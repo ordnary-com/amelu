@@ -1877,6 +1877,7 @@ margin: 0.2ch;
    keep price boxes, feature rows etc. aligned across plans. */
 .plan-table {
   display: grid;
+  margin-top: 1.25rem;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -1891,63 +1892,89 @@ margin: 0.2ch;
 .plan-cell-active {
   background-color: rgba(138, 180, 248, 0.08);
 }
-.plan-cell-badge {
-  min-height: 1.1rem;
-  text-align: center;
-  font-size: 0.72rem;
+.plan-cell-header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.75rem;
+}
+.plan-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.plan-header-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.plan-current-chip {
+  font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--link);
-  padding-top: 1.5rem;
+  background-color: rgba(138, 180, 248, 0.15);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
 }
-.plan-cell-name {
-  text-align: center;
-  font-size: 1.25rem;
-  font-weight: 700;
-  padding-bottom: 1.25rem;
-}
-.plan-cell-price {
-  gap: 0.6rem;
-  padding-bottom: 1.75rem;
-}
-.plan-price-plain {
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-.plan-price-note {
-  text-align: center;
-  font-size: 0.82rem;
+.plan-header-price {
+  font-size: 0.95rem;
   color: var(--text-muted);
 }
-.plan-price-box {
-  display: block;
-  width: 100%;
+.plan-header-price strong {
+  font-size: 1.3rem;
+  color: var(--text);
+}
+.plan-price-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.plan-switch-button {
+  flex-shrink: 0;
   text-align: center;
   font-size: 0.85rem;
+  font-weight: 500;
   color: var(--text);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.7rem;
+  padding: 0.55rem 1.1rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
-.plan-price-box strong {
-  font-size: 1.25rem;
-}
-.plan-price-box:hover {
+.plan-switch-button:hover {
   background-color: var(--surface-raised);
 }
-.plan-price-box:disabled {
+.plan-switch-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.plan-cancel-button {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 0.55rem 0.25rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.plan-cancel-button:hover {
+  color: var(--text);
+}
+.plan-cancel-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 .plan-cell-feature {
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
   font-size: 0.88rem;
   color: var(--text-muted);

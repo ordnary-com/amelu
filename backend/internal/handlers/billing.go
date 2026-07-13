@@ -310,6 +310,15 @@ func (a *App) CreateBillingPortalSession(w http.ResponseWriter, r *http.Request)
 		params.FlowData = &stripe.BillingPortalSessionFlowDataParams{
 			Type: stripe.String(req.Flow),
 		}
+		if req.Flow == string(stripe.BillingPortalSessionFlowTypeSubscriptionCancel) {
+			if !billing.StripeSubscriptionID.Valid || billing.StripeSubscriptionID.String == "" {
+				writeError(w, http.StatusBadRequest, "no active subscription to cancel")
+				return
+			}
+			params.FlowData.SubscriptionCancel = &stripe.BillingPortalSessionFlowDataSubscriptionCancelParams{
+				Subscription: stripe.String(billing.StripeSubscriptionID.String),
+			}
+		}
 	}
 
 	session, err := portalsession.New(params)

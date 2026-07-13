@@ -33,6 +33,12 @@ type Config struct {
 	ResendAPIKey    string
 	ResendFromEmail string
 	ResendFromName  string
+
+	// Stripe billing is optional in the same vein: absent, /api/billing/*
+	// reports the feature unavailable instead of failing startup. Both must
+	// be set together for webhooks to be verifiable.
+	StripeSecretKey     string
+	StripeWebhookSecret string
 }
 
 func Load() (*Config, error) {
@@ -51,6 +57,9 @@ func Load() (*Config, error) {
 		ResendAPIKey:    os.Getenv("RESEND_API_KEY"),
 		ResendFromEmail: getEnv("RESEND_FROM_EMAIL", "onboarding@ordnary.com"),
 		ResendFromName:  getEnv("RESEND_FROM_NAME", "Amelu"),
+
+		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
+		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
 	}
 
 	var missing []string

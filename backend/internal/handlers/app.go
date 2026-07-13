@@ -24,6 +24,14 @@ type App struct {
 	// invite emails report unavailable rather than failing startup.
 	Resend *resend.Client
 	// FrontendOrigin is used to build the reset-link URL emailed to
-	// invitees (e.g. https://app.amelu.org/reset-password/<token>).
+	// invitees (e.g. https://app.amelu.org/reset-password/<token>), and the
+	// success/cancel/return URLs for Stripe Checkout and the billing portal.
 	FrontendOrigin string
+
+	// StripeEnabled is false when STRIPE_SECRET_KEY isn't configured -
+	// billing handlers report unavailable rather than failing startup, same
+	// convention as Resend/DomainConnect above. StripeWebhookSecret verifies
+	// incoming webhook payloads and is required whenever Stripe is enabled.
+	StripeEnabled       bool
+	StripeWebhookSecret string
 }

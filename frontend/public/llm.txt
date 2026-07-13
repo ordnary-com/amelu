@@ -1,0 +1,27 @@
+# Amelu
+
+> Amelu is an email hosting service by Ordnary. It lets customers register
+> or bring their own email domains and manage mailboxes, aliases, forwarding,
+> spam filtering, and DNS configuration for them, on top of a self-hosted
+> Stalwart mail server.
+
+## What this application is
+
+Amelu's dashboard is the customer-facing control panel for the service:
+sign up, add an email domain, verify its DNS records, create mailboxes and
+address aliases, configure spam filtering and forwarding rules, and manage
+account/organization/billing settings - all without touching a mail server
+directly.
+
+## Who it's for
+
+Individuals and organizations who want to run email on their own domain
+without operating mail server infrastructure themselves.
+
+## Notes for automated agents
+
+- This file describes the product for humans and AI assistants browsing the
+  site; it is not developer documentation. Repository-level guidance for
+  coding agents working on Amelu's own source lives in `AGENTS.md` /
+  `CLAUDE.md` at the repository root, not here.
+- Amelu is made in the Netherlands by Ordnary.

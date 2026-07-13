@@ -216,6 +216,31 @@ export interface DomainConnectStatus {
   applyUrl?: string;
 }
 
+export type BillingInterval = "monthly" | "annual";
+
+export interface Plan {
+  id: string;
+  name: string;
+  priceCentsMonthly?: number;
+  priceCentsAnnual?: number;
+  maxDomains: number;
+  maxMailboxesPerDomain: number;
+  purchasable: boolean;
+  current: boolean;
+}
+
+export interface BillingOverview {
+  plan: Plan;
+  subscriptionStatus?: string;
+  billingInterval?: BillingInterval;
+  hasPaymentMethod: boolean;
+}
+
+// Deep-links into a specific Stripe Billing Portal flow instead of its
+// default landing page - see
+// https://stripe.com/docs/customer-management/portal-deep-links.
+export type BillingPortalFlow = "payment_method_update" | "subscription_cancel";
+
 
 export const api = {
   signup: (
@@ -538,4 +563,14 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(limits),
     }),
+
+  getBillingOverview: () => request<BillingOverview>("/api/billing/overview"),
+
+  listPlans: () => request<Plan[]>("/api/billing/plans"),
+
+  createCheckoutSession: (planId: string, interval: BillingInterval = "annual") =>
+    request<{ url: string }>("/api/billing/checkout", { method: "POST", body: JSON.stringify({ planId, interval }) }),
+
+  createBillingPortalSession: (flow?: BillingPortalFlow) =>
+    request<{ url: string }>("/api/billing/portal", { method: "POST", body: JSON.stringify({ flow }) }),
 };

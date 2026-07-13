@@ -13,6 +13,11 @@ const LABELS: Record<string, string> = {
   unpaid: "Unpaid",
   paused: "Paused",
   none: "None",
+  paid: "Paid",
+  open: "Open",
+  draft: "Draft",
+  uncollectible: "Uncollectible",
+  void: "Void",
 };
 
 // Maps our statuses onto app.css's .tag color variants (only green/orange
@@ -33,6 +38,11 @@ const CLASS: Record<string, string> = {
   unpaid: "tag red",
   paused: "tag",
   none: "tag",
+  paid: "tag green",
+  open: "tag orange",
+  draft: "tag",
+  uncollectible: "tag red",
+  void: "tag",
 };
 
 export function Tag({ status }: { status: string }) {

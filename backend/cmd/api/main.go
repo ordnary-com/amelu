@@ -207,6 +207,7 @@ func main() {
 	mux.HandleFunc("GET /api/billing/plans", auth.Require(app.Store, app.ListPlans))
 	mux.HandleFunc("POST /api/billing/checkout", auth.Require(app.Store, app.CreateCheckoutSession))
 	mux.HandleFunc("POST /api/billing/portal", auth.Require(app.Store, app.CreateBillingPortalSession))
+	mux.HandleFunc("GET /api/billing/invoices", auth.Require(app.Store, app.ListInvoices))
 
 	// Public - Stripe calls this directly, never a logged-in customer. The
 	// webhook signature (verified inside StripeWebhook) is the only trust

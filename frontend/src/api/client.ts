@@ -241,6 +241,17 @@ export interface BillingOverview {
 // https://stripe.com/docs/customer-management/portal-deep-links.
 export type BillingPortalFlow = "payment_method_update" | "subscription_cancel";
 
+export interface Invoice {
+  id: string;
+  number: string;
+  status: "draft" | "open" | "paid" | "uncollectible" | "void";
+  total: number;
+  currency: string;
+  createdAt: string;
+  hostedInvoiceUrl?: string;
+  invoicePdf?: string;
+}
+
 
 export const api = {
   signup: (
@@ -573,4 +584,6 @@ export const api = {
 
   createBillingPortalSession: (flow?: BillingPortalFlow) =>
     request<{ url: string }>("/api/billing/portal", { method: "POST", body: JSON.stringify({ flow }) }),
+
+  listInvoices: () => request<Invoice[]>("/api/billing/invoices"),
 };

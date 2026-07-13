@@ -1,0 +1,33 @@
+{
+  "providerId": "amelu.org",
+  "providerName": "Amelu",
+  "serviceId": "mailhosting",
+  "serviceName": "Amelu Mail Hosting",
+  "version": "1.0",
+  "logoUrl": "https://amelu.org/logo.png",
+  "description": "Configures MX, SPF, DKIM, DMARC, MTA-STS, TLS-RPT, autodiscovery and service SRV records for mail hosting on Amelu.",
+  "variableDescription": "All values are computed by Amelu per-domain at the time you click \"Fix automatically\" and are not editable.",
+  "syncPubKeyDomain": "amelu.org",
+  "syncRedirectDomain": "amelu.org",
+  "warnPhishing": false,
+  "records": [
+    { "type": "MX", "host": "@", "pointsTo": "marduk.mx.amelu.org", "priority": 10, "ttl": 3600 },
+    { "type": "TXT", "host": "@", "data": "v=spf1 mx -all", "ttl": 3600 },
+    { "type": "TXT", "host": "_dmarc", "data": "%DCE_DMARC_VALUE%", "ttl": 3600 },
+    { "type": "TXT", "host": "%DCE_ED25519_SELECTOR%", "data": "%DCE_ED25519_VALUE%", "ttl": 3600 },
+    { "type": "TXT", "host": "%DCE_RSA_SELECTOR%", "data": "%DCE_RSA_VALUE%", "ttl": 3600 },
+    { "type": "CNAME", "host": "mta-sts", "pointsTo": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "TXT", "host": "_mta-sts", "data": "%DCE_MTA_STS_VALUE%", "ttl": 3600 },
+    { "type": "TXT", "host": "_smtp._tls", "data": "%DCE_TLSRPT_VALUE%", "ttl": 3600 },
+    { "type": "CNAME", "host": "ua-auto-config", "pointsTo": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "TXT", "host": "_ua-auto-config", "data": "%DCE_UA_AUTOCONF_VALUE%", "ttl": 3600 },
+    { "type": "CNAME", "host": "autoconfig", "pointsTo": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "CNAME", "host": "autodiscover", "pointsTo": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "SRV", "service": "_caldavs", "protocol": "_tcp", "priority": 0, "weight": 1, "port": 443, "target": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "SRV", "service": "_carddavs", "protocol": "_tcp", "priority": 0, "weight": 1, "port": 443, "target": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "SRV", "service": "_imaps", "protocol": "_tcp", "priority": 0, "weight": 1, "port": 993, "target": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "SRV", "service": "_jmap", "protocol": "_tcp", "priority": 0, "weight": 1, "port": 443, "target": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "SRV", "service": "_pop3s", "protocol": "_tcp", "priority": 0, "weight": 1, "port": 995, "target": "marduk.mx.amelu.org", "ttl": 3600 },
+    { "type": "SRV", "service": "_submissions", "protocol": "_tcp", "priority": 0, "weight": 1, "port": 465, "target": "marduk.mx.amelu.org", "ttl": 3600 }
+  ]
+}

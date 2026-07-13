@@ -1,0 +1,21 @@
+v1-ed25519-20260711._domainkey.amelu-test-provisioning-1234.com. IN TXT "v=DKIM1; k=ed25519; h=sha256; p=qC402webF7xeqOjU83ktRQ5hawDPm/K3iWfhQzlMWQg="
+v1-rsa-20260711._domainkey.amelu-test-provisioning-1234.com. IN TXT (
+    "v=DKIM1; k=rsa; h=sha256; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA083s//zEu1hOF4JnXcFTqvF/sIFd6QVyG/4hL/eX8UbLVAplmyb3Lp5sOY8mISLHfj/Uh49F7zta9YJU+sdlJXIhrju7H5uusGYiLEdM0wqxqYlUFlI5e/2fa9s3eg+15RoINMYjQZOgOqY8kaKq008h0LyqWKk+KBN0Co5ue+E43EUp9dEJ4HH"
+    "GW4OeCvDNBctIfxN5TuYh6H+CIJMhO3zySsrRxdpyYMNAkzNCJOtPBrBN4ABX6bWoomzg35RCjpRNBOC9FcuzPaXjDk/zAyN+kE7jP3V/doCh2uo44Hr1pASLh0Jk0e80zDrwwKUy3QmdKVFFXQRABRGu7Dc/9QIDAQAB"
+)
+amelu-test-provisioning-1234.com. IN TXT "v=spf1 mx -all"
+amelu-test-provisioning-1234.com. IN MX 10 marduk.mx.amelu.org.
+_dmarc.amelu-test-provisioning-1234.com. IN TXT "v=DMARC1; p=reject; rua=mailto:postmaster@amelu-test-provisioning-1234.com"
+_caldavs._tcp.amelu-test-provisioning-1234.com. IN SRV 0 1 443 marduk.mx.amelu.org.
+_carddavs._tcp.amelu-test-provisioning-1234.com. IN SRV 0 1 443 marduk.mx.amelu.org.
+_imaps._tcp.amelu-test-provisioning-1234.com. IN SRV 0 1 993 marduk.mx.amelu.org.
+_jmap._tcp.amelu-test-provisioning-1234.com. IN SRV 0 1 443 marduk.mx.amelu.org.
+_pop3s._tcp.amelu-test-provisioning-1234.com. IN SRV 0 1 995 marduk.mx.amelu.org.
+_submissions._tcp.amelu-test-provisioning-1234.com. IN SRV 0 1 465 marduk.mx.amelu.org.
+mta-sts.amelu-test-provisioning-1234.com. IN CNAME marduk.mx.amelu.org.
+_mta-sts.amelu-test-provisioning-1234.com. IN TXT "v=STSv1; id=36024079723858421"
+_smtp._tls.amelu-test-provisioning-1234.com. IN TXT "v=TLSRPTv1; rua=mailto:postmaster@amelu-test-provisioning-1234.com"
+ua-auto-config.amelu-test-provisioning-1234.com. IN CNAME marduk.mx.amelu.org.
+_ua-auto-config.amelu-test-provisioning-1234.com. IN TXT "v=UAAC1; a=sha256; d=zDsoRo50EvU+FlWRA+9KS9mu3CYV26rTSOOZd4z56bc="
+autoconfig.amelu-test-provisioning-1234.com. IN CNAME marduk.mx.amelu.org.
+autodiscover.amelu-test-provisioning-1234.com. IN CNAME marduk.mx.amelu.org.

@@ -21,6 +21,7 @@ export function Layout() {
   const exact = (p: string) => (path === p ? "active" : "");
   const onDomains = path.startsWith("/domains");
   const onAccount = path.startsWith("/account");
+  const onBilling = path.startsWith("/billing");
   const onAllAddresses = domainId != null && path === `/domains/${domainId}`;
   const onMailboxesArea = domainId != null && path.startsWith(`/domains/${domainId}/mailboxes`);
   const onAliasesArea = domainId != null && path.startsWith(`/domains/${domainId}/aliases`);
@@ -69,11 +70,8 @@ export function Layout() {
               <li className={exact("/organization")}>
                 <Link to="/organization">My Organization</Link>
               </li>
-              <li className={exact("/billing")}>
-                <Link to="/billing">Billing</Link>
-              </li>
-              <li className={exact("/support")}>
-                <Link to="/support">Support</Link>
+              <li className={onBilling ? "submenu-parent active" : "submenu-parent"}>
+                <Link to="/billing/overview">Billing</Link>
               </li>
 
               <li className={`secondary ${exact("/changelog")}`}>
@@ -305,6 +303,22 @@ export function Layout() {
 
                 <li className="delete">
                   <Link to="/account/terminate">Terminate...</Link>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {onBilling && (
+            <div className="sidemenu">
+              <ul>
+                <li className={exact("/billing/overview")}>
+                  <Link to="/billing/overview">Overview</Link>
+                </li>
+                <li className={exact("/billing/plans")}>
+                  <Link to="/billing/plans">Plans</Link>
+                </li>
+                <li className={exact("/billing/invoices")}>
+                  <Link to="/billing/invoices">Invoices</Link>
                 </li>
               </ul>
             </div>

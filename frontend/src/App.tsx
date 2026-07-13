@@ -57,6 +57,9 @@ import { SpamAggressivenessPage } from "./pages/SpamAggressivenessPage";
 import { SpamSenderListsPage } from "./pages/SpamSenderListsPage";
 import { SpamRecipientDenylistPage } from "./pages/SpamRecipientDenylistPage";
 import { SetPasswordPage } from "./pages/SetPasswordPage";
+import { BillingOverviewPage } from "./pages/BillingOverviewPage";
+import { BillingPlansPage } from "./pages/BillingPlansPage";
+import { BillingInvoicesPage } from "./pages/BillingInvoicesPage";
 
 export default function App() {
   return (
@@ -75,8 +78,9 @@ export default function App() {
           >
             <Route path="/" element={<DashboardPage />} />
             <Route path="/organization" element={<MyOrganizationPage />} />
-            <Route path="/billing" element={<ComingSoonPage title="Billing" />} />
-            <Route path="/support" element={<ComingSoonPage title="Support" />} />
+            <Route path="/billing/overview" element={<BillingOverviewPage />} />
+            <Route path="/billing/plans" element={<BillingPlansPage />} />
+            <Route path="/billing/invoices" element={<BillingInvoicesPage />} />
             <Route path="/changelog" element={<ComingSoonPage title="Changelog" />} />
             <Route path="/status" element={<ComingSoonPage title="Service Status" />} />
 

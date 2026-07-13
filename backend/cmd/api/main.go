@@ -14,6 +14,8 @@ import (
 	"amelu/backend/internal/handlers"
 	"amelu/backend/internal/resend"
 	"amelu/backend/internal/stalwart"
+
+	"github.com/stripe/stripe-go/v81"
 )
 
 // runExpirationSweepSafely recovers from any panic in the sweep so a bug
@@ -69,6 +71,14 @@ func main() {
 		app.Resend = resend.NewClient(cfg.ResendAPIKey, cfg.ResendFromEmail, cfg.ResendFromName)
 	} else {
 		log.Printf("resend: RESEND_API_KEY not set, password reset invite emails will report unavailable")
+	}
+
+	if cfg.StripeSecretKey != "" && cfg.StripeWebhookSecret != "" {
+		stripe.Key = cfg.StripeSecretKey
+		app.StripeEnabled = true
+		app.StripeWebhookSecret = cfg.StripeWebhookSecret
+	} else {
+		log.Printf("stripe: STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET not set, billing will report unavailable")
 	}
 
 	// Mailbox expiration has no native Stalwart mechanism - this ticker is
@@ -192,6 +202,16 @@ func main() {
 
 	mux.HandleFunc("GET /api/mailboxes/{id}/limits", auth.Require(app.Store, app.GetMailboxLimits))
 	mux.HandleFunc("PUT /api/mailboxes/{id}/limits", auth.Require(app.Store, app.UpdateMailboxLimits))
+
+	mux.HandleFunc("GET /api/billing/overview", auth.Require(app.Store, app.GetBillingOverview))
+	mux.HandleFunc("GET /api/billing/plans", auth.Require(app.Store, app.ListPlans))
+	mux.HandleFunc("POST /api/billing/checkout", auth.Require(app.Store, app.CreateCheckoutSession))
+	mux.HandleFunc("POST /api/billing/portal", auth.Require(app.Store, app.CreateBillingPortalSession))
+
+	// Public - Stripe calls this directly, never a logged-in customer. The
+	// webhook signature (verified inside StripeWebhook) is the only trust
+	// boundary.
+	mux.HandleFunc("POST /api/webhooks/stripe", app.StripeWebhook)
 
 	log.Printf("amelu api listening on %s", cfg.HTTPAddr)
 	if err := http.ListenAndServe(cfg.HTTPAddr, handlers.CORS(cfg.CORSOrigin, mux)); err != nil {

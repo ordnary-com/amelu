@@ -5,6 +5,14 @@ const LABELS: Record<string, string> = {
   failed: "Failed",
   suspended: "Suspended",
   deleted: "Deleted",
+  trialing: "Trialing",
+  past_due: "Past Due",
+  canceled: "Canceled",
+  incomplete: "Incomplete",
+  incomplete_expired: "Incomplete",
+  unpaid: "Unpaid",
+  paused: "Paused",
+  none: "None",
 };
 
 // Maps our statuses onto app.css's .tag color variants (only green/orange
@@ -17,6 +25,14 @@ const CLASS: Record<string, string> = {
   failed: "tag red",
   suspended: "tag",
   deleted: "tag",
+  trialing: "tag orange",
+  past_due: "tag red",
+  canceled: "tag",
+  incomplete: "tag orange",
+  incomplete_expired: "tag",
+  unpaid: "tag red",
+  paused: "tag",
+  none: "tag",
 };
 
 export function Tag({ status }: { status: string }) {

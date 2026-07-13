@@ -321,6 +321,24 @@ body {
   flex-direction: column;
 }
 
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  display: inline-block;
+  vertical-align: middle;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
 /* React mounts into this plain div, which otherwise has no height rules of
    its own and just shrink-wraps its content - leaving body's min-height
    unused whenever a page's content is shorter than the viewport (footer
@@ -1851,4 +1869,103 @@ margin: 0.2ch;
 }
 .tips-card-nav .button-pill-outline {
   padding: 0.4rem 1rem;
+}
+
+/* A real CSS grid, not stacked flex columns: cells are emitted row-by-row
+   in DOM order so every plan's Nth cell lands in the same grid row and
+   gets matched height automatically - no manual height-syncing needed to
+   keep price boxes, feature rows etc. aligned across plans. */
+.plan-table {
+  display: grid;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--surface);
+}
+.plan-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.85rem 1.75rem;
+}
+.plan-cell-active {
+  background-color: rgba(138, 180, 248, 0.08);
+}
+.plan-cell-badge {
+  min-height: 1.1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--link);
+  padding-top: 1.5rem;
+}
+.plan-cell-name {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding-bottom: 1.25rem;
+}
+.plan-cell-price {
+  gap: 0.6rem;
+  padding-bottom: 1.75rem;
+}
+.plan-price-plain {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.plan-price-note {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.plan-price-box {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.plan-price-box strong {
+  font-size: 1.25rem;
+}
+.plan-price-box:hover {
+  background-color: var(--surface-raised);
+}
+.plan-price-box:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.plan-cell-feature {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  padding: 1rem 1.75rem;
+  border-top: 1px solid var(--border);
+}
+.plan-cell-feature .material-symbols-outlined {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.plan-cell-feature.plan-feature-included .material-symbols-outlined {
+  color: #24a148;
+}
+.plan-cell-active.plan-cell-feature .material-symbols-outlined {
+  color: var(--link);
+}
+.plan-cell-active.plan-cell-feature {
+  color: var(--text);
+  font-weight: 600;
 }

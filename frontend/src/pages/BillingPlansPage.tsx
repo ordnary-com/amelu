@@ -46,6 +46,7 @@ export function BillingPlansPage() {
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>("monthly");
 
   useEffect(() => {
     api.listPlans().then(setPlans);
@@ -64,6 +65,19 @@ export function BillingPlansPage() {
     }
   };
 
+  const cancelPlan = async (planId: string) => {
+    const key = `${planId}:cancel`;
+    setError(null);
+    setBusyKey(key);
+    try {
+      const { url } = await api.createBillingPortalSession("subscription_cancel");
+      window.location.href = url;
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not open billing portal");
+      setBusyKey(null);
+    }
+  };
+
   const maxPerks = plans ? Math.max(...plans.map((p) => (PERKS_BY_PLAN[p.id] ?? []).length)) : 0;
 
   return (
@@ -77,53 +91,73 @@ export function BillingPlansPage() {
         </div>
       )}
 
+      {plans && plans.some((p) => p.priceCentsMonthly != null) && (
+        <div className="segmented-control" role="radiogroup" aria-label="Billing period">
+          <label className={`segmented-option${billingInterval === "monthly" ? " segmented-option-active" : ""}`}>
+            <input
+              type="radio"
+              name="billing-interval"
+              value="monthly"
+              checked={billingInterval === "monthly"}
+              onChange={() => setBillingInterval("monthly")}
+            />
+            Monthly
+          </label>
+          <label className={`segmented-option${billingInterval === "annual" ? " segmented-option-active" : ""}`}>
+            <input
+              type="radio"
+              name="billing-interval"
+              value="annual"
+              checked={billingInterval === "annual"}
+              onChange={() => setBillingInterval("annual")}
+            />
+            Yearly
+          </label>
+        </div>
+      )}
+
       {plans && (
         <div className="plan-table" style={{ gridTemplateColumns: `repeat(${plans.length}, 1fr)` }}>
-          {plans.map((p) => (
-            <div key={`${p.id}-badge`} className={cellClass(p.current, "plan-cell-badge")}>
-              {p.current ? "Current Plan" : ""}
-            </div>
-          ))}
-
-          {plans.map((p) => (
-            <div key={`${p.id}-name`} className={cellClass(p.current, "plan-cell-name")}>
-              {p.name}
-            </div>
-          ))}
-
           {plans.map((p) => {
             const isFree = p.priceCentsMonthly == null || p.priceCentsAnnual == null;
+            const priceCents = billingInterval === "monthly" ? p.priceCentsMonthly : p.priceCentsAnnual;
             const savings = !isFree ? p.priceCentsMonthly! * 12 - p.priceCentsAnnual! : 0;
+            const key = `${p.id}:${billingInterval}`;
             return (
-              <div key={`${p.id}-price`} className={cellClass(p.current, "plan-cell-price")}>
-                {isFree ? (
-                  <>
-                    <div className="plan-price-plain">Free</div>
-                    <div className="plan-price-note">No credit card required</div>
-                  </>
-                ) : p.current ? (
-                  <div className="plan-price-plain">
-                    {formatDollars(p.priceCentsMonthly!)} <span className="light">/monthly</span>
+              <div key={`${p.id}-header`} className={cellClass(p.current, "plan-cell-header")}>
+                <div className="plan-header-info">
+                  <div className="plan-header-name">
+                    {p.name}
+                    {p.current && <span className="plan-current-chip">Current plan</span>}
                   </div>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="plan-price-box"
-                      disabled={!p.purchasable || busyKey === `${p.id}:monthly`}
-                      onClick={() => upgrade(p.id, "monthly")}
-                    >
-                      <strong>{formatDollars(p.priceCentsMonthly!)}</strong> /monthly
-                    </button>
-                    <button
-                      type="button"
-                      className="plan-price-box"
-                      disabled={!p.purchasable || busyKey === `${p.id}:annual`}
-                      onClick={() => upgrade(p.id, "annual")}
-                    >
-                      <strong>{formatDollars(p.priceCentsAnnual!)}</strong> /yearly, save {formatDollars(savings)}
-                    </button>
-                  </>
+                  {isFree ? (
+                    <div className="plan-header-price">Free</div>
+                  ) : (
+                    <div className="plan-header-price">
+                      <strong>{formatDollars(priceCents!)}</strong> <span className="light">/{billingInterval}</span>
+                      {billingInterval === "annual" && <div className="plan-price-note">Save {formatDollars(savings)}/year</div>}
+                    </div>
+                  )}
+                </div>
+                {!p.current && !isFree && (
+                  <button
+                    type="button"
+                    className="plan-switch-button"
+                    disabled={!p.purchasable || busyKey === key}
+                    onClick={() => upgrade(p.id, billingInterval)}
+                  >
+                    Switch
+                  </button>
+                )}
+                {p.current && !isFree && (
+                  <button
+                    type="button"
+                    className="plan-cancel-button"
+                    disabled={busyKey === `${p.id}:cancel`}
+                    onClick={() => cancelPlan(p.id)}
+                  >
+                    Cancel plan
+                  </button>
                 )}
               </div>
             );

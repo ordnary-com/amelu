@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"amelu/backend/internal/db"
 
@@ -13,6 +14,7 @@ import (
 	portalsession "github.com/stripe/stripe-go/v81/billingportal/session"
 	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
+	"github.com/stripe/stripe-go/v81/invoice"
 	"github.com/stripe/stripe-go/v81/webhook"
 )
 
@@ -94,6 +96,65 @@ func (a *App) GetBillingOverview(w http.ResponseWriter, r *http.Request) {
 		BillingInterval:    billing.BillingInterval.String,
 		HasPaymentMethod:   billing.StripeCustomerID.Valid,
 	})
+}
+
+type invoiceResponse struct {
+	ID               string `json:"id"`
+	Number           string `json:"number"`
+	Status           string `json:"status"`
+	Total            int64  `json:"total"`
+	Currency         string `json:"currency"`
+	CreatedAt        string `json:"createdAt"`
+	HostedInvoiceURL string `json:"hostedInvoiceUrl,omitempty"`
+	InvoicePDF       string `json:"invoicePdf,omitempty"`
+}
+
+// ListInvoices returns every Stripe invoice issued to this customer, newest
+// first (Stripe's own default List ordering) - there's no local copy of
+// invoices, this reads straight from Stripe on each request.
+func (a *App) ListInvoices(w http.ResponseWriter, r *http.Request) {
+	if !a.StripeEnabled {
+		writeError(w, http.StatusServiceUnavailable, "billing is not available yet")
+		return
+	}
+	cust, ok := requireCustomer(w, r)
+	if !ok {
+		return
+	}
+
+	billing, err := a.Store.GetCustomerBilling(r.Context(), cust.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load billing info")
+		return
+	}
+
+	out := []invoiceResponse{}
+	if billing.StripeCustomerID.Valid && billing.StripeCustomerID.String != "" {
+		params := &stripe.InvoiceListParams{
+			Customer: stripe.String(billing.StripeCustomerID.String),
+		}
+		params.Limit = stripe.Int64(100)
+		it := invoice.List(params)
+		for it.Next() {
+			inv := it.Invoice()
+			out = append(out, invoiceResponse{
+				ID:               inv.ID,
+				Number:           inv.Number,
+				Status:           string(inv.Status),
+				Total:            inv.Total,
+				Currency:         string(inv.Currency),
+				CreatedAt:        time.Unix(inv.Created, 0).UTC().Format(http.TimeFormat),
+				HostedInvoiceURL: inv.HostedInvoiceURL,
+				InvoicePDF:       inv.InvoicePDF,
+			})
+		}
+		if err := it.Err(); err != nil {
+			log.Printf("stripe: list invoices for customer %s: %v", cust.ID, err)
+			writeError(w, http.StatusBadGateway, "could not load invoices")
+			return
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // getOrCreateStripeCustomer returns the customer's existing Stripe Customer

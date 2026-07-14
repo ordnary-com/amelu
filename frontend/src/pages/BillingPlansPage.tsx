@@ -128,7 +128,7 @@ export function BillingPlansPage() {
                 <div className="plan-header-info">
                   <div className="plan-header-name">
                     {p.name}
-                    {p.current && <span className="plan-current-chip">Current plan</span>}
+                    {p.current && <span className="light plan-current-label">Current plan</span>}
                   </div>
                   {isFree ? (
                     <div className="plan-header-price">Free</div>

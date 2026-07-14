@@ -1911,15 +1911,9 @@ margin: 0.2ch;
   font-size: 1.1rem;
   font-weight: 700;
 }
-.plan-current-chip {
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--link);
-  background-color: rgba(138, 180, 248, 0.15);
-  border-radius: 999px;
-  padding: 0.2rem 0.6rem;
+.plan-current-label {
+  font-size: 0.85rem;
+  font-weight: 400;
 }
 .plan-header-price {
   font-size: 0.95rem;

@@ -4,7 +4,6 @@ import { SnackbarProvider } from "./context/SnackbarContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
-import { ComingSoonPage } from "./pages/ComingSoonPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { MyOrganizationPage } from "./pages/MyOrganizationPage";
 import { DomainsPage } from "./pages/DomainsPage";
@@ -60,6 +59,8 @@ import { SetPasswordPage } from "./pages/SetPasswordPage";
 import { BillingOverviewPage } from "./pages/BillingOverviewPage";
 import { BillingPlansPage } from "./pages/BillingPlansPage";
 import { BillingInvoicesPage } from "./pages/BillingInvoicesPage";
+import { ChangelogPage } from "./pages/ChangelogPage";
+import { StatusPage } from "./pages/StatusPage";
 
 export default function App() {
   return (
@@ -81,8 +82,8 @@ export default function App() {
             <Route path="/billing/overview" element={<BillingOverviewPage />} />
             <Route path="/billing/plans" element={<BillingPlansPage />} />
             <Route path="/billing/invoices" element={<BillingInvoicesPage />} />
-            <Route path="/changelog" element={<ComingSoonPage title="Changelog" />} />
-            <Route path="/status" element={<ComingSoonPage title="Service Status" />} />
+            <Route path="/changelog" element={<ChangelogPage />} />
+            <Route path="/status" element={<StatusPage />} />
 
             <Route path="/domains" element={<DomainsPage />} />
             <Route path="/domains/new" element={<NewDomainPage />} />

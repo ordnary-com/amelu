@@ -18,6 +18,9 @@ const LABELS: Record<string, string> = {
   draft: "Draft",
   uncollectible: "Uncollectible",
   void: "Void",
+  operational: "Operational",
+  degraded: "Degraded",
+  outage: "Outage",
 };
 
 // Maps our statuses onto app.css's .tag color variants (only green/orange
@@ -43,6 +46,9 @@ const CLASS: Record<string, string> = {
   draft: "tag",
   uncollectible: "tag red",
   void: "tag",
+  operational: "tag green",
+  degraded: "tag orange",
+  outage: "tag red",
 };
 
 export function Tag({ status }: { status: string }) {

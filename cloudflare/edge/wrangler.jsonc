@@ -1,0 +1,37 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-edge-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  // No route/custom-domain binding is committed here on purpose - attaching
+  // api.amelu.org is a dashboard/CI action gated behind a real Cloudflare
+  // account (see docs/cloudflare/EDGE_WORKER.md, "Manual dashboard steps").
+  // Uncomment and fill in once that account exists:
+  // "routes": [
+  //   { "pattern": "api.amelu.org/*", "custom_domain": true }
+  // ],
+  "vars": {
+    "ENVIRONMENT": "development"
+  },
+  "env": {
+    "preview": {
+      "vars": {
+        "ENVIRONMENT": "preview"
+      }
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      }
+      // "routes": [ { "pattern": "api.amelu.org/*", "custom_domain": true } ]
+    }
+  }
+  // Secrets (ORIGIN_BASE_URL, ORIGIN_SHARED_SECRET, ALLOWED_ORIGIN) are NOT
+  // defined here - they are set via `wrangler secret put <NAME>` per
+  // environment, or via .dev.vars locally. See .dev.vars.example and
+  // docs/cloudflare/SECRETS.md.
+}

@@ -1,0 +1,20 @@
+# Copy to .dev.vars for local `wrangler dev` (never committed - see .gitignore).
+# Production/preview equivalents are set with `wrangler secret put <NAME>`,
+# never written into wrangler.jsonc. See docs/cloudflare/SECRETS.md.
+
+# Base URL the Worker proxies to. Locally this is the Go backend running on
+# your machine; in preview/production this is the private Cloudflare Tunnel
+# hostname (never a public IP), e.g. https://origin.internal.amelu.org -
+# see docs/cloudflare/TUNNEL.md.
+ORIGIN_BASE_URL=http://localhost:8081
+
+# Shared secret for Worker -> origin authentication (HMAC signature, see
+# backend/internal/auth/internal.go's sibling scheme used for
+# request signing here). Must match a secret the Go origin also trusts.
+# This example value is only for local dev - generate a real random value
+# per environment: `openssl rand -hex 32`.
+ORIGIN_SHARED_SECRET=dev-only-shared-secret-change-me
+
+# Exact origin allowed to call this API with credentials (CORS). Locally
+# this is the Vite dev server.
+ALLOWED_ORIGIN=http://localhost:5173

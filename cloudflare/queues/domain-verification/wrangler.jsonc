@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-domain-verification-consumer",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Not deployed by this migration - see docs/cloudflare/QUEUES.md for the
+  // `wrangler queues create` steps that must run once, by hand, before
+  // this binds to a real queue.
+  "queues": {
+    "producers": [
+      { "queue": "amelu-domain-verification", "binding": "DOMAIN_VERIFICATION_QUEUE" }
+    ],
+    "consumers": [
+      {
+        "queue": "amelu-domain-verification",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "dead_letter_queue": "amelu-domain-verification-dlq"
+      }
+    ]
+  },
+  "vars": {
+    "ENVIRONMENT": "development"
+  }
+  // Secrets (ORIGIN_BASE_URL, INTERNAL_JOBS_SHARED_SECRET) set via
+  // `wrangler secret put`, same convention as cloudflare/edge - see
+  // docs/cloudflare/SECRETS.md.
+}

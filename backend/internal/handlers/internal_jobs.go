@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+type domainVerifiedJobRequest struct {
+	DomainID       string `json:"domainId"`
+	IdempotencyKey string `json:"idempotencyKey"`
+}
+
 // Healthz is public and unauthenticated by design - the edge Worker and
 // Cloudflare Tunnel both need something to poll that proves the origin
 // process is up without granting access to anything. It touches no
@@ -32,5 +37,32 @@ func (a *App) Healthz(w http.ResponseWriter, r *http.Request) {
 func (a *App) RunExpirationSweepJob(w http.ResponseWriter, r *http.Request) {
 	log.Printf("internal job: expiration sweep triggered externally")
 	a.RunExpirationSweep(r.Context())
+	writeJSON(w, http.StatusOK, map[string]string{"status": "completed"})
+}
+
+// DomainVerifiedJob is called by the cloudflare/queues/domain-verification
+// Worker consumer once a live DNS check confirms a domain's verification
+// TXT record - see docs/cloudflare/QUEUES.md. It reuses
+// Store.MarkDomainVerified exactly as the existing (customer-triggered)
+// DNS check path does, so this is a second caller of already-idempotent
+// logic, not new state-mutation logic: running it twice for the same
+// domainId (expected under Cloudflare Queues' at-least-once delivery) just
+// re-applies the same UPDATE. idempotencyKey is accepted and logged for
+// traceability across retries/duplicate delivery, not used to gate the
+// write - the underlying UPDATE is idempotent on its own.
+func (a *App) DomainVerifiedJob(w http.ResponseWriter, r *http.Request) {
+	var req domainVerifiedJobRequest
+	if err := decodeJSON(r, &req); err != nil || req.DomainID == "" {
+		writeError(w, http.StatusBadRequest, "domainId is required")
+		return
+	}
+
+	if err := a.Store.MarkDomainVerified(r.Context(), req.DomainID); err != nil {
+		log.Printf("internal job: mark domain %s verified (idempotencyKey=%s): %v", req.DomainID, req.IdempotencyKey, err)
+		writeError(w, http.StatusInternalServerError, "could not mark domain verified")
+		return
+	}
+	a.Store.LogActivity(r.Context(), req.DomainID, "domain.verified", "Domain verified via async DNS check")
+	log.Printf("internal job: domain %s marked verified (idempotencyKey=%s)", req.DomainID, req.IdempotencyKey)
 	writeJSON(w, http.StatusOK, map[string]string{"status": "completed"})
 }

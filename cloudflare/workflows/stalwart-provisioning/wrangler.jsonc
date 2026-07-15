@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-stalwart-provisioning",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workflows": [
+    {
+      "name": "amelu-stalwart-provisioning",
+      "binding": "STALWART_PROVISIONING_WORKFLOW",
+      "class_name": "StalwartProvisioningWorkflow"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "development"
+  }
+  // Secrets (ORIGIN_BASE_URL, INTERNAL_JOBS_SHARED_SECRET) via
+  // `wrangler secret put` - see docs/cloudflare/SECRETS.md. This Workflow
+  // is design/scaffold only in this migration - see
+  // docs/cloudflare/WORKFLOWS.md "Stalwart provisioning: status" for what
+  // is and isn't wired up yet.
+}

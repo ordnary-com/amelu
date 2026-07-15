@@ -1,0 +1,16 @@
+{
+  "name": "amelu-workflows",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "typecheck:mailbox-expiration": "tsc --noEmit -p mailbox-expiration/tsconfig.json",
+    "typecheck:stalwart-provisioning": "tsc --noEmit -p stalwart-provisioning/tsconfig.json",
+    "typecheck": "npm run typecheck:mailbox-expiration && npm run typecheck:stalwart-provisioning"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260715.1",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.111.0"
+  }
+}

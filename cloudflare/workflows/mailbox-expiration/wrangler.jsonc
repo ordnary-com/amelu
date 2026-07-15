@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-mailbox-expiration-trigger",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Runs every 15 minutes, matching today's in-process ticker interval
+  // (see backend/cmd/api/main.go) - this Worker REPLACES that ticker only
+  // once EXPIRATION_SWEEP_MODE=external is set on the Go origin. Until
+  // then both can safely coexist (the Go endpoint is idempotent), but
+  // running both permanently just means duplicate sweeps for no benefit.
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+  "workflows": [
+    {
+      "name": "amelu-mailbox-expiration",
+      "binding": "MAILBOX_EXPIRATION_WORKFLOW",
+      "class_name": "MailboxExpirationWorkflow"
+    }
+  ],
+  "vars": {
+    "ENVIRONMENT": "development"
+  }
+  // Secrets (ORIGIN_BASE_URL, INTERNAL_JOBS_SHARED_SECRET) via
+  // `wrangler secret put` - see docs/cloudflare/SECRETS.md.
+}

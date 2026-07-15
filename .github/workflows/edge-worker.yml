@@ -1,0 +1,37 @@
+name: Edge Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloudflare/edge/**"
+      - ".github/workflows/edge-worker.yml"
+  pull_request:
+    paths:
+      - "cloudflare/edge/**"
+      - ".github/workflows/edge-worker.yml"
+
+concurrency:
+  group: edge-worker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare/edge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - run: npm install
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: test
+        run: npm test

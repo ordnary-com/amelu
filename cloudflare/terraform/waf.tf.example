@@ -1,0 +1,34 @@
+# Template only - see README.md. NOT APPLIED.
+# Starting WAF/rate-limiting posture for api.amelu.org and app.amelu.org.
+# Verify resource names/attributes against the current Cloudflare
+# Terraform provider docs before use - the WAF/ruleset resource shape has
+# changed across provider versions.
+# Reference: https://developers.cloudflare.com/waf/,
+# https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs
+
+resource "cloudflare_ruleset" "api_rate_limit" {
+  zone_id     = var.zone_id
+  name        = "amelu-api-rate-limit"
+  description = "Basic rate limiting for api.amelu.org - tune thresholds against real traffic before relying on this"
+  kind        = "zone"
+  phase       = "http_ratelimit"
+
+  rules = [
+    {
+      action      = "block"
+      expression  = "(http.host eq \"api.amelu.org\")"
+      description = "Rate limit api.amelu.org"
+      ratelimit = {
+        characteristics     = ["cf.colo.id", "ip.src"]
+        period              = 60
+        requests_per_period = 300 # placeholder - tune against MONITORING.md data, not guessed
+        mitigation_timeout  = 60
+      }
+    }
+  ]
+}
+
+# A managed WAF ruleset (Cloudflare Managed Ruleset) deployment is
+# recommended but intentionally not templated here - enabling it requires
+# reviewing which rule categories fit a JSON API (some managed rules assume
+# HTML/browser traffic) rather than blindly enabling everything.

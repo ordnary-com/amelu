@@ -1,0 +1,52 @@
+name: Queue Consumer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloudflare/queues/**"
+      - ".github/workflows/queue-consumer.yml"
+  pull_request:
+    paths:
+      - "cloudflare/queues/**"
+      - ".github/workflows/queue-consumer.yml"
+
+concurrency:
+  group: queue-consumer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare/queues/domain-verification
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - run: npm install
+
+      - name: typecheck
+        run: npm run typecheck
+
+      - name: test
+        run: npm test
+
+  typecheck-workflows:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cloudflare/workflows
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - run: npm install
+      - run: npm run typecheck

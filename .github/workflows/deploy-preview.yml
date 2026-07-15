@@ -1,0 +1,41 @@
+# Stub only. Documents the intended preview-deploy shape for the edge
+# Worker without actually executing it - see docs/cloudflare/DEPLOYMENT.md.
+# The `if: false` guard on the deploy job means this workflow never runs
+# its deploy step even when triggered, regardless of secrets configured.
+# Flip that guard only once a real preview-deploy strategy (e.g. a
+# per-PR Cloudflare API token scoped to preview-only resources) has been
+# reviewed - this is intentionally not wired up as part of this migration.
+name: Deploy Preview (stub)
+
+on:
+  pull_request:
+    paths:
+      - "cloudflare/edge/**"
+
+concurrency:
+  group: deploy-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    # Disabled on purpose - see the file header comment above. This job
+    # intentionally never runs its steps.
+    if: false
+    defaults:
+      run:
+        working-directory: cloudflare/edge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - run: npm install
+
+      - name: deploy preview
+        run: npx wrangler deploy --env preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

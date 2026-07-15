@@ -235,7 +235,13 @@ func main() {
 	mux.HandleFunc("POST /api/webhooks/stripe", app.StripeWebhook)
 
 	log.Printf("amelu api listening on %s", cfg.HTTPAddr)
-	if err := http.ListenAndServe(cfg.HTTPAddr, handlers.CORS(cfg.CORSOrigin, mux)); err != nil {
+	// EdgeAuth sits outermost: with ORIGIN_SHARED_SECRET set (production,
+	// once the Tunnel+Worker exist) it rejects anything that didn't pass
+	// through the edge Worker before CORS or any route even runs. Empty
+	// secret (today's default) makes it a no-op passthrough. See
+	// docs/cloudflare/TUNNEL.md and SECURITY.md.
+	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigin, mux))
+	if err := http.ListenAndServe(cfg.HTTPAddr, handler); err != nil {
 		log.Fatalf("serve: %v", err)
 	}
 }

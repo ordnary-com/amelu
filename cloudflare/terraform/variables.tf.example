@@ -1,0 +1,43 @@
+# Template only - see README.md. Not applied by any automation in this repo.
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID - not secret, but never hardcoded"
+  type        = string
+}
+
+variable "zone_id" {
+  description = "Zone ID for amelu.org, obtained after DASHBOARD_SETUP.md step 1"
+  type        = string
+}
+
+variable "mail_ip_1" {
+  description = "Primary mail server public IPv4 - placeholder, real value never committed"
+  type        = string
+}
+
+variable "mail_ip_2" {
+  type = string
+}
+
+variable "mail_ip_3" {
+  type = string
+}
+
+variable "mail_host_1" {
+  description = "Primary mail server hostname, e.g. mx1.amelu.org"
+  type        = string
+}
+
+variable "mail_host_2" {
+  type = string
+}
+
+variable "mail_host_3" {
+  type = string
+}
+
+variable "web_origin_ip" {
+  description = "Origin IP for the root amelu.org record, if not fully Pages/Workers-managed"
+  type        = string
+  default     = null
+}

@@ -1,0 +1,36 @@
+# Example Docker Compose deployment for the private origin tunnel(s).
+# Copy to docker-compose.yml, fill in the placeholders via a real .env file
+# (never committed), and run alongside the existing Go API + Postgres +
+# Stalwart containers/hosts. Two cloudflared replicas for HA - see
+# docs/cloudflare/TUNNEL.md "Multiple replicas".
+#
+# Reference: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/many-cfd-one-tunnel/
+
+services:
+  cloudflared-1:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./config.yml:/etc/cloudflared/config.yml:ro
+      - ${CF_TUNNEL_CREDENTIALS_FILE}:/etc/cloudflared/${CF_TUNNEL_ID}.json:ro
+    networks:
+      - amelu-internal
+
+  cloudflared-2:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./config.yml:/etc/cloudflared/config.yml:ro
+      - ${CF_TUNNEL_CREDENTIALS_FILE}:/etc/cloudflared/${CF_TUNNEL_ID}.json:ro
+    networks:
+      - amelu-internal
+
+networks:
+  amelu-internal:
+    # The Go API container must be reachable on this network at
+    # ORIGIN_LOCAL_ADDR (see config.yml.example) and must NOT publish any
+    # port to the host or a public network - that's the whole point of the
+    # tunnel replacing a public HTTP listener.
+    external: true

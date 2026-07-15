@@ -1,0 +1,31 @@
+# Example cloudflared config for the private Amelu origin tunnel.
+# Copy to config.yml alongside the tunnel credentials file - never commit
+# the real file (it references a real tunnel ID/credentials path).
+#
+# Reference: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/local-management/local-tunnel-configuration/
+
+tunnel: ${CF_TUNNEL_ID}
+credentials-file: /etc/cloudflared/${CF_TUNNEL_ID}.json
+
+# Only HTTP ingress for the Go API is defined here. SMTP/IMAP/POP3/
+# ManageSieve/MX traffic MUST NEVER be routed through this tunnel or any
+# Cloudflare HTTP proxy - those stay on direct, DNS-only records pointing
+# at the mail server's own public IP (see docs/cloudflare/DNS_AND_MAIL.md).
+# This tunnel exists solely to remove the Go API's public HTTP listener.
+ingress:
+  - hostname: ${TUNNEL_PUBLIC_HOSTNAME}
+    service: http://${ORIGIN_LOCAL_ADDR}
+    originRequest:
+      # The edge Worker is the only intended caller; this tunnel hostname
+      # itself should also be bound to a Cloudflare Access "service token"
+      # policy or an mTLS client certificate policy for defense in depth -
+      # see docs/cloudflare/TUNNEL.md "Locking the tunnel hostname down".
+      noTLSVerify: false
+      connectTimeout: 10s
+      keepAliveTimeout: 90s
+  - service: http_status:404
+
+# Run multiple `cloudflared` replicas (see docker-compose.yml.example and
+# systemd/) pointed at the same tunnel credentials for HA - Cloudflare
+# load-balances across all connected replicas automatically, no extra
+# config needed here.

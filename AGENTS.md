@@ -46,6 +46,15 @@ Needs `backend/.env` (copy `backend/.env.example`) and a reachable Postgres
 at `DATABASE_URL`. Requires Node 20+ (see `.nvmrc`) - Vite's rolldown build
 does not run on Node 18.
 
+## Production
+
+Deployed on Cloudflare: `app.amelu.org` (Pages) -> `api.amelu.org` (edge
+Worker) -> Cloudflare Tunnel -> Go API + Postgres (Docker on a Hetzner VPS).
+Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
+`docs/cloudflare/` for the full architecture/ops docs, and
+`docs/FRONTEND_DEPLOYS.md` for how to actually ship a frontend change
+(manual `wrangler pages deploy` today - no CI/CD deploy yet).
+
 ## Conventions worth knowing before editing
 
 - No comments explaining *what* code does - only *why*, when something is

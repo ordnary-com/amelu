@@ -6,6 +6,7 @@ package handlers
 import (
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/domainconnect"
+	"amelu/backend/internal/ordnaryauth"
 	"amelu/backend/internal/resend"
 	"amelu/backend/internal/stalwart"
 )
@@ -40,4 +41,10 @@ type App struct {
 	// around the route in cmd/api/main.go, same pattern as auth.Require for
 	// customer sessions.
 	InternalJobsSharedSecret string
+
+	// Ordnary is nil until ORDNARY_ISSUER/CLIENT_ID/REDIRECT_URI/
+	// COOKIE_SECRET are all set - "Login with Ordnary account" reports
+	// unavailable rather than failing startup, same convention as
+	// DomainConnect/Resend/Stripe above. See internal/ordnaryauth.
+	Ordnary *ordnaryauth.Config
 }

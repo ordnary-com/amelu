@@ -105,6 +105,15 @@ func (s *Store) GetCustomerBilling(ctx context.Context, customerID string) (*Cus
 	return b, nil
 }
 
+// SetCustomerPlanTier directly assigns a plan tier with no Stripe object
+// involved - used by the admin "change plan" action when the customer has
+// no live Stripe subscription yet (a comp/manual override), unlike
+// UpdateCustomerSubscriptionByCustomerID which always writes Stripe fields.
+func (s *Store) SetCustomerPlanTier(ctx context.Context, customerID, planTierID string) error {
+	_, err := s.conn.ExecContext(ctx, `UPDATE customers SET plan_tier_id = $1 WHERE id = $2`, planTierID, customerID)
+	return err
+}
+
 func (s *Store) SetCustomerStripeCustomerID(ctx context.Context, customerID, stripeCustomerID string) error {
 	_, err := s.conn.ExecContext(ctx, `UPDATE customers SET stripe_customer_id = $1 WHERE id = $2`, stripeCustomerID, customerID)
 	return err

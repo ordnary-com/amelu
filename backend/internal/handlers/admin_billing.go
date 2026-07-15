@@ -128,15 +128,24 @@ type adminUpdateSubscriptionRequest struct {
 }
 
 // AdminUpdateSubscription -> PATCH /internal/admin/customers/{id}/subscription.
-// Moves a customer to a different plan tier by swapping the Stripe
-// subscription's price to that plan's price for its CURRENT billing
-// interval (monthly/annual) - admins pick a plan, not a billing cadence.
+// Moves a customer to a different plan tier. If they already have a live
+// Stripe subscription, this swaps its price to the new plan's price for its
+// CURRENT billing interval (monthly/annual - admins pick a plan, not a
+// billing cadence) and prorates. If they don't (e.g. still on the free
+// plan), this is a direct DB override with no Stripe object involved - a
+// comp/manual upgrade, common for support cases - so an admin isn't forced
+// to send someone through Stripe Checkout just to hand them a plan.
 func (a *App) AdminUpdateSubscription(w http.ResponseWriter, r *http.Request, operator string) {
 	customerID := r.PathValue("id")
-	billing, ok := a.requireCustomerSubscription(w, r, customerID)
-	if !ok {
+	billing, err := a.Store.GetCustomerBilling(r.Context(), customerID)
+	if errors.Is(err, db.ErrNotFound) {
+		writeError(w, http.StatusNotFound, "customer not found")
+		return
+	} else if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load billing info")
 		return
 	}
+
 	var req adminUpdateSubscriptionRequest
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -148,6 +157,22 @@ func (a *App) AdminUpdateSubscription(w http.ResponseWriter, r *http.Request, op
 		return
 	} else if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load plan")
+		return
+	}
+
+	hasSubscription := billing.StripeSubscriptionID.Valid && billing.StripeSubscriptionID.String != ""
+	if !hasSubscription {
+		if err := a.Store.SetCustomerPlanTier(r.Context(), customerID, plan.ID); err != nil {
+			writeError(w, http.StatusInternalServerError, "could not update plan")
+			return
+		}
+		a.Store.LogAdminAction(r.Context(), "customer", customerID, operator, "subscription.plan_changed", "Plan set to "+plan.Name+" (no Stripe subscription - direct override)")
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+		return
+	}
+
+	if !a.StripeEnabled {
+		writeError(w, http.StatusServiceUnavailable, "billing is not available on this server")
 		return
 	}
 

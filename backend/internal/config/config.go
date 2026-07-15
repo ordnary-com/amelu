@@ -56,6 +56,13 @@ type Config struct {
 	// private Tunnel hostname. Empty means those endpoints refuse all
 	// requests (fail closed), not that they run unauthenticated.
 	InternalJobsSharedSecret string
+
+	// OriginSharedSecret authenticates every request (see
+	// handlers.EdgeAuth) as having passed through the edge Worker, not
+	// hit the Tunnel hostname directly. Empty disables the check (today's
+	// default - no Worker/Tunnel exists yet). Deliberately a separate
+	// secret from InternalJobsSharedSecret - see docs/cloudflare/SECRETS.md.
+	OriginSharedSecret string
 }
 
 func Load() (*Config, error) {
@@ -80,6 +87,7 @@ func Load() (*Config, error) {
 
 		ExpirationSweepMode:      getEnv("EXPIRATION_SWEEP_MODE", "ticker"),
 		InternalJobsSharedSecret: os.Getenv("INTERNAL_JOBS_SHARED_SECRET"),
+		OriginSharedSecret:       os.Getenv("ORIGIN_SHARED_SECRET"),
 	}
 
 	var missing []string

@@ -39,6 +39,23 @@ type Config struct {
 	// be set together for webhooks to be verifiable.
 	StripeSecretKey     string
 	StripeWebhookSecret string
+
+	// EXPIRATION_SWEEP_MODE is the Cloudflare-migration feature flag for the
+	// mailbox expiration job (see docs/cloudflare/WORKFLOWS.md). "ticker"
+	// (default) keeps today's in-process 15-minute goroutine. "external"
+	// disables that goroutine entirely and expects an external trigger
+	// (Cloudflare Worker Cron Trigger + Workflow) to call
+	// POST /internal/jobs/expiration-sweep instead. Rollback is just
+	// setting this back to "ticker" and restarting - no data migration
+	// either direction, since both paths call the same
+	// RunExpirationSweep/ListExpiredMailboxes logic.
+	ExpirationSweepMode string
+
+	// InternalJobsSharedSecret authenticates internal-only endpoints (see
+	// auth.RequireInternal) called by Cloudflare Workers/Workflows over the
+	// private Tunnel hostname. Empty means those endpoints refuse all
+	// requests (fail closed), not that they run unauthenticated.
+	InternalJobsSharedSecret string
 }
 
 func Load() (*Config, error) {
@@ -60,6 +77,9 @@ func Load() (*Config, error) {
 
 		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
+
+		ExpirationSweepMode:      getEnv("EXPIRATION_SWEEP_MODE", "ticker"),
+		InternalJobsSharedSecret: os.Getenv("INTERNAL_JOBS_SHARED_SECRET"),
 	}
 
 	var missing []string
@@ -77,6 +97,13 @@ func Load() (*Config, error) {
 	}
 	if len(missing) > 0 {
 		return nil, fmt.Errorf("missing required environment variables: %v", missing)
+	}
+
+	if cfg.ExpirationSweepMode != "ticker" && cfg.ExpirationSweepMode != "external" {
+		return nil, fmt.Errorf("EXPIRATION_SWEEP_MODE must be \"ticker\" or \"external\", got %q", cfg.ExpirationSweepMode)
+	}
+	if cfg.ExpirationSweepMode == "external" && cfg.InternalJobsSharedSecret == "" {
+		return nil, fmt.Errorf("EXPIRATION_SWEEP_MODE=external requires INTERNAL_JOBS_SHARED_SECRET to be set")
 	}
 
 	return cfg, nil

@@ -34,4 +34,10 @@ type App struct {
 	// incoming webhook payloads and is required whenever Stripe is enabled.
 	StripeEnabled       bool
 	StripeWebhookSecret string
+
+	// InternalJobsSharedSecret is only used for logging/diagnostics here -
+	// the actual verification happens in auth.RequireInternal, wrapped
+	// around the route in cmd/api/main.go, same pattern as auth.Require for
+	// customer sessions.
+	InternalJobsSharedSecret string
 }

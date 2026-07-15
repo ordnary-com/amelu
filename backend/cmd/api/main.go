@@ -130,6 +130,22 @@ func main() {
 	mux.HandleFunc("POST /internal/jobs/expiration-sweep", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.RunExpirationSweepJob))
 	mux.HandleFunc("POST /internal/jobs/domain-verified", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.DomainVerifiedJob))
 
+	// Cross-customer admin surface for Helm (ordnary-identity/apps/helm, via
+	// services/helm-api) - see internal/handlers/admin.go and
+	// internal/auth/admin.go. Same "never reachable from the public edge
+	// Worker" boundary as /internal/jobs/* above; the operator identity is
+	// bound into the HMAC signature so every action is attributable.
+	mux.HandleFunc("GET /internal/admin/customers", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminSearchCustomers))
+	mux.HandleFunc("GET /internal/admin/customers/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetCustomer))
+	mux.HandleFunc("GET /internal/admin/domains/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetDomain))
+	mux.HandleFunc("PATCH /internal/admin/domains/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateDomain))
+	mux.HandleFunc("POST /internal/admin/domains/{id}/verify", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminVerifyDomain))
+	mux.HandleFunc("DELETE /internal/admin/domains/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminDeleteDomain))
+	mux.HandleFunc("GET /internal/admin/mailboxes/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetMailbox))
+	mux.HandleFunc("PATCH /internal/admin/mailboxes/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateMailbox))
+	mux.HandleFunc("DELETE /internal/admin/mailboxes/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminDeleteMailbox))
+	mux.HandleFunc("POST /internal/admin/mailboxes/{id}/reset-password", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminResetMailboxPassword))
+
 	mux.HandleFunc("POST /api/signup", app.Signup)
 	mux.HandleFunc("POST /api/login", app.Login)
 	mux.HandleFunc("POST /api/logout", app.Logout)

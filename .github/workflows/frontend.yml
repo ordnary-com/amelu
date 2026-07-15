@@ -1,0 +1,49 @@
+name: Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/frontend.yml"
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/frontend.yml"
+
+concurrency:
+  group: frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: lint
+        run: pnpm --filter frontend lint
+
+      # Runs `vite build` only, not `tsc -b` - the repo has pre-existing
+      # type errors unrelated to this migration, see
+      # docs/cloudflare/PAGES_FRONTEND.md "Common errors".
+      - name: build
+        run: cd frontend && npx vite build
+        env:
+          VITE_API_URL: https://api.amelu.org

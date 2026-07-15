@@ -76,6 +76,12 @@ type Config struct {
 	OrdnaryClientSecret string
 	OrdnaryRedirectURI  string
 	OrdnaryCookieSecret string
+
+	// AdminSharedSecret authenticates cross-customer admin calls from Helm
+	// (ordnary-identity/apps/helm, via services/helm-api) - see
+	// internal/auth/admin.go. Empty disables the entire /internal/admin/*
+	// surface (fails closed), same convention as InternalJobsSharedSecret.
+	AdminSharedSecret string
 }
 
 func Load() (*Config, error) {
@@ -107,6 +113,8 @@ func Load() (*Config, error) {
 		OrdnaryClientSecret: os.Getenv("ORDNARY_CLIENT_SECRET"),
 		OrdnaryRedirectURI:  os.Getenv("ORDNARY_REDIRECT_URI"),
 		OrdnaryCookieSecret: os.Getenv("ORDNARY_COOKIE_SECRET"),
+
+		AdminSharedSecret: os.Getenv("AMELU_ADMIN_SHARED_SECRET"),
 	}
 
 	var missing []string

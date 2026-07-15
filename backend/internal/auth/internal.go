@@ -46,34 +46,36 @@ func RequireInternal(secret string, next http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, `{"error":"internal jobs are not configured"}`, http.StatusServiceUnavailable)
 			return
 		}
-
-		got := r.Header.Get(InternalAuthHeader)
-		ts, sig, ok := splitSignature(got)
-		if !ok {
+		if !VerifySignedHeader(secret, r.Header.Get(InternalAuthHeader), r.Method, r.URL.Path) {
 			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 			return
 		}
-
-		sec, err := strconv.ParseInt(ts, 10, 64)
-		if err != nil {
-			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-			return
-		}
-		at := time.Unix(sec, 0)
-		if d := time.Since(at); d > internalAuthSkew || d < -internalAuthSkew {
-			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-			return
-		}
-
-		want := SignInternalRequest(secret, r.Method, r.URL.Path, at)
-		_, wantSig, _ := splitSignature(want)
-		if !hmac.Equal([]byte(sig), []byte(wantSig)) {
-			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
-			return
-		}
-
 		next(w, r)
 	}
+}
+
+// VerifySignedHeader checks a "<timestamp>.<hex hmac>" header value against
+// the given secret/method/path, within the replay skew window. Shared by
+// RequireInternal (internal job routes, header X-Amelu-Internal-Signature)
+// and handlers.EdgeAuth (all routes, header X-Origin-Shared-Secret) - same
+// signing scheme, different header names and different secrets, so a
+// compromise of one doesn't imply the other.
+func VerifySignedHeader(secret, headerValue, method, path string) bool {
+	ts, sig, ok := splitSignature(headerValue)
+	if !ok {
+		return false
+	}
+	sec, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		return false
+	}
+	at := time.Unix(sec, 0)
+	if d := time.Since(at); d > internalAuthSkew || d < -internalAuthSkew {
+		return false
+	}
+	want := SignInternalRequest(secret, method, path, at)
+	_, wantSig, _ := splitSignature(want)
+	return hmac.Equal([]byte(sig), []byte(wantSig))
 }
 
 func splitSignature(v string) (ts, sig string, ok bool) {

@@ -54,6 +54,11 @@ export async function buildOriginRequest(
     // Required by the Workers runtime when forwarding a streaming body on
     // a Request constructed from another Request.
     duplex: hasBody ? "half" : undefined,
+    // fetch() defaults to following redirects itself, which would silently
+    // swallow the origin's 3xx (e.g. the OAuth login/callback redirects in
+    // internal/ordnaryauth) and return the followed response instead. A
+    // transparent proxy must pass redirects through untouched.
+    redirect: "manual",
   } as RequestInit);
 }
 

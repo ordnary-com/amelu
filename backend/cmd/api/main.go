@@ -114,6 +114,7 @@ func main() {
 	// the private Tunnel hostname - see docs/cloudflare/WORKFLOWS.md and
 	// SECURITY.md. Not a customer session endpoint.
 	mux.HandleFunc("POST /internal/jobs/expiration-sweep", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.RunExpirationSweepJob))
+	mux.HandleFunc("POST /internal/jobs/domain-verified", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.DomainVerifiedJob))
 
 	mux.HandleFunc("POST /api/signup", app.Signup)
 	mux.HandleFunc("POST /api/login", app.Login)

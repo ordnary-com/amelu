@@ -45,15 +45,25 @@ func (a *App) InviteMailboxPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := a.sendMailboxPasswordInvite(r, mailbox, domain, recipient); err != nil {
+		writeError(w, http.StatusBadGateway, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+// sendMailboxPasswordInvite is the shared core of InviteMailboxPassword
+// (customer-facing) and AdminResetMailboxPassword (Helm admin surface) -
+// generates a one-time token and emails the setup link, never handling a
+// plaintext password itself.
+func (a *App) sendMailboxPasswordInvite(r *http.Request, mailbox *db.Mailbox, domain *db.Domain, recipient string) error {
 	rawToken, tokenHash, err := auth.NewSessionToken()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "could not generate reset token")
-		return
+		return errors.New("could not generate reset token")
 	}
 	expiresAt := time.Now().Add(passwordResetTokenTTL)
 	if err := a.Store.CreatePasswordResetToken(r.Context(), mailbox.ID, tokenHash, expiresAt); err != nil {
-		writeError(w, http.StatusInternalServerError, "could not save reset token")
-		return
+		return errors.New("could not save reset token")
 	}
 
 	address := mailbox.LocalPart + "@" + domain.Name
@@ -69,12 +79,11 @@ func (a *App) InviteMailboxPassword(w http.ResponseWriter, r *http.Request) {
 		"If you weren't expecting this, you can safely ignore this email."
 
 	if _, err := a.Resend.SendEmail(r.Context(), recipient, subject, html, text); err != nil {
-		writeError(w, http.StatusBadGateway, "could not send invite email: "+err.Error())
-		return
+		return errors.New("could not send invite email: " + err.Error())
 	}
 
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.password_invite_sent", "Sent password setup invite for "+address+" to "+recipient)
-	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	return nil
 }
 
 // GetPasswordResetToken is a public (unauthenticated) endpoint - the

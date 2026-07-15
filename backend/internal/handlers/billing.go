@@ -253,6 +253,11 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	params.AddMetadata("customerId", cust.ID)
 	params.AddMetadata("planTierId", plan.ID)
 	params.AddMetadata("interval", req.Interval)
+	// stripe-go v81 doesn't have a typed field for this yet - branding_settings
+	// is newer than the SDK's struct coverage - so it goes through AddExtra.
+	// Only overrides the name shown at the top of the Checkout page itself;
+	// receipts/invoices/terms still use the account's actual business name.
+	params.AddExtra("branding_settings[display_name]", "Amelu Internet Services")
 	params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{}
 	params.SubscriptionData.AddMetadata("customerId", cust.ID)
 	params.SubscriptionData.AddMetadata("planTierId", plan.ID)

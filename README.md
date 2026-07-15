@@ -7,6 +7,7 @@
 [![Go](https://github.com/ordnary-com/amelu/actions/workflows/go.yml/badge.svg)](https://github.com/ordnary-com/amelu/actions/workflows/go.yml)
 [![Frontend](https://github.com/ordnary-com/amelu/actions/workflows/frontend.yml/badge.svg)](https://github.com/ordnary-com/amelu/actions/workflows/frontend.yml)
 [![Edge Worker](https://github.com/ordnary-com/amelu/actions/workflows/edge-worker.yml/badge.svg)](https://github.com/ordnary-com/amelu/actions/workflows/edge-worker.yml)
+[![License](https://img.shields.io/badge/license-source--available-blue)](LICENSE.md)
 
 [amelu.org](https://amelu.org) · [app.amelu.org](https://app.amelu.org) · [Report an issue](https://github.com/ordnary-com/amelu/issues)
 
@@ -135,8 +136,12 @@ configuration (TLS, WAF, rate limiting, secret rotation).
 ## Contributing
 
 Issues and pull requests are welcome. Before making structural changes, skim `AGENTS.md` for this repo's
-conventions (no framework on the backend, no ORM, mirror existing patterns before inventing new ones).
+conventions (no framework on the backend, no ORM, mirror existing patterns before inventing new ones). By
+submitting a contribution you agree to the terms in [`LICENSE.md`](LICENSE.md#4-contributions).
 
 ## License
 
-License TBD.
+Amelu is **source-available**, not open source in the OSI sense: the code is public so you can read it,
+verify it, and contribute back, but Ordnary retains all commercial and hosting rights. In short, you may not
+self-host Amelu, use the code in your own projects, or offer it as a service under any name. See
+[`LICENSE.md`](LICENSE.md) for the full terms.

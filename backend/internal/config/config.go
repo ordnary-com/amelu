@@ -63,6 +63,19 @@ type Config struct {
 	// default - no Worker/Tunnel exists yet). Deliberately a separate
 	// secret from InternalJobsSharedSecret - see docs/cloudflare/SECRETS.md.
 	OriginSharedSecret string
+
+	// "Login with Ordnary account" (see internal/ordnaryauth) is optional
+	// in the same vein as Domain Connect/Resend/Stripe above: until all of
+	// OrdnaryIssuer/ClientID/RedirectURI/OrdnaryCookieSecret are set, the
+	// feature reports unavailable rather than failing startup.
+	// OrdnaryClientSecret is only required for a confidential client - the
+	// client can be registered as public/PKCE-only, matching how nolan/loom
+	// are configured (see ordnary-workspace apps/nolan/.env.example).
+	OrdnaryIssuer       string
+	OrdnaryClientID     string
+	OrdnaryClientSecret string
+	OrdnaryRedirectURI  string
+	OrdnaryCookieSecret string
 }
 
 func Load() (*Config, error) {
@@ -88,6 +101,12 @@ func Load() (*Config, error) {
 		ExpirationSweepMode:      getEnv("EXPIRATION_SWEEP_MODE", "ticker"),
 		InternalJobsSharedSecret: os.Getenv("INTERNAL_JOBS_SHARED_SECRET"),
 		OriginSharedSecret:       os.Getenv("ORIGIN_SHARED_SECRET"),
+
+		OrdnaryIssuer:       os.Getenv("ORDNARY_ISSUER"),
+		OrdnaryClientID:     os.Getenv("ORDNARY_CLIENT_ID"),
+		OrdnaryClientSecret: os.Getenv("ORDNARY_CLIENT_SECRET"),
+		OrdnaryRedirectURI:  os.Getenv("ORDNARY_REDIRECT_URI"),
+		OrdnaryCookieSecret: os.Getenv("ORDNARY_COOKIE_SECRET"),
 	}
 
 	var missing []string

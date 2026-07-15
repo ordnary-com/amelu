@@ -12,6 +12,7 @@ import (
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/domainconnect"
 	"amelu/backend/internal/handlers"
+	"amelu/backend/internal/ordnaryauth"
 	"amelu/backend/internal/resend"
 	"amelu/backend/internal/stalwart"
 
@@ -74,6 +75,19 @@ func main() {
 		log.Printf("resend: RESEND_API_KEY not set, password reset invite emails will report unavailable")
 	}
 
+	if cfg.OrdnaryIssuer != "" && cfg.OrdnaryClientID != "" && cfg.OrdnaryRedirectURI != "" && cfg.OrdnaryCookieSecret != "" {
+		app.Ordnary = &ordnaryauth.Config{
+			Issuer:       cfg.OrdnaryIssuer,
+			ClientID:     cfg.OrdnaryClientID,
+			ClientSecret: cfg.OrdnaryClientSecret,
+			RedirectURI:  cfg.OrdnaryRedirectURI,
+			CookieSecret: cfg.OrdnaryCookieSecret,
+			Production:   app.CookieSecure,
+		}
+	} else {
+		log.Printf("ordnary auth: ORDNARY_ISSUER/CLIENT_ID/REDIRECT_URI/COOKIE_SECRET not fully set, \"Login with Ordnary account\" will report unavailable")
+	}
+
 	if cfg.StripeSecretKey != "" && cfg.StripeWebhookSecret != "" {
 		stripe.Key = cfg.StripeSecretKey
 		app.StripeEnabled = true
@@ -120,6 +134,12 @@ func main() {
 	mux.HandleFunc("POST /api/login", app.Login)
 	mux.HandleFunc("POST /api/logout", app.Logout)
 	mux.HandleFunc("GET /api/me", auth.Require(app.Store, app.Me))
+
+	// "Login with Ordnary account" - see internal/ordnaryauth. Full-page
+	// GET navigations (not fetch/XHR), same as the password login above but
+	// via a redirect round-trip instead of a JSON POST.
+	mux.HandleFunc("GET /api/auth/ordnary/login", app.OrdnaryLogin)
+	mux.HandleFunc("GET /api/auth/ordnary/callback", app.OrdnaryCallback)
 
 	mux.HandleFunc("GET /api/account", auth.Require(app.Store, app.Me))
 	mux.HandleFunc("PATCH /api/account/name", auth.Require(app.Store, app.UpdateAccountName))

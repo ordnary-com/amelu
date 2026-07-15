@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"amelu/backend/internal/auth"
 )
@@ -23,9 +24,16 @@ import (
 // answered by the edge Worker itself and should never reach the origin at
 // all in production, but this keeps local dev (frontend hitting :8081
 // directly, no Worker in the loop) working unchanged.
+//
+// /internal/ routes are exempt: those are called directly by Cloudflare
+// Queues/Workflows over the Tunnel, never proxied through the edge Worker,
+// and already carry their own HMAC auth (auth.RequireInternal, a distinct
+// header and secret - see INTERNAL_JOBS_SHARED_SECRET). Requiring the edge
+// Worker's signature there too would make internal job routes unreachable
+// by design, not more secure.
 func EdgeAuth(secret string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if secret == "" || r.Method == http.MethodOptions {
+		if secret == "" || r.Method == http.MethodOptions || strings.HasPrefix(r.URL.Path, "/internal/") {
 			next.ServeHTTP(w, r)
 			return
 		}

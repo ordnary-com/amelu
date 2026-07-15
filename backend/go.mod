@@ -22,6 +22,4 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 )
 
-replace github.com/migadu/go-sieve => /Users/stijnjakobs/Projects/go-sieve
-
 replace github.com/emersion/go-message => github.com/migadu/go-message v0.0.0-20260705121217-8814c0e56d68

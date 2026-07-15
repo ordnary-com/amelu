@@ -1,0 +1,104 @@
+# Template only - see README.md. NOT APPLIED. Mirrors the record table in
+# ../../docs/cloudflare/DNS_AND_MAIL.md - read that document before touching
+# this file for real. Every mail-related resource below sets `proxied =
+# false` explicitly and deliberately - never remove that line for a mail
+# record, even to "simplify" the config.
+
+terraform {
+  required_providers {
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.0" # verify against current Terraform Registry docs before use
+    }
+  }
+}
+
+# --- Web-facing records: proxied ---
+
+resource "cloudflare_dns_record" "root" {
+  zone_id = var.zone_id
+  name    = "amelu.org"
+  type    = "A"
+  content = var.web_origin_ip
+  proxied = true
+  ttl     = 1 # automatic, only valid when proxied
+}
+
+# app.amelu.org and api.amelu.org are intentionally NOT declared here -
+# they're created automatically by Pages/Workers custom domain attachment
+# (see PAGES_FRONTEND.md, EDGE_WORKER.md) and managing them via Terraform
+# in parallel risks fighting that automation. If migrating to
+# Terraform-managed custom domains later, import the existing resources
+# first rather than creating new ones.
+
+resource "cloudflare_dns_record" "status" {
+  zone_id = var.zone_id
+  name    = "status.amelu.org"
+  type    = "CNAME"
+  content = "your-status-page-host.example" # replace with real status page target
+  proxied = true
+  ttl     = 1
+}
+
+# --- Mail-facing records: DNS-only (proxied = false), never change this ---
+
+resource "cloudflare_dns_record" "mx1" {
+  zone_id = var.zone_id
+  name    = "mx1.amelu.org"
+  type    = "A"
+  content = var.mail_ip_1
+  proxied = false
+  ttl     = 3600
+}
+
+resource "cloudflare_dns_record" "mx2" {
+  zone_id = var.zone_id
+  name    = "mx2.amelu.org"
+  type    = "A"
+  content = var.mail_ip_2
+  proxied = false
+  ttl     = 3600
+}
+
+resource "cloudflare_dns_record" "mx3" {
+  zone_id = var.zone_id
+  name    = "mx3.amelu.org"
+  type    = "A"
+  content = var.mail_ip_3
+  proxied = false
+  ttl     = 3600
+}
+
+resource "cloudflare_dns_record" "mx_amelu_org" {
+  zone_id  = var.zone_id
+  name     = "amelu.org"
+  type     = "MX"
+  content  = var.mail_host_1
+  priority = 10
+  proxied  = false
+  ttl      = 3600
+}
+
+resource "cloudflare_dns_record" "spf" {
+  zone_id = var.zone_id
+  name    = "amelu.org"
+  type    = "TXT"
+  content = "v=spf1 mx a:${var.mail_host_1} a:${var.mail_host_2} a:${var.mail_host_3} -all"
+  proxied = false
+  ttl     = 3600
+}
+
+resource "cloudflare_dns_record" "dmarc" {
+  zone_id = var.zone_id
+  name    = "_dmarc.amelu.org"
+  type    = "TXT"
+  content = "v=DMARC1; p=quarantine; rua=mailto:dmarc@amelu.org"
+  proxied = false
+  ttl     = 3600
+}
+
+# DKIM, MTA-STS, TLS-RPT, autodiscover/autoconfig, and CAA records follow
+# the same DNS-only pattern - omitted here for brevity, see the full table
+# in docs/cloudflare/DNS_AND_MAIL.md and add the equivalent
+# cloudflare_dns_record resources with proxied = false before applying
+# this for real.

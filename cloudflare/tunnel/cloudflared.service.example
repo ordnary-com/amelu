@@ -1,0 +1,31 @@
+# Example systemd unit for running cloudflared directly on the origin host
+# (alternative to docker-compose.yml.example). Install as
+# /etc/systemd/system/cloudflared.service, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now cloudflared
+#
+# Run this unit on 2+ hosts/instances pointed at the same tunnel
+# credentials for HA (see docs/cloudflare/TUNNEL.md "Multiple replicas") -
+# each is an independent replica, no leader election needed.
+#
+# Reference: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/deploy-tunnels/deployment-guides/
+
+[Unit]
+Description=cloudflared tunnel for Amelu private origin
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/cloudflared tunnel --config /etc/cloudflared/config.yml run
+Restart=on-failure
+RestartSec=5
+User=cloudflared
+Group=cloudflared
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/etc/cloudflared
+
+[Install]
+WantedBy=multi-user.target

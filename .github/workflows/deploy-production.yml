@@ -1,0 +1,84 @@
+# Manual, approval-gated production deploy for the edge Worker. Never runs
+# automatically on a push - only `workflow_dispatch`, and the `production`
+# GitHub Environment should have required reviewers configured (repo
+# Settings -> Environments -> production -> Required reviewers) so this
+# cannot proceed without a human approval even after being triggered.
+# See docs/cloudflare/DEPLOYMENT.md.
+name: Deploy Production (manual, gated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm a production deploy of the edge Worker'
+        required: true
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  migration-checks:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'deploy' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+
+      - name: backend build/vet/test
+        working-directory: backend
+        run: |
+          go build ./...
+          go vet ./...
+          go test ./...
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: edge worker typecheck/test
+        working-directory: cloudflare/edge
+        run: |
+          npm install
+          npm run typecheck
+          npm test
+
+  deploy:
+    needs: migration-checks
+    runs-on: ubuntu-latest
+    # Requires the `production` GitHub Environment to exist with required
+    # reviewers configured - this is what actually gates the deploy beyond
+    # the workflow_dispatch confirmation input above.
+    environment: production
+    defaults:
+      run:
+        working-directory: cloudflare/edge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - run: npm install
+
+      # wrangler secret put reads from stdin/env, never a bare CLI arg, so
+      # secret values never appear in the Actions log - see
+      # docs/cloudflare/SECRETS.md "No secrets in logs".
+      - name: set Worker secrets
+        run: |
+          echo "${{ secrets.ORIGIN_BASE_URL }}" | npx wrangler secret put ORIGIN_BASE_URL --env production
+          echo "${{ secrets.ORIGIN_SHARED_SECRET }}" | npx wrangler secret put ORIGIN_SHARED_SECRET --env production
+          echo "${{ secrets.ALLOWED_ORIGIN }}" | npx wrangler secret put ALLOWED_ORIGIN --env production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: deploy
+        run: npx wrangler deploy --env production
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

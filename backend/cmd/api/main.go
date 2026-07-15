@@ -47,10 +47,11 @@ func main() {
 	}
 
 	app := &handlers.App{
-		Store:          db.NewStore(conn),
-		Stalwart:       stalwart.NewClient(cfg.StalwartBaseURL, cfg.StalwartUser, cfg.StalwartPassword),
-		CookieSecure:   strings.HasPrefix(cfg.CORSOrigin, "https://"),
-		FrontendOrigin: cfg.CORSOrigin,
+		Store:                    db.NewStore(conn),
+		Stalwart:                 stalwart.NewClient(cfg.StalwartBaseURL, cfg.StalwartUser, cfg.StalwartPassword),
+		CookieSecure:             strings.HasPrefix(cfg.CORSOrigin, "https://"),
+		FrontendOrigin:           cfg.CORSOrigin,
+		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
 	}
 
 	if cfg.DomainConnectPrivateKey != "" {
@@ -84,16 +85,35 @@ func main() {
 	// Mailbox expiration has no native Stalwart mechanism - this ticker is
 	// Amelu's own stand-in, sweeping for due expirations every 15 minutes.
 	// Wrapped in its own recover so a panic here can't take down the whole
-	// API process.
-	go func() {
-		ticker := time.NewTicker(15 * time.Minute)
-		defer ticker.Stop()
-		for range ticker.C {
-			runExpirationSweepSafely(app)
-		}
-	}()
+	// API process. EXPIRATION_SWEEP_MODE=external disables this goroutine
+	// in favor of an outside trigger calling
+	// POST /internal/jobs/expiration-sweep instead (see
+	// docs/cloudflare/WORKFLOWS.md) - config.Load already rejects any other
+	// value, so this is the only place that needs to branch on it.
+	if cfg.ExpirationSweepMode == "ticker" {
+		go func() {
+			ticker := time.NewTicker(15 * time.Minute)
+			defer ticker.Stop()
+			for range ticker.C {
+				runExpirationSweepSafely(app)
+			}
+		}()
+	} else {
+		log.Printf("expiration sweep: in-process ticker disabled (EXPIRATION_SWEEP_MODE=external), expecting external trigger")
+	}
 
 	mux := http.NewServeMux()
+
+	// Public, unauthenticated, no DB/Stalwart dependency - polled by the
+	// Cloudflare Tunnel connector and the edge Worker's origin health
+	// check. See docs/cloudflare/TUNNEL.md and EDGE_WORKER.md.
+	mux.HandleFunc("GET /api/healthz", app.Healthz)
+
+	// Internal-only: HMAC-signed shared secret (auth.RequireInternal), and
+	// must never be routed to by the public edge Worker or exposed outside
+	// the private Tunnel hostname - see docs/cloudflare/WORKFLOWS.md and
+	// SECURITY.md. Not a customer session endpoint.
+	mux.HandleFunc("POST /internal/jobs/expiration-sweep", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.RunExpirationSweepJob))
 
 	mux.HandleFunc("POST /api/signup", app.Signup)
 	mux.HandleFunc("POST /api/login", app.Login)

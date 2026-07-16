@@ -19,3 +19,26 @@ func requireCustomer(w http.ResponseWriter, r *http.Request) (*db.Customer, bool
 	}
 	return customer, true
 }
+
+// requireOrgActor is requireCustomer plus the acting customer's role in
+// their own organization - the starting point for every team/domain/
+// mailbox/billing handler that needs an authz.Can* check. A customer with
+// no organization_members row (shouldn't happen outside a data bug, since
+// signup and invitation acceptance always create one) gets a 500 rather
+// than silently being treated as any particular role.
+func (a *App) requireOrgActor(w http.ResponseWriter, r *http.Request) (customer *db.Customer, role string, ok bool) {
+	customer, ok = requireCustomer(w, r)
+	if !ok {
+		return nil, "", false
+	}
+	if !customer.OrganizationID.Valid {
+		writeError(w, http.StatusInternalServerError, "account has no organization")
+		return nil, "", false
+	}
+	role, err := a.Store.GetMemberRole(r.Context(), customer.OrganizationID.String, customer.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not resolve organization role")
+		return nil, "", false
+	}
+	return customer, role, true
+}

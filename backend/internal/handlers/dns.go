@@ -23,7 +23,7 @@ func (a *App) GetDomainDNS(w http.ResponseWriter, r *http.Request) {
 	}
 	domainID := r.PathValue("id")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return
@@ -76,7 +76,7 @@ func (a *App) GetDomainBindFile(w http.ResponseWriter, r *http.Request) {
 	}
 	domainID := r.PathValue("id")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return

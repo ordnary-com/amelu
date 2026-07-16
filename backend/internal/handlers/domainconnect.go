@@ -26,7 +26,7 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 	}
 	domainID := r.PathValue("id")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if err != nil {
 		if err == db.ErrNotFound {
 			writeError(w, http.StatusNotFound, "domain not found")

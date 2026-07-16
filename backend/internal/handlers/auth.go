@@ -36,6 +36,7 @@ type profileResponse struct {
 	PlanTierName     string  `json:"planTierName"`
 	OrganizationID   string  `json:"organizationId"`
 	OrganizationName string  `json:"organizationName"`
+	Role             string  `json:"role"`
 	LastSignInAt     *string `json:"lastSignInAt,omitempty"`
 }
 
@@ -51,6 +52,7 @@ func toProfileResponse(p *db.CustomerProfile) profileResponse {
 		PlanTierName:     p.PlanTierName,
 		OrganizationID:   p.OrganizationID,
 		OrganizationName: p.OrganizationName,
+		Role:             p.Role,
 	}
 	if p.LastSignInAt.Valid {
 		formatted := p.LastSignInAt.Time.Format(http.TimeFormat)
@@ -130,6 +132,10 @@ func (a *App) Signup(w http.ResponseWriter, r *http.Request) {
 
 	customer, err := a.Store.CreateCustomer(r.Context(), req.Email, req.Name, hash, organization.ID, req.FirstName, req.LastName, req.Username)
 	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not create account")
+		return
+	}
+	if err := a.Store.AddOrganizationMember(r.Context(), organization.ID, customer.ID, db.RoleOwner); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create account")
 		return
 	}

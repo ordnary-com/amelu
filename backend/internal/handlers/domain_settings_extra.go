@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 	"strings"
+
+	"amelu/backend/internal/authz"
 )
 
 // --- recent activity ---
@@ -19,7 +21,7 @@ func (a *App) GetActivity(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -49,11 +51,15 @@ type updateDomainNotesRequest struct {
 }
 
 func (a *App) UpdateDomainNotes(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -78,11 +84,15 @@ type updateDomainListingRequest struct {
 }
 
 func (a *App) UpdateDomainListing(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -112,11 +122,15 @@ type transferDomainRequest struct {
 // Stalwart aren't scoped to an Amelu customer at all, so there's nothing to
 // change on the mail cluster side.
 func (a *App) TransferDomain(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanDeleteOrTransferDomain(role) {
+		writeError(w, http.StatusForbidden, "only the organization owner can transfer a domain")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -147,5 +161,7 @@ func (a *App) TransferDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "domain.transferred", "Ownership transferred to "+email)
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"domain.transferred", "domain", domain.ID, domain.Name, map[string]any{"newOwnerEmail": email}, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }

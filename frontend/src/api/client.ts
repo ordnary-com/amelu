@@ -33,6 +33,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export type OrganizationRole = "owner" | "admin" | "helpdesk" | "billing" | "read_only";
+
 export interface Customer {
   id: string;
   email: string;
@@ -44,7 +46,50 @@ export interface Customer {
   planTierName: string;
   organizationId: string;
   organizationName: string;
+  role: OrganizationRole;
   lastSignInAt?: string;
+}
+
+export interface Member {
+  id: string;
+  email: string;
+  name: string;
+  role: OrganizationRole;
+  createdAt: string;
+  isSelf: boolean;
+}
+
+export interface Invitation {
+  id: string;
+  email: string;
+  role: OrganizationRole;
+  createdAt: string;
+  expiresAt: string;
+  expired: boolean;
+}
+
+export interface CreateInvitationResult extends Invitation {
+  emailSent: boolean;
+  devInviteUrl?: string;
+}
+
+export interface InvitationDetails {
+  valid: boolean;
+  email?: string;
+  role?: OrganizationRole;
+  organizationName?: string;
+  existingAccount?: boolean;
+}
+
+export interface AuditEntry {
+  id: string;
+  actorEmail: string;
+  action: string;
+  objectType: string;
+  objectId?: string;
+  objectLabel?: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
 }
 
 export interface Domain {
@@ -586,4 +631,43 @@ export const api = {
     request<{ url: string }>("/api/billing/portal", { method: "POST", body: JSON.stringify({ flow }) }),
 
   listInvoices: () => request<Invoice[]>("/api/billing/invoices"),
+
+  listOrganizationMembers: () => request<Member[]>("/api/organization/members"),
+
+  updateMemberRole: (id: string, role: OrganizationRole) =>
+    request<{ ok: boolean }>(`/api/organization/members/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+
+  removeMember: (id: string) =>
+    request<{ ok: boolean }>(`/api/organization/members/${id}`, { method: "DELETE" }),
+
+  listOrganizationInvitations: () => request<Invitation[]>("/api/organization/invitations"),
+
+  createInvitation: (email: string, role: OrganizationRole) =>
+    request<CreateInvitationResult>("/api/organization/invitations", {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }),
+
+  revokeInvitation: (id: string) =>
+    request<{ ok: boolean }>(`/api/organization/invitations/${id}`, { method: "DELETE" }),
+
+  listOrganizationAudit: (before?: string) =>
+    request<AuditEntry[]>(`/api/organization/audit${before ? `?before=${encodeURIComponent(before)}` : ""}`),
+
+  getInvitation: (token: string) => request<InvitationDetails>(`/api/invitations/${token}`),
+
+  acceptInvitation: (
+    token: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    username: string,
+  ) =>
+    request<Customer>(`/api/invitations/${token}/accept`, {
+      method: "POST",
+      body: JSON.stringify({ password, firstName, lastName, username }),
+    }),
 };

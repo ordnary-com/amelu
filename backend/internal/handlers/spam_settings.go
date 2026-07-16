@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 	"strings"
+
+	"amelu/backend/internal/authz"
 )
 
 // --- overview ---
@@ -20,7 +22,7 @@ func (a *App) GetSpamOverview(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -47,7 +49,7 @@ func (a *App) GetSpamSubjectSettings(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -58,11 +60,15 @@ func (a *App) GetSpamSubjectSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateSpamSubjectSettings(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -100,7 +106,7 @@ func (a *App) GetSpamSenderLists(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -111,11 +117,15 @@ func (a *App) GetSpamSenderLists(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateSpamSenderLists(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -152,7 +162,7 @@ func (a *App) GetSpamRecipientDenylist(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -160,11 +170,15 @@ func (a *App) GetSpamRecipientDenylist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateSpamRecipientDenylist(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}

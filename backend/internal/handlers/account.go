@@ -193,6 +193,23 @@ func (a *App) TerminateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Deleting the account also destroys every domain it personally
+	// created in Stalwart (below) - safe only when this customer is the
+	// organization's sole member. With teammates present, self-termination
+	// must go through team removal instead (see RemoveMember), which
+	// reassigns domains to another owner rather than destroying them.
+	if customer.OrganizationID.Valid {
+		members, err := a.Store.ListOrganizationMembers(r.Context(), customer.OrganizationID.String)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "could not check organization membership")
+			return
+		}
+		if len(members) > 1 {
+			writeError(w, http.StatusConflict, "you're part of a team - have another owner or admin remove you, or transfer ownership, before deleting your account")
+			return
+		}
+	}
+
 	domains, err := a.Store.ListDomains(r.Context(), customer.ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not list domains")

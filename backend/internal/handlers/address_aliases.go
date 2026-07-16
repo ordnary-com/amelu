@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 )
 
@@ -29,7 +30,7 @@ func (a *App) ListAddressAliases(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -81,11 +82,15 @@ type createAddressAliasResult struct {
 // caller can surface "already claimed by another mailbox" instead of
 // silently pretending the fan-out worked.
 func (a *App) CreateAddressAlias(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -147,14 +152,18 @@ func (a *App) findMailboxByLocalPart(ctx context.Context, domainID, localPart st
 // it's attached to and its index in that mailbox's aliases list - see
 // ListAddressAliases) from Stalwart.
 func (a *App) DeleteAddressAlias(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
 		return
 	}
 	mailboxID := r.PathValue("mailboxId")
 	index := r.PathValue("index")
 
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, mailboxID)
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, mailboxID)
 	if !ok {
 		return
 	}
@@ -175,7 +184,7 @@ func (a *App) ExportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -214,11 +223,15 @@ type importAliasResult struct {
 // independently - one failure (no such mailbox, alias already claimed)
 // doesn't abort the rest.
 func (a *App) ImportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"amelu/backend/internal/auth"
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 )
 
@@ -18,11 +19,15 @@ const passwordResetTokenTTL = 24 * time.Hour
 // own invite). The recipient sets their own password without the admin
 // ever seeing or choosing it.
 func (a *App) InviteMailboxPassword(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
+		return
+	}
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -49,6 +54,8 @@ func (a *App) InviteMailboxPassword(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, err.Error())
 		return
 	}
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"mailbox.password_reset", "mailbox", mailbox.ID, mailbox.LocalPart+"@"+domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 

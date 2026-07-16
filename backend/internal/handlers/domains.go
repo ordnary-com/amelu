@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/stalwart"
 )
@@ -54,8 +55,12 @@ type createDomainRequest struct {
 // customer's own responsibility — see GetDomainDNS for the records they
 // need to add at their registrar and live verification of what's published.
 func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
 		return
 	}
 
@@ -70,12 +75,17 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	maxDomains, _, err := a.Store.GetPlanTier(r.Context(), customer.PlanTierID)
+	planTierID, err := a.Store.GetOrganizationPlanTierID(r.Context(), customer.OrganizationID.String)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not check plan limits")
 		return
 	}
-	count, err := a.Store.CountDomains(r.Context(), customer.ID)
+	maxDomains, _, err := a.Store.GetPlanTier(r.Context(), planTierID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not check plan limits")
+		return
+	}
+	count, err := a.Store.CountDomainsForOrganization(r.Context(), customer.OrganizationID.String)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not check plan limits")
 		return
@@ -98,8 +108,10 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 	}
 	a.Store.UpdateDomainStatus(r.Context(), domain.ID, "dns_pending", "")
 	a.Store.LogActivity(r.Context(), domain.ID, "domain.created", "Domain "+name+" created")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"domain.created", "domain", domain.ID, name, nil, requestIP(r))
 
-	updated, err := a.Store.GetDomain(r.Context(), customer.ID, domain.ID)
+	updated, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domain.ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "domain created but could not reload status")
 		return
@@ -113,7 +125,7 @@ func (a *App) ListDomains(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	domains, err := a.Store.ListDomains(r.Context(), customer.ID)
+	domains, err := a.Store.ListDomainsForOrganization(r.Context(), customer.OrganizationID.String)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not list domains")
 		return
@@ -127,13 +139,17 @@ func (a *App) ListDomains(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteDomain(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanDeleteOrTransferDomain(role) {
+		writeError(w, http.StatusForbidden, "only the organization owner can delete a domain")
 		return
 	}
 	domainID := r.PathValue("id")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return
@@ -147,10 +163,12 @@ func (a *App) DeleteDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.Store.DeleteDomain(r.Context(), customer.ID, domainID); err != nil {
+	if err := a.Store.DeleteDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID); err != nil {
 		writeError(w, http.StatusInternalServerError, "domain removed from mail cluster but could not update records")
 		return
 	}
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"domain.deleted", "domain", domainID, domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 

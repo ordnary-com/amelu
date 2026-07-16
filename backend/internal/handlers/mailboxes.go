@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/stalwart"
 )
@@ -58,13 +59,13 @@ func errStatus(err error) int {
 // createMailbox creates one mailbox end to end (plan limit check, Stalwart,
 // then our own DB), shared by the single-mailbox create handler and CSV
 // import so the rules can't drift between the two paths.
-func (a *App) createMailbox(ctx context.Context, customer *db.Customer, domain *db.Domain, rawLocalPart, displayName, password string) (*db.Mailbox, string, error) {
+func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.Domain, rawLocalPart, displayName, password string) (*db.Mailbox, string, error) {
 	localPart := strings.ToLower(strings.TrimSpace(rawLocalPart))
 	if localPart == "" {
 		return nil, "", &httpError{http.StatusBadRequest, "localPart is required"}
 	}
 
-	_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, customer.PlanTierID)
+	_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, planTierID)
 	if err != nil {
 		return nil, "", &httpError{http.StatusInternalServerError, "could not check plan limits"}
 	}
@@ -157,13 +158,17 @@ type createMailboxResponse struct {
 }
 
 func (a *App) CreateMailbox(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
 		return
 	}
 	domainID := r.PathValue("domainId")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return
@@ -178,12 +183,19 @@ func (a *App) CreateMailbox(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mailbox, generatedPassword, err := a.createMailbox(r.Context(), customer, domain, req.LocalPart, req.DisplayName, req.Password)
+	planTierID, err := a.Store.GetOrganizationPlanTierID(r.Context(), customer.OrganizationID.String)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not check plan limits")
+		return
+	}
+	mailbox, generatedPassword, err := a.createMailbox(r.Context(), planTierID, domain, req.LocalPart, req.DisplayName, req.Password)
 	if err != nil {
 		writeError(w, errStatus(err), err.Error())
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.created", "Mailbox "+mailbox.LocalPart+"@"+domain.Name+" created")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"mailbox.created", "mailbox", mailbox.ID, mailbox.LocalPart+"@"+domain.Name, nil, requestIP(r))
 
 	// Best-effort: existing domain-wide rules (Bcc Captures, Sender/Recipient
 	// Denylist, Sender Junklist, Subject Handling) should cover this mailbox
@@ -206,7 +218,7 @@ func (a *App) ListMailboxes(w http.ResponseWriter, r *http.Request) {
 	}
 	domainID := r.PathValue("domainId")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return
@@ -236,7 +248,7 @@ func (a *App) GetMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 	mailboxID := r.PathValue("id")
 
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, mailboxID)
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, mailboxID)
 	if !ok {
 		return
 	}
@@ -248,13 +260,17 @@ type updateMailboxNameRequest struct {
 }
 
 func (a *App) UpdateMailboxName(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
 		return
 	}
 	mailboxID := r.PathValue("id")
 
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, mailboxID)
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, mailboxID)
 	if !ok {
 		return
 	}
@@ -274,13 +290,17 @@ func (a *App) UpdateMailboxName(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteMailbox(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
 		return
 	}
 	mailboxID := r.PathValue("id")
 
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, mailboxID)
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, mailboxID)
 	if !ok {
 		return
 	}
@@ -297,17 +317,23 @@ func (a *App) DeleteMailbox(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.deleted", "Mailbox "+mailbox.LocalPart+"@"+domain.Name+" deleted")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"mailbox.deleted", "mailbox", mailbox.ID, mailbox.LocalPart+"@"+domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (a *App) SuspendMailbox(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
 		return
 	}
 	mailboxID := r.PathValue("id")
 
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, mailboxID)
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, mailboxID)
 	if !ok {
 		return
 	}
@@ -323,18 +349,24 @@ func (a *App) SuspendMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 	mailbox.Status = "suspended"
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.suspended", "Mailbox "+mailbox.LocalPart+"@"+domain.Name+" suspended")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"mailbox.suspended", "mailbox", mailbox.ID, mailbox.LocalPart+"@"+domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, toMailboxResponse(mailbox, domain.Name))
 }
 
 // ActivateMailbox reverses SuspendMailbox.
 func (a *App) ActivateMailbox(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
 		return
 	}
 	mailboxID := r.PathValue("id")
 
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, mailboxID)
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, mailboxID)
 	if !ok {
 		return
 	}
@@ -350,6 +382,8 @@ func (a *App) ActivateMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 	mailbox.Status = "active"
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.activated", "Mailbox "+mailbox.LocalPart+"@"+domain.Name+" activated")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"mailbox.activated", "mailbox", mailbox.ID, mailbox.LocalPart+"@"+domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, toMailboxResponse(mailbox, domain.Name))
 }
 
@@ -369,7 +403,7 @@ func (a *App) ExportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
 	}
 	domainID := r.PathValue("id")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return
@@ -431,18 +465,28 @@ type importMailboxResult struct {
 // one-time generated passwords) comes back so the customer can see exactly
 // what happened.
 func (a *App) ImportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
+		return
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
 		return
 	}
 	domainID := r.PathValue("id")
 
-	domain, err := a.Store.GetDomain(r.Context(), customer.ID, domainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return
 	} else if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load domain")
+		return
+	}
+
+	planTierID, err := a.Store.GetOrganizationPlanTierID(r.Context(), customer.OrganizationID.String)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not check plan limits")
 		return
 	}
 
@@ -480,7 +524,7 @@ func (a *App) ImportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
 		expirationDate := col(row, 5)
 		removeUponExpiration := col(row, 6)
 
-		mailbox, generatedPassword, err := a.createMailbox(r.Context(), customer, domain, localPart, displayName, password)
+		mailbox, generatedPassword, err := a.createMailbox(r.Context(), planTierID, domain, localPart, displayName, password)
 		if err != nil {
 			results = append(results, importMailboxResult{Address: localPart + "@" + domain.Name, Error: err.Error()})
 			continue
@@ -533,9 +577,9 @@ func (a *App) ImportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
 }
 
 // loadOwnedMailbox loads a mailbox and its parent domain, verifying the
-// domain belongs to customerID. Writes an error response and returns
+// domain belongs to organizationID. Writes an error response and returns
 // ok=false if not found or not owned.
-func (a *App) loadOwnedMailbox(w http.ResponseWriter, r *http.Request, customerID, mailboxID string) (*db.Mailbox, *db.Domain, bool) {
+func (a *App) loadOwnedMailbox(w http.ResponseWriter, r *http.Request, organizationID, mailboxID string) (*db.Mailbox, *db.Domain, bool) {
 	mailbox, err := a.Store.GetMailbox(r.Context(), mailboxID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "mailbox not found")
@@ -545,7 +589,7 @@ func (a *App) loadOwnedMailbox(w http.ResponseWriter, r *http.Request, customerI
 		return nil, nil, false
 	}
 
-	domain, err := a.Store.GetDomain(r.Context(), customerID, mailbox.DomainID)
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), organizationID, mailbox.DomainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "mailbox not found")
 		return nil, nil, false

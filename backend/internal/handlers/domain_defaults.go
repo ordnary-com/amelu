@@ -1,6 +1,10 @@
 package handlers
 
-import "net/http"
+import (
+	"net/http"
+
+	"amelu/backend/internal/authz"
+)
 
 // Default Services and Default Limits are templates only - they're read
 // once, at the moment a new mailbox is created (see
@@ -14,7 +18,7 @@ func (a *App) GetDomainDefaultServices(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -28,11 +32,15 @@ func (a *App) GetDomainDefaultServices(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateDomainDefaultServices(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -63,7 +71,7 @@ func (a *App) GetDomainDefaultLimits(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -74,11 +82,15 @@ func (a *App) GetDomainDefaultLimits(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateDomainDefaultLimits(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}

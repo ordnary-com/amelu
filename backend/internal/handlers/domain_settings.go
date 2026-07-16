@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 )
 
@@ -19,7 +20,7 @@ func (a *App) ListDomainAliases(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -44,11 +45,15 @@ type createDomainAliasRequest struct {
 }
 
 func (a *App) CreateDomainAlias(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -73,11 +78,15 @@ func (a *App) CreateDomainAlias(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteDomainAlias(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -102,7 +111,7 @@ func (a *App) GetCatchAll(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -124,11 +133,15 @@ type updateCatchAllRequest struct {
 }
 
 func (a *App) UpdateCatchAll(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -185,11 +198,15 @@ func (a *App) UpdateCatchAll(w http.ResponseWriter, r *http.Request) {
 // --- deactivate / reactivate domain ---
 
 func (a *App) DeactivateDomain(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -203,15 +220,21 @@ func (a *App) DeactivateDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "domain.deactivated", "Domain deactivated")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"domain.deactivated", "domain", domain.ID, domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 func (a *App) ReactivateDomain(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -225,12 +248,16 @@ func (a *App) ReactivateDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "domain.reactivated", "Domain reactivated")
+	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
+		"domain.reactivated", "domain", domain.ID, domain.Name, nil, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
-// loadOwnedDomain loads a domain by id, verifying it belongs to customerID.
-func (a *App) loadOwnedDomain(w http.ResponseWriter, r *http.Request, customerID, domainID string) (*db.Domain, bool) {
-	domain, err := a.Store.GetDomain(r.Context(), customerID, domainID)
+// loadOwnedDomain loads a domain by id, verifying it belongs to
+// organizationID - any member of the organization can load any of its
+// domains, regardless of which specific teammate originally created it.
+func (a *App) loadOwnedDomain(w http.ResponseWriter, r *http.Request, organizationID, domainID string) (*db.Domain, bool) {
+	domain, err := a.Store.GetDomainForOrganization(r.Context(), organizationID, domainID)
 	if errors.Is(err, db.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "domain not found")
 		return nil, false

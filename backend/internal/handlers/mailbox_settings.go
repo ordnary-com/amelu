@@ -6,9 +6,24 @@ import (
 	"strings"
 	"time"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/stalwart"
 )
+
+// requireMailboxManage is the shared gate for every mutating mailbox-settings
+// handler in this file - owner, admin, and helpdesk.
+func (a *App) requireMailboxManage(w http.ResponseWriter, r *http.Request) (*db.Customer, bool) {
+	customer, role, ok := a.requireOrgActor(w, r)
+	if !ok {
+		return nil, false
+	}
+	if !authz.CanManageMailboxes(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage mailboxes")
+		return nil, false
+	}
+	return customer, true
+}
 
 // --- Enabled Services ---
 
@@ -35,7 +50,7 @@ func (a *App) GetMailboxServices(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -43,11 +58,11 @@ func (a *App) GetMailboxServices(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateMailboxServices(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -94,11 +109,11 @@ type setMailboxPasswordRequest struct {
 }
 
 func (a *App) SetMailboxPassword(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -132,7 +147,7 @@ func (a *App) GetMailboxInternalAccess(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -140,11 +155,11 @@ func (a *App) GetMailboxInternalAccess(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateMailboxInternalAccess(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -178,7 +193,7 @@ func (a *App) GetMailboxDelegation(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -186,11 +201,11 @@ func (a *App) GetMailboxDelegation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateMailboxDelegation(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -229,7 +244,7 @@ func (a *App) ListMailboxForwards(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -250,11 +265,11 @@ type createForwardRequest struct {
 }
 
 func (a *App) CreateMailboxForward(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -285,11 +300,11 @@ func (a *App) CreateMailboxForward(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteMailboxForward(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -323,7 +338,7 @@ func (a *App) GetMailboxListing(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -331,11 +346,11 @@ func (a *App) GetMailboxListing(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateMailboxListing(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -365,7 +380,7 @@ func (a *App) GetMailboxNotes(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -373,11 +388,11 @@ func (a *App) GetMailboxNotes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateMailboxNotes(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -416,7 +431,7 @@ func (a *App) GetMailboxExpiration(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -429,11 +444,11 @@ type updateExpirationRequest struct {
 }
 
 func (a *App) UpdateMailboxExpiration(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -481,7 +496,7 @@ func (a *App) GetMailboxLimits(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, _, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -489,11 +504,11 @@ func (a *App) GetMailboxLimits(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateMailboxLimits(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -533,7 +548,7 @@ func (a *App) ListMailboxIdentities(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -555,11 +570,11 @@ type createIdentityRequest struct {
 }
 
 func (a *App) CreateMailboxIdentity(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -585,11 +600,11 @@ func (a *App) CreateMailboxIdentity(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteMailboxIdentity(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, ok := a.requireMailboxManage(w, r)
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -617,7 +632,7 @@ func (a *App) GetMailboxActivity(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -646,7 +661,7 @@ func (a *App) GetMailboxRecentLogs(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.ID, r.PathValue("id"))
+	mailbox, domain, ok := a.loadOwnedMailbox(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}

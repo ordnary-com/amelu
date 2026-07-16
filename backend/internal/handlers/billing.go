@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 
 	"github.com/stripe/stripe-go/v81"
@@ -17,6 +18,35 @@ import (
 	"github.com/stripe/stripe-go/v81/invoice"
 	"github.com/stripe/stripe-go/v81/webhook"
 )
+
+// resolveBillingCustomer authenticates the acting customer, checks the
+// requested billing permission, and resolves the *billing-holding* customer
+// row for their organization - plan_tier_id/stripe_customer_id are still
+// per-customer columns (billing hasn't been made organization-aware, out of
+// scope for this change - see db.GetOrganizationOwnerCustomer), so every
+// team member with billing access sees/manages the organization owner's
+// billing state, not their own (usually plan-less) row. Returns the acting
+// customer (for audit logging) and the billing-holder customer.
+func (a *App) resolveBillingCustomer(w http.ResponseWriter, r *http.Request, requireManage bool) (actor *db.Customer, billingCustomer *db.Customer, ok bool) {
+	actor, role, ok := a.requireOrgActor(w, r)
+	if !ok {
+		return nil, nil, false
+	}
+	allowed := authz.CanViewBilling(role)
+	if requireManage {
+		allowed = authz.CanManageBilling(role)
+	}
+	if !allowed {
+		writeError(w, http.StatusForbidden, "you don't have permission to access billing")
+		return nil, nil, false
+	}
+	billingCustomer, err := a.Store.GetOrganizationOwnerCustomer(r.Context(), actor.OrganizationID.String)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load billing account")
+		return nil, nil, false
+	}
+	return actor, billingCustomer, true
+}
 
 type planResponse struct {
 	ID                    string `json:"id"`
@@ -48,7 +78,7 @@ func toPlanResponse(p *db.PlanTier, currentPlanID string) planResponse {
 }
 
 func (a *App) ListPlans(w http.ResponseWriter, r *http.Request) {
-	cust, ok := requireCustomer(w, r)
+	_, cust, ok := a.resolveBillingCustomer(w, r, false)
 	if !ok {
 		return
 	}
@@ -74,7 +104,7 @@ type billingOverviewResponse struct {
 }
 
 func (a *App) GetBillingOverview(w http.ResponseWriter, r *http.Request) {
-	cust, ok := requireCustomer(w, r)
+	_, cust, ok := a.resolveBillingCustomer(w, r, false)
 	if !ok {
 		return
 	}
@@ -117,7 +147,7 @@ func (a *App) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "billing is not available yet")
 		return
 	}
-	cust, ok := requireCustomer(w, r)
+	_, cust, ok := a.resolveBillingCustomer(w, r, false)
 	if !ok {
 		return
 	}
@@ -201,7 +231,7 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "billing is not available yet")
 		return
 	}
-	cust, ok := requireCustomer(w, r)
+	actor, cust, ok := a.resolveBillingCustomer(w, r, true)
 	if !ok {
 		return
 	}
@@ -269,6 +299,8 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, "could not start checkout")
 		return
 	}
+	a.Store.LogOrganizationAudit(r.Context(), actor.OrganizationID.String, &actor.ID, actor.Email,
+		"billing.checkout_started", "billing", plan.ID, plan.Name, map[string]any{"interval": req.Interval}, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]string{"url": session.URL})
 }
 
@@ -284,7 +316,7 @@ func (a *App) CreateBillingPortalSession(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusServiceUnavailable, "billing is not available yet")
 		return
 	}
-	cust, ok := requireCustomer(w, r)
+	actor, cust, ok := a.resolveBillingCustomer(w, r, true)
 	if !ok {
 		return
 	}
@@ -332,6 +364,8 @@ func (a *App) CreateBillingPortalSession(w http.ResponseWriter, r *http.Request)
 		writeError(w, http.StatusBadGateway, "could not open billing portal")
 		return
 	}
+	a.Store.LogOrganizationAudit(r.Context(), actor.OrganizationID.String, &actor.ID, actor.Email,
+		"billing.portal_opened", "billing", "", "", map[string]any{"flow": req.Flow}, requestIP(r))
 	writeJSON(w, http.StatusOK, map[string]string{"url": session.URL})
 }
 
@@ -387,6 +421,9 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := a.Store.UpdateCustomerSubscriptionByCustomerID(ctx, customerID, planTierID, billingInterval, session.Customer.ID, session.Subscription.ID, "active"); err != nil {
 			log.Printf("stripe webhook: update subscription for customer %s: %v", customerID, err)
+		} else if billed, err := a.Store.GetCustomerByID(ctx, customerID); err == nil && billed.OrganizationID.Valid {
+			a.Store.LogOrganizationAudit(ctx, billed.OrganizationID.String, nil, "stripe",
+				"billing.subscription_started", "billing", planTierID, planTierID, map[string]any{"interval": billingInterval}, "")
 		}
 
 	case stripe.EventTypeCustomerSubscriptionUpdated:
@@ -422,6 +459,9 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		if updateErr != nil {
 			log.Printf("stripe webhook: update subscription for stripe customer %s: %v", sub.Customer.ID, updateErr)
+		} else if billed, err := a.Store.GetCustomerByStripeCustomerID(ctx, sub.Customer.ID); err == nil && billed.OrganizationID.Valid {
+			a.Store.LogOrganizationAudit(ctx, billed.OrganizationID.String, nil, "stripe",
+				"billing.subscription_updated", "billing", planTierID, planTierID, map[string]any{"status": string(sub.Status)}, "")
 		}
 
 	case stripe.EventTypeCustomerSubscriptionDeleted:
@@ -435,6 +475,9 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := a.Store.DowngradeCustomerToFreeByStripeCustomerID(ctx, sub.Customer.ID); err != nil {
 			log.Printf("stripe webhook: downgrade stripe customer %s: %v", sub.Customer.ID, err)
+		} else if billed, err := a.Store.GetCustomerByStripeCustomerID(ctx, sub.Customer.ID); err == nil && billed.OrganizationID.Valid {
+			a.Store.LogOrganizationAudit(ctx, billed.OrganizationID.String, nil, "stripe",
+				"billing.subscription_cancelled", "billing", "", "", nil, "")
 		}
 	}
 

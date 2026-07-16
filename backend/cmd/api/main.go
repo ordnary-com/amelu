@@ -168,6 +168,18 @@ func main() {
 	mux.HandleFunc("GET /api/auth/ordnary/login", app.OrdnaryLogin)
 	mux.HandleFunc("GET /api/auth/ordnary/callback", app.OrdnaryCallback)
 
+	mux.HandleFunc("GET /api/organization/members", auth.Require(app.Store, app.ListOrganizationMembers))
+	mux.HandleFunc("PATCH /api/organization/members/{id}/role", auth.Require(app.Store, app.UpdateMemberRole))
+	mux.HandleFunc("DELETE /api/organization/members/{id}", auth.Require(app.Store, app.RemoveMember))
+	mux.HandleFunc("GET /api/organization/invitations", auth.Require(app.Store, app.ListOrganizationInvitations))
+	mux.HandleFunc("POST /api/organization/invitations", auth.Require(app.Store, app.CreateInvitation))
+	mux.HandleFunc("DELETE /api/organization/invitations/{id}", auth.Require(app.Store, app.RevokeInvitation))
+	mux.HandleFunc("GET /api/organization/audit", auth.Require(app.Store, app.ListOrganizationAudit))
+
+	// Public - the recipient of an invite link isn't logged into Amelu yet.
+	mux.HandleFunc("GET /api/invitations/{token}", app.GetInvitation)
+	mux.HandleFunc("POST /api/invitations/{token}/accept", app.AcceptInvitation)
+
 	mux.HandleFunc("GET /api/account", auth.Require(app.Store, app.Me))
 	mux.HandleFunc("PATCH /api/account/name", auth.Require(app.Store, app.UpdateAccountName))
 	mux.HandleFunc("PATCH /api/account/profile", auth.Require(app.Store, app.UpdateAccountProfile))

@@ -82,6 +82,7 @@ export default function App() {
           >
             <Route path="/" element={<DashboardPage />} />
             <Route path="/organization" element={<MyOrganizationPage />} />
+            <Route path="/organization/activity" element={<OrganizationActivityPage />} />
             <Route path="/billing/overview" element={<BillingOverviewPage />} />
             <Route path="/billing/plans" element={<BillingPlansPage />} />
             <Route path="/billing/invoices" element={<BillingInvoicesPage />} />

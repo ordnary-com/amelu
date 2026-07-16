@@ -105,6 +105,25 @@ func (s *Store) GetCustomerBilling(ctx context.Context, customerID string) (*Cus
 	return b, nil
 }
 
+// GetCustomerByStripeCustomerID resolves a customer from a Stripe webhook's
+// customer ID - used only to attribute organization_audit_log entries for
+// subscription lifecycle events (see handlers.StripeWebhook), not for any
+// authorization decision.
+func (s *Store) GetCustomerByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*Customer, error) {
+	c := &Customer{}
+	err := s.conn.QueryRowContext(ctx, `
+		SELECT id, email, name, password_hash, plan_tier_id, organization_id, last_sign_in_at, created_at
+		FROM customers WHERE stripe_customer_id = $1
+	`, stripeCustomerID).Scan(&c.ID, &c.Email, &c.Name, &c.PasswordHash, &c.PlanTierID, &c.OrganizationID, &c.LastSignInAt, &c.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
 // SetCustomerPlanTier directly assigns a plan tier with no Stripe object
 // involved - used by the admin "change plan" action when the customer has
 // no live Stripe subscription yet (a comp/manual override), unlike

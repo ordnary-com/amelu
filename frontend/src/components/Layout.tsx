@@ -70,6 +70,9 @@ export function Layout() {
               <li className={exact("/organization")}>
                 <Link to="/organization">My Organization</Link>
               </li>
+              <li className={`submenu ${exact("/organization/activity")}`}>
+                <Link to="/organization/activity">Activity Log</Link>
+              </li>
               <li className={onBilling ? "submenu-parent active" : "submenu-parent"}>
                 <Link to="/billing/overview">Billing</Link>
               </li>

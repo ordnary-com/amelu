@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/sieve"
 )
@@ -361,7 +362,7 @@ func (a *App) ListPatternRewrites(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -388,11 +389,15 @@ type createPatternRewriteRequest struct {
 // mail that would otherwise land there, since Stalwart never hands an
 // unrecognized address to any script in the first place.
 func (a *App) CreatePatternRewrite(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -441,11 +446,15 @@ func (a *App) CreatePatternRewrite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeletePatternRewrite(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -490,7 +499,7 @@ func (a *App) ListBccCaptures(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -513,11 +522,15 @@ type createBccCaptureRequest struct {
 }
 
 func (a *App) CreateBccCapture(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}
@@ -550,11 +563,15 @@ func (a *App) CreateBccCapture(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) DeleteBccCapture(w http.ResponseWriter, r *http.Request) {
-	customer, ok := requireCustomer(w, r)
+	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return
 	}
-	domain, ok := a.loadOwnedDomain(w, r, customer.ID, r.PathValue("id"))
+	if !authz.CanManageDomains(role) {
+		writeError(w, http.StatusForbidden, "you don't have permission to manage domains")
+		return
+	}
+	domain, ok := a.loadOwnedDomain(w, r, customer.OrganizationID.String, r.PathValue("id"))
 	if !ok {
 		return
 	}

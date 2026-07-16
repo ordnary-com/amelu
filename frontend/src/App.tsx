@@ -6,6 +6,8 @@ import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { MyOrganizationPage } from "./pages/MyOrganizationPage";
+import { OrganizationActivityPage } from "./pages/OrganizationActivityPage";
+import { AcceptInvitePage } from "./pages/AcceptInvitePage";
 import { DomainsPage } from "./pages/DomainsPage";
 import { NewDomainPage } from "./pages/NewDomainPage";
 import { AllAddressesPage } from "./pages/AllAddressesPage";
@@ -70,6 +72,7 @@ export default function App() {
           <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password/:token" element={<SetPasswordPage />} />
+          <Route path="/accept-invite/:token" element={<AcceptInvitePage />} />
           <Route
             element={
               <ProtectedRoute>

@@ -1,11 +1,11 @@
 # Cloudflare Tunnel
 
-**Historical.** The origin now runs as a Cloudflare Container bound
-directly to the edge Worker (see `ARCHITECTURE.md`, `EDGE_WORKER.md`) -
-this Tunnel+VPS setup is no longer the live path. Kept here, and the VPS
-kept warm, as the documented rollback target for a defined bake period
-after the Containers cutover (see `ROLLBACK.md`); safe to remove once that
-window has passed with no rollback needed.
+**Historical - the Hetzner VPS this describes has been decommissioned.**
+The origin now runs as a Cloudflare Container bound directly to the edge
+Worker (see `ARCHITECTURE.md`, `EDGE_WORKER.md`). This doc is kept only as
+a record of the prior architecture; there is no VPS left to fall back to,
+so the "Full migration rollback (worst case)" procedure in `ROLLBACK.md`
+no longer applies - see that doc's caveat.
 
 Last verified against Cloudflare documentation: 2026-07-15.
 

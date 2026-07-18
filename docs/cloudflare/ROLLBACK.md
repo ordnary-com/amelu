@@ -15,9 +15,8 @@ migration to reverse.
 | `EXPIRATION_SWEEP_MODE=external` | Set back to `ticker` (or unset), restart origin | No - `RunExpirationSweep` is the same function either way | `WORKFLOWS.md` "Disabling" |
 | Edge Worker deploy | `npx wrangler rollback --env production` | No | `EDGE_WORKER.md` "Rollback" |
 | Pages deploy | Dashboard "Rollback to this deployment" | No | `PAGES_FRONTEND.md` "Rollback" |
-| Containers cutover (Worker routing to `AmeluOriginContainer` instead of the Tunnel) | `git revert` the Worker code change (restores `fetch(env.ORIGIN_BASE_URL)`), redeploy; requires the Tunnel+VPS path to still be warm - **only valid during the bake window**, see below | No | `EDGE_WORKER.md`, this doc's "Full migration rollback" |
-| Neon cutover (`DATABASE_URL`) | Point `DATABASE_URL` back at the original Hetzner Postgres and redeploy; only valid while that Postgres is still running (kept warm through the bake window, then decommissioned) | No - both databases exist independently, nothing was migrated between them | `ARCHITECTURE.md` |
-| Tunnel/`cloudflared` | Stop `cloudflared`, temporarily re-enable a public Go listener + repoint DNS | No | `TUNNEL.md` "Emergency rollback" |
+| Containers cutover (Worker routing to `AmeluOriginContainer`) | **No VPS/Tunnel fallback exists anymore (decommissioned 2026-07-18)** - a regression must be fixed forward on the Containers setup, or via `npx wrangler rollback --env production` to a previous Worker version if one still built successfully | No | `EDGE_WORKER.md`, this doc's "Full migration rollback" |
+| Neon cutover (`DATABASE_URL`) | **No original Postgres to fall back to (decommissioned along with the VPS)** - a regression must be fixed forward against Neon (e.g. via Neon's own point-in-time restore/branching) | No - nothing was migrated between databases in the first place (Neon started empty) | `ARCHITECTURE.md` |
 | DNS cutover (whole zone) | Revert nameservers at the registrar | No - mail records/IPs never changed | `DNS_AND_MAIL.md` "Rollback" |
 | `ORIGIN_SHARED_SECRET`/`INTERNAL_JOBS_SHARED_SECRET` rotation | Set the previous value back on both sides if a rotation broke something before completing | No | `SECRETS.md` |
 | Queue consumer deploy | `wrangler delete` or simply stop enqueuing (nothing depends on it yet) | No | `QUEUES.md` "Rollback" |
@@ -40,36 +39,27 @@ before, which is exactly what this migration fixed. Use it locally only,
 and `git checkout backend/go.mod backend/go.sum` before committing anything
 else.
 
-## Full migration rollback (worst case)
+## Full migration rollback (worst case) - superseded
 
-If the entire Cloudflare migration needs to be reversed after a DNS
-cutover:
+The Tunnel+VPS-era version of this section (re-enable the VPS's public
+listener, stop `cloudflared`, point the frontend back at a direct API
+host) **no longer applies** - the Hetzner VPS and its self-hosted Postgres
+were decommissioned on 2026-07-18, after the Containers + Neon cutover
+was verified healthy in production. There is no "revert to the old
+infra" path anymore.
 
-1. `DNS_AND_MAIL.md` "Rollback" - revert nameservers, mail is unaffected
-   throughout.
-2. Re-enable the Go API's public HTTP listener (remove/bypass the Tunnel
-   requirement - the Go binary itself never required a Tunnel to run, this
-   is a deployment/network config change, not a code change).
-3. Point the frontend's `VITE_API_URL` back at the direct API host and
-   rebuild/redeploy it via its previous hosting method.
-4. Stop `cloudflared` processes.
-5. Leave Cloudflare-side resources (Worker, Pages project, Tunnel, Queues,
-   R2 bucket) in place but idle - they cost nothing meaningful while unused
-   (see `COSTS.md`) and deleting them isn't necessary for the rollback to be
-   complete.
+If a serious regression surfaces on the Containers/Neon setup now, the
+available options are:
 
-Every step above is reversible again (re-doing the migration is just
-following `README.md`'s order again) since no data was migrated
-irreversibly at any point - Postgres, Stalwart, and mailbox storage were
-never touched.
-
-**Caveat as of the Containers + Neon migration**: steps 2 and 4 above (re-
-enabling the VPS's public listener / stopping `cloudflared`) assume the
-Hetzner VPS and its Postgres are still running. That's true only during the
-bake window kept open after the Containers/Neon cutover (see
-`ARCHITECTURE.md`, `TUNNEL.md`) - once that window closes and the VPS is
-decommissioned, this "worst case" rollback path no longer exists and a
-regression instead has to be fixed forward on the Containers/Neon setup.
+1. `npx wrangler rollback --env production` to the last known-good Worker
+   deployment (only helps for a bad Worker/edge-code change, not a bad
+   Container image or a Neon-side issue).
+2. Fix forward: patch the Go origin or the Container config and redeploy
+   (`DEPLOYMENT.md`).
+3. For a Neon-side issue: use Neon's own point-in-time restore / branching
+   from the dashboard - there's no second Postgres to fail over to.
+4. `DNS_AND_MAIL.md` "Rollback" still applies independently for a DNS/zone-
+   level problem - mail is unaffected either way.
 
 ## What can't be "rolled back" because it was never risky to begin with
 

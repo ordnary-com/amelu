@@ -41,9 +41,10 @@ flowchart LR
 The Go API previously ran on a Hetzner VPS, reached via a private Cloudflare
 Tunnel hostname, with Postgres self-hosted alongside it. Both moved onto
 Cloudflare-adjacent managed platforms: the API is now a Cloudflare Container
-bound directly to the edge Worker (no Tunnel hop), and Postgres is Neon. See
-`TUNNEL.md` for the historical Tunnel setup, kept as a documented rollback
-path.
+bound directly to the edge Worker (no Tunnel hop), and Postgres is Neon.
+Verified healthy in production on 2026-07-18, after which the Hetzner VPS
+was decommissioned - see `TUNNEL.md` for a historical record of that setup
+and `ROLLBACK.md` for what rollback options exist now that it's gone.
 
 ## Request flow (customer dashboard action)
 

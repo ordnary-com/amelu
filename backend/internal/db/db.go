@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"path"
 	"sort"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -17,11 +18,21 @@ import (
 //go:embed migrations/*.sql
 var embeddedMigrations embed.FS
 
+// Managed Postgres (e.g. Neon) enforces a connection cap shared across every
+// origin instance, and pgx's default extended query protocol prepares
+// statements server-side per-connection - both of which make an unbounded
+// pool (database/sql's default) unsafe once more than one instance can be
+// running at a time. These limits keep each instance's footprint small and
+// bounded regardless of how many instances are running concurrently.
 func Open(dsn string) (*sql.DB, error) {
 	conn, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open postgres: %w", err)
 	}
+	conn.SetMaxOpenConns(10)
+	conn.SetMaxIdleConns(5)
+	conn.SetConnMaxLifetime(5 * time.Minute)
+	conn.SetConnMaxIdleTime(1 * time.Minute)
 	if err := conn.Ping(); err != nil {
 		return nil, fmt.Errorf("ping postgres: %w", err)
 	}

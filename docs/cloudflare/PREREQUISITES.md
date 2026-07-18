@@ -24,6 +24,8 @@ Before starting any step in this migration, have the following ready.
 | Go | 1.26.4 | `backend/go.mod` |
 | wrangler | ^4.111.0 | `cloudflare/edge/package.json`, `cloudflare/queues/*/package.json` |
 | @cloudflare/vitest-pool-workers | ^0.18.5 | `cloudflare/edge/package.json` |
+| @cloudflare/containers | ^0.3.7 | `cloudflare/edge/package.json` |
+| Docker | any recent version, running locally or on the CI runner | `wrangler deploy` builds the Container image from `backend/Dockerfile` |
 
 Install wrangler as a dev dependency (already in `package.json` under each
 `cloudflare/*` package) rather than globally, so CI and every developer use
@@ -38,8 +40,15 @@ reading the docs)
 
 - A Cloudflare API token scoped to Workers/Pages/Queues/R2/DNS edit for the
   `amelu.org` account (see `SECRETS.md` for exact scopes and rotation).
+- The account on the **Workers Paid plan** - Cloudflare Containers require
+  it.
+- A Neon project and database created, with both its direct and pooled
+  connection strings on hand (direct is what Amelu actually uses - see
+  `ARCHITECTURE.md`).
 - A Cloudflare Tunnel created and its credentials file available to the
-  origin host (see `TUNNEL.md`).
+  origin host, only needed if standing up the historical Tunnel+VPS
+  rollback path (see `TUNNEL.md`) - not required for a fresh Containers
+  deploy.
 - An R2 bucket in the EU jurisdiction, if adopting `R2_STORAGE.md` (optional,
   can be deferred).
 

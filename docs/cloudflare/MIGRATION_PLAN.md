@@ -9,9 +9,9 @@ Cloudflare**, **Place behind Cloudflare**, **Keep on origin**, **Defer**, or
 | Component | Classification | Notes |
 |---|---|---|
 | React dashboard static assets | Move to Cloudflare | Cloudflare Pages. See `PAGES_FRONTEND.md`. |
-| Go API HTTP listener | Place behind Cloudflare | Edge Worker (`cloudflare/edge`) + Tunnel (`cloudflare/tunnel`). The Go binary itself is unmodified in behavior, just no longer publicly reachable. |
+| Go API HTTP listener | Move to Cloudflare | Edge Worker (`cloudflare/edge`) + Cloudflare Container (`backend/Dockerfile`, bound via Durable Object - see `container.ts`). Superseded the original Tunnel (`cloudflare/tunnel`) approach, kept as a documented rollback path (`ROLLBACK.md`) for a bake period. The Go binary itself is unmodified in behavior, just no longer publicly reachable and no longer running on a separately-operated VPS. |
 | Go API application logic (handlers, routing) | Keep on origin | No rewrite. All changes in this migration are additive (new endpoints, new middleware), not a port. |
-| Postgres | Keep on origin | Explicitly not migrated to D1 - safety rule #1. |
+| Postgres | Move to Cloudflare-adjacent managed Postgres | Neon. Still explicitly not migrated to D1 - safety rule #1 still stands, Neon is a real external Postgres, not D1's SQLite semantics. |
 | Stalwart mail server (SMTP/IMAP/POP3/ManageSieve/admin API) | Keep on origin | Never proxied through Cloudflare's HTTP proxy; admin API never public. Safety rules #4, #5. |
 | Live mailbox storage | Explicitly do not migrate | Stays on Stalwart's own disk. Safety rule #3. |
 | CORS handling | Move to Cloudflare (duplicated, not replaced) | Edge Worker enforces CORS at the edge; `backend/internal/handlers/cors.go` is left in place unchanged for local dev (frontend hitting the Go API directly, no Worker in the loop). |

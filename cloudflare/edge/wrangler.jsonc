@@ -17,6 +17,25 @@
   "vars": {
     "ENVIRONMENT": "development"
   },
+  // The Go origin, built from backend/Dockerfile and run as a Cloudflare
+  // Container bound to this Worker via the Durable Object below - replaces
+  // the old Tunnel+VPS path. See src/container.ts and
+  // docs/cloudflare/ARCHITECTURE.md.
+  "containers": [
+    {
+      "class_name": "AmeluOriginContainer",
+      "image": "../../backend/Dockerfile",
+      "max_instances": 3
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "class_name": "AmeluOriginContainer", "name": "AMELU_ORIGIN" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["AmeluOriginContainer"] }
+  ],
   "env": {
     "preview": {
       "vars": {
@@ -30,7 +49,8 @@
       // "routes": [ { "pattern": "api.amelu.org/*", "custom_domain": true } ]
     }
   }
-  // Secrets (ORIGIN_BASE_URL, ORIGIN_SHARED_SECRET, ALLOWED_ORIGIN) are NOT
+  // Secrets (ORIGIN_SHARED_SECRET, ALLOWED_ORIGIN, DATABASE_URL and the
+  // other origin env vars forwarded via src/container.ts's envVars) are NOT
   // defined here - they are set via `wrangler secret put <NAME>` per
   // environment, or via .dev.vars locally. See .dev.vars.example and
   // docs/cloudflare/SECRETS.md.

@@ -7,6 +7,10 @@ import { signOriginRequest } from "../../shared/sign";
 // VERIFY AGAINST CURRENT DOCS before deploying: the exact retry-config
 // shape passed to step.do() has changed across Workflows releases.
 export interface Env {
+  // amelu-edge-api's public hostname (e.g. https://api.amelu.org) - see
+  // the equivalent comment in
+  // cloudflare/queues/domain-verification/src/types.ts for why this is no
+  // longer a private Tunnel hostname.
   ORIGIN_BASE_URL: string;
   INTERNAL_JOBS_SHARED_SECRET: string;
 }

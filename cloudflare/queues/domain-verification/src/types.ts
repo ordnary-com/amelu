@@ -1,9 +1,17 @@
 export interface Env {
+  // The amelu-edge-api Worker's public hostname (e.g. https://api.amelu.org)
+  // - there's no more private Tunnel hostname to call directly once the
+  // origin moves to a Cloudflare Container bound only inside that Worker's
+  // own wrangler.jsonc (see docs/cloudflare/ARCHITECTURE.md). Requests to
+  // /internal/* pass through amelu-edge-api like any other path but are
+  // exempt from its own X-Origin-Shared-Secret check (backend/internal/
+  // handlers/edge_auth.go) - this INTERNAL_JOBS_SHARED_SECRET signature is
+  // the real auth for this call.
   ORIGIN_BASE_URL: string;
   // Distinct from the edge Worker's ORIGIN_SHARED_SECRET - this consumer
-  // calls POST /internal/jobs/domain-verified directly over the Tunnel,
-  // authenticated the same way backend/internal/auth.RequireInternal
-  // authenticates other internal job callers (see docs/cloudflare/SECRETS.md).
+  // calls POST /internal/jobs/domain-verified, authenticated the same way
+  // backend/internal/auth.RequireInternal authenticates other internal job
+  // callers (see docs/cloudflare/SECRETS.md).
   INTERNAL_JOBS_SHARED_SECRET: string;
   ENVIRONMENT?: string;
   DOMAIN_VERIFICATION_QUEUE?: Queue<DomainVerificationMessage>;

@@ -23,6 +23,7 @@
   // docs/cloudflare/ARCHITECTURE.md.
   "containers": [
     {
+      "name": "amelu-origin",
       "class_name": "AmeluOriginContainer",
       "image": "../../backend/Dockerfile",
       "max_instances": 3
@@ -40,13 +41,39 @@
     "preview": {
       "vars": {
         "ENVIRONMENT": "preview"
+      },
+      "containers": [
+        {
+          "name": "amelu-origin-preview",
+          "class_name": "AmeluOriginContainer",
+          "image": "../../backend/Dockerfile",
+          "max_instances": 3
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "class_name": "AmeluOriginContainer", "name": "AMELU_ORIGIN" }
+        ]
       }
     },
     "production": {
       "vars": {
         "ENVIRONMENT": "production"
-      }
+      },
       // "routes": [ { "pattern": "api.amelu.org/*", "custom_domain": true } ]
+      "containers": [
+        {
+          "name": "amelu-origin-production",
+          "class_name": "AmeluOriginContainer",
+          "image": "../../backend/Dockerfile",
+          "max_instances": 3
+        }
+      ],
+      "durable_objects": {
+        "bindings": [
+          { "class_name": "AmeluOriginContainer", "name": "AMELU_ORIGIN" }
+        ]
+      }
     }
   }
   // Secrets (ORIGIN_SHARED_SECRET, ALLOWED_ORIGIN, DATABASE_URL and the

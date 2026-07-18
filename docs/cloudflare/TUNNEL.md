@@ -1,5 +1,12 @@
 # Cloudflare Tunnel
 
+**Historical.** The origin now runs as a Cloudflare Container bound
+directly to the edge Worker (see `ARCHITECTURE.md`, `EDGE_WORKER.md`) -
+this Tunnel+VPS setup is no longer the live path. Kept here, and the VPS
+kept warm, as the documented rollback target for a defined bake period
+after the Containers cutover (see `ROLLBACK.md`); safe to remove once that
+window has passed with no rollback needed.
+
 Last verified against Cloudflare documentation: 2026-07-15.
 
 Config templates: `cloudflare/tunnel/config.yml.example`,

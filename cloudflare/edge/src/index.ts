@@ -1,8 +1,13 @@
+import { getContainer } from "@cloudflare/containers";
 import type { Env } from "./types";
 import { isPreflight, preflightResponse } from "./cors";
 import { buildClientResponse, buildOriginRequest, requestId, stableErrorResponse } from "./proxy";
 import { redactHeaders } from "./redact";
 import { applyNoStore, applySecurityHeaders } from "./security";
+
+// wrangler's Durable Object migrations require the class to be exported
+// from the Worker's main entrypoint module.
+export { AmeluOriginContainer } from "./container";
 
 // Public edge health check - answered entirely at the edge, no origin
 // call, so it stays accurate even during an origin/Tunnel outage (the
@@ -29,7 +34,8 @@ async function healthzUpstreamResponse(env: Env, reqId: string, requestOrigin: s
       env,
       reqId,
     );
-    const originResp = await fetch(originReq);
+    const container = getContainer(env.AMELU_ORIGIN, "origin");
+    const originResp = await container.fetch(originReq);
     return buildClientResponse(originResp, env, reqId, requestOrigin);
   } catch (err) {
     console.error(
@@ -73,7 +79,8 @@ export default {
         }),
       );
 
-      const originResponse = await fetch(originRequest);
+      const container = getContainer(env.AMELU_ORIGIN, "origin");
+      const originResponse = await container.fetch(originRequest);
       return buildClientResponse(originResponse, env, reqId, requestOrigin);
     } catch (err) {
       console.error(

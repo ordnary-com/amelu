@@ -67,12 +67,33 @@ jobs:
 
       # wrangler secret put reads from stdin/env, never a bare CLI arg, so
       # secret values never appear in the Actions log - see
-      # docs/cloudflare/SECRETS.md "No secrets in logs".
+      # docs/cloudflare/SECRETS.md "No secrets in logs". Everything below
+      # DATABASE_URL is forwarded into the Container's env by
+      # cloudflare/edge/src/container.ts (via `env.X` inside envVars) -
+      # these used to be set out-of-band as origin process env on the
+      # Hetzner VPS, now they're Worker secrets like everything else here.
       - name: set Worker secrets
         run: |
           echo "${{ secrets.ORIGIN_BASE_URL }}" | npx wrangler secret put ORIGIN_BASE_URL --env production
           echo "${{ secrets.ORIGIN_SHARED_SECRET }}" | npx wrangler secret put ORIGIN_SHARED_SECRET --env production
           echo "${{ secrets.ALLOWED_ORIGIN }}" | npx wrangler secret put ALLOWED_ORIGIN --env production
+          echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --env production
+          echo "${{ secrets.STALWART_BASE_URL }}" | npx wrangler secret put STALWART_BASE_URL --env production
+          echo "${{ secrets.STALWART_ADMIN_USER }}" | npx wrangler secret put STALWART_ADMIN_USER --env production
+          echo "${{ secrets.STALWART_ADMIN_PASSWORD }}" | npx wrangler secret put STALWART_ADMIN_PASSWORD --env production
+          echo "${{ secrets.RESEND_API_KEY }}" | npx wrangler secret put RESEND_API_KEY --env production
+          echo "${{ secrets.STRIPE_SECRET_KEY }}" | npx wrangler secret put STRIPE_SECRET_KEY --env production
+          echo "${{ secrets.STRIPE_WEBHOOK_SECRET }}" | npx wrangler secret put STRIPE_WEBHOOK_SECRET --env production
+          echo "${{ secrets.DOMAIN_CONNECT_PRIVATE_KEY }}" | npx wrangler secret put DOMAIN_CONNECT_PRIVATE_KEY --env production
+          echo "${{ secrets.DOMAIN_CONNECT_PUBKEY_DOMAIN }}" | npx wrangler secret put DOMAIN_CONNECT_PUBKEY_DOMAIN --env production
+          echo "${{ secrets.DOMAIN_CONNECT_REDIRECT_URI }}" | npx wrangler secret put DOMAIN_CONNECT_REDIRECT_URI --env production
+          echo "${{ secrets.ORDNARY_ISSUER }}" | npx wrangler secret put ORDNARY_ISSUER --env production
+          echo "${{ secrets.ORDNARY_CLIENT_ID }}" | npx wrangler secret put ORDNARY_CLIENT_ID --env production
+          echo "${{ secrets.ORDNARY_CLIENT_SECRET }}" | npx wrangler secret put ORDNARY_CLIENT_SECRET --env production
+          echo "${{ secrets.ORDNARY_REDIRECT_URI }}" | npx wrangler secret put ORDNARY_REDIRECT_URI --env production
+          echo "${{ secrets.ORDNARY_COOKIE_SECRET }}" | npx wrangler secret put ORDNARY_COOKIE_SECRET --env production
+          echo "${{ secrets.AMELU_ADMIN_SHARED_SECRET }}" | npx wrangler secret put AMELU_ADMIN_SHARED_SECRET --env production
+          echo "${{ secrets.INTERNAL_JOBS_SHARED_SECRET }}" | npx wrangler secret put INTERNAL_JOBS_SHARED_SECRET --env production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

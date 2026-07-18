@@ -2,12 +2,15 @@ import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 
 // These exercise the Worker's actual fetch() entrypoint end-to-end inside
-// the workerd runtime (via SELF, see vitest.config.ts). ORIGIN_BASE_URL in
-// the test environment (https://origin.test.invalid) is deliberately
-// unreachable - that's what lets us assert the error-handling path
-// deterministically without standing up a real origin. Header/body
-// transformation logic itself is covered in unit.test.ts against the pure
-// functions directly.
+// the workerd runtime (via SELF, see vitest.config.ts). The AMELU_ORIGIN
+// container binding is unusable in this local test environment (no Docker
+// runtime - vitest-pool-workers doesn't emulate real container startup),
+// so every call into it fails deterministically - that's what lets us
+// assert the error-handling path without standing up a real origin.
+// Header/body transformation logic itself is covered in unit.test.ts
+// against the pure functions directly. A real Container round-trip can
+// only be exercised with `wrangler dev` locally (Docker required) or
+// against a deployed preview environment.
 
 describe("edge worker: health endpoints", () => {
   it("GET /healthz answers at the edge without contacting the origin", async () => {

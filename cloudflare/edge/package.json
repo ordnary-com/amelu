@@ -9,6 +9,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@cloudflare/containers": "^0.3.7"
+  },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.18.5",
     "@cloudflare/workers-types": "^5.20260715.1",

@@ -15,6 +15,8 @@ migration to reverse.
 | `EXPIRATION_SWEEP_MODE=external` | Set back to `ticker` (or unset), restart origin | No - `RunExpirationSweep` is the same function either way | `WORKFLOWS.md` "Disabling" |
 | Edge Worker deploy | `npx wrangler rollback --env production` | No | `EDGE_WORKER.md` "Rollback" |
 | Pages deploy | Dashboard "Rollback to this deployment" | No | `PAGES_FRONTEND.md` "Rollback" |
+| Containers cutover (Worker routing to `AmeluOriginContainer` instead of the Tunnel) | `git revert` the Worker code change (restores `fetch(env.ORIGIN_BASE_URL)`), redeploy; requires the Tunnel+VPS path to still be warm - **only valid during the bake window**, see below | No | `EDGE_WORKER.md`, this doc's "Full migration rollback" |
+| Neon cutover (`DATABASE_URL`) | Point `DATABASE_URL` back at the original Hetzner Postgres and redeploy; only valid while that Postgres is still running (kept warm through the bake window, then decommissioned) | No - both databases exist independently, nothing was migrated between them | `ARCHITECTURE.md` |
 | Tunnel/`cloudflared` | Stop `cloudflared`, temporarily re-enable a public Go listener + repoint DNS | No | `TUNNEL.md` "Emergency rollback" |
 | DNS cutover (whole zone) | Revert nameservers at the registrar | No - mail records/IPs never changed | `DNS_AND_MAIL.md` "Rollback" |
 | `ORIGIN_SHARED_SECRET`/`INTERNAL_JOBS_SHARED_SECRET` rotation | Set the previous value back on both sides if a rotation broke something before completing | No | `SECRETS.md` |
@@ -60,6 +62,14 @@ Every step above is reversible again (re-doing the migration is just
 following `README.md`'s order again) since no data was migrated
 irreversibly at any point - Postgres, Stalwart, and mailbox storage were
 never touched.
+
+**Caveat as of the Containers + Neon migration**: steps 2 and 4 above (re-
+enabling the VPS's public listener / stopping `cloudflared`) assume the
+Hetzner VPS and its Postgres are still running. That's true only during the
+bake window kept open after the Containers/Neon cutover (see
+`ARCHITECTURE.md`, `TUNNEL.md`) - once that window closes and the VPS is
+decommissioned, this "worst case" rollback path no longer exists and a
+regression instead has to be fixed forward on the Containers/Neon setup.
 
 ## What can't be "rolled back" because it was never risky to begin with
 

@@ -5,12 +5,21 @@ import { signOriginRequest } from "../src/sign";
 import { applyNoStore, applySecurityHeaders } from "../src/security";
 import { buildClientResponse, buildOriginRequest, requestId, stableErrorResponse } from "../src/proxy";
 import type { Env } from "../src/types";
+import type { AmeluOriginContainer } from "../src/container";
 
 const env: Env = {
   ORIGIN_BASE_URL: "https://origin.test.invalid",
+  // Unused by the cors/proxy unit tests below - only the fetch() handler in
+  // index.ts touches the container binding, and that's exercised by the
+  // Worker integration tests (see test/worker.test.ts), not here.
+  AMELU_ORIGIN: {} as DurableObjectNamespace<AmeluOriginContainer>,
   ORIGIN_SHARED_SECRET: "test-shared-secret",
   ALLOWED_ORIGIN: "https://app.amelu.org",
   ENVIRONMENT: "test",
+  DATABASE_URL: "postgres://test",
+  STALWART_BASE_URL: "https://stalwart.test.invalid",
+  STALWART_ADMIN_USER: "test",
+  STALWART_ADMIN_PASSWORD: "test",
 };
 
 describe("cors", () => {

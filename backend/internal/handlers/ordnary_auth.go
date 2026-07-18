@@ -83,7 +83,14 @@ func (a *App) provisionOrdnaryCustomer(r *http.Request, email, name string) (*db
 	if err != nil {
 		return nil, err
 	}
-	return a.Store.CreateCustomer(r.Context(), email, name, unusablePassword, organization.ID, "", "", "")
+	customer, err := a.Store.CreateCustomer(r.Context(), email, name, unusablePassword, organization.ID, "", "", "")
+	if err != nil {
+		return nil, err
+	}
+	if err := a.Store.AddOrganizationMember(r.Context(), organization.ID, customer.ID, db.RoleOwner); err != nil {
+		return nil, err
+	}
+	return customer, nil
 }
 
 func randomHex(n int) string {

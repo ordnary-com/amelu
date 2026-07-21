@@ -48,8 +48,8 @@ Nothing fancy, just a few pieces talking to each other:
   no ORM. This is the only thing the frontend ever talks to. Stalwart and
   Postgres are never exposed directly.
 - `cloudflare/edge/`: small TypeScript Worker, public entrypoint for
-  `api.amelu.org`, proxies to the Go origin over a private Cloudflare
-  Tunnel.
+  `api.amelu.org`, binds straight to the Go origin running as a Cloudflare
+  Container, no VPS, no Tunnel, no public port on the origin at all.
 - `cloudflare/queues/` + `cloudflare/workflows/`: the durable async stuff,
   domain verification, Stalwart provisioning, retries, dead-letter handling.
 
@@ -65,7 +65,7 @@ plan, rollback procedures: that's all in
 - Mail: [Stalwart](https://stalw.art), talked to via its admin API
 - Billing: Stripe
 - Transactional email: [Resend](https://resend.com)
-- Edge/CDN/DNS: Cloudflare (Pages, Workers, Tunnel, Queues, Workflows, R2)
+- Edge/CDN/DNS: Cloudflare (Pages, Workers, Containers, Queues, Workflows, R2)
 - Everything glued together with pnpm workspaces
 
 ## Running it locally
@@ -117,10 +117,10 @@ amelu/
 │   └── internal/          auth, db, handlers, stalwart client, ordnaryauth, ...
 ├── frontend/               React dashboard (Cloudflare Pages)
 ├── cloudflare/
-│   ├── edge/               public API Worker
+│   ├── edge/               public API Worker, binds the origin Container
 │   ├── queues/              domain verification consumer
 │   ├── workflows/           Stalwart provisioning, mailbox expiration
-│   ├── tunnel/              cloudflared config examples
+│   ├── tunnel/              historical cloudflared config, no longer in use
 │   └── terraform/           DNS/WAF templates (not applied automatically)
 ├── docs/cloudflare/        architecture, deployment, security, rollback docs
 └── .github/workflows/      CI: Go, frontend, edge Worker, queue consumer, preview/prod deploy
@@ -128,9 +128,10 @@ amelu/
 
 ## Deployment
 
-Production runs at `app.amelu.org` (Pages) and `api.amelu.org` (edge Worker,
-then Tunnel, then the Go origin on a private VPS), with Postgres running
-alongside the API in Docker. [`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md)
+Everything runs on Cloudflare now. Production is `app.amelu.org` (Pages) and
+`api.amelu.org` (edge Worker, bound straight to the Go API running as a
+Cloudflare Container, no VPS anywhere anymore). Postgres is managed, hosted
+on Neon. [`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md)
 has the full procedure, and [`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md)
 covers backing out of a bad deploy.
 

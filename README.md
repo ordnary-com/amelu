@@ -1,10 +1,6 @@
 <img src="frontend/public/amelu-logo.png" alt="Amelu" height="40" />
 
-# Amelu
-
 Email hosting on your own domain, from [Ordnary](https://ordnary.com).
-
-amelu.org · app.amelu.org · [report an issue](https://github.com/ordnary-com/amelu/issues)
 
 ---
 

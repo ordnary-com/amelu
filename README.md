@@ -1,34 +1,45 @@
-<div align="center">
-
 <img src="frontend/public/amelu-logo.png" alt="Amelu" height="40" />
 
-**Email hosting on your own domain, fully managed.**
+# Amelu
 
-[![Go](https://github.com/ordnary-com/amelu/actions/workflows/go.yml/badge.svg)](https://github.com/ordnary-com/amelu/actions/workflows/go.yml)
-[![Frontend](https://github.com/ordnary-com/amelu/actions/workflows/frontend.yml/badge.svg)](https://github.com/ordnary-com/amelu/actions/workflows/frontend.yml)
-[![Edge Worker](https://github.com/ordnary-com/amelu/actions/workflows/edge-worker.yml/badge.svg)](https://github.com/ordnary-com/amelu/actions/workflows/edge-worker.yml)
-[![License](https://img.shields.io/badge/license-source--available-blue)](LICENSE.md)
+Email hosting on your own domain, from [Ordnary](https://ordnary.com).
 
-[amelu.org](https://amelu.org) · [app.amelu.org](https://app.amelu.org) · [Report an issue](https://github.com/ordnary-com/amelu/issues)
-
-</div>
+amelu.org · app.amelu.org · [report an issue](https://github.com/ordnary-com/amelu/issues)
 
 ---
 
-Amelu is an email hosting product by [Ordnary](https://ordnary.com). It provisions and manages mailboxes,
-aliases and domains on top of a self-hosted [Stalwart](https://stalw.art) mail server, with its own Postgres
-database for account and billing metadata, kept separate from Stalwart's own mail store.
+## Why we built this
 
-## Features
+We wanted email on our own domain that we actually control: real IMAP/SMTP,
+no lock-in to a big provider, no proprietary web client. Most "custom domain
+email" options turn out to be a reseller markup on top of Google Workspace,
+or they leave you self-hosting a mail server yourself, which starts as a
+weekend project and quietly becomes a permanent job: DNS records, spam
+reputation, a server you now have to keep patched forever.
 
-- **Domain hosting** — verify any domain, get guided DNS instructions, and (where supported) automatic DNS
-  fixes via Domain Connect.
-- **Mailboxes & aliases** — unlimited address and domain aliases, forwarding, catch-all addresses.
-- **Spam filtering & pattern rewrites** — on by default, no extra configuration.
-- **Billing** — Stripe-powered subscriptions with a real free tier, monthly or annual billing.
-- **Standards-based** — plain IMAP, SMTP and POP3. No proprietary protocol, use any email client.
-- **Self-hosted mail** — Stalwart runs on infrastructure we operate, not a big-tech reseller shelf.
-- **EU-hosted** — mail and data stay on servers in the EU.
+Amelu is our attempt at a middle path. Under the hood it's
+[Stalwart](https://stalw.art), an open-source mail server, doing the actual
+mail handling. Amelu is the layer on top: a dashboard for verifying domains,
+setting up aliases, getting DNS right, and billing, so running your own mail
+server feels like signing up for a SaaS product instead of administering one.
+
+Right now it's a working demo rather than a public launch. Domain
+verification, mailbox provisioning, and billing all work end to end against
+a real Stalwart instance we operate, but we're still hardening things before
+opening it up more broadly.
+
+## What it does
+
+Verify a domain and get guided DNS instructions, with automatic fixes via
+Domain Connect where that's supported. Create mailboxes and aliases, forward
+addresses, set up a catch-all. Spam filtering is on by default and doesn't
+need any setup.
+
+Since it's plain IMAP, SMTP, and POP3 underneath, any mail client works,
+there's no proprietary app you're stuck with. Billing runs through Stripe
+with a real free tier and monthly or annual paid plans. And because Stalwart
+runs on infrastructure we operate ourselves rather than someone else's
+platform, mail and data stay on servers in the EU.
 
 ## Architecture
 
@@ -41,40 +52,34 @@ database for account and billing metadata, kept separate from Stalwart's own mai
                                                                                                     Stalwart Mail Server
 ```
 
-- **`frontend/`** — React 19 + Vite dashboard, deployed to Cloudflare Pages.
-- **`backend/`** — Go API (stdlib `net/http`, 1.22+ pattern routing), Postgres via `pgx`, no ORM. The only
-  thing the frontend talks to; Stalwart and Postgres are never exposed directly.
-- **`cloudflare/edge/`** — TypeScript Worker that's the public entrypoint for `api.amelu.org`, proxying to the
-  Go origin over a private Cloudflare Tunnel.
-- **`cloudflare/queues/`**, **`cloudflare/workflows/`** — durable async jobs (domain verification, Stalwart
-  provisioning) and their retry/dead-letter handling.
+`frontend/` is the React 19 + Vite dashboard, deployed to Cloudflare Pages.
+`backend/` is a Go API (stdlib `net/http`, no framework, Postgres via `pgx`,
+no ORM) and it's the only thing the frontend ever talks to; Stalwart and
+Postgres are never exposed directly. `cloudflare/edge/` is a small
+TypeScript Worker that's the public entrypoint for `api.amelu.org` and
+proxies to the Go origin over a private Cloudflare Tunnel.
+`cloudflare/queues/` and `cloudflare/workflows/` handle the durable async
+jobs, mostly domain verification and Stalwart provisioning, along with their
+retry and dead-letter handling.
 
-The full migration architecture, rollout plan and rollback procedures are documented in
-[`docs/cloudflare/`](docs/cloudflare/README.md) — start there for anything infrastructure-related.
+The Postgres database only holds account and billing metadata; it's kept
+separate from Stalwart's own mail store on purpose. If you want the full
+migration architecture, rollout plan, and rollback procedures, they're in
+[`docs/cloudflare/`](docs/cloudflare/README.md).
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 19, Vite, react-router-dom, Material Web Components |
-| Backend | Go 1.26, stdlib `net/http`, `pgx` (no ORM) |
-| Database | PostgreSQL |
-| Mail server | [Stalwart](https://stalw.art), managed via its admin API |
-| Billing | Stripe |
-| Transactional email | [Resend](https://resend.com) |
-| Edge / CDN / DNS | Cloudflare (Pages, Workers, Tunnel, Queues, Workflows, R2) |
-| Package manager | pnpm (workspace monorepo) |
+Frontend is React 19, Vite, react-router-dom, and Material Web Components.
+Backend is Go 1.26 on the standard library's `net/http`, talking to Postgres
+through `pgx` directly, no ORM. Stalwart is the mail server, managed through
+its admin API. Stripe handles billing, [Resend](https://resend.com) handles
+transactional email, and Cloudflare (Pages, Workers, Tunnel, Queues,
+Workflows, R2) is the edge/CDN/DNS layer. It's a pnpm workspace monorepo.
 
-## Getting started
+## Running it locally
 
-### Prerequisites
-
-- [Node.js 20+](https://nodejs.org) (see `.nvmrc` — Vite's rolldown build does not run on Node 18)
-- [pnpm 9](https://pnpm.io) (`packageManager` pinned in `package.json`)
-- [Go 1.26+](https://go.dev)
-- A reachable PostgreSQL instance
-
-### Setup
+You'll need Node 20+ (see `.nvmrc`, Vite's rolldown build doesn't run on
+Node 18), pnpm 9, Go 1.26+, and a reachable PostgreSQL instance.
 
 ```bash
 git clone https://github.com/ordnary-com/amelu.git
@@ -87,13 +92,16 @@ cp backend/.env.example backend/.env
 pnpm dev
 ```
 
-This starts the frontend at `http://localhost:5173` and the backend at `http://localhost:8081`. Database
-migrations are plain `.sql` files under `backend/internal/db/migrations/`, embedded via `go:embed` and applied
-automatically on backend startup — there's no separate migrate command.
+That starts the frontend at `http://localhost:5173` and the backend at
+`http://localhost:8081`. Migrations are plain `.sql` files under
+`backend/internal/db/migrations/`, embedded via `go:embed` and applied
+automatically on backend startup, so there's no separate migrate command to
+remember.
 
-Optional integrations (Domain Connect, Resend, Stripe, "Login with Ordnary account") are all configured the
-same way: missing config means the feature reports itself unavailable at request time rather than failing
-startup. See `backend/.env.example` for the full list of variables.
+The rest of the integrations (Domain Connect, Resend, Stripe, "Login with
+Ordnary account") follow the same pattern: if the config is missing, the
+feature just reports itself unavailable at request time instead of failing
+startup. `backend/.env.example` has the full list of variables.
 
 ### Running tests
 
@@ -106,42 +114,48 @@ cd cloudflare/edge && npm test
 
 ```
 amelu/
-├── backend/              Go API
-│   ├── cmd/api/          entrypoint
-│   └── internal/         auth, db, handlers, stalwart client, ordnaryauth, ...
-├── frontend/              React dashboard (Cloudflare Pages)
+├── backend/               Go API
+│   ├── cmd/api/           entrypoint
+│   └── internal/          auth, db, handlers, stalwart client, ordnaryauth, ...
+├── frontend/               React dashboard (Cloudflare Pages)
 ├── cloudflare/
-│   ├── edge/              public API Worker
-│   ├── queues/             domain verification consumer
-│   ├── workflows/          Stalwart provisioning, mailbox expiration
-│   ├── tunnel/             cloudflared config examples
-│   └── terraform/          DNS/WAF templates (not applied automatically)
-├── docs/cloudflare/       architecture, deployment, security, rollback docs
-└── .github/workflows/     CI: Go, frontend, edge Worker, queue consumer, preview/prod deploy
+│   ├── edge/               public API Worker
+│   ├── queues/              domain verification consumer
+│   ├── workflows/           Stalwart provisioning, mailbox expiration
+│   ├── tunnel/              cloudflared config examples
+│   └── terraform/           DNS/WAF templates (not applied automatically)
+├── docs/cloudflare/        architecture, deployment, security, rollback docs
+└── .github/workflows/      CI: Go, frontend, edge Worker, queue consumer, preview/prod deploy
 ```
 
 ## Deployment
 
-Production deploys to `app.amelu.org` (Pages), `api.amelu.org` (edge Worker → Tunnel → Go origin on a private
-VPS), with Postgres running alongside the API in Docker. See
-[`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md) for the full procedure and
-[`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md) for how to back out of a bad deploy.
+Production runs at `app.amelu.org` (Pages) and `api.amelu.org` (edge Worker,
+then Tunnel, then the Go origin on a private VPS), with Postgres running
+alongside the API in Docker. [`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md)
+has the full procedure, and [`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md)
+covers backing out of a bad deploy.
 
 ## Security
 
-If you find a security issue, please email **abuse@amelu.org** rather than opening a public issue. See
-[`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md) for the recommended production security
-configuration (TLS, WAF, rate limiting, secret rotation).
+Found a security issue? Email **abuse@amelu.org** instead of opening a
+public issue. [`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md)
+describes what's actually in place in production (TLS, WAF, rate limiting,
+secret rotation).
 
 ## Contributing
 
-Issues and pull requests are welcome. Before making structural changes, skim `AGENTS.md` for this repo's
-conventions (no framework on the backend, no ORM, mirror existing patterns before inventing new ones). By
-submitting a contribution you agree to the terms in [`LICENSE.md`](LICENSE.md#4-contributions).
+Issues and pull requests are welcome. Before making structural changes, skim
+`AGENTS.md` for this repo's conventions, no framework on the backend, no
+ORM, and mirror existing patterns rather than inventing new ones. Submitting
+a contribution means you agree to the terms in
+[`LICENSE.md`](LICENSE.md#4-contributions).
 
 ## License
 
-Amelu is **source-available**, not open source in the OSI sense: the code is public so you can read it,
-verify it, and contribute back, but Ordnary retains all commercial and hosting rights. In short, you may not
-self-host Amelu, use the code in your own projects, or offer it as a service under any name. See
-[`LICENSE.md`](LICENSE.md) for the full terms.
+Amelu is source-available, not open source in the OSI sense: the code is
+public so you can read it, verify it, and contribute back, but Ordnary keeps
+the commercial and hosting rights. That means no self-hosting Amelu, no
+reusing the code in your own projects, and no offering it as a service under
+another name. Full terms are in [`LICENSE.md`](LICENSE.md).
+</content>

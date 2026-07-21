@@ -17,12 +17,13 @@ Amelu is our attempt at a middle path. Under the hood it's
 [Stalwart](https://stalw.art), an open-source mail server, doing the actual
 mail handling. Amelu is the layer on top: a dashboard for verifying domains,
 setting up aliases, getting DNS right, and billing, so running your own mail
-server feels like signing up for a SaaS product instead of administering one.
+server feels like signing up for a SaaS product instead of wrangling a
+server yourself at 1am because a cert expired.
 
-Right now it's a working demo rather than a public launch. Domain
-verification, mailbox provisioning, and billing all work end to end against
-a real Stalwart instance we operate, but we're still hardening things before
-opening it up more broadly.
+Right now it's a working demo, not a public launch, so don't go telling all
+your friends yet. Domain verification, mailbox provisioning, and billing all
+work end to end against a real Stalwart instance we operate, but we're still
+hardening things before opening it up more broadly.
 
 ## What it does
 
@@ -32,50 +33,50 @@ addresses, set up a catch-all. Spam filtering is on by default and doesn't
 need any setup.
 
 Since it's plain IMAP, SMTP, and POP3 underneath, any mail client works,
-there's no proprietary app you're stuck with. Billing runs through Stripe
-with a real free tier and monthly or annual paid plans. And because Stalwart
-runs on infrastructure we operate ourselves rather than someone else's
-platform, mail and data stay on servers in the EU.
+no proprietary app you're stuck with, use Thunderbird, Apple Mail, whatever
+you like. Billing runs through Stripe with a real free tier and monthly or
+annual paid plans. And because Stalwart runs on infrastructure we operate
+ourselves rather than someone else's platform, mail and data stay on servers
+in the EU.
 
 ## Architecture
 
-```
-                     ┌──────────────────┐        ┌──────────────────┐
-   Browser ───────▶  │  Cloudflare Pages │        │  Cloudflare Edge  │  ───▶  Cloudflare Tunnel  ───▶  Go API
-                     │   (React/Vite)    │        │  Worker (public)  │                                   │
-                     └──────────────────┘        └──────────────────┘                                   ▼
-                                                                                                    PostgreSQL (pgx)
-                                                                                                    Stalwart Mail Server
-```
+Nothing fancy, just a few pieces talking to each other:
 
-`frontend/` is the React 19 + Vite dashboard, deployed to Cloudflare Pages.
-`backend/` is a Go API (stdlib `net/http`, no framework, Postgres via `pgx`,
-no ORM) and it's the only thing the frontend ever talks to; Stalwart and
-Postgres are never exposed directly. `cloudflare/edge/` is a small
-TypeScript Worker that's the public entrypoint for `api.amelu.org` and
-proxies to the Go origin over a private Cloudflare Tunnel.
-`cloudflare/queues/` and `cloudflare/workflows/` handle the durable async
-jobs, mostly domain verification and Stalwart provisioning, along with their
-retry and dead-letter handling.
+- `frontend/`: React 19 + Vite dashboard, deployed to Cloudflare Pages.
+- `backend/`: Go API, stdlib `net/http`, no framework, Postgres via `pgx`,
+  no ORM. This is the only thing the frontend ever talks to. Stalwart and
+  Postgres are never exposed directly.
+- `cloudflare/edge/`: small TypeScript Worker, public entrypoint for
+  `api.amelu.org`, proxies to the Go origin over a private Cloudflare
+  Tunnel.
+- `cloudflare/queues/` + `cloudflare/workflows/`: the durable async stuff,
+  domain verification, Stalwart provisioning, retries, dead-letter handling.
 
-The Postgres database only holds account and billing metadata; it's kept
-separate from Stalwart's own mail store on purpose. If you want the full
-migration architecture, rollout plan, and rollback procedures, they're in
-[`docs/cloudflare/`](docs/cloudflare/README.md).
+Postgres only stores account and billing metadata, kept separate from
+Stalwart's own mail store on purpose. Full migration architecture, rollout
+plan, rollback procedures: that's all in
+[`docs/cloudflare/`](docs/cloudflare/README.md) if you're curious.
 
 ## Tech stack
 
-Frontend is React 19, Vite, react-router-dom, and Material Web Components.
-Backend is Go 1.26 on the standard library's `net/http`, talking to Postgres
-through `pgx` directly, no ORM. Stalwart is the mail server, managed through
-its admin API. Stripe handles billing, [Resend](https://resend.com) handles
-transactional email, and Cloudflare (Pages, Workers, Tunnel, Queues,
-Workflows, R2) is the edge/CDN/DNS layer. It's a pnpm workspace monorepo.
+- Frontend: React 19, Vite, react-router-dom, Material Web Components
+- Backend: Go 1.26, stdlib `net/http`, `pgx` (no ORM, no framework)
+- Mail: [Stalwart](https://stalw.art), talked to via its admin API
+- Billing: Stripe
+- Transactional email: [Resend](https://resend.com)
+- Edge/CDN/DNS: Cloudflare (Pages, Workers, Tunnel, Queues, Workflows, R2)
+- Everything glued together with pnpm workspaces
 
 ## Running it locally
 
-You'll need Node 20+ (see `.nvmrc`, Vite's rolldown build doesn't run on
-Node 18), pnpm 9, Go 1.26+, and a reachable PostgreSQL instance.
+You'll need:
+
+- Node 20+ (`.nvmrc` has the exact version, Vite's rolldown build doesn't
+  run on Node 18, learned that the hard way)
+- pnpm 9
+- Go 1.26+
+- a reachable PostgreSQL instance
 
 ```bash
 git clone https://github.com/ordnary-com/amelu.git
@@ -91,13 +92,14 @@ pnpm dev
 That starts the frontend at `http://localhost:5173` and the backend at
 `http://localhost:8081`. Migrations are plain `.sql` files under
 `backend/internal/db/migrations/`, embedded via `go:embed` and applied
-automatically on backend startup, so there's no separate migrate command to
-remember.
+automatically on backend startup, no separate migrate command to remember or
+forget.
 
 The rest of the integrations (Domain Connect, Resend, Stripe, "Login with
 Ordnary account") follow the same pattern: if the config is missing, the
-feature just reports itself unavailable at request time instead of failing
-startup. `backend/.env.example` has the full list of variables.
+feature just shrugs and reports itself unavailable at request time instead
+of crashing on startup. `backend/.env.example` has the full list of
+variables.
 
 ### Running tests
 

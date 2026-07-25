@@ -10,20 +10,18 @@ import (
 // backupMXHost is one of the other nodes in this Stalwart cluster, added
 // as DNS-level MX failover on top of Stalwart's own auto-generated zone
 // file - which only ever includes a single MX record for marduk, the node
-// the admin API talks to. Confirmed live: since all three nodes share
-// cluster storage, mail sent directly to either of these independently
-// delivers correctly for any domain in the cluster, not just marduk's -
-// so without these, marduk being unreachable would break inbound mail for
-// every domain even though the other two nodes could easily have handled
-// it.
+// the admin API talks to. Confirmed live: since both nodes share cluster
+// storage, mail sent directly to the other independently delivers
+// correctly for any domain in the cluster, not just marduk's - so without
+// this, marduk being unreachable would break inbound mail for every domain
+// even though the other node could easily have handled it.
 type backupMXHost struct {
 	Host     string
 	Priority int
 }
 
 var backupMXHosts = []backupMXHost{
-	{Host: "nabu.mx.amelu.org.", Priority: 20},
-	{Host: "ishtar.mx.amelu.org.", Priority: 30},
+	{Host: "ishtar.mx.amelu.org.", Priority: 20},
 }
 
 // AppendBackupMXRecords adds ZoneRecord entries for the cluster's other

@@ -197,9 +197,37 @@ input[type="checkbox"]:disabled {
   flex-shrink: 0;
 }
 
+/* Every primary action button in the app (Material's md-filled-button, and
+   the plain .button-primary/.button-pill links used outside Material
+   contexts, e.g. the dashboard's "Add a domain") should look identical:
+   solid brand blue, white label, the same 4px corner radius. Outlined/text
+   buttons get the same corner radius and sizing for visual consistency but
+   stay outlined/text - Cancel needs to read as lower-emphasis than Save,
+   not just a second blue button next to it. */
+md-filled-button {
+  --md-filled-button-container-color: var(--link);
+  --md-filled-button-label-text-color: #ffffff;
+  --md-filled-button-container-shape: 4px;
+  --md-filled-button-label-text-size: 0.85rem;
+  --md-filled-button-hover-label-text-color: #ffffff;
+  --md-filled-button-pressed-label-text-color: #ffffff;
+  --md-filled-button-focus-label-text-color: #ffffff;
+}
+md-outlined-button {
+  --md-outlined-button-outline-color: var(--link);
+  --md-outlined-button-label-text-color: var(--link);
+  --md-outlined-button-container-shape: 4px;
+  --md-outlined-button-label-text-size: 0.85rem;
+}
+md-text-button {
+  --md-text-button-label-text-color: var(--link);
+  --md-text-button-container-shape: 4px;
+  --md-text-button-label-text-size: 0.85rem;
+}
+
 md-filled-button.md-button-error {
   --md-filled-button-container-color: var(--md-sys-color-error);
-  --md-filled-button-label-text-color: #202124;
+  --md-filled-button-label-text-color: #ffffff;
 }
 md-outlined-button.md-button-error {
   --md-outlined-button-outline-color: var(--md-sys-color-error);
@@ -1688,8 +1716,6 @@ margin: 0.2ch;
   gap: 0.6rem;
 }
 
-.button-primary,
-.button-secondary,
 .button-outline {
   display: inline-flex;
   align-items: center;
@@ -1697,20 +1723,9 @@ margin: 0.2ch;
   border-radius: 4px;
   font-size: 0.85rem;
   text-decoration: none;
-}
-.button-primary {
-  background-color: var(--link);
-  color: #041e49;
-}
-.button-primary:hover {
-  background-color: #aecbfa;
-}
-.button-secondary,
-.button-outline {
   border: 1px solid var(--border);
   color: var(--link);
 }
-.button-secondary:hover,
 .button-outline:hover {
   background-color: var(--surface-raised);
 }
@@ -1774,12 +1789,13 @@ margin: 0.2ch;
 }
 .button-pill {
   background-color: var(--link);
-  color: #041e49;
+  color: #ffffff;
   font-weight: 500;
   border: none;
 }
 .button-pill:hover {
   background-color: #aecbfa;
+  color: #041e49;
   text-decoration: none;
 }
 .button-pill:disabled {

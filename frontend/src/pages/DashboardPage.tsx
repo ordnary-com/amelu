@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api, type ActivityEntry, type Domain } from "../api/client";
 
@@ -116,6 +116,7 @@ function FeatureIllustration() {
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const { customer } = useAuth();
   const [domains, setDomains] = useState<Domain[] | null>(null);
   const [activity, setActivity] = useState<ActivityRow[] | null>(null);
@@ -214,13 +215,11 @@ export function DashboardPage() {
               business while delivery, security, and filtering are handled for you.
             </p>
             <div className="dashboard-feature-buttons">
-              <Link to="/domains/new" className="button-primary">
-                Add a domain
-              </Link>
+              <md-filled-button onClick={() => navigate("/domains/new")}>Add a domain</md-filled-button>
               {firstDomain && (
-                <Link to={`/domains/${firstDomain.id}/mailboxes/new`} className="button-secondary">
+                <md-outlined-button onClick={() => navigate(`/domains/${firstDomain.id}/mailboxes/new`)}>
                   New mailbox
-                </Link>
+                </md-outlined-button>
               )}
             </div>
           </div>

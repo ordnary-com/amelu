@@ -47,9 +47,9 @@ export function ImportMailboxesPage() {
                   ) : (
                     <>
                       Created.{" "}
-                      {r.generatedPassword && (
+                      {r.password && (
                         <>
-                          Password: <span className="api-token">{r.generatedPassword}</span>{" "}
+                          Password: <span className="api-token">{r.password}</span>{" "}
                         </>
                       )}
                       {r.note && <span className="light">{r.note}</span>}

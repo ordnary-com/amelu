@@ -232,12 +232,16 @@ export interface Mailbox {
   displayName: string;
   status: "active" | "suspended" | "deleted";
   createdAt: string;
-  generatedPassword?: string;
+  // The password actually set in the mail cluster on creation - present
+  // whether it was typed in or auto-generated, so the customer always has
+  // a way to confirm exactly what was set. Never present on any other
+  // response (we don't have the plaintext after creation).
+  password?: string;
 }
 
 export interface ImportMailboxResult {
   address: string;
-  generatedPassword?: string;
+  password?: string;
   note?: string;
   error?: string;
 }

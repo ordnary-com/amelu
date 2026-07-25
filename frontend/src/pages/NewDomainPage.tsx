@@ -80,7 +80,7 @@ export function NewDomainPage() {
       if (createDefaultAddresses) {
         for (const localPart of DEFAULT_ADDRESSES) {
           const mailbox = await api.createMailbox(domain.id, localPart);
-          addresses.push({ address: mailbox.address, password: mailbox.generatedPassword });
+          addresses.push({ address: mailbox.address, password: mailbox.password });
         }
       }
 

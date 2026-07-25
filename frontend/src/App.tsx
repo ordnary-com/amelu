@@ -33,7 +33,8 @@ import { NewAliasPage } from "./pages/NewAliasPage";
 import { ImportAliasesPage } from "./pages/ImportAliasesPage";
 import { DefaultServicesPage } from "./pages/DefaultServicesPage";
 import { DefaultLimitsPage } from "./pages/DefaultLimitsPage";
-import { DnsPage } from "./pages/DnsPage";
+import { DnsOverviewPage } from "./pages/DnsOverviewPage";
+import { DnsRecordsPage } from "./pages/DnsRecordsPage";
 import { DeleteDomainPage } from "./pages/DeleteDomainPage";
 import { AccountOverviewPage } from "./pages/AccountOverviewPage";
 import { AccountGeneralPage } from "./pages/AccountGeneralPage";
@@ -123,7 +124,8 @@ export default function App() {
             <Route path="/domains/:domainId/catchall" element={<CatchallPage />} />
             <Route path="/domains/:domainId/bccs/new" element={<NewBccCapturePage />} />
             <Route path="/domains/:domainId/bccs" element={<BccCapturesPage />} />
-            <Route path="/domains/:domainId/dns" element={<DnsPage />} />
+            <Route path="/domains/:domainId/dns" element={<DnsOverviewPage />} />
+            <Route path="/domains/:domainId/dns/records" element={<DnsRecordsPage />} />
             <Route path="/domains/:domainId/spam" element={<SpamOverviewPage />} />
             <Route path="/domains/:domainId/spam/subject" element={<SpamAggressivenessPage />} />
             <Route path="/domains/:domainId/spam/sender-lists" element={<SpamSenderListsPage />} />

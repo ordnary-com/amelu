@@ -28,6 +28,7 @@ export function Layout() {
   const onDomainAliasesArea = domainId != null && path.startsWith(`/domains/${domainId}/domain-aliases`);
   const onRewritesArea = domainId != null && path.startsWith(`/domains/${domainId}/rewrites`);
   const onBccsArea = domainId != null && path.startsWith(`/domains/${domainId}/bccs`);
+  const onDnsArea = domainId != null && path.startsWith(`/domains/${domainId}/dns`);
   const onSpamArea = domainId != null && path.startsWith(`/domains/${domainId}/spam`);
   const onMailboxDetailArea = domainId != null && mailboxId != null && path.startsWith(`/domains/${domainId}/mailboxes/${mailboxId}`);
 
@@ -185,7 +186,7 @@ export function Layout() {
                   </li>
                 )}
 
-                <li className={exact(`/domains/${domainId}/dns`)}>
+                <li className={onDnsArea ? "active" : ""}>
                   <Link to={`/domains/${domainId}/dns`}>DNS Configuration</Link>
                 </li>
                 <li className={onSpamArea ? "active" : ""}>
@@ -226,6 +227,19 @@ export function Layout() {
                 </li>
                 <li className={exact(`/domains/${domainId}/spam/recipient-denylist`)}>
                   <Link to={`/domains/${domainId}/spam/recipient-denylist`}>Recipient Denylist</Link>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {onDnsArea && (
+            <div className="sidemenu">
+              <ul>
+                <li className={exact(`/domains/${domainId}/dns`)}>
+                  <Link to={`/domains/${domainId}/dns`}>Overview</Link>
+                </li>
+                <li className={exact(`/domains/${domainId}/dns/records`)}>
+                  <Link to={`/domains/${domainId}/dns/records`}>DNS Config</Link>
                 </li>
               </ul>
             </div>

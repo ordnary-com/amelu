@@ -16,7 +16,7 @@ const STATUS_CLASS: Record<DnsRecordCheck["status"], string> = {
   unchecked: "tag orange",
 };
 
-export function DnsPage() {
+export function DnsRecordsPage() {
   const { domainId } = useParams<{ domainId: string }>();
   const [records, setRecords] = useState<DnsRecordCheck[] | null>(null);
   const [applyUrl, setApplyUrl] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export function DnsPage() {
   return (
     <div>
       <div className="page-header">
-        <h1>DNS Configuration</h1>
+        <h1>DNS Config</h1>
         <div className="page-header-actions">
           <md-outlined-button type="button" onClick={reload} disabled={checking}>
             {checking ? "Checking…" : "Recheck DNS"}

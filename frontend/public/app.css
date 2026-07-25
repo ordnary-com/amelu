@@ -1,38 +1,65 @@
 /*
 Color scheme: https://www.ibm.com/design/language/color/
-Dark theme tokens modeled after Google Cloud Console's dark palette.
+Light theme - page content is white/near-white, chrome (header + sidebar)
+is brand blue #0043ce (the exact blue in amelu-logo.png), overridden
+locally on those two containers further down.
 */
 
 :root {
-  --bg: #202124;
-  --surface: #292a2d;
-  --surface-raised: #303134;
-  --surface-deep: #141414;
-  --text: #e8eaed;
-  --text-muted: #9aa0a6;
-  --border: rgba(255, 255, 255, 0.12);
-  --link: #8ab4f8;
+  --bg: #f8f9fa;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-deep: #f1f3f4;
+  --text: #202124;
+  --text-muted: #5f6368;
+  --border: rgba(0, 0, 0, 0.12);
+  --link: #0043ce;
 
-  /* Material 3 tokens, mapped onto the dark palette above so md-* web
+  /* Material 3 tokens, mapped onto the light palette above so md-* web
      components (checkbox, radio, buttons, text fields) match the rest of
      the app instead of Material's default purple light theme. */
   --md-sys-color-primary: var(--link);
-  --md-sys-color-on-primary: #041e49;
+  --md-sys-color-on-primary: #ffffff;
   --md-sys-color-on-surface: var(--text);
   --md-sys-color-on-surface-variant: var(--text-muted);
-  --md-sys-color-outline: rgba(255, 255, 255, 0.35);
+  --md-sys-color-outline: rgba(0, 0, 0, 0.35);
   --md-sys-color-outline-variant: var(--border);
   --md-sys-color-surface: var(--surface);
   --md-sys-color-surface-container-highest: var(--surface-raised);
-  --md-sys-color-error: #f28b82;
-  --md-sys-color-on-error-container: #f28b82;
-  --md-sys-color-shadow: #000000;
+  --md-sys-color-error: #da1e28;
+  --md-sys-color-on-error-container: #da1e28;
+  --md-sys-color-shadow: rgba(0, 0, 0, 0.3);
   --md-ref-typeface-plain: "Google Sans", "Helvetica Neue", sans-serif;
   --md-ref-typeface-brand: "Google Sans", "Helvetica Neue", sans-serif;
 
   --md-dialog-container-color: var(--surface-raised);
   --md-dialog-headline-color: var(--text);
   --md-dialog-supporting-text-color: var(--text-muted);
+}
+
+/* Chrome (header + sidebar) stays brand blue regardless of the light page
+   theme above - redefining the same tokens here means every existing rule
+   that reads var(--text-muted)/var(--surface)/var(--border) etc. inside
+   these two containers automatically becomes light-on-blue without having
+   to touch each sidebar/header rule individually. */
+header,
+.sidemenu-container {
+  --bg: #0043ce;
+  --surface: #0032a0;
+  --surface-raised: #0032a0;
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.75);
+  --border: rgba(255, 255, 255, 0.25);
+  --link: #ffffff;
+  background-color: var(--bg);
+  color: var(--text);
+}
+header img {
+  /* amelu-logo.png is a single flat blue (#0043ce) on a transparent
+     background - brightness(0) crushes it to black while preserving alpha,
+     invert(1) flips that black to white, giving a clean white wordmark on
+     the blue header without needing a separate logo asset. */
+  filter: brightness(0) invert(1);
 }
 
 html {
@@ -170,9 +197,37 @@ input[type="checkbox"]:disabled {
   flex-shrink: 0;
 }
 
+/* Every primary action button in the app (Material's md-filled-button, and
+   the plain .button-primary/.button-pill links used outside Material
+   contexts, e.g. the dashboard's "Add a domain") should look identical:
+   solid brand blue, white label, the same 4px corner radius. Outlined/text
+   buttons get the same corner radius and sizing for visual consistency but
+   stay outlined/text - Cancel needs to read as lower-emphasis than Save,
+   not just a second blue button next to it. */
+md-filled-button {
+  --md-filled-button-container-color: var(--link);
+  --md-filled-button-label-text-color: #ffffff;
+  --md-filled-button-container-shape: 4px;
+  --md-filled-button-label-text-size: 0.85rem;
+  --md-filled-button-hover-label-text-color: #ffffff;
+  --md-filled-button-pressed-label-text-color: #ffffff;
+  --md-filled-button-focus-label-text-color: #ffffff;
+}
+md-outlined-button {
+  --md-outlined-button-outline-color: var(--link);
+  --md-outlined-button-label-text-color: var(--link);
+  --md-outlined-button-container-shape: 4px;
+  --md-outlined-button-label-text-size: 0.85rem;
+}
+md-text-button {
+  --md-text-button-label-text-color: var(--link);
+  --md-text-button-container-shape: 4px;
+  --md-text-button-label-text-size: 0.85rem;
+}
+
 md-filled-button.md-button-error {
   --md-filled-button-container-color: var(--md-sys-color-error);
-  --md-filled-button-label-text-color: #202124;
+  --md-filled-button-label-text-color: #ffffff;
 }
 md-outlined-button.md-button-error {
   --md-outlined-button-outline-color: var(--md-sys-color-error);
@@ -253,7 +308,7 @@ md-outlined-button.md-button-error {
 }
 .segmented-option-active {
   background-color: var(--link);
-  color: #041e49;
+  color: #ffffff;
   font-weight: 500;
 }
 .segmented-option-disabled {
@@ -444,6 +499,11 @@ main {
  display: flex;
  flex-direction: row;
  flex: 1;
+ /* .container's border-top-left-radius reveals whatever sits behind it in
+    that corner - which is main's own background, not the sidebar's. Must
+    match the sidebar's blue so the rounded corner reads as one continuous
+    blue shape instead of a mismatched light sliver peeking through. */
+ background-color: #0043ce;
 }
 
 main h1 {
@@ -1656,8 +1716,6 @@ margin: 0.2ch;
   gap: 0.6rem;
 }
 
-.button-primary,
-.button-secondary,
 .button-outline {
   display: inline-flex;
   align-items: center;
@@ -1665,20 +1723,9 @@ margin: 0.2ch;
   border-radius: 4px;
   font-size: 0.85rem;
   text-decoration: none;
-}
-.button-primary {
-  background-color: var(--link);
-  color: #041e49;
-}
-.button-primary:hover {
-  background-color: #aecbfa;
-}
-.button-secondary,
-.button-outline {
   border: 1px solid var(--border);
   color: var(--link);
 }
-.button-secondary:hover,
 .button-outline:hover {
   background-color: var(--surface-raised);
 }
@@ -1742,12 +1789,13 @@ margin: 0.2ch;
 }
 .button-pill {
   background-color: var(--link);
-  color: #041e49;
+  color: #ffffff;
   font-weight: 500;
   border: none;
 }
 .button-pill:hover {
   background-color: #aecbfa;
+  color: #041e49;
   text-decoration: none;
 }
 .button-pill:disabled {

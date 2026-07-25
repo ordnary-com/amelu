@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, ApiError, type Domain } from "../api/client";
 import { useSnackbar } from "../context/SnackbarContext";
 
-type PasswordMethod = "invitation" | "password";
+type PasswordMethod = "generate" | "password";
 
 export function NewMailboxPage() {
   const { showSnackbar } = useSnackbar();
@@ -12,12 +12,11 @@ export function NewMailboxPage() {
   const [domain, setDomain] = useState<Domain | null>(null);
   const [localPart, setLocalPart] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [passwordMethod, setPasswordMethod] = useState<PasswordMethod>("invitation");
-  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [passwordMethod, setPasswordMethod] = useState<PasswordMethod>("generate");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{ address: string; password?: string; invited: boolean } | null>(null);
+  const [result, setResult] = useState<{ address: string; password?: string; wasGenerated: boolean } | null>(null);
 
   useEffect(() => {
     if (!domainId) return;
@@ -30,18 +29,13 @@ export function NewMailboxPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      // "Invite user to set own password" needs an email-invitation flow we
-      // don't have yet (no transactional email sending is wired up), so it
-      // falls back to generating a password the same way an empty password
-      // always has - the result screen says so plainly rather than
-      // pretending an invite email went out.
       const mailbox = await api.createMailbox(
         domainId,
         localPart.trim(),
         displayName.trim(),
         passwordMethod === "password" ? password : "",
       );
-      setResult({ address: mailbox.address, password: mailbox.generatedPassword, invited: passwordMethod === "invitation" });
+      setResult({ address: mailbox.address, password: mailbox.password, wasGenerated: passwordMethod === "generate" });
     } catch (err) {
       showSnackbar(err instanceof ApiError ? err.message : "Could not create mailbox", "error");
     } finally {
@@ -53,18 +47,17 @@ export function NewMailboxPage() {
     return (
       <div className="mailbox-form">
         <h1>Mailbox Added</h1>
-        {result.invited && (
-          <div className="alert alert-info">
-            <span>Email invitations aren't available yet - share this generated password with them directly.</span>
-          </div>
-        )}
         <p>
           <strong>{result.address}</strong> was created
-          {result.password && " with a generated password, shown only once"}:
+          {result.password && (result.wasGenerated ? " with a generated password, shown only once" : " with the password you set")}:
         </p>
         {result.password && (
           <div className="field">
-            <md-outlined-text-field label="Generated password" value={result.password} readOnly />
+            <md-outlined-text-field
+              label={result.wasGenerated ? "Generated password" : "Password"}
+              value={result.password}
+              readOnly
+            />
           </div>
         )}
         <div className="field-action">
@@ -79,10 +72,7 @@ export function NewMailboxPage() {
   return (
     <div className="mailbox-form">
       <h1>New Mailbox</h1>
-      <p>
-        Pick the address and its display name. You can set an initial password now yourself or simply let the
-        mailbox user pick one by sending an invitation.
-      </p>
+      <p>Pick the address and its display name, then either generate a password or set one yourself.</p>
 
       <form onSubmit={submit} autoComplete="new-password">
         <h4>Mailbox Information</h4>
@@ -112,10 +102,10 @@ export function NewMailboxPage() {
           <label className="md-radio-label">
             <md-radio
               name="password-method"
-              checked={passwordMethod === "invitation"}
-              onChange={() => setPasswordMethod("invitation")}
+              checked={passwordMethod === "generate"}
+              onChange={() => setPasswordMethod("generate")}
             />
-            Invite user to set own password
+            Generate a password for me
           </label>
           <label className="md-radio-label">
             <md-radio
@@ -126,20 +116,6 @@ export function NewMailboxPage() {
             Set initial password
           </label>
         </div>
-
-        {passwordMethod === "invitation" && (
-          <div className="field">
-            <md-outlined-text-field
-              label="Email address"
-              type="email"
-              autocomplete="new-password"
-              placeholder="john@somewhere-else.tld"
-              value={recoveryEmail}
-              onInput={(e) => setRecoveryEmail((e.target as unknown as { value: string }).value)}
-              required
-            />
-          </div>
-        )}
 
         {passwordMethod === "password" && (
           <div className="field field-with-action">

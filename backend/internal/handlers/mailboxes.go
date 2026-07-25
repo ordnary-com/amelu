@@ -58,7 +58,10 @@ func errStatus(err error) int {
 
 // createMailbox creates one mailbox end to end (plan limit check, Stalwart,
 // then our own DB), shared by the single-mailbox create handler and CSV
-// import so the rules can't drift between the two paths.
+// import so the rules can't drift between the two paths. The returned string
+// is always the password that was actually set in Stalwart - caller-supplied
+// or freshly generated - so the customer can be shown exactly what was set,
+// rather than only ever seeing a password back when one was auto-generated.
 func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.Domain, rawLocalPart, displayName, password string) (*db.Mailbox, string, error) {
 	localPart := strings.ToLower(strings.TrimSpace(rawLocalPart))
 	if localPart == "" {
@@ -77,13 +80,11 @@ func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.D
 		return nil, "", &httpError{http.StatusForbidden, "mailbox limit reached for your plan"}
 	}
 
-	generatedPassword := ""
 	if password == "" {
-		generatedPassword, err = generatePassword()
+		password, err = generatePassword()
 		if err != nil {
 			return nil, "", &httpError{http.StatusInternalServerError, "could not generate password"}
 		}
-		password = generatedPassword
 	}
 
 	if _, err := a.Stalwart.CreateMailbox(ctx, localPart, domain.Name, password); err != nil {
@@ -102,7 +103,7 @@ func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.D
 		a.Store.LogActivity(ctx, domain.ID, "mailbox.defaults_apply_failed", "Could not apply domain default services/limits to "+localPart+"@"+domain.Name+": "+err.Error())
 	}
 
-	return mailbox, generatedPassword, nil
+	return mailbox, password, nil
 }
 
 // applyDomainDefaultsToMailbox pushes the domain's Default Services /
@@ -154,7 +155,7 @@ type createMailboxRequest struct {
 
 type createMailboxResponse struct {
 	mailboxResponse
-	GeneratedPassword string `json:"generatedPassword,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 func (a *App) CreateMailbox(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +189,7 @@ func (a *App) CreateMailbox(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not check plan limits")
 		return
 	}
-	mailbox, generatedPassword, err := a.createMailbox(r.Context(), planTierID, domain, req.LocalPart, req.DisplayName, req.Password)
+	mailbox, usedPassword, err := a.createMailbox(r.Context(), planTierID, domain, req.LocalPart, req.DisplayName, req.Password)
 	if err != nil {
 		writeError(w, errStatus(err), err.Error())
 		return
@@ -206,8 +207,8 @@ func (a *App) CreateMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, createMailboxResponse{
-		mailboxResponse:   toMailboxResponse(mailbox, domain.Name),
-		GeneratedPassword: generatedPassword,
+		mailboxResponse: toMailboxResponse(mailbox, domain.Name),
+		Password:        usedPassword,
 	})
 }
 
@@ -445,10 +446,10 @@ type importMailboxesRequest struct {
 }
 
 type importMailboxResult struct {
-	Address           string `json:"address"`
-	GeneratedPassword string `json:"generatedPassword,omitempty"`
-	Note              string `json:"note,omitempty"`
-	Error             string `json:"error,omitempty"`
+	Address  string `json:"address"`
+	Password string `json:"password,omitempty"`
+	Note     string `json:"note,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 // ImportMailboxesCSV bulk-creates mailboxes from CSV with exactly 7 columns
@@ -524,7 +525,7 @@ func (a *App) ImportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
 		expirationDate := col(row, 5)
 		removeUponExpiration := col(row, 6)
 
-		mailbox, generatedPassword, err := a.createMailbox(r.Context(), planTierID, domain, localPart, displayName, password)
+		mailbox, usedPassword, err := a.createMailbox(r.Context(), planTierID, domain, localPart, displayName, password)
 		if err != nil {
 			results = append(results, importMailboxResult{Address: localPart + "@" + domain.Name, Error: err.Error()})
 			continue
@@ -567,9 +568,9 @@ func (a *App) ImportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
 		}
 
 		results = append(results, importMailboxResult{
-			Address:           mailbox.LocalPart + "@" + domain.Name,
-			GeneratedPassword: generatedPassword,
-			Note:              note,
+			Address:  mailbox.LocalPart + "@" + domain.Name,
+			Password: usedPassword,
+			Note:     note,
 		})
 	}
 

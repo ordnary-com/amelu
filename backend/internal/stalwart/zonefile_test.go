@@ -72,8 +72,8 @@ func TestAppendBackupMXRecords(t *testing.T) {
 	base := []ZoneRecord{{Name: "example.com.", Type: "MX", TTL: 3600, Priority: intPtr(10), Content: "marduk.mx.amelu.org."}}
 	records := AppendBackupMXRecords(base, "example.com")
 
-	if len(records) != 3 {
-		t.Fatalf("got %d records, want 3 (1 original + 2 backup)", len(records))
+	if len(records) != 2 {
+		t.Fatalf("got %d records, want 2 (1 original + 1 backup)", len(records))
 	}
 
 	var mxHosts []string
@@ -93,13 +93,13 @@ func TestAppendBackupMXRecords(t *testing.T) {
 		priorities = append(priorities, *r.Priority)
 	}
 
-	wantHosts := []string{"marduk.mx.amelu.org.", "nabu.mx.amelu.org.", "ishtar.mx.amelu.org."}
+	wantHosts := []string{"marduk.mx.amelu.org.", "ishtar.mx.amelu.org."}
 	for i, want := range wantHosts {
 		if mxHosts[i] != want {
 			t.Errorf("mxHosts[%d] = %q, want %q", i, mxHosts[i], want)
 		}
 	}
-	wantPriorities := []int{10, 20, 30}
+	wantPriorities := []int{10, 20}
 	for i, want := range wantPriorities {
 		if priorities[i] != want {
 			t.Errorf("priorities[%d] = %d, want %d", i, priorities[i], want)
@@ -109,11 +109,11 @@ func TestAppendBackupMXRecords(t *testing.T) {
 
 func TestAppendBackupMXZoneFileLines(t *testing.T) {
 	lines := AppendBackupMXZoneFileLines("example.com")
-	if !strings.Contains(lines, "example.com.\t3600\tIN\tMX\t20 nabu.mx.amelu.org.") {
-		t.Errorf("missing nabu MX line, got:\n%s", lines)
-	}
-	if !strings.Contains(lines, "example.com.\t3600\tIN\tMX\t30 ishtar.mx.amelu.org.") {
+	if !strings.Contains(lines, "example.com.\t3600\tIN\tMX\t20 ishtar.mx.amelu.org.") {
 		t.Errorf("missing ishtar MX line, got:\n%s", lines)
+	}
+	if strings.Contains(lines, "nabu") {
+		t.Errorf("nabu should no longer appear, got:\n%s", lines)
 	}
 }
 

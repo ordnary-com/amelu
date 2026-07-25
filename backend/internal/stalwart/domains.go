@@ -17,6 +17,14 @@ type Domain struct {
 
 // CreateDomain creates a Domain object in Stalwart. It does not itself
 // configure DKIM/DNS management mode; Stalwart defaults apply.
+//
+// Idempotent by design: if the domain was already provisioned directly in
+// Stalwart (e.g. amelu.org itself, bootstrapped before the app's own
+// domain-ownership tracking existed), Stalwart rejects the create with a
+// primaryKeyViolation. Rather than surface that as a failure - which left
+// the caller's own domain row stuck in "failed" with no way to recover
+// short of manually deleting Stalwart's mailboxes first - we adopt the
+// existing domain and return it, same as if we'd just created it.
 func (c *Client) CreateDomain(ctx context.Context, name string) (*Domain, error) {
 	args := map[string]any{
 		"create": map[string]any{
@@ -38,6 +46,12 @@ func (c *Client) CreateDomain(ctx context.Context, name string) (*Domain, error)
 		return nil, fmt.Errorf("decode create domain response: %w", err)
 	}
 	if notCreated, ok := result.NotCreated["d0"]; ok {
+		var reason struct {
+			Type string `json:"type"`
+		}
+		if json.Unmarshal(notCreated, &reason) == nil && reason.Type == "primaryKeyViolation" {
+			return c.GetDomain(ctx, name)
+		}
 		return nil, fmt.Errorf("stalwart rejected domain %s: %s", name, notCreated)
 	}
 	created, ok := result.Created["d0"]

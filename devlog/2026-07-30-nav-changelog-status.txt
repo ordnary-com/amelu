@@ -1,0 +1,11 @@
+Changelog moved to the header, Service Status out of the sidebar
+30 July 2026
+
+The two "secondary" items at the bottom of the main sidemenu in Layout.tsx are
+gone. Changelog is now a link in the header nav, before "Signed in as", next to
+Sign Out. It needs no new CSS: header nav already styles plain anchors as muted
+white underlined text, same as the Sign Out submit-link.
+
+Service Status was removed from the sidebar entirely. The /status route and
+StatusPage are untouched and still reachable by URL - nothing in the app links
+to them now, so that page either needs a home somewhere or should go.

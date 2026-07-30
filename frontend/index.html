@@ -19,6 +19,20 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/app.css" />
+    <!--
+      Stamps the stored theme (see src/context/ThemeContext.tsx) on <html>
+      before the stylesheet paints. Doing this in React instead would show a
+      flash of the light palette on every load for dark-theme users.
+    -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem("amelu.theme");
+        var dark =
+          stored === "dark" ||
+          ((stored === "system" || stored === null) && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
     <title>Amelu</title>
   </head>
   <body>

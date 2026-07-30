@@ -1,0 +1,28 @@
+Light, dark and system theme under My Account
+30 July 2026
+
+New page at /account/appearance (AccountAppearancePage, sidebar entry between
+Password and API Keys) with a three way segmented control: Light, Dark,
+System. The choice is stored in localStorage under amelu.theme, so it is per
+device rather than on the customer record, and applies immediately without a
+Save button.
+
+app.css was already almost entirely token driven, so dark is one extra block:
+:root[data-theme="dark"] restating --bg/--surface/--text/--border/--link plus
+a few --md-sys-color-* tokens. data-theme is only ever "light" or "dark" -
+"system" is resolved against prefers-color-scheme in ThemeContext and stamped
+on <html>, which keeps duplicated media queries out of the stylesheet. An
+inline script in index.html stamps it before first paint, otherwise dark users
+got a flash of the light palette on every load.
+
+Four colours were hardcoded and had to become tokens: main's background
+(#0043ce, the filler behind .container's 28px border-top-left-radius) showed a
+bright blue wedge against the dark page, and md-filled-button plus
+.segmented-option-active/.button-pill had color: #ffffff, which is unreadable
+on dark's lighter --link. Chrome blue is now --chrome-bg/--chrome-surface,
+navy #0a1f4a in dark. The select arrow SVG was #e8eaed, invisible on white -
+it was a leftover from an earlier dark theme, so it had been broken in light
+all along.
+
+No dashboard screenshot: local login is Ordnary SSO only, so both themes were
+checked against a static harness loading the real app.css.

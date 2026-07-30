@@ -1,0 +1,14 @@
+Dropped the "two-factor isn't available yet" tip
+30 July 2026
+
+My Account opened with a warning banner saying two-factor authentication
+isn't available yet and we'd let people know when it ships. It's gone.
+
+Sign-in goes through Ordnary's SSO, which already enforces its own second
+factor, so the banner apologised for a gap that isn't there and pointed
+people at a setting Amelu is never going to own.
+
+Still there and still wrong for the same reason: the "Second Factor Auth -
+Disabled" row in the details card underneath. It reports on local password
+auth that the SSO login doesn't use. Either drop the row or relabel it to
+name the identity provider.

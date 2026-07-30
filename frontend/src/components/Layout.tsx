@@ -38,6 +38,8 @@ export function Layout() {
         <img src="/amelu-logo.png" alt="Amelu" />
         <div className="announcement"></div>
         <nav>
+          <Link to="/changelog">Changelog</Link>
+          <span className="separator">|</span>
           Signed in as <strong>{customer?.email}</strong>
           <span className="separator">|</span>
           <button className="submit-link signout" onClick={() => logout()}>
@@ -76,13 +78,6 @@ export function Layout() {
               </li>
               <li className={onBilling ? "submenu-parent active" : "submenu-parent"}>
                 <Link to="/billing/overview">Billing</Link>
-              </li>
-
-              <li className={`secondary ${exact("/changelog")}`}>
-                <Link to="/changelog">Changelog</Link>
-              </li>
-              <li className={`secondary ${exact("/status")}`}>
-                <Link to="/status">Service Status</Link>
               </li>
             </ul>
           </div>
@@ -313,9 +308,12 @@ export function Layout() {
                 <li className={exact("/account/password")}>
                   <Link to="/account/password">Password</Link>
                 </li>
+                <li className={exact("/account/appearance")}>
+                  <Link to="/account/appearance">Appearance</Link>
+                </li>
 
-                <li className="disabled">
-                  <span>API Keys</span>
+                <li className={exact("/account/api-keys")}>
+                  <Link to="/account/api-keys">API Keys</Link>
                 </li>
 
                 <li className="delete">

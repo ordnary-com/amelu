@@ -20,12 +20,6 @@ export function AccountOverviewPage() {
     <div>
       <h1>My Account</h1>
 
-      <div className="alert alert-warning">
-        <span>
-          <b>Tip:</b> Two-factor authentication isn't available yet. We'll let you know when it ships.
-        </span>
-      </div>
-
       <div className="material-card">
         <md-list>
           <md-list-item type="link" href="/account/edit" onClick={(e: React.MouseEvent) => goTo(e, "/account/edit")}>

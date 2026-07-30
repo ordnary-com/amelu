@@ -47,6 +47,16 @@ func CanManageMailboxes(role string) bool {
 	return role == db.RoleOwner || role == db.RoleAdmin || role == db.RoleHelpdesk
 }
 
+// CanAccessMailboxContents covers reading and sending the actual mail in a
+// mailbox over the API - owner and admin only. Deliberately narrower than
+// CanManageMailboxes: helpdesk can reset a mailbox password to help someone
+// back in, but that is a support action the mailbox owner can see happened,
+// whereas reading their mail silently is not. read_only means "view the
+// configuration", never "read the correspondence".
+func CanAccessMailboxContents(role string) bool {
+	return role == db.RoleOwner || role == db.RoleAdmin
+}
+
 // CanManageBilling covers viewing and changing billing/subscription state -
 // owner and billing only.
 func CanManageBilling(role string) bool {

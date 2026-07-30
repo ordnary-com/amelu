@@ -180,12 +180,20 @@ func main() {
 	mux.HandleFunc("GET /api/invitations/{token}", app.GetInvitation)
 	mux.HandleFunc("POST /api/invitations/{token}/accept", app.AcceptInvitation)
 
-	mux.HandleFunc("GET /api/account", auth.Require(app.Store, app.Me))
-	mux.HandleFunc("PATCH /api/account/name", auth.Require(app.Store, app.UpdateAccountName))
-	mux.HandleFunc("PATCH /api/account/profile", auth.Require(app.Store, app.UpdateAccountProfile))
-	mux.HandleFunc("PATCH /api/account/email", auth.Require(app.Store, app.UpdateAccountEmail))
-	mux.HandleFunc("PATCH /api/account/password", auth.Require(app.Store, app.UpdateAccountPassword))
-	mux.HandleFunc("DELETE /api/account", auth.Require(app.Store, app.TerminateAccount))
+	// Session-only (auth.RequireSession, not auth.Require): the account
+	// surface and API key management are the two things an API key must not
+	// be able to reach, so a leaked key can't mint more keys, move the
+	// sign-in email, or terminate the account.
+	mux.HandleFunc("GET /api/account", auth.RequireSession(app.Store, app.Me))
+	mux.HandleFunc("PATCH /api/account/name", auth.RequireSession(app.Store, app.UpdateAccountName))
+	mux.HandleFunc("PATCH /api/account/profile", auth.RequireSession(app.Store, app.UpdateAccountProfile))
+	mux.HandleFunc("PATCH /api/account/email", auth.RequireSession(app.Store, app.UpdateAccountEmail))
+	mux.HandleFunc("PATCH /api/account/password", auth.RequireSession(app.Store, app.UpdateAccountPassword))
+	mux.HandleFunc("DELETE /api/account", auth.RequireSession(app.Store, app.TerminateAccount))
+
+	mux.HandleFunc("GET /api/account/api-keys", auth.RequireSession(app.Store, app.ListAPIKeys))
+	mux.HandleFunc("POST /api/account/api-keys", auth.RequireSession(app.Store, app.CreateAPIKey))
+	mux.HandleFunc("DELETE /api/account/api-keys/{id}", auth.RequireSession(app.Store, app.RevokeAPIKey))
 
 	mux.HandleFunc("POST /api/domains", auth.Require(app.Store, app.CreateDomain))
 	mux.HandleFunc("GET /api/domains", auth.Require(app.Store, app.ListDomains))

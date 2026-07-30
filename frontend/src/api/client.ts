@@ -81,6 +81,20 @@ export interface InvitationDetails {
   existingAccount?: boolean;
 }
 
+export interface ApiKey {
+  id: string;
+  name: string;
+  prefix: string;
+  createdAt: string;
+  lastUsedAt?: string;
+}
+
+// The raw key is only present in the create response - the backend stores a
+// hash, so it can never be read back.
+export interface CreatedApiKey extends ApiKey {
+  key: string;
+}
+
 export interface AuditEntry {
   id: string;
   actorEmail: string;
@@ -349,6 +363,13 @@ export const api = {
       method: "DELETE",
       body: JSON.stringify({ currentPassword }),
     }),
+
+  listApiKeys: () => request<ApiKey[]>("/api/account/api-keys"),
+
+  createApiKey: (name: string) =>
+    request<CreatedApiKey>("/api/account/api-keys", { method: "POST", body: JSON.stringify({ name }) }),
+
+  revokeApiKey: (id: string) => request<{ ok: boolean }>(`/api/account/api-keys/${id}`, { method: "DELETE" }),
 
   listDomains: () => request<Domain[]>("/api/domains"),
 

@@ -312,8 +312,8 @@ export function Layout() {
                   <Link to="/account/appearance">Appearance</Link>
                 </li>
 
-                <li className="disabled">
-                  <span>API Keys</span>
+                <li className={exact("/account/api-keys")}>
+                  <Link to="/account/api-keys">API Keys</Link>
                 </li>
 
                 <li className="delete">

@@ -41,6 +41,7 @@ import { AccountGeneralPage } from "./pages/AccountGeneralPage";
 import { AccountEmailPage } from "./pages/AccountEmailPage";
 import { AccountPasswordPage } from "./pages/AccountPasswordPage";
 import { AccountAppearancePage } from "./pages/AccountAppearancePage";
+import { AccountApiKeysPage } from "./pages/AccountApiKeysPage";
 import { AccountTerminatePage } from "./pages/AccountTerminatePage";
 import { RecentActivityPage } from "./pages/RecentActivityPage";
 import { AddressAliasesPage } from "./pages/AddressAliasesPage";
@@ -142,6 +143,7 @@ export default function App() {
             <Route path="/account/email" element={<AccountEmailPage />} />
             <Route path="/account/password" element={<AccountPasswordPage />} />
             <Route path="/account/appearance" element={<AccountAppearancePage />} />
+            <Route path="/account/api-keys" element={<AccountApiKeysPage />} />
             <Route path="/account/terminate" element={<AccountTerminatePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/domains" replace />} />

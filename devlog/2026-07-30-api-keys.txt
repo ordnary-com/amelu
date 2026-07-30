@@ -1,0 +1,26 @@
+API keys, the sidebar item that was greyed out
+30 July 2026
+
+/account/api-keys is a real page now. Create a key with a name, see prefix,
+created and last used, revoke it. The raw key is shown once in the response
+and never stored - api_keys (migration 0025) holds a SHA-256 hash, the same
+shape as sessions and organization_invitations. prefix is amelu_live_ plus 6
+of the 43 random characters, purely so two keys can be told apart on screen.
+
+Keys authenticate through auth.Require, which now takes either the session
+cookie or Authorization: Bearer amelu_live_..., so every /api route accepted
+them the moment the middleware changed - no per-route work. A key acts as its
+owning customer with that customer's organization role.
+
+What a key cannot do is reach /api/account/* or /api/account/api-keys: those
+moved to a new auth.RequireSession, cookie-only. A leaked key can manage
+domains and mailboxes but cannot mint more keys, move the sign-in email, or
+terminate the account. Checked by hand against a throwaway customer: bearer on
+/api/domains 200, on /api/account 401, minting a second key 401, revoked key
+401, another customer's key id 404 rather than a 403 that would confirm it
+exists.
+
+Authorization was already absent from the edge Worker's STRIP_REQUEST_HEADERS
+and present in redact.ts, so keys work through api.amelu.org without a Worker
+change. CORS still only allows Content-Type - deliberate, keys are for
+server-to-server callers, not browser JavaScript.

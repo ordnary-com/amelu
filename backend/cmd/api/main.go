@@ -252,6 +252,13 @@ func main() {
 	mux.HandleFunc("POST /api/mailboxes/{id}/suspend", auth.Require(app.Store, app.SuspendMailbox))
 	mux.HandleFunc("POST /api/mailboxes/{id}/activate", auth.Require(app.Store, app.ActivateMailbox))
 
+	// Mail contents, the surface an automated caller (API key) actually
+	// wants: read and send as a mailbox over HTTP instead of IMAP/SMTP.
+	// Owner and admin only - see authz.CanAccessMailboxContents.
+	mux.HandleFunc("GET /api/mailboxes/{id}/messages", auth.Require(app.Store, app.ListMailboxMessages))
+	mux.HandleFunc("GET /api/mailboxes/{id}/messages/{messageId}", auth.Require(app.Store, app.GetMailboxMessage))
+	mux.HandleFunc("POST /api/mailboxes/{id}/messages", auth.Require(app.Store, app.SendMailboxMessage))
+
 	mux.HandleFunc("GET /api/mailboxes/{id}/activity", auth.Require(app.Store, app.GetMailboxActivity))
 	mux.HandleFunc("GET /api/mailboxes/{id}/logs", auth.Require(app.Store, app.GetMailboxRecentLogs))
 

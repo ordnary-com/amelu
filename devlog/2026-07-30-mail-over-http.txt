@@ -1,0 +1,39 @@
+Read and send mail over HTTP, so agents don't need IMAP
+30 July 2026
+
+Someone in the showcase channel asked whether Amelu could give AI agents their
+own inboxes. Most of that already existed - a mailbox per agent, provisioned
+over the API, with its own credentials - the gap was that reading and sending
+meant speaking IMAP and SMTP.
+
+Three endpoints, all API-key friendly:
+GET  /api/mailboxes/{id}/messages?folder=inbox|sent&limit=&position=
+GET  /api/mailboxes/{id}/messages/{messageId}
+POST /api/mailboxes/{id}/messages
+
+They sit on JMAP, extending what ListRecentEmails already did. Reading is
+Email/query then Email/get with fetchTextBodyValues; bodies are capped at
+256KB and multi-part bodies are joined in order rather than taking part one.
+Sending is Email/set into Drafts then EmailSubmission/set, two requests rather
+than one with #back-references, so a failed submission is distinguishable from
+a failed build - and the orphaned draft gets destroyed instead of sitting in
+the mailbox.
+
+There is no from field on send. The From and the SMTP envelope are both the
+submitting mailbox, so a key cannot send as a colleague. Recipients are
+rejected if they contain a newline, comma or space, which is the header
+injection case: "a@example.com\nBcc: victim@example.com" is a 400, not a
+silent extra recipient.
+
+New authz.CanAccessMailboxContents, owner and admin only - deliberately
+narrower than CanManageMailboxes. Helpdesk resetting a password is a visible
+support action; helpdesk silently reading someone's mail is not.
+
+Not verified against a live Stalwart - marduk isn't reachable from this
+machine, /jmap returns 401 with the local .env. Covered instead by a fake JMAP
+server in messages_test.go that pins the request shapes. The submission
+envelope and onSuccessUpdateEmail move are the two bits most likely to need a
+correction once tried for real.
+
+Still missing, and the thing that was actually asked for: a webhook on
+inbound mail. Polling works but is not what an agent wants.

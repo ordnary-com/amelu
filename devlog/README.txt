@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-07-30  Read and send mail over HTTP, so agents don't need IMAP
+            2026-07-30-mail-over-http.txt
+
 2026-07-30  API keys, the sidebar item that was greyed out
             2026-07-30-api-keys.txt
 

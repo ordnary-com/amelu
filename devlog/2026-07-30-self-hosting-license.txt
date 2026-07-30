@@ -1,0 +1,16 @@
+Self-hosting for personal use is allowed now
+30 July 2026
+
+A reviewer said it was disappointing that you couldn't self-host Amelu even
+for your own purpose. Fair point, so the license is now 1.1 with a Personal
+Use carve-out: run your own instance for free, for your own mailboxes and
+domains and your household's, modify it, keep a fork.
+
+What still needs a separate license is the commercial half. Running it for a
+company or team, charging for access, or hosting mailboxes for anyone outside
+your household. The line is "am I the only one benefiting", not "is money
+involved".
+
+README and CONTRIBUTING both still said self-hosting was forbidden, so those
+moved with it. Self-hosting is unsupported though, you run your own Stalwart
+and your own Postgres.

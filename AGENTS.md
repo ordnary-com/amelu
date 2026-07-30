@@ -28,7 +28,11 @@ a JSON HTTP API. `pnpm dev` at the repo root starts both together.
   just add the next-numbered file and restart.
 - Auth is cookie-session based (`internal/auth`); `auth.Require(...)` wraps
   a route and `requireCustomer(w, r)` pulls the resolved customer back out
-  inside the handler.
+  inside the handler. `auth.Require` also accepts a personal API key in
+  `Authorization: Bearer amelu_live_...`, acting as the key's owner. The
+  account surface and API key management use `auth.RequireSession(...)`
+  instead, which is cookie-only, so a leaked key can't mint further keys or
+  take over the account.
 - Optional integrations all follow the same convention: missing
   config/API key means the feature reports "unavailable" at request time,
   never a startup failure. See `internal/config/config.go`. Currently:

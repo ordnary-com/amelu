@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-07-30  Changelog moved to the header, Service Status out of the sidebar
+            2026-07-30-nav-changelog-status.txt
+
 2026-07-30  Light, dark and system theme under My Account
             2026-07-30-theme-setting.txt
 

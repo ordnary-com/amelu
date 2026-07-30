@@ -137,10 +137,38 @@ covers backing out of a bad deploy.
 
 ## Security
 
-Found a security issue? Email **abuse@amelu.org** instead of opening a
-public issue. [`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md)
-describes what's actually in place in production (TLS, WAF, rate limiting,
-secret rotation).
+**Your password** is hashed with bcrypt and never stored in a form anyone can
+reverse, including us.
+
+**Your session** lives server-side in Postgres. The cookie only carries a
+random 32-byte token, and only its SHA-256 hash is stored, so even a full
+database leak hands an attacker nothing they can log in with. The cookie is
+`HttpOnly` (JavaScript can't read it), `Secure` (HTTPS only), `SameSite=Lax`,
+and expires after 7 days. Nothing auth-related is kept in `localStorage`.
+Password reset links are hashed the same way, single-use, and expire.
+
+**Your mail never touches this database.** Amelu's Postgres holds account,
+domain and billing metadata. Message content lives in Stalwart's own store on
+the mail server, deliberately kept separate.
+
+**The infrastructure isn't reachable.** The Go API has no public listener at
+all, Postgres isn't exposed, and Stalwart's admin API is only ever called
+from the origin over its own private network. Everything public goes through
+Cloudflare, and each hop is authenticated independently: the edge Worker
+signs every request to the origin (HMAC), background jobs use a separate
+secret so compromising one doesn't grant the other, and Stripe webhooks are
+signature-verified before a single byte is acted on. Logs redact
+`Authorization`, `Cookie`, `Set-Cookie` and every signature header, and
+request bodies are never logged.
+
+Honest about the gaps: **two-factor authentication doesn't exist yet**, which
+is the biggest missing piece for account security. Rate limiting is a
+Cloudflare WAF policy configured in the dashboard, not application code in
+this repo.
+
+[`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md) has the full
+trust-boundary breakdown. Found a security issue? Email **abuse@amelu.org**
+instead of opening a public issue.
 
 ## Contributing
 

@@ -18,7 +18,7 @@ Also fixed a wrong claim while I was in there. The README said SECURITY.md
 covered rate limiting, but that doc says in so many words that rate limiting
 is not implemented and is a Cloudflare WAF dashboard policy. Claiming a
 control you don't have is worse than admitting the gap, so it now says the
-real thing, and says there's no 2FA yet either.
+real thing.
 
 docs/cloudflare/SECURITY.md was written for the Cloudflare migration and
 never covered password hashing or sessions at all. Added a section for it.

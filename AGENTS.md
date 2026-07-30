@@ -69,15 +69,19 @@ Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
 
 ## Devlog
 
-Every working session that changes something gets a devlog entry in
-`devlog/`, written before the session ends, and listed in the index at the
-bottom of `devlog/README.txt`. Entries are **plain text `.txt`, not
-markdown** - no headings, bold, backticks or link syntax - so an entry can be
-pasted straight into a devlog box elsewhere. Read `devlog/README.txt` for the
-house style first; the short version is: same day, specific enough to name
-the actual error or endpoint, one screen long, screenshots for anything
-visible, proofread. Vague summaries ("cleaned up some backend flows") are
-worse than no entry.
+Every change gets a devlog entry in `devlog/`, written before the session
+ends and listed in the index at the bottom of `devlog/README.txt`.
+
+- **One entry per change**, not one per session. Two unrelated things means
+  two files.
+- **Short** - ten to fifteen lines. This is a quick note about what changed,
+  not a write-up.
+- **Plain text `.txt`, not markdown** - no headings, bold, backticks or link
+  syntax, so an entry can be pasted straight into a devlog box elsewhere.
+- **Specific** - name the endpoint, the table, the actual error string. Vague
+  summaries ("cleaned up some backend flows") are worse than no entry.
+
+See `devlog/README.txt` for the format.
 
 ## Licensing
 

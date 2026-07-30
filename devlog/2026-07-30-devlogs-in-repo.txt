@@ -1,0 +1,14 @@
+Devlogs live in the repo now
+30 July 2026
+
+Reviews said my devlogs were too few and too generic, and they were right.
+"Cleaned up backend flows, simplified some api surface" describes nothing,
+and one entry stops mid word at "which broke checkou".
+
+The cause was that they lived outside the repo, so writing one was a separate
+chore I did days later from memory. They're in devlog/ now, plain text, one
+entry per change, written the same day.
+
+Still missing: screenshots. Several people asked for pictures of the
+dashboard and there are zero, which is a bit absurd for a project whose best
+review was about the UI.

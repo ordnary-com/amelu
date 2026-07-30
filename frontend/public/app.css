@@ -1,8 +1,9 @@
 /*
 Color scheme: https://www.ibm.com/design/language/color/
-Light theme - page content is white/near-white, chrome (header + sidebar)
-is brand blue #0043ce (the exact blue in amelu-logo.png), overridden
-locally on those two containers further down.
+Page content is white/near-white in the light theme and near-black in the
+dark one; chrome (header + sidebar) is brand blue #0043ce (the exact blue in
+amelu-logo.png), deepened to navy in dark, overridden locally on those two
+containers further down.
 */
 
 :root {
@@ -35,18 +36,54 @@ locally on those two containers further down.
   --md-dialog-container-color: var(--surface-raised);
   --md-dialog-headline-color: var(--text);
   --md-dialog-supporting-text-color: var(--text-muted);
+
+  --chrome-bg: #0043ce;
+  --chrome-surface: #0032a0;
+
+  --select-arrow-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%235f6368%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  --input-hover-border: rgba(0, 0, 0, 0.3);
+  --focus-ring: rgba(0, 67, 206, 0.2);
 }
 
-/* Chrome (header + sidebar) stays brand blue regardless of the light page
-   theme above - redefining the same tokens here means every existing rule
+/* Dark theme. Only the palette tokens above are restated - every rule in this
+   file reads them, so nothing below needs a dark variant. data-theme is always
+   "light" or "dark" (never "system"): the choice is resolved against
+   prefers-color-scheme in ThemeContext and stamped on <html>, which keeps this
+   stylesheet free of duplicated media-query blocks. */
+:root[data-theme="dark"] {
+  --bg: #16181c;
+  --surface: #1e2126;
+  --surface-raised: #24282e;
+  --surface-deep: #101216;
+  --text: #e8eaed;
+  --text-muted: #9aa0a6;
+  --border: rgba(255, 255, 255, 0.14);
+  --link: #8ab4f8;
+
+  --md-sys-color-on-primary: #06265c;
+  --md-sys-color-outline: rgba(255, 255, 255, 0.4);
+  --md-sys-color-error: #f28b82;
+  --md-sys-color-on-error-container: #f28b82;
+  --md-sys-color-shadow: rgba(0, 0, 0, 0.6);
+
+  --chrome-bg: #0a1f4a;
+  --chrome-surface: #0d2559;
+
+  --select-arrow-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e8eaed%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  --input-hover-border: rgba(255, 255, 255, 0.24);
+  --focus-ring: rgba(138, 180, 248, 0.25);
+}
+
+/* Chrome (header + sidebar) stays brand-coloured regardless of the page
+   theme - redefining the same tokens here means every existing rule
    that reads var(--text-muted)/var(--surface)/var(--border) etc. inside
    these two containers automatically becomes light-on-blue without having
    to touch each sidebar/header rule individually. */
 header,
 .sidemenu-container {
-  --bg: #0043ce;
-  --surface: #0032a0;
-  --surface-raised: #0032a0;
+  --bg: var(--chrome-bg);
+  --surface: var(--chrome-surface);
+  --surface-raised: var(--chrome-surface);
   --text: #ffffff;
   --text-muted: rgba(255, 255, 255, 0.75);
   --border: rgba(255, 255, 255, 0.25);
@@ -125,14 +162,14 @@ select {
 input:hover,
 textarea:hover,
 select:hover {
-  border-color: rgba(255, 255, 255, 0.24);
+  border-color: var(--input-hover-border);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--link);
-  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.25);
+  box-shadow: 0 0 0 3px var(--focus-ring);
   color: var(--text);
   outline: none;
 }
@@ -144,7 +181,7 @@ select {
   padding-right: 2rem;
   appearance: none;
   background-color: var(--surface);
-  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e8eaed%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-image: var(--select-arrow-image);
   background-repeat: no-repeat, repeat;
   background-position: right .65rem top 50%;
   text-overflow: ellipsis;
@@ -206,12 +243,12 @@ input[type="checkbox"]:disabled {
    not just a second blue button next to it. */
 md-filled-button {
   --md-filled-button-container-color: var(--link);
-  --md-filled-button-label-text-color: #ffffff;
+  --md-filled-button-label-text-color: var(--md-sys-color-on-primary);
   --md-filled-button-container-shape: 4px;
   --md-filled-button-label-text-size: 0.85rem;
-  --md-filled-button-hover-label-text-color: #ffffff;
-  --md-filled-button-pressed-label-text-color: #ffffff;
-  --md-filled-button-focus-label-text-color: #ffffff;
+  --md-filled-button-hover-label-text-color: var(--md-sys-color-on-primary);
+  --md-filled-button-pressed-label-text-color: var(--md-sys-color-on-primary);
+  --md-filled-button-focus-label-text-color: var(--md-sys-color-on-primary);
 }
 md-outlined-button {
   --md-outlined-button-outline-color: var(--link);
@@ -308,7 +345,7 @@ md-outlined-button.md-button-error {
 }
 .segmented-option-active {
   background-color: var(--link);
-  color: #ffffff;
+  color: var(--md-sys-color-on-primary);
   font-weight: 500;
 }
 .segmented-option-disabled {
@@ -503,7 +540,7 @@ main {
     that corner - which is main's own background, not the sidebar's. Must
     match the sidebar's blue so the rounded corner reads as one continuous
     blue shape instead of a mismatched light sliver peeking through. */
- background-color: #0043ce;
+ background-color: var(--chrome-bg);
 }
 
 main h1 {
@@ -1789,7 +1826,7 @@ margin: 0.2ch;
 }
 .button-pill {
   background-color: var(--link);
-  color: #ffffff;
+  color: var(--md-sys-color-on-primary);
   font-weight: 500;
   border: none;
 }

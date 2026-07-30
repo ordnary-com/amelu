@@ -180,12 +180,20 @@ func main() {
 	mux.HandleFunc("GET /api/invitations/{token}", app.GetInvitation)
 	mux.HandleFunc("POST /api/invitations/{token}/accept", app.AcceptInvitation)
 
-	mux.HandleFunc("GET /api/account", auth.Require(app.Store, app.Me))
-	mux.HandleFunc("PATCH /api/account/name", auth.Require(app.Store, app.UpdateAccountName))
-	mux.HandleFunc("PATCH /api/account/profile", auth.Require(app.Store, app.UpdateAccountProfile))
-	mux.HandleFunc("PATCH /api/account/email", auth.Require(app.Store, app.UpdateAccountEmail))
-	mux.HandleFunc("PATCH /api/account/password", auth.Require(app.Store, app.UpdateAccountPassword))
-	mux.HandleFunc("DELETE /api/account", auth.Require(app.Store, app.TerminateAccount))
+	// Session-only (auth.RequireSession, not auth.Require): the account
+	// surface and API key management are the two things an API key must not
+	// be able to reach, so a leaked key can't mint more keys, move the
+	// sign-in email, or terminate the account.
+	mux.HandleFunc("GET /api/account", auth.RequireSession(app.Store, app.Me))
+	mux.HandleFunc("PATCH /api/account/name", auth.RequireSession(app.Store, app.UpdateAccountName))
+	mux.HandleFunc("PATCH /api/account/profile", auth.RequireSession(app.Store, app.UpdateAccountProfile))
+	mux.HandleFunc("PATCH /api/account/email", auth.RequireSession(app.Store, app.UpdateAccountEmail))
+	mux.HandleFunc("PATCH /api/account/password", auth.RequireSession(app.Store, app.UpdateAccountPassword))
+	mux.HandleFunc("DELETE /api/account", auth.RequireSession(app.Store, app.TerminateAccount))
+
+	mux.HandleFunc("GET /api/account/api-keys", auth.RequireSession(app.Store, app.ListAPIKeys))
+	mux.HandleFunc("POST /api/account/api-keys", auth.RequireSession(app.Store, app.CreateAPIKey))
+	mux.HandleFunc("DELETE /api/account/api-keys/{id}", auth.RequireSession(app.Store, app.RevokeAPIKey))
 
 	mux.HandleFunc("POST /api/domains", auth.Require(app.Store, app.CreateDomain))
 	mux.HandleFunc("GET /api/domains", auth.Require(app.Store, app.ListDomains))
@@ -243,6 +251,13 @@ func main() {
 	mux.HandleFunc("DELETE /api/mailboxes/{id}", auth.Require(app.Store, app.DeleteMailbox))
 	mux.HandleFunc("POST /api/mailboxes/{id}/suspend", auth.Require(app.Store, app.SuspendMailbox))
 	mux.HandleFunc("POST /api/mailboxes/{id}/activate", auth.Require(app.Store, app.ActivateMailbox))
+
+	// Mail contents, the surface an automated caller (API key) actually
+	// wants: read and send as a mailbox over HTTP instead of IMAP/SMTP.
+	// Owner and admin only - see authz.CanAccessMailboxContents.
+	mux.HandleFunc("GET /api/mailboxes/{id}/messages", auth.Require(app.Store, app.ListMailboxMessages))
+	mux.HandleFunc("GET /api/mailboxes/{id}/messages/{messageId}", auth.Require(app.Store, app.GetMailboxMessage))
+	mux.HandleFunc("POST /api/mailboxes/{id}/messages", auth.Require(app.Store, app.SendMailboxMessage))
 
 	mux.HandleFunc("GET /api/mailboxes/{id}/activity", auth.Require(app.Store, app.GetMailboxActivity))
 	mux.HandleFunc("GET /api/mailboxes/{id}/logs", auth.Require(app.Store, app.GetMailboxRecentLogs))

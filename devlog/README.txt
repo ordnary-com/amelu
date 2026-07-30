@@ -24,6 +24,21 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-07-30  Read and send mail over HTTP, so agents don't need IMAP
+            2026-07-30-mail-over-http.txt
+
+2026-07-30  API keys, the sidebar item that was greyed out
+            2026-07-30-api-keys.txt
+
+2026-07-30  Dropped the "two-factor isn't available yet" tip
+            2026-07-30-remove-2fa-tip.txt
+
+2026-07-30  Changelog moved to the header, Service Status out of the sidebar
+            2026-07-30-nav-changelog-status.txt
+
+2026-07-30  Light, dark and system theme under My Account
+            2026-07-30-theme-setting.txt
+
 2026-07-30  Wrote down how accounts are actually secured
             2026-07-30-security-section.txt
 

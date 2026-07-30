@@ -1,8 +1,9 @@
 # Contributing to Amelu
 
 Thanks for taking the time to contribute. Amelu is [source-available, not open
-source](LICENSE.md) — read the license before you start, since it affects what
-you can do with a fork beyond preparing a contribution.
+source](LICENSE.md). You can fork it and self-host it for personal use, and
+you can contribute back. What you can't do is run it commercially. Read the
+license before you start.
 
 ## Before you start
 

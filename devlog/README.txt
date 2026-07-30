@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-07-30  Wrote down how accounts are actually secured
+            2026-07-30-security-section.txt
+
 2026-07-30  Self-hosting for personal use is allowed now
             2026-07-30-self-hosting-license.txt
 

@@ -1,0 +1,24 @@
+Wrote down how accounts are actually secured
+30 July 2026
+
+A reviewer asked straight out whether Amelu uses any security measures,
+encryption or otherwise, and said they couldn't find an answer. Went looking
+and they were right: everything was implemented, nothing was written down
+where a user would look. The README's security section was three lines and a
+mail address.
+
+So the README now answers it directly. Passwords are bcrypt. Session tokens
+are 32 random bytes where only the sha256 hash goes into the sessions table,
+so a database dump contains nothing you can log in with. Cookies are
+HttpOnly, Secure, SameSite=Lax, 7 day TTL, nothing in localStorage. Password
+reset tokens get the same treatment and are single use. Mail content lives in
+Stalwart, not in this database.
+
+Also fixed a wrong claim while I was in there. The README said SECURITY.md
+covered rate limiting, but that doc says in so many words that rate limiting
+is not implemented and is a Cloudflare WAF dashboard policy. Claiming a
+control you don't have is worse than admitting the gap, so it now says the
+real thing, and says there's no 2FA yet either.
+
+docs/cloudflare/SECURITY.md was written for the Cloudflare migration and
+never covered password hashing or sessions at all. Added a section for it.

@@ -41,6 +41,31 @@ flowchart LR
    body") - it never parses, buffers, or re-serializes it, so it cannot be
    the thing that breaks signature verification.
 
+## Account security (layer 5, in detail)
+
+Predates this migration and is unchanged by it, but it's what customers
+actually ask about, so it's documented here rather than nowhere.
+
+- **Passwords**: bcrypt at `DefaultCost` (`internal/auth/auth.go`). No
+  reversible storage, no legacy hash format to migrate off.
+- **Session tokens**: 32 bytes from `crypto/rand`, base64url-encoded into the
+  cookie. Only `sha256(token)` is written to the `sessions` table, so the
+  table is useless to anyone who reads it - a leaked database dump contains
+  no usable credential. Lookup is `WHERE token_hash = $1 AND expires_at >
+  now()`, so expiry is enforced in the query, not by a sweep job.
+- **Cookie flags**: `HttpOnly`, `Secure` (off only when running without TLS
+  locally), `SameSite=Lax`, `Path=/`, 7-day TTL (`SessionTTL`). Logout deletes
+  the server-side row, so it invalidates the session rather than only clearing
+  the browser's copy.
+- **Password reset tokens**: same hash-before-store treatment
+  (`internal/db/password_reset.go`), and single-use - redemption requires
+  `used_at IS NULL AND expires_at > now()`.
+- **Mail data separation**: this database holds account/domain/billing
+  metadata only. Message content lives in Stalwart's own store.
+
+Known gap: **no 2FA**. The account page tells users so directly rather than
+implying the option exists.
+
 ## Defense in depth, not defense in one layer
 
 Layers 1-3 each independently prevent unauthorized origin access:

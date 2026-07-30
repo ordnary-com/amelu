@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-07-30  API keys, the sidebar item that was greyed out
+            2026-07-30-api-keys.txt
+
 2026-07-30  Dropped the "two-factor isn't available yet" tip
             2026-07-30-remove-2fa-tip.txt
 

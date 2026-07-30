@@ -66,3 +66,20 @@ Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
   find and mirror the closest existing example rather than inventing a new
   shape - list pages, create forms, settings forms, and sub-sidebars all
   already have an established pattern in `Layout.tsx` and `pages/`.
+
+## Devlog
+
+Every working session that changes something gets a devlog entry in
+`devlog/`, written before the session ends, and linked from the index at the
+bottom of `devlog/README.md`. Read `devlog/README.md` for the format and the
+house style first - the short version is: same day, specific enough to name
+the actual error or endpoint, one screen long, screenshots for anything
+visible, proofread. Vague summaries ("cleaned up some backend flows") are
+worse than no entry.
+
+## Licensing
+
+Amelu is source-available under `LICENSE.md`. Self-hosting for personal use
+is allowed and free; commercial or organizational use is not. If a change
+touches how that's described, `LICENSE.md`, `README.md` and `CONTRIBUTING.md`
+all say it and all three need to stay in sync.

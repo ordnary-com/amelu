@@ -1,0 +1,29 @@
+Dark mode shipped invisible behind a cached stylesheet
+31 July 2026
+
+Dark mode worked locally and did nothing on prod. The code was fine: the
+theme setting stored, data-theme="dark" landed on <html>, and the deployed
+app.css contained the dark block. The stylesheet the browser was using did
+not.
+
+app.css is the one stylesheet that isn't content-hashed - it sits in public/
+and index.html links it by name, so every deploy reuses the same URL. The JS
+bundle is hashed, so the new theme code arrived immediately, set
+data-theme="dark", and matched nothing in the four-hour-old CSS still in
+cache. New visitors saw dark mode correctly; anyone who had loaded the
+dashboard before the deploy did not, which is why it looked like a prod-only
+bug.
+
+Two things were caching it. public/_headers now serves /app.css as
+must-revalidate, confirmed working on the deployment URL. On app.amelu.org it
+is still overridden by a zone-level Browser Cache TTL of 4 hours (14400) -
+the hashed JS carries the same max-age, harmless there, fatal for a fixed
+filename. That setting needs changing to "Respect Existing Headers" in the
+Cloudflare dashboard; it can't be done from wrangler.
+
+Until then the link carries ?v=2. index.html is must-revalidate, so changing
+the link is what actually reaches a stale browser.
+
+Also noticed while in there: app.css line 815 references
+url(/images/logo_bg.svg) and public/images doesn't exist. Pre-existing, not
+touched.

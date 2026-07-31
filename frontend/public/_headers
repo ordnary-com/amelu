@@ -1,0 +1,11 @@
+# app.css is the one stylesheet that is NOT content-hashed: it lives in
+# public/ and is linked by filename from index.html, so a new deploy reuses
+# the same URL. Cloudflare Pages' default (max-age=14400) then leaves every
+# returning visitor on the previous stylesheet for up to four hours - which
+# is exactly how the dark theme shipped invisible: the new hashed JS set
+# data-theme="dark" while the cached CSS had no dark rules to match it.
+#
+# Revalidating on every load costs one conditional request; the ETag makes
+# it a 304 in the normal case.
+/app.css
+  Cache-Control: public, max-age=0, must-revalidate

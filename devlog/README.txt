@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-07-31  Dark mode shipped invisible behind a cached stylesheet
+            2026-07-31-dark-mode-stale-css.txt
+
 2026-07-30  Read and send mail over HTTP, so agents don't need IMAP
             2026-07-30-mail-over-http.txt
 

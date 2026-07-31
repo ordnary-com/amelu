@@ -18,7 +18,13 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/app.css" />
+    <!--
+      The ?v= is a cache buster for visitors who still hold a copy of
+      app.css from before public/_headers started forcing revalidation.
+      index.html itself is served must-revalidate, so changing this link is
+      what actually reaches them. Bump it if app.css ever goes stale again.
+    -->
+    <link rel="stylesheet" href="/app.css?v=2" />
     <!--
       Stamps the stored theme (see src/context/ThemeContext.tsx) on <html>
       before the stylesheet paints. Doing this in React instead would show a

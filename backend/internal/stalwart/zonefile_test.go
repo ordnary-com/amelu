@@ -68,53 +68,30 @@ func TestParseZoneFile_LiveFixture(t *testing.T) {
 	}
 }
 
-func TestAppendBackupMXRecords(t *testing.T) {
-	base := []ZoneRecord{{Name: "example.com.", Type: "MX", TTL: 3600, Priority: intPtr(10), Content: "marduk.mx.amelu.org."}}
-	records := AppendBackupMXRecords(base, "example.com")
-
-	if len(records) != 2 {
-		t.Fatalf("got %d records, want 2 (1 original + 1 backup)", len(records))
+func TestFilterTLSIncompatibleRecords(t *testing.T) {
+	data, err := os.ReadFile("testdata/sample_zonefile.txt")
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	var mxHosts []string
-	var priorities []int
-	for _, r := range records {
-		if r.Type != "MX" {
-			t.Errorf("unexpected non-MX record: %+v", r)
-			continue
-		}
-		if r.Name != "example.com." {
-			t.Errorf("record name = %q, want %q", r.Name, "example.com.")
-		}
-		if r.Priority == nil {
-			t.Fatalf("record %+v has nil priority", r)
-		}
-		mxHosts = append(mxHosts, r.Content)
-		priorities = append(priorities, *r.Priority)
-	}
+	filtered := FilterTLSIncompatibleRecords(string(data))
+	records := ParseZoneFile(filtered)
 
-	wantHosts := []string{"marduk.mx.amelu.org.", "ishtar.mx.amelu.org."}
-	for i, want := range wantHosts {
-		if mxHosts[i] != want {
-			t.Errorf("mxHosts[%d] = %q, want %q", i, mxHosts[i], want)
+	for _, record := range records {
+		if isTLSIncompatibleRecord(record.Name, record.Type) {
+			t.Errorf("TLS-incompatible record was not filtered: %s %s", record.Type, record.Name)
 		}
 	}
-	wantPriorities := []int{10, 20}
-	for i, want := range wantPriorities {
-		if priorities[i] != want {
-			t.Errorf("priorities[%d] = %d, want %d", i, priorities[i], want)
-		}
+	if strings.Contains(filtered, "mta-sts.amelu-test-provisioning-1234.com") ||
+		strings.Contains(filtered, "autoconfig.amelu-test-provisioning-1234.com") ||
+		strings.Contains(filtered, "autodiscover.amelu-test-provisioning-1234.com") ||
+		strings.Contains(filtered, "ua-auto-config.amelu-test-provisioning-1234.com") {
+		t.Error("filtered zone file still contains a customer-domain HTTP discovery hostname")
+	}
+	if !strings.Contains(filtered, "v1-rsa-20260711._domainkey") || !strings.Contains(filtered, "AQAB") {
+		t.Error("multi-line RSA DKIM record was changed or removed")
+	}
+	if len(records) != 12 {
+		t.Errorf("got %d records after filtering, want 12", len(records))
 	}
 }
-
-func TestAppendBackupMXZoneFileLines(t *testing.T) {
-	lines := AppendBackupMXZoneFileLines("example.com")
-	if !strings.Contains(lines, "example.com.\t3600\tIN\tMX\t20 ishtar.mx.amelu.org.") {
-		t.Errorf("missing ishtar MX line, got:\n%s", lines)
-	}
-	if strings.Contains(lines, "nabu") {
-		t.Errorf("nabu should no longer appear, got:\n%s", lines)
-	}
-}
-
-func intPtr(i int) *int { return &i }

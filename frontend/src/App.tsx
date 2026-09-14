@@ -66,6 +66,7 @@ import { BillingPlansPage } from "./pages/BillingPlansPage";
 import { BillingInvoicesPage } from "./pages/BillingInvoicesPage";
 import { ChangelogPage } from "./pages/ChangelogPage";
 import { StatusPage } from "./pages/StatusPage";
+import { SupportPage } from "./pages/SupportPage";
 
 export default function App() {
   return (
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/billing/invoices" element={<BillingInvoicesPage />} />
             <Route path="/changelog" element={<ChangelogPage />} />
             <Route path="/status" element={<StatusPage />} />
+            <Route path="/support" element={<SupportPage />} />
 
             <Route path="/domains" element={<DomainsPage />} />
             <Route path="/domains/new" element={<NewDomainPage />} />

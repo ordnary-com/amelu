@@ -1,60 +1,10 @@
 package stalwart
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-// backupMXHost is one of the other nodes in this Stalwart cluster, added
-// as DNS-level MX failover on top of Stalwart's own auto-generated zone
-// file - which only ever includes a single MX record for marduk, the node
-// the admin API talks to. Confirmed live: since both nodes share cluster
-// storage, mail sent directly to the other independently delivers
-// correctly for any domain in the cluster, not just marduk's - so without
-// this, marduk being unreachable would break inbound mail for every domain
-// even though the other node could easily have handled it.
-type backupMXHost struct {
-	Host     string
-	Priority int
-}
-
-var backupMXHosts = []backupMXHost{
-	{Host: "ishtar.mx.amelu.org.", Priority: 20},
-}
-
-// AppendBackupMXRecords adds ZoneRecord entries for the cluster's other
-// nodes after whatever MX record(s) Stalwart's own zone file already
-// contains for domainName - for the parsed-record consumer (DNS
-// Configuration's live-verified table).
-func AppendBackupMXRecords(records []ZoneRecord, domainName string) []ZoneRecord {
-	name := domainName + "."
-	for _, host := range backupMXHosts {
-		priority := host.Priority
-		records = append(records, ZoneRecord{
-			Name:     name,
-			Type:     "MX",
-			TTL:      3600,
-			Priority: &priority,
-			Content:  host.Host,
-		})
-	}
-	return records
-}
-
-// AppendBackupMXZoneFileLines returns BIND-format zone file text for the
-// cluster's other nodes, meant to be appended after Stalwart's own raw
-// zone file text - for the verbatim BIND-file-download consumer.
-func AppendBackupMXZoneFileLines(domainName string) string {
-	name := domainName + "."
-	var b strings.Builder
-	b.WriteString("\n; Backup MX records - other nodes in the same Amelu mail cluster,\n; for failover if the primary node above is unreachable.\n")
-	for _, host := range backupMXHosts {
-		fmt.Fprintf(&b, "%s\t3600\tIN\tMX\t%d %s\n", name, host.Priority, host.Host)
-	}
-	return b.String()
-}
 
 // ZoneRecord is one DNS record extracted from Stalwart's server-computed
 // dnsZoneFile for a domain (MX/SPF/DKIM/DMARC/etc). Stalwart itself decides

@@ -8,10 +8,15 @@ document in full before changing anything, and do the cutover during a
 low-traffic window with the rollback plan (bottom of this doc) already
 copy-pasted somewhere ready to run.
 
-Placeholders used throughout: `${MAIL_IP_1..3}` (mail server public IPv4
-addresses), `${MAIL_HOST_1..3}` (mail server hostnames, e.g.
-`mx1.amelu.org`), `${WEB_ORIGIN_IP}` (only relevant if something other than
-Pages/Workers serves a proxied record's origin).
+Placeholders used throughout: `${MAIL_IP}` (the mail server's public IPv4
+address), `${MAIL_HOST}` (the mail server hostname, `marduk.mx.amelu.org`),
+`${WEB_ORIGIN_IP}` (only relevant if something other than Pages/Workers
+serves a proxied record's origin).
+
+There is a single mail server (`marduk`) - the other two nodes that used to
+back this zone (`ishtar`, `nabu`) have been discontinued. There is no MX
+failover target anymore: if `marduk` is unreachable, inbound mail queues at
+the sender until it's back, same as any single-MX setup.
 
 ## The one rule that matters most
 
@@ -31,10 +36,10 @@ them here.
 | `app.amelu.org` | CNAME | Pages-managed | **Proxied** | Dashboard, HTTP(S) only. Auto-created by Pages custom domain (`PAGES_FRONTEND.md`) |
 | `api.amelu.org` | CNAME | Worker custom domain | **Proxied** | Edge Worker, HTTP(S) only |
 | `status.amelu.org` | CNAME/A | status page host | **Proxied** | HTTP(S) only |
-| `mail.amelu.org` | A/AAAA | `${MAIL_IP_1}` | **DNS-only** | Webmail/mail-related host if it exists, but resolved by mail clients, not browsers, via IMAP/SMTP config - never assume "has 'mail' in the name" implies safe to proxy |
-| `mx1.amelu.org`, `mx2.amelu.org`, `mx3.amelu.org` | A | `${MAIL_IP_1..3}` | **DNS-only** | Targets of MX records - SMTP speaks directly to these IPs |
-| `amelu.org` | MX | `${MAIL_HOST_1}` (priority 10), `${MAIL_HOST_2}` (priority 20), `${MAIL_HOST_3}` (priority 30) | **N/A (MX has no proxy option)** | Lower priority number = preferred. See "MX priorities" below |
-| `amelu.org` | TXT (SPF) | `v=spf1 mx a:${MAIL_HOST_1} a:${MAIL_HOST_2} a:${MAIL_HOST_3} -all` | **DNS-only** | SPF is evaluated by receiving mail servers doing DNS lookups, never through a browser/HTTP path |
+| `mail.amelu.org` | A/AAAA | `${MAIL_IP}` | **DNS-only** | Webmail/mail-related host if it exists, but resolved by mail clients, not browsers, via IMAP/SMTP config - never assume "has 'mail' in the name" implies safe to proxy |
+| `marduk.mx.amelu.org` | A | `${MAIL_IP}` | **DNS-only** | Target of the MX record - SMTP speaks directly to this IP |
+| `amelu.org` | MX | `${MAIL_HOST}` (priority 10) | **N/A (MX has no proxy option)** | Single mail server, one MX record - see "MX priorities" below |
+| `amelu.org` | TXT (SPF) | `v=spf1 mx -all` | **DNS-only** | SPF is evaluated by receiving mail servers doing DNS lookups, never through a browser/HTTP path. `mx` alone is enough with one MX host |
 | `<selector>._domainkey.amelu.org` (per customer domain, at their registrar - not this zone) | TXT (DKIM) | Stalwart-generated public key | **DNS-only** (customer's own zone) | See `internal/stalwart/zonefile.go` for how Amelu generates the expected value per domain |
 | `_dmarc.amelu.org` | TXT (DMARC) | `v=DMARC1; p=quarantine; rua=mailto:dmarc@amelu.org` | **DNS-only** | Same reasoning as SPF |
 | `_mta-sts.amelu.org` | TXT | `v=STSv1; id=<unique-id>` | **DNS-only** | Points mail servers at the MTA-STS policy file |
@@ -43,9 +48,9 @@ them here.
 | `autoconfig.amelu.org` | CNAME/A | mail server or config host | **DNS-only** | Thunderbird-style autoconfig - fetched by mail clients, not browsers, but still keep DNS-only since it's part of the mail onboarding chain, not the web app |
 | `autodiscover.amelu.org` | CNAME/A | mail server or config host | **DNS-only** | Outlook-style autodiscover, same reasoning |
 | `_autodiscover._tcp.amelu.org` | SRV | mail server | **DNS-only (SRV has no proxy option)** | |
-| `_submission._tcp.amelu.org` | SRV | `${MAIL_HOST_1}:587` | **DNS-only** | SMTP submission |
-| `_imaps._tcp.amelu.org` | SRV | `${MAIL_HOST_1}:993` | **DNS-only** | |
-| `_pop3s._tcp.amelu.org` | SRV | `${MAIL_HOST_1}:995` | **DNS-only** | |
+| `_submission._tcp.amelu.org` | SRV | `${MAIL_HOST}:587` | **DNS-only** | SMTP submission |
+| `_imaps._tcp.amelu.org` | SRV | `${MAIL_HOST}:993` | **DNS-only** | |
+| `_pop3s._tcp.amelu.org` | SRV | `${MAIL_HOST}:995` | **DNS-only** | |
 | `amelu.org` | CAA | `0 issue "letsencrypt.org"` (or actual CA) | **N/A (CAA has no proxy option)** | Controls which CAs may issue certs for the zone - keep in sync with whatever issues certs for both the proxied web records and the DNS-only mail records' own TLS |
 
 Every record's proxy status is an individual decision in the table above -
@@ -53,44 +58,58 @@ there is no "proxy everything under this zone" toggle used here, precisely
 because a zone-wide setting would eventually catch a mail record by
 mistake.
 
+## Customer-domain HTTPS records are temporarily suppressed
+
+Stalwart includes `mta-sts`, `ua-auto-config`, `autoconfig`, and
+`autodiscover` records in every customer domain's computed zone file. Those
+names are CNAMEs to `marduk.mx.amelu.org`, but HTTPS clients send the
+customer hostname through SNI and reject marduk's certificate because it
+does not cover that name.
+
+`stalwart.FilterTLSIncompatibleRecords` therefore removes those four CNAMEs
+and the related `_mta-sts` and `_ua-auto-config` TXT advertisements before
+the records reach the dashboard, BIND download, or Domain Connect. MX, SPF,
+DKIM, DMARC, TLS-RPT, and service SRV records remain unchanged. Do not remove
+this filter until every customer hostname is covered by automatic ACME or a
+separate multi-tenant HTTPS endpoint.
+
 ## MX priorities
 
-Lower number wins. `${MAIL_HOST_1}` at priority 10 is preferred; `2` and `3`
-at 20/30 are failover targets, used only if `1` is unreachable per standard
-MX fallback behavior - not related to Cloudflare in any way, this is base
-SMTP behavior.
+Priority is moot with a single MX host - there's nothing to fall back to.
+Kept at the conventional `10` for the one record rather than `0` purely for
+readability; any value works identically with only one target.
 
 ## A/AAAA and PTR/rDNS
 
-Each `${MAIL_HOST_N}` needs a matching PTR (reverse DNS) record at whichever
-provider hosts `${MAIL_IP_N}` - **not configured in Cloudflare**, since
-Cloudflare doesn't own the IP space these mail servers run on (unless
+`${MAIL_HOST}` needs a matching PTR (reverse DNS) record at whichever
+provider hosts `${MAIL_IP}` - **not configured in Cloudflare**, since
+Cloudflare doesn't own the IP space this mail server runs on (unless
 Cloudflare Magic Transit/BYOIP is in use, which it isn't here). Verify with:
 
 ```
-dig -x ${MAIL_IP_1} +short
-# expect: mx1.amelu.org. (or equivalent, matching the A record)
+dig -x ${MAIL_IP} +short
+# expect: marduk.mx.amelu.org. (matching the A record)
 ```
 
-Mismatched or missing PTR records are one of the most common reasons
+A mismatched or missing PTR record is one of the most common reasons
 receiving mail servers reject or spam-flag mail - verify this before and
 after any change here, unrelated to Cloudflare specifically.
 
 ## FCrDNS (Forward-Confirmed reverse DNS)
 
-Confirms `${MAIL_HOST_N}` resolves to `${MAIL_IP_N}` (forward) AND
-`${MAIL_IP_N}` resolves back to `${MAIL_HOST_N}` (reverse, i.e. PTR) -
-both directions must agree:
+Confirms `${MAIL_HOST}` resolves to `${MAIL_IP}` (forward) AND `${MAIL_IP}`
+resolves back to `${MAIL_HOST}` (reverse, i.e. PTR) - both directions must
+agree:
 
 ```
-dig ${MAIL_HOST_1} +short          # forward: expect ${MAIL_IP_1}
-dig -x ${MAIL_IP_1} +short         # reverse: expect ${MAIL_HOST_1}.
+dig ${MAIL_HOST} +short          # forward: expect ${MAIL_IP}
+dig -x ${MAIL_IP} +short         # reverse: expect ${MAIL_HOST}.
 ```
 
 ## HELO/EHLO consistency
 
 Stalwart's configured HELO/EHLO hostname (outside the scope of this repo's
-DNS - a Stalwart config value) should match `${MAIL_HOST_1}` and have a
+DNS - a Stalwart config value) should match `${MAIL_HOST}` and have a
 consistent, resolvable A record - many receiving servers check this against
 the connecting IP's PTR record as part of spam filtering.
 
@@ -125,13 +144,13 @@ dig amelu.org DNSKEY +short
 dig amelu.org +dnssec
 
 # Live SMTP TLS check
-openssl s_client -connect ${MAIL_HOST_1}:587 -starttls smtp -crlf
+openssl s_client -connect ${MAIL_HOST}:587 -starttls smtp -crlf
 
 # Live IMAP TLS check
-openssl s_client -connect ${MAIL_HOST_1}:993
+openssl s_client -connect ${MAIL_HOST}:993
 
 # SMTP banner / EHLO
-echo -e "EHLO test.example\r\nQUIT\r\n" | openssl s_client -connect ${MAIL_HOST_1}:25 -crlf -quiet
+echo -e "EHLO test.example\r\nQUIT\r\n" | openssl s_client -connect ${MAIL_HOST}:25 -crlf -quiet
 ```
 
 ## DNSSEC

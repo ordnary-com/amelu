@@ -1,0 +1,26 @@
+Mail cluster down to one node: marduk, backup MX removed
+11 August 2026
+
+The other two mailserver VPSes are discontinued; marduk is now the only
+node. ishtar (priority 20) was still hardcoded in
+internal/stalwart/zonefile.go as a DNS-level backup MX, appended to every
+customer's DNS Configuration table and downloadable zone file via
+AppendBackupMXRecords/AppendBackupMXZoneFileLines, called from
+GetDomainDNS and GetDomainBindFile in internal/handlers/dns.go. With no
+second node to fail over to, that whole mechanism was dead weight, so it's
+gone rather than left with an empty host list. Deleted the two zonefile_test.go
+cases that asserted the ishtar record.
+
+Also updated the not-yet-applied Cloudflare DNS-as-code and docs, which were
+still written for three servers: cloudflare/terraform/dns.tf.example and
+variables.tf.example collapsed mail_ip_1..3/mail_host_1..3 down to a single
+mail_ip/mail_host pair, one A record, one MX (priority 10, doesn't matter
+with one host), and SPF simplified from three a: mechanisms to "v=spf1 mx
+-all". docs/cloudflare/DNS_AND_MAIL.md rewritten the same way, MX priorities
+section now just explains why the number is moot with one host.
+
+Not touched: domainconnect/template.json and
+MailboxUsageInstructionsPage.tsx already only referenced marduk.mx.amelu.org,
+no change needed there. Actual DNS at the registrar/Cloudflare dashboard
+still needs the MX/A/SPF records for ishtar's old hostname removed by hand -
+this repo's terraform is a template only, never applied automatically.

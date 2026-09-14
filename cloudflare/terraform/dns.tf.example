@@ -42,29 +42,11 @@ resource "cloudflare_dns_record" "status" {
 
 # --- Mail-facing records: DNS-only (proxied = false), never change this ---
 
-resource "cloudflare_dns_record" "mx1" {
+resource "cloudflare_dns_record" "mx_host" {
   zone_id = var.zone_id
-  name    = "mx1.amelu.org"
+  name    = var.mail_host # marduk.mx.amelu.org
   type    = "A"
-  content = var.mail_ip_1
-  proxied = false
-  ttl     = 3600
-}
-
-resource "cloudflare_dns_record" "mx2" {
-  zone_id = var.zone_id
-  name    = "mx2.amelu.org"
-  type    = "A"
-  content = var.mail_ip_2
-  proxied = false
-  ttl     = 3600
-}
-
-resource "cloudflare_dns_record" "mx3" {
-  zone_id = var.zone_id
-  name    = "mx3.amelu.org"
-  type    = "A"
-  content = var.mail_ip_3
+  content = var.mail_ip
   proxied = false
   ttl     = 3600
 }
@@ -73,7 +55,7 @@ resource "cloudflare_dns_record" "mx_amelu_org" {
   zone_id  = var.zone_id
   name     = "amelu.org"
   type     = "MX"
-  content  = var.mail_host_1
+  content  = var.mail_host
   priority = 10
   proxied  = false
   ttl      = 3600
@@ -83,7 +65,7 @@ resource "cloudflare_dns_record" "spf" {
   zone_id = var.zone_id
   name    = "amelu.org"
   type    = "TXT"
-  content = "v=spf1 mx a:${var.mail_host_1} a:${var.mail_host_2} a:${var.mail_host_3} -all"
+  content = "v=spf1 mx -all"
   proxied = false
   ttl     = 3600
 }

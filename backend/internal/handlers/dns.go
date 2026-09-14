@@ -38,8 +38,8 @@ func (a *App) GetDomainDNS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	records := stalwart.ParseZoneFile(stalwartDomain.DNSZoneFile)
-	records = stalwart.AppendBackupMXRecords(records, domain.Name)
+	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
+	records := stalwart.ParseZoneFile(zoneFile)
 	checks := dnscheck.Check(r.Context(), records)
 
 	for _, rec := range records {
@@ -93,9 +93,9 @@ func (a *App) GetDomainBindFile(w http.ResponseWriter, r *http.Request) {
 
 	header := fmt.Sprintf("; Amelu DNS zone file for %s\n; Generated %s\n; Import this into your DNS provider (e.g. Cloudflare > DNS > Import and Export).\n\n",
 		domain.Name, time.Now().UTC().Format(time.RFC3339))
-	backupMX := stalwart.AppendBackupMXZoneFileLines(domain.Name)
 
 	w.Header().Set("Content-Type", "text/dns")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.zone"`, domain.Name))
-	w.Write([]byte(header + stalwartDomain.DNSZoneFile + backupMX))
+	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
+	w.Write([]byte(header + zoneFile))
 }

@@ -40,9 +40,7 @@ func TestBuildApplyURL(t *testing.T) {
 		RSASelector:     "v1-rsa-20260711._domainkey",
 		RSAValue:        "v=DKIM1; k=rsa; h=sha256; p=verylongbase64key",
 		DMARCValue:      "v=DMARC1; p=reject; rua=mailto:postmaster@example.com",
-		MTASTSValue:     "v=STSv1; id=123456",
 		TLSRPTValue:     "v=TLSRPTv1; rua=mailto:postmaster@example.com",
-		UAAutoConfValue: "v=UAAC1; a=sha256; d=abcdef",
 	}
 
 	applyURL, err := client.BuildApplyURL("https://dash.cloudflare.com/domainconnect", "example.com", vars)
@@ -68,6 +66,9 @@ func TestBuildApplyURL(t *testing.T) {
 	}
 	if q.Get("DCE_RSA_VALUE") != vars.RSAValue {
 		t.Errorf("DCE_RSA_VALUE not round-tripped correctly")
+	}
+	if q.Has("DCE_MTA_STS_VALUE") || q.Has("DCE_UA_AUTOCONF_VALUE") {
+		t.Errorf("TLS-incompatible record variables must not be included")
 	}
 
 	sigB64 := q.Get("sig")

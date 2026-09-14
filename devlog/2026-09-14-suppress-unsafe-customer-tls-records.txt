@@ -1,0 +1,14 @@
+Customer HTTPS discovery records hidden until TLS supports them
+14 September 2026
+
+Stalwart generated mta-sts, autoconfig, autodiscover, and ua-auto-config
+CNAMEs for every customer domain, all pointing at marduk.mx.amelu.org.
+HTTPS requests kept the customer hostname in SNI, while marduk served a
+certificate covering only marduk, so hostname verification failed.
+FilterTLSIncompatibleRecords now removes those CNAMEs and the related
+_mta-sts and _ua-auto-config TXT advertisements from the DNS API and BIND
+downloads without parsing and rewriting the 2048-bit RSA DKIM record.
+Domain Connect no longer includes the same records or variables.
+MX, SPF, DKIM, DMARC, TLS-RPT, and service SRV records are unchanged.
+The filter stays until per-customer ACME or a multi-tenant HTTPS endpoint
+can present a valid certificate for every advertised customer hostname.

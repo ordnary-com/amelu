@@ -167,7 +167,7 @@ Cloudflare WAF policy configured in the dashboard, not application code in
 this repo.
 
 [`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md) has the full
-trust-boundary breakdown. Found a security issue? Email **abuse@amelu.org**
+trust-boundary breakdown. Found a security issue? Email **abuse@ordnary.com**
 instead of opening a public issue.
 
 ## Contributing

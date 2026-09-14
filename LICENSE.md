@@ -126,5 +126,5 @@ This license is governed by the laws of the Netherlands.
 
 Questions about licensing beyond what's granted here (for example, running
 Amelu for your company, or licensing it for your own commercial hosting):
-hello@amelu.org. Personal self-hosting needs no permission and no email, just
+notices@ordnary.com. Personal self-hosting needs no permission and no email, just
 go ahead.

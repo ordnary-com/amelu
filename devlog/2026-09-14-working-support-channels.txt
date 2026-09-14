@@ -1,0 +1,12 @@
+Dashboard support route and published contact addresses repaired
+14 September 2026
+
+The dashboard linked to /support without registering that route, so React
+Router's wildcard silently redirected signed-in customers to /domains.
+SupportPage now gives customers a working email action, incident-status
+link, and a separate abuse contact.
+Until the amelu.org aliases are provisioned and monitored, support routes to
+support@ordnary.com and abuse reports route to abuse@ordnary.com.
+The repository's security contacts now use the same working abuse address.
+License questions use notices@ordnary.com instead of the unavailable
+hello@amelu.org mailbox.

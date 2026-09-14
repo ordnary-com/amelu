@@ -67,7 +67,7 @@ changes in separate commits.
 ## Reporting a security issue
 
 Don't open a public issue for security vulnerabilities. Email
-**abuse@amelu.org** instead — see [`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md)
+**abuse@ordnary.com** instead — see [`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md)
 for more context on our production security posture.
 
 ## Code of conduct

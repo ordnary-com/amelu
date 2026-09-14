@@ -10,30 +10,14 @@ variable "zone_id" {
   type        = string
 }
 
-variable "mail_ip_1" {
-  description = "Primary mail server public IPv4 - placeholder, real value never committed"
+variable "mail_ip" {
+  description = "Mail server (marduk) public IPv4 - placeholder, real value never committed"
   type        = string
 }
 
-variable "mail_ip_2" {
-  type = string
-}
-
-variable "mail_ip_3" {
-  type = string
-}
-
-variable "mail_host_1" {
-  description = "Primary mail server hostname, e.g. mx1.amelu.org"
+variable "mail_host" {
+  description = "Mail server hostname, marduk.mx.amelu.org"
   type        = string
-}
-
-variable "mail_host_2" {
-  type = string
-}
-
-variable "mail_host_3" {
-  type = string
 }
 
 variable "web_origin_ip" {

@@ -97,9 +97,7 @@ type RecordVars struct {
 	RSASelector     string // e.g. "v1-rsa-20260711._domainkey"
 	RSAValue        string
 	DMARCValue      string
-	MTASTSValue     string
 	TLSRPTValue     string
-	UAAutoConfValue string
 }
 
 // BuildApplyURL constructs the signed synchronous "apply" redirect URL for
@@ -116,9 +114,7 @@ func (c *Client) BuildApplyURL(syncUX, domain string, vars RecordVars) (string, 
 	params.Set("DCE_RSA_SELECTOR", vars.RSASelector)
 	params.Set("DCE_RSA_VALUE", vars.RSAValue)
 	params.Set("DCE_DMARC_VALUE", vars.DMARCValue)
-	params.Set("DCE_MTA_STS_VALUE", vars.MTASTSValue)
 	params.Set("DCE_TLSRPT_VALUE", vars.TLSRPTValue)
-	params.Set("DCE_UA_AUTOCONF_VALUE", vars.UAAutoConfValue)
 	params.Set("key", "_dcpubkeyv1."+c.cfg.PubKeyDomain)
 
 	// Signature covers the full query string exactly as it will be sent,

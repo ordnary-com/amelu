@@ -83,12 +83,8 @@ func recordVarsFromZoneFile(records []stalwart.ZoneRecord, domainName string) do
 			vars.RSAValue = rec.Content
 		case strings.HasPrefix(rec.Name, "_dmarc."):
 			vars.DMARCValue = rec.Content
-		case strings.HasPrefix(rec.Name, "_mta-sts."):
-			vars.MTASTSValue = rec.Content
 		case strings.HasPrefix(rec.Name, "_smtp._tls."):
 			vars.TLSRPTValue = rec.Content
-		case strings.HasPrefix(rec.Name, "_ua-auto-config."):
-			vars.UAAutoConfValue = rec.Content
 		}
 	}
 	return vars

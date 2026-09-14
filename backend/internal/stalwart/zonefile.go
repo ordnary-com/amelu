@@ -72,6 +72,50 @@ type ZoneRecord struct {
 // live dnsZoneFile: Stalwart omits the TTL field entirely, so it's optional.
 var zoneLineRe = regexp.MustCompile(`^(\S+)\s+(?:(\d+)\s+)?IN\s+(\S+)\s+(.*)$`)
 
+// FilterTLSIncompatibleRecords removes customer-domain HTTP discovery
+// records until Stalwart can present a certificate for those customer
+// hostnames. Pointing them at marduk currently serves marduk's certificate,
+// which fails hostname verification. The raw text is filtered instead of
+// parsed and rendered again so multi-segment 2048-bit DKIM TXT records stay
+// exactly as Stalwart emitted them.
+func FilterTLSIncompatibleRecords(zoneFile string) string {
+	var out strings.Builder
+	skippingContinuation := false
+
+	for _, rawLine := range strings.SplitAfter(zoneFile, "\n") {
+		line := strings.TrimSpace(rawLine)
+		if skippingContinuation {
+			if strings.Contains(line, ")") {
+				skippingContinuation = false
+			}
+			continue
+		}
+
+		match := zoneLineRe.FindStringSubmatch(line)
+		if match != nil && isTLSIncompatibleRecord(match[1], match[3]) {
+			if strings.HasSuffix(line, "(") {
+				skippingContinuation = true
+			}
+			continue
+		}
+		out.WriteString(rawLine)
+	}
+
+	return out.String()
+}
+
+func isTLSIncompatibleRecord(name, recordType string) bool {
+	label := strings.ToLower(strings.SplitN(strings.TrimSuffix(name, "."), ".", 2)[0])
+	switch strings.ToUpper(recordType) {
+	case "CNAME":
+		return label == "mta-sts" || label == "ua-auto-config" || label == "autoconfig" || label == "autodiscover"
+	case "TXT":
+		return label == "_mta-sts" || label == "_ua-auto-config"
+	default:
+		return false
+	}
+}
+
 // ParseZoneFile parses the BIND-style zone file text returned by Stalwart's
 // Domain.dnsZoneFile field.
 //

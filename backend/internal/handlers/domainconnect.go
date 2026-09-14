@@ -52,7 +52,8 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, "could not fetch DNS records from mail cluster: "+err.Error())
 		return
 	}
-	records := stalwart.ParseZoneFile(stalwartDomain.DNSZoneFile)
+	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
+	records := stalwart.ParseZoneFile(zoneFile)
 	vars := recordVarsFromZoneFile(records, domain.Name)
 
 	applyURL, err := a.DomainConnect.BuildApplyURL(settings.URLSyncUX, domain.Name, vars)

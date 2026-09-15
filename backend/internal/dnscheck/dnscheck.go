@@ -6,7 +6,9 @@ package dnscheck
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,7 +21,7 @@ const (
 	StatusMatched   Status = "matched"
 	StatusMismatch  Status = "mismatch"
 	StatusMissing   Status = "missing"
-	StatusUnchecked Status = "unchecked" // record type we don't verify live (e.g. CAA, SRV)
+	StatusUnchecked Status = "unchecked" // record type we don't verify live (e.g. CAA)
 )
 
 type RecordCheck struct {
@@ -36,7 +38,14 @@ type RecordCheck struct {
 // intermittently fail lookups that public resolvers (1.1.1.1, 8.8.8.8)
 // handle fine. A live "is your DNS correct" check is only trustworthy if
 // its own lookups are.
-var resolver = &net.Resolver{
+type dnsResolver interface {
+	LookupMX(context.Context, string) ([]*net.MX, error)
+	LookupTXT(context.Context, string) ([]string, error)
+	LookupCNAME(context.Context, string) (string, error)
+	LookupSRV(context.Context, string, string, string) (string, []*net.SRV, error)
+}
+
+var resolver dnsResolver = &net.Resolver{
 	PreferGo: true,
 	Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
 		d := net.Dialer{Timeout: 5 * time.Second}
@@ -45,8 +54,8 @@ var resolver = &net.Resolver{
 }
 
 // Check verifies each expected record from Stalwart's zone file against
-// live DNS. Only MX, TXT, and CNAME are actually looked up; other types are
-// reported unchecked rather than guessed at.
+// live DNS. Only MX, TXT, CNAME, and SRV are actually looked up; other types
+// are reported unchecked rather than guessed at.
 func Check(ctx context.Context, records []stalwart.ZoneRecord) []RecordCheck {
 	out := make([]RecordCheck, 0, len(records))
 	for _, rec := range records {
@@ -59,6 +68,8 @@ func Check(ctx context.Context, records []stalwart.ZoneRecord) []RecordCheck {
 			out = append(out, checkTXT(ctx, name, rec))
 		case "CNAME":
 			out = append(out, checkCNAME(ctx, name, rec))
+		case "SRV":
+			out = append(out, checkSRV(ctx, name, rec))
 		default:
 			out = append(out, RecordCheck{
 				Type: rec.Type, Name: name, Expected: rec.Content, Status: StatusUnchecked,
@@ -66,6 +77,31 @@ func Check(ctx context.Context, records []stalwart.ZoneRecord) []RecordCheck {
 		}
 	}
 	return out
+}
+
+func checkSRV(ctx context.Context, name string, rec stalwart.ZoneRecord) RecordCheck {
+	check := RecordCheck{Type: "SRV", Name: name, Expected: rec.Content, Status: StatusMissing}
+
+	_, srvs, err := resolver.LookupSRV(ctx, "", "", name)
+	if err != nil || len(srvs) == 0 {
+		return check
+	}
+
+	expected := strings.Fields(rec.Content)
+	for _, srv := range srvs {
+		target := strings.TrimSuffix(srv.Target, ".")
+		actual := fmt.Sprintf("%d %d %d %s", srv.Priority, srv.Weight, srv.Port, target)
+		check.Actual = append(check.Actual, actual)
+		if len(expected) == 4 && expected[0] == strconv.Itoa(int(srv.Priority)) &&
+			expected[1] == strconv.Itoa(int(srv.Weight)) && expected[2] == strconv.Itoa(int(srv.Port)) &&
+			strings.EqualFold(strings.TrimSuffix(expected[3], "."), target) {
+			check.Status = StatusMatched
+		}
+	}
+	if check.Status != StatusMatched {
+		check.Status = StatusMismatch
+	}
+	return check
 }
 
 func checkMX(ctx context.Context, name string, rec stalwart.ZoneRecord) RecordCheck {

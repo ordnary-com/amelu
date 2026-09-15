@@ -56,6 +56,14 @@ func TestForwarding(t *testing.T) {
 		t.Errorf("clean mail: expected forward to archive@elsewhere.com, got %v", clean.RedirectAddresses)
 	}
 
+	withoutSpamHeader, err := SimulateMessage(loaded, "sender@elsewhere.com", "victim@example.com", "hello", nil)
+	if err != nil {
+		t.Fatalf("simulate without spam header: %v", err)
+	}
+	if len(withoutSpamHeader.RedirectAddresses) != 1 || withoutSpamHeader.RedirectAddresses[0] != "archive@elsewhere.com" {
+		t.Errorf("mail without spam header: expected forward to archive@elsewhere.com, got %v", withoutSpamHeader.RedirectAddresses)
+	}
+
 	spam, err := SimulateMessage(loaded, "sender@elsewhere.com", "victim@example.com", "hello", map[string]string{"X-Spam-Status": "Yes"})
 	if err != nil {
 		t.Fatalf("simulate spam: %v", err)

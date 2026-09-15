@@ -29,7 +29,7 @@ func GenerateForwardingScript(forwards []Forward) (string, error) {
 	if len(forwards) == 0 {
 		return "", nil
 	}
-	script := `require ["copy"];` + "\n" + `if header :contains "X-Spam-Status" "No" {` + "\n"
+	script := `require ["copy"];` + "\n" + `if not header :contains "X-Spam-Status" "Yes" {` + "\n"
 	for _, f := range forwards {
 		if f.Destination == "" {
 			return "", fmt.Errorf("forwarding destination is required")

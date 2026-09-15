@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-09-15  SRV records now receive a real live DNS status
+            2026-09-15-verify-srv-records.txt
+
 2026-09-15  Forwarding no longer depends on a clean-mail header being present
             2026-09-15-forward-without-spam-header.txt
 

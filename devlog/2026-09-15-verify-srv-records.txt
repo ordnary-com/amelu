@@ -1,0 +1,12 @@
+SRV records now receive a real live DNS status
+2026-09-15
+
+GET /api/domains/{id}/dns previously marked every SRV record unchecked.
+That made correctly published service records appear as Not verified.
+The DNS checker now queries SRV records through the same public resolver
+used for the existing MX, TXT, and CNAME checks.
+It compares priority, weight, port, and target with Stalwart's expected
+zone record and reports matched, mismatch, or missing.
+Hostname comparison ignores case and a trailing root dot.
+Unit tests cover a matching record and a wrong port.
+This repairs the SRV status limitation reported in GitHub issue 2.

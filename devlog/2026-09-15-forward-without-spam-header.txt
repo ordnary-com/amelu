@@ -1,0 +1,12 @@
+Forwarding no longer depends on a clean-mail header being present
+2026-09-15
+
+Mailbox forwarding generated a Sieve rule that ran only when
+X-Spam-Status explicitly contained No.
+If Stalwart did not attach that header, the condition was false and the
+message stayed in the mailbox without sending the configured copy.
+GenerateForwardingScript now forwards unless X-Spam-Status explicitly
+contains Yes.
+Messages marked as spam are still kept out of the forwarding path.
+The Sieve simulation test now covers clean, spam, and missing-header mail.
+This repairs the forwarding failure reported in GitHub issue 2.

@@ -29,7 +29,10 @@ func GenerateForwardingScript(forwards []Forward) (string, error) {
 	if len(forwards) == 0 {
 		return "", nil
 	}
-	script := `require ["copy"];` + "\n" + `if not header :contains "X-Spam-Status" "Yes" {` + "\n"
+	// Stalwart's verdict leads the header ("Yes, score=..." / "No, score=...")
+	// and the rule names after it can contain "yes" or "no" too, so only the
+	// leading verdict counts. Mail without the header is forwarded.
+	script := `require ["copy"];` + "\n" + `if not header :matches "X-Spam-Status" "Yes*" {` + "\n"
 	for _, f := range forwards {
 		if f.Destination == "" {
 			return "", fmt.Errorf("forwarding destination is required")

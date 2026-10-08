@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useParams } from "react-router-dom";
-import { api, ApiError, type Mailbox } from "../api/client";
+import { api, ApiError, type Mailbox, type MailboxForward } from "../api/client";
 import { Tag } from "../components/Tag";
 
 export function MailboxOverviewPage() {
   const { mailboxId } = useParams<{ domainId: string; mailboxId: string }>();
   const [mailbox, setMailbox] = useState<Mailbox | null>(null);
+  const [forwards, setForwards] = useState<MailboxForward[] | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -13,8 +14,9 @@ export function MailboxOverviewPage() {
 
   const reload = useCallback(async () => {
     if (!mailboxId) return;
-    const m = await api.getMailbox(mailboxId);
+    const [m, f] = await Promise.all([api.getMailbox(mailboxId), api.listMailboxForwards(mailboxId).catch(() => null)]);
     setMailbox(m);
+    setForwards(f);
     setDisplayName(m.displayName);
   }, [mailboxId]);
 
@@ -94,7 +96,11 @@ export function MailboxOverviewPage() {
           </div>
           <div className="kv-row">
             <span className="kv-row-label">Forwarding</span>
-            <span className="light">Inactive</span>
+            {forwards && forwards.length > 0 ? (
+              <span>Active, to {forwards.map((f) => f.destination).join(", ")}</span>
+            ) : (
+              <span className="light">{forwards ? "Inactive" : "Unknown"}</span>
+            )}
           </div>
           <div className="kv-row">
             <span className="kv-row-label">Expires</span>

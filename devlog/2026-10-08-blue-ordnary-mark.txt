@@ -1,0 +1,8 @@
+Login button uses the blue Ordnary mark
+2026-10-08
+
+The Login with Ordnary account button on /login showed the old Ordnary
+icon, forced to white with a CSS filter. It now shows the blue dot-ring
+mark from Ordnary ID (frontend/public/ordnary-mark-blue.png), without the
+filter, so it keeps its brand blue on the dark button.
+The old frontend/public/ordnary-icon.png was no longer used and is removed.

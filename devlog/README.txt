@@ -24,6 +24,15 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-08  Login shows a loading overlay and the callback's error
+            2026-10-08-login-loading-overlay.txt
+
+2026-10-08  Login button uses the blue Ordnary mark
+            2026-10-08-blue-ordnary-mark.txt
+
+2026-10-08  Login with Ordnary account failed with ordnary_auth_failed
+            2026-10-08-ordnary-login-fraud-guard.txt
+
 2026-09-15  SRV records now receive a real live DNS status
             2026-09-15-verify-srv-records.txt
 

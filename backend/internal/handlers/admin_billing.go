@@ -189,6 +189,13 @@ func (a *App) AdminUpdateSubscription(w http.ResponseWriter, r *http.Request, op
 		return
 	}
 
+	stripePriceID, err := resolveStripePrice(priceID.String)
+	if err != nil {
+		log.Printf("stripe: resolve price %s for admin plan change: %v", priceID.String, err)
+		writeError(w, http.StatusBadGateway, "could not find the plan's Stripe price")
+		return
+	}
+
 	sub, err := subscription.Get(billing.StripeSubscriptionID.String, nil)
 	if err != nil || len(sub.Items.Data) == 0 {
 		log.Printf("stripe: get subscription %s for admin plan change: %v", billing.StripeSubscriptionID.String, err)
@@ -199,7 +206,7 @@ func (a *App) AdminUpdateSubscription(w http.ResponseWriter, r *http.Request, op
 
 	_, err = subscription.Update(billing.StripeSubscriptionID.String, &stripe.SubscriptionParams{
 		Items: []*stripe.SubscriptionItemsParams{
-			{ID: stripe.String(itemID), Price: stripe.String(priceID.String)},
+			{ID: stripe.String(itemID), Price: stripe.String(stripePriceID)},
 		},
 		ProrationBehavior: stripe.String("create_prorations"),
 	})

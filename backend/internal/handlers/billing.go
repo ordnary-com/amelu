@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"amelu/backend/internal/authz"
@@ -17,6 +18,7 @@ import (
 	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
 	"github.com/stripe/stripe-go/v81/invoice"
+	"github.com/stripe/stripe-go/v81/price"
 	"github.com/stripe/stripe-go/v81/webhook"
 )
 
@@ -268,9 +270,15 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "this plan is not available for purchase")
 		return
 	}
-	stripePriceID := plan.StripePriceIDAnnual.String
+	priceRef := plan.StripePriceIDAnnual.String
 	if req.Interval == "monthly" {
-		stripePriceID = plan.StripePriceIDMonthly.String
+		priceRef = plan.StripePriceIDMonthly.String
+	}
+	stripePriceID, err := resolveStripePrice(priceRef)
+	if err != nil {
+		log.Printf("stripe: resolve price %s: %v", priceRef, err)
+		writeError(w, http.StatusBadGateway, "could not start checkout"+stripeErrorSuffix(err))
+		return
 	}
 
 	stripeCustomerID, ok := a.getOrCreateStripeCustomer(w, r, cust)
@@ -456,14 +464,22 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		planTierID := ""
 		billingInterval := ""
 		if sub.Items != nil && len(sub.Items.Data) > 0 && sub.Items.Data[0].Price != nil {
-			priceID := sub.Items.Data[0].Price.ID
-			if plan, err := a.Store.GetPlanTierByStripePriceID(ctx, priceID); err == nil {
+			subPrice := sub.Items.Data[0].Price
+			for _, ref := range []string{subPrice.LookupKey, subPrice.ID} {
+				if ref == "" {
+					continue
+				}
+				plan, err := a.Store.GetPlanTierByStripePriceID(ctx, ref)
+				if err != nil {
+					continue
+				}
 				planTierID = plan.ID
-				if plan.StripePriceIDMonthly.String == priceID {
+				if plan.StripePriceIDMonthly.String == ref {
 					billingInterval = "monthly"
-				} else if plan.StripePriceIDAnnual.String == priceID {
+				} else if plan.StripePriceIDAnnual.String == ref {
 					billingInterval = "annual"
 				}
+				break
 			}
 		}
 
@@ -515,4 +531,24 @@ func stripeErrorSuffix(err error) string {
 		return fmt.Sprintf(" (%s: %s)", stripeErr.Code, stripeErr.Param)
 	}
 	return fmt.Sprintf(" (%s)", stripeErr.Code)
+}
+
+// resolveStripePrice turns a plan tier's stored price into a Stripe Price ID.
+// Plan tiers store lookup keys (amelu_go_monthly and so on), set on the
+// matching price in both test and live mode, so one database works with
+// either key. A stored price_... ID is used as is.
+func resolveStripePrice(ref string) (string, error) {
+	if strings.HasPrefix(ref, "price_") {
+		return ref, nil
+	}
+	params := &stripe.PriceListParams{LookupKeys: stripe.StringSlice([]string{ref})}
+	params.Filters.AddFilter("limit", "", "1")
+	prices := price.List(params)
+	if prices.Next() {
+		return prices.Price().ID, nil
+	}
+	if err := prices.Err(); err != nil {
+		return "", err
+	}
+	return "", fmt.Errorf("no active Stripe price with lookup key %q", ref)
 }

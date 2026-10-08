@@ -1,0 +1,13 @@
+Checkout replaces a Stripe customer Stripe no longer knows
+2026-10-08
+
+Buying a plan ended in "could not start checkout": POST /api/billing/checkout
+returned 502 because checkoutsession.New failed. The Stripe error only went
+to the container log, which wrangler tail doesn't show, so the cause wasn't
+visible. The same request with the same parameters works in test mode.
+Most likely the stored customer_billing.stripe_customer_id was made with
+another Stripe key (test mode) and Stripe answers resource_missing for it.
+The handler now creates a new Stripe Customer once in that case, stores it
+and retries. Any other failure adds Stripe's error code and parameter to
+the message, e.g. "could not start checkout (resource_missing:
+line_items[0][price])"; Stripe's own message stays in the log only.

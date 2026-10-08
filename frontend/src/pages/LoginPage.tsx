@@ -6,8 +6,8 @@ import { API_URL } from "../api/client";
 // What the API's Ordnary callback redirects back with (see
 // backend/internal/handlers/ordnary_auth.go).
 const ERRORS: Record<string, string> = {
-  ordnary_auth_failed: "We couldn't sign you in with your Ordnary account. Please try again.",
-  ordnary_email_unverified: "Verify the email address on your Ordnary account first, then try again.",
+  ordnary_auth_failed: "Sign-in failed. Please try again.",
+  ordnary_email_unverified: "Verify your Ordnary account's email address, then sign in again.",
 };
 
 export function LoginPage() {
@@ -16,12 +16,12 @@ export function LoginPage() {
   const error = errorCode ? (ERRORS[errorCode] ?? ERRORS.ordnary_auth_failed) : null;
 
   // The round trip through Ordnary ID takes a few seconds, longer when the
-  // API has to start up, and the browser shows nothing while it waits. Cover
-  // the page so the click visibly did something.
+  // API has to start up, and the browser shows nothing while it waits. A
+  // progress bar and a spinner in the button show the click did something.
   const [redirecting, setRedirecting] = useState(false);
 
-  // Going back to this page restores it from the back/forward cache with the
-  // overlay still up; take it down again.
+  // Going back to this page restores it from the back/forward cache still
+  // in that state; reset it.
   useEffect(() => {
     const onPageShow = (event: PageTransitionEvent) => {
       if (event.persisted) setRedirecting(false);
@@ -32,6 +32,7 @@ export function LoginPage() {
 
   return (
     <div className={styles.loginContainer}>
+      {redirecting && <div className={styles.progressBar} role="progressbar" aria-label="Signing in" />}
       <div className={styles.loginCard}>
         <div className={styles.logoWrapper}>
           <img src="/icon-logo-crop.png" alt="Amelu" className={styles.logo} />
@@ -61,7 +62,11 @@ export function LoginPage() {
             setRedirecting(true);
           }}
         >
-          <img src="/ordnary-mark-blue.png" alt="" className={styles.primaryButtonIcon} />
+          {redirecting ? (
+            <span className={styles.spinner} aria-hidden="true" />
+          ) : (
+            <img src="/ordnary-mark-blue.png" alt="" className={styles.primaryButtonIcon} />
+          )}
           Login with Ordnary account
         </a>
 
@@ -71,14 +76,6 @@ export function LoginPage() {
           essential account and security notifications related to your use of Amelu.
         </div>
       </div>
-
-      {redirecting && (
-        <div className={styles.overlay} role="status" aria-live="polite">
-          <div className={styles.spinner} aria-hidden="true" />
-          <p className={styles.overlayTitle}>Signing you in</p>
-          <p className={styles.overlayText}>Taking you to your Ordnary account. This can take a few seconds.</p>
-        </div>
-      )}
     </div>
   );
 }

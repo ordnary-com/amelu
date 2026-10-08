@@ -103,3 +103,74 @@
   font-size: 13px;
   line-height: 1.6;
 }
+
+.error {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background-color: rgba(248, 113, 113, 0.08);
+  color: #fca5a5;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+  background-color: rgba(21, 21, 23, 0.92);
+  backdrop-filter: blur(4px);
+  animation: overlayIn 0.2s ease-out;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 12px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #0051fe;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.overlayTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.overlayText {
+  margin: 0;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #adb2b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .loginCard {
+    animation: none;
+  }
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

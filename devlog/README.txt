@@ -24,7 +24,7 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
-2026-10-08  Login shows a loading overlay and the callback's error
+2026-10-08  Login shows progress while redirecting to Ordnary
             2026-10-08-login-loading-overlay.txt
 
 2026-10-08  Login button uses the blue Ordnary mark

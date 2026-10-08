@@ -1,0 +1,13 @@
+Login with Ordnary account failed with ordnary_auth_failed
+2026-10-08
+
+Every login with an Ordnary account ended on /login?error=ordnary_auth_failed.
+The cause was in Ordnary ID, not here: POST /api/oauth/token answered
+403 "Request blocked due to high security risk". The API exchanges the code
+from its container, and Ordnary ID's risk check read that server IP and
+the Go-http-client user agent as a new device in another country.
+Ordnary ID now skips that check when an app's own server redeems the code,
+since the browser was already checked at /oauth/authorize.
+OrdnaryCallback in backend/internal/handlers/ordnary_auth.go swallowed the
+reason, so it now logs the error from the OAuth round trip and from finding
+or creating the customer. The email address is kept out of the log.

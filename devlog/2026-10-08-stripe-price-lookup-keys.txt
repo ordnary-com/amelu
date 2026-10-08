@@ -1,0 +1,14 @@
+Plans could not be bought in production: test-mode price IDs
+2026-10-08
+
+POST /api/billing/checkout failed with "could not start checkout
+(resource_missing: line_items[0][price])". Migration 0016 seeded
+plan_tiers with the test-mode price IDs, which the live key doesn't know.
+The live prices did exist, with the same amounts in EUR.
+Each of the four prices now has a Stripe lookup key, in test and in live
+mode: amelu_go_monthly, amelu_go_annual, amelu_pro_monthly,
+amelu_pro_annual. Migration 0026 stores those keys in plan_tiers instead
+of the seeded IDs, and resolveStripePrice turns them into the price of
+whichever key the API runs with. A stored price_ ID still works as is.
+The admin plan change resolves the same way, and the subscription webhook
+matches a plan on the price's lookup key first, then its ID.

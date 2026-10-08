@@ -1,0 +1,11 @@
+Login shows a loading overlay and the callback's error
+2026-10-08
+
+Clicking Login with Ordnary account left /login unchanged for several
+seconds while the browser went to api.amelu.org and on to Ordnary ID,
+longer when the API container had to start. It looked like nothing happened.
+The click now covers the page with a spinner and "Signing you in", and a
+second click does nothing. Coming back with the back button takes the
+overlay down again (pageshow from the back/forward cache).
+/login also ignored ?error= from the callback. ordnary_auth_failed and
+ordnary_email_unverified now show a short message above the button.

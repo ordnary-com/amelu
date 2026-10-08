@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-08  Plans could not be bought in production: test-mode price IDs
+            2026-10-08-stripe-price-lookup-keys.txt
+
 2026-10-08  Checkout replaces a Stripe customer Stripe no longer knows
             2026-10-08-checkout-stripe-customer.txt
 

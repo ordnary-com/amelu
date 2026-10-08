@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-08  Forwarding still broken for existing forwards (GitHub issue 2)
+            2026-10-08-forwarding-scripts-redeployed.txt
+
 2026-10-08  Plans could not be bought in production: test-mode price IDs
             2026-10-08-stripe-price-lookup-keys.txt
 

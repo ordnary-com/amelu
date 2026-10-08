@@ -116,6 +116,12 @@ func main() {
 		log.Printf("expiration sweep: in-process ticker disabled (EXPIRATION_SWEEP_MODE=external), expecting external trigger")
 	}
 
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), handlers.StartupMaintenanceTimeout)
+		defer cancel()
+		app.RunStartupMaintenance(ctx)
+	}()
+
 	mux := http.NewServeMux()
 
 	// Public, unauthenticated, no DB/Stalwart dependency - polled by the

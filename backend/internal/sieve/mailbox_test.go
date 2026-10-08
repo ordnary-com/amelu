@@ -64,6 +64,22 @@ func TestForwarding(t *testing.T) {
 		t.Errorf("mail without spam header: expected forward to archive@elsewhere.com, got %v", withoutSpamHeader.RedirectAddresses)
 	}
 
+	cleanWithRules, err := SimulateMessage(loaded, "sender@elsewhere.com", "victim@example.com", "hello", map[string]string{"X-Spam-Status": "No, score=-0.20 tests=DKIM_SIGNED_YES,ARC_NA"})
+	if err != nil {
+		t.Fatalf("simulate clean with rule names: %v", err)
+	}
+	if len(cleanWithRules.RedirectAddresses) != 1 {
+		t.Errorf("clean mail whose rule names contain \"yes\": expected a forward, got %v", cleanWithRules.RedirectAddresses)
+	}
+
+	spamWithRules, err := SimulateMessage(loaded, "sender@elsewhere.com", "victim@example.com", "hello", map[string]string{"X-Spam-Status": "Yes, score=7.10 tests=RCVD_NO_TLS_LAST"})
+	if err != nil {
+		t.Fatalf("simulate spam with rule names: %v", err)
+	}
+	if len(spamWithRules.RedirectAddresses) != 0 {
+		t.Errorf("spam whose rule names contain \"no\": expected no forward, got %v", spamWithRules.RedirectAddresses)
+	}
+
 	spam, err := SimulateMessage(loaded, "sender@elsewhere.com", "victim@example.com", "hello", map[string]string{"X-Spam-Status": "Yes"})
 	if err != nil {
 		t.Fatalf("simulate spam: %v", err)

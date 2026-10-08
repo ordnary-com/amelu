@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-08  Checkout replaces a Stripe customer Stripe no longer knows
+            2026-10-08-checkout-stripe-customer.txt
+
 2026-10-08  Login shows progress while redirecting to Ordnary
             2026-10-08-login-loading-overlay.txt
 

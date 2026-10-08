@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -199,6 +200,12 @@ func (a *App) getOrCreateStripeCustomer(w http.ResponseWriter, r *http.Request, 
 	if billing.StripeCustomerID.Valid && billing.StripeCustomerID.String != "" {
 		return billing.StripeCustomerID.String, true
 	}
+	return a.createStripeCustomer(w, r, cust)
+}
+
+// createStripeCustomer makes a new Stripe Customer for cust and stores its
+// ID, replacing any previous one.
+func (a *App) createStripeCustomer(w http.ResponseWriter, r *http.Request, cust *db.Customer) (string, bool) {
 
 	params := &stripe.CustomerParams{
 		Email: stripe.String(cust.Email),
@@ -294,9 +301,20 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	params.SubscriptionData.AddMetadata("interval", req.Interval)
 
 	session, err := checkoutsession.New(params)
+	// A stored Stripe Customer that Stripe doesn't know was made with another
+	// key (test mode before going live, or another account). Replace it once.
+	var stripeErr *stripe.Error
+	if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeResourceMissing && stripeErr.Param == "customer" {
+		log.Printf("stripe: customer %s for %s no longer exists, creating a new one", stripeCustomerID, cust.ID)
+		if stripeCustomerID, ok = a.createStripeCustomer(w, r, cust); !ok {
+			return
+		}
+		params.Customer = stripe.String(stripeCustomerID)
+		session, err = checkoutsession.New(params)
+	}
 	if err != nil {
 		log.Printf("stripe: create checkout session: %v", err)
-		writeError(w, http.StatusBadGateway, "could not start checkout")
+		writeError(w, http.StatusBadGateway, "could not start checkout"+stripeErrorSuffix(err))
 		return
 	}
 	a.Store.LogOrganizationAudit(r.Context(), actor.OrganizationID.String, &actor.ID, actor.Email,
@@ -482,4 +500,19 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]bool{"received": true})
+}
+
+// stripeErrorSuffix names Stripe's error code and the parameter it refers
+// to, e.g. " (resource_missing: line_items[0][price])", so a failure shown
+// to the customer can be traced without the container's logs. Stripe's own
+// message is left out: it can echo IDs and isn't written for customers.
+func stripeErrorSuffix(err error) string {
+	var stripeErr *stripe.Error
+	if !errors.As(err, &stripeErr) || stripeErr.Code == "" {
+		return ""
+	}
+	if stripeErr.Param != "" {
+		return fmt.Sprintf(" (%s: %s)", stripeErr.Code, stripeErr.Param)
+	}
+	return fmt.Sprintf(" (%s)", stripeErr.Code)
 }

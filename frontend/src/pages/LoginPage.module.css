@@ -95,7 +95,6 @@
   height: 24px;
   width: 24px;
   flex-shrink: 0;
-  filter: brightness(0) invert(1);
 }
 
 .footer {

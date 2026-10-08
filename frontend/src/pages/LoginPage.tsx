@@ -16,7 +16,7 @@ export function LoginPage() {
         </p>
 
         <a href={`${API_URL}/api/auth/ordnary/login`} className={styles.primaryButton}>
-          <img src="/ordnary-icon.png" alt="" className={styles.primaryButtonIcon} />
+          <img src="/ordnary-mark-blue.png" alt="" className={styles.primaryButtonIcon} />
           Login with Ordnary account
         </a>
 

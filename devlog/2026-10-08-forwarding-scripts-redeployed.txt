@@ -1,0 +1,16 @@
+Forwarding still broken for existing forwards (GitHub issue 2)
+2026-10-08
+
+The 2026-09-15 fix changed GenerateForwardingScript, but Amelu only
+rebuilds a mailbox's amelu-rules Sieve script when one of its rules
+changes. Every forward created before that kept the old script, which
+forwarded only mail whose X-Spam-Status contained "No". Test mail was
+not forwarded; the odd spam message was, when a rule name in its header
+contained "no".
+The new check was loose too: header :contains "Yes" also matched rule
+names. It is now header :matches "X-Spam-Status" "Yes*", so only the
+leading verdict counts; tests cover headers with rule names.
+At startup the API now rebuilds the scripts of every domain with
+forwards, once (maintenance_runs, migration 0027).
+The Mailbox Overview showed Forwarding as Inactive, hardcoded. It now
+lists the forward destinations.

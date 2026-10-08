@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -37,6 +38,9 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 
 	result, err := a.Ordnary.Callback(w, r)
 	if err != nil {
+		// The redirect only says that it failed; the reason (state mismatch,
+		// a refused code exchange, userinfo) is only ever visible here.
+		log.Printf("ordnary auth: callback: %v", err)
 		http.Redirect(w, r, a.FrontendOrigin+"/login?error=ordnary_auth_failed", http.StatusFound)
 		return
 	}
@@ -51,6 +55,7 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 		customer, err = a.provisionOrdnaryCustomer(r, email, result.User.Name)
 	}
 	if err != nil {
+		log.Printf("ordnary auth: find or create customer: %v", err)
 		writeError(w, http.StatusInternalServerError, "could not sign in")
 		return
 	}

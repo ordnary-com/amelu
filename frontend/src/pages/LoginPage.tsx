@@ -6,8 +6,8 @@ import { API_URL } from "../api/client";
 // What the API's Ordnary callback redirects back with (see
 // backend/internal/handlers/ordnary_auth.go).
 const ERRORS: Record<string, string> = {
-  ordnary_auth_failed: "We couldn't sign you in with your Ordnary account. Please try again.",
-  ordnary_email_unverified: "Verify the email address on your Ordnary account first, then try again.",
+  ordnary_auth_failed: "Sign-in failed. Please try again.",
+  ordnary_email_unverified: "Verify your Ordnary account's email address, then sign in again.",
 };
 
 export function LoginPage() {

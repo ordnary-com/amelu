@@ -74,6 +74,10 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "domain name is required")
 		return
 	}
+	if isReservedDomain(name) {
+		writeError(w, http.StatusForbidden, "this domain is reserved and can't be added")
+		return
+	}
 
 	planTierID, err := a.Store.GetOrganizationPlanTierID(r.Context(), customer.OrganizationID.String)
 	if err != nil {

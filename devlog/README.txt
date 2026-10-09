@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-09  Ordnary's own domains can no longer be added as customer domains
+            2026-10-09-reserved-domains.txt
+
 2026-10-08  Forwarding still broken for existing forwards (GitHub issue 2)
             2026-10-08-forwarding-scripts-redeployed.txt
 

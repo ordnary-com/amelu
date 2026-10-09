@@ -68,6 +68,10 @@ func (a *App) CreateDomainAlias(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "alias domain name is required")
 		return
 	}
+	if isReservedDomain(aliasName) {
+		writeError(w, http.StatusForbidden, "this domain is reserved and can't be added")
+		return
+	}
 
 	if err := a.Stalwart.AddDomainAlias(r.Context(), domain.Name, aliasName); err != nil {
 		writeError(w, http.StatusBadGateway, "failed to add domain alias in mail cluster: "+err.Error())

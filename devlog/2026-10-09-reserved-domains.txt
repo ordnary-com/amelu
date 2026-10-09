@@ -1,0 +1,13 @@
+Ordnary's own domains can no longer be added as customer domains
+2026-10-09
+
+A customer had added ordnary.com as a domain on 2026-07-24. Stalwart
+delivers mail for any domain it hosts locally instead of following MX,
+so once it was active every Amelu sender writing to an ordnary.com
+address got "Mailbox does not exist" from marduk. The domain, its
+admin/postmaster/abuse accounts and DKIM signatures were removed from
+Stalwart by hand.
+POST /api/domains and POST /api/domains/{id}/aliases now refuse
+ordnary.com, ordnary.cloud, amelu.org and any subdomain of them with
+403 "this domain is reserved and can't be added" (isReservedDomain in
+handlers/reserved_domains.go).

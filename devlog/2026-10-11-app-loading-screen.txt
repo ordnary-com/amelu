@@ -1,0 +1,16 @@
+Loading screen before the dashboard looked broken
+2026-10-11
+
+While the session check (GET /api/account) was in flight, ProtectedRoute
+rendered a bare "Loading..." paragraph. With no layout around it, the text
+ended up top-left on an empty page background, and then the whole header
+and sidebar popped in at once, which read as a glitch.
+It now renders .app-loading (app.css): a full-screen panel in the same
+--chrome-bg blue as the header and sidebar, with the sliding 3px bar the
+login page already uses. The layout swaps in without a color flash. The
+bar slows down under prefers-reduced-motion.
+Bumped index.html's link to /app.css?v=3. The live response for app.css
+still carries Cache-Control max-age=14400 despite the must-revalidate
+rule in public/_headers, so without the bump returning visitors keep the
+old stylesheet for up to four hours. That is also why the Your Role badge
+fix looked like it hadn't shipped.

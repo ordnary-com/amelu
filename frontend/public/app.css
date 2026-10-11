@@ -1551,6 +1551,7 @@ margin: 0.2ch;
 .tag {
   display: inline-flex;
   align-items: center;
+  justify-self: start;
   background-color: var(--surface-raised);
   border-radius: 3px;
   padding: 0.22rem 0.6rem;

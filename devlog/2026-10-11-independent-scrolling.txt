@@ -1,0 +1,16 @@
+Content scrolls on its own, sidebar stays put
+2026-10-11
+
+The whole page scrolled as one, so on a long page (a mailbox overview,
+a big address list) the sidebar slid up and out of view with the content.
+The dashboard shell is now pinned to the viewport: #root:has(> main) gets
+flex: none and height: 100vh (flex: 1 alone let the flex basis win over the
+height), main gets min-height: 0, and .container and .sidemenu-container
+each get overflow-y: auto. The sidebar also needed flex: none, or main
+squeezed it below its menus' width once it had an overflow and labels like
+"Usage Instructions" got cut off. It has a thin translucent scrollbar so it
+doesn't sit on top of the third menu.
+Layout scrolls .container back to the top on every route change; the window
+used to be the scroller, now a new page would open at the old one's offset.
+Login, invite and reset pages don't render <main> and still scroll normally.
+Bumped index.html to /app.css?v=6.

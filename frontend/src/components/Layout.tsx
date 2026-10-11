@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { api, API_URL, type Domain } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -10,6 +10,14 @@ export function Layout() {
   const location = useLocation();
   const path = location.pathname;
   const [domains, setDomains] = useState<Domain[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // .container is the scroller now, not the window, and it stays mounted
+  // across routes, so without this a new page opens at the old one's scroll
+  // position.
+  useEffect(() => {
+    containerRef.current?.scrollTo(0, 0);
+  }, [path]);
 
   useEffect(() => {
     api.listDomains().then(setDomains);
@@ -334,7 +342,7 @@ export function Layout() {
           )}
         </div>
 
-        <div className="container">
+        <div className="container" ref={containerRef}>
           <div className={`inner-container ${path === "/" ? "inner-container-flush" : ""}`}>
             <Outlet />
           </div>

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-11  Content scrolls on its own, sidebar stays put
+            2026-10-11-independent-scrolling.txt
+
 2026-10-11  Second sidebar jumped in width between pages
             2026-10-11-fixed-width-sub-sidebar.txt
 

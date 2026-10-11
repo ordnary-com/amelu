@@ -444,6 +444,15 @@ body {
   min-height: 100vh;
   flex: 1;
 }
+/* Inside the dashboard (Layout renders <main> straight into #root) the
+   page itself never scrolls: the shell is pinned to the viewport and the
+   sidebars and .container each scroll on their own, so a long page no
+   longer drags the menus up with it. Login and the other standalone pages
+   don't render <main> and keep normal page scrolling. */
+#root:has(> main) {
+  flex: none;
+  height: 100vh;
+}
 
 li {padding: 0.2rem; }
 
@@ -541,6 +550,7 @@ main {
     match the sidebar's blue so the rounded corner reads as one continuous
     blue shape instead of a mismatched light sliver peeking through. */
  background-color: var(--chrome-bg);
+ min-height: 0;
 }
 
 main h1 {
@@ -779,6 +789,12 @@ main h2 {
   display: flex;
   flex-direction: row;
   padding-right: 2rem;
+  /* Scrolling on its own now; without flex: none the overflow lets main
+     shrink it below its menus' width and the labels get cut off. */
+  flex: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
 .sidemenu {
@@ -837,7 +853,8 @@ main h2 {
 
 .container {
   flex: auto;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   border-radius: 2px;

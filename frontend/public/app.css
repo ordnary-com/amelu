@@ -1476,9 +1476,26 @@ button.red:hover,
 
 
 
+/* An inline mask, not the flat black PNG this replaced: content: url(png)
+   can never pick up currentColor, so the icon always looked black no
+   matter what color the surrounding link text actually was (muted gray in
+   the sidebar, link blue elsewhere, white on the blue chrome). Masking
+   with background-color: currentColor keeps it in sync with the link
+   automatically, including on hover and across themes. */
 a[target="_blank"]:after {
-  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
-  margin: 0 3px 0 5px;
+  content: "";
+  display: inline-block;
+  width: 0.65em;
+  height: 0.65em;
+  margin: 0 0 0 0.3em;
+  vertical-align: middle;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M432 320h-32a16 16 0 0 0-16 16v112H64V128h240a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16H48a48 48 0 0 0-48 48v352a48 48 0 0 0 48 48h352a48 48 0 0 0 48-48V336a16 16 0 0 0-16-16zM488 0h-128c-21.4 0-32.1 25.9-17 41l35.7 35.7L135 320.4a24 24 0 0 0 0 34l22.6 22.6a24 24 0 0 0 34 0l243.7-243.7L471 169c15.1 15.1 41 4.4 41-17V24a24 24 0 0 0-24-24z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M432 320h-32a16 16 0 0 0-16 16v112H64V128h240a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16H48a48 48 0 0 0-48 48v352a48 48 0 0 0 48 48h352a48 48 0 0 0 48-48V336a16 16 0 0 0-16-16zM488 0h-128c-21.4 0-32.1 25.9-17 41l35.7 35.7L135 320.4a24 24 0 0 0 0 34l22.6 22.6a24 24 0 0 0 34 0l243.7-243.7L471 169c15.1 15.1 41 4.4 41-17V24a24 24 0 0 0-24-24z'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 .backup-code-2fa { font-family: monospace; }
@@ -1534,6 +1551,7 @@ margin: 0.2ch;
 .tag {
   display: inline-flex;
   align-items: center;
+  justify-self: start;
   background-color: var(--surface-raised);
   border-radius: 3px;
   padding: 0.22rem 0.6rem;
@@ -1888,16 +1906,6 @@ margin: 0.2ch;
 }
 .button-pill-danger:hover {
   background-color: rgba(255, 99, 92, 0.12);
-}
-
-.new-domain-layout {
-  display: flex;
-  gap: 2.5rem;
-  align-items: flex-start;
-}
-.new-domain-form {
-  flex: 1;
-  min-width: 0;
 }
 
 .tips-card {

@@ -1,0 +1,17 @@
+Your Role badge on My Organization stretched full-width
+11 August 2026
+
+Screenshot showed the OWNER badge on My Organization as a full-width green
+bar instead of a compact pill. .kv-row (app.css) is display: grid with a
+1fr value column and no justify-items override, so its default stretch
+applies to whatever sits directly in that column. Everywhere else .tag
+badges are wrapped in a plain <span> or sit outside a grid, so the stretch
+never showed up - MyOrganizationPage.tsx:150 puts the role <span
+className={ROLE_TAG_CLASS[...]}> straight in as the second grid child,
+so it inherited the full column width. .tag's own display: inline-flex
+only governs its children's layout, not whether the grid stretches its
+outer box.
+
+Added justify-self: start to .tag in app.css instead of wrapping the one
+call site - fixes it at the source for any future direct-grid-child usage
+too, and is a no-op outside grid containers.

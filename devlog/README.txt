@@ -24,8 +24,17 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-11  Email and Password removed from My Account, sign-in is Ordnary-only
+            2026-10-11-account-email-password-removed.txt
+
 2026-10-09  Ordnary's own domains can no longer be added as customer domains
             2026-10-09-reserved-domains.txt
+
+2026-10-09  Data Processing Agreement on amelu.org/dpa
+            2026-10-09-data-processing-agreement.txt
+
+2026-10-09  All contact points link to the Ordnary contact page
+            2026-10-09-contact-via-ordnary-contact-page.txt
 
 2026-10-08  Forwarding still broken for existing forwards (GitHub issue 2)
             2026-10-08-forwarding-scripts-redeployed.txt
@@ -56,6 +65,18 @@ ENTRIES
 
 2026-09-14  Customer HTTPS discovery records hidden until TLS supports them
             2026-09-14-suppress-unsafe-customer-tls-records.txt
+
+2026-08-11  External-link icon was a flat black PNG, never matched the link color
+            2026-08-11-external-link-icon-color.txt
+
+2026-08-11  New Domain's floating tips card replaced with plain copy
+            2026-08-11-new-domain-tips-redesign.txt
+
+2026-08-11  Your Role badge on My Organization stretched full-width
+            2026-08-11-role-tag-full-width.txt
+
+2026-08-11  Root route rendered nothing while the auth check was in flight
+            2026-08-11-blank-screen-before-login.txt
 
 2026-08-11  Mail cluster down to one node: marduk, backup MX removed
             2026-08-11-single-mail-node.txt

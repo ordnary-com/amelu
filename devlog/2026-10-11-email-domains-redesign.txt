@@ -1,0 +1,18 @@
+Email Domains redesigned in the Dashboard's style
+2026-10-11
+
+/domains was a bare list: name, status tag, three unlabeled coloured dots
+and a date. It now uses the Dashboard's layout: a white hero with a
+headline that sums up the state ("Both domains are ready", "1 of 2
+domains need attention"), a checklist (active, DNS set up) and an Add a
+domain button, Quick links on the right (Check DNS records for the first
+domain that needs attention, View DNS records, Contact Support), and a
+grey section with one card per domain plus a dashed Add a domain card.
+Each card shows the name, when it was added, the status tag and labelled
+MX, SPF and DKIM checks. CheckBadge and DomainIcon moved from
+DashboardPage to components/DashboardIcons.tsx; Layout makes /domains
+flush like / (dashboardStyle).
+GET /api/domains/{id}/dns returns no _domainkey records for any domain, so
+DKIM showed red everywhere. A check with no record to compare, or a failed
+lookup, is now grey "not checked" and doesn't count as needing attention.
+Bumped index.html to /app.css?v=10.

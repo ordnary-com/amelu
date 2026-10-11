@@ -1,0 +1,13 @@
+All contact points now link to the Ordnary contact page
+2026-10-09
+
+A customer mailed support@amelu.org and hello@amelu.org, both listed on
+amelu.org, and got 550 5.1.2 Mailbox does not exist. The landing source had
+already moved to @ordnary.com addresses on 14 September, but that build was
+never deployed, so amelu.org still showed the dead amelu.org mailboxes.
+Every contact point now links to https://ordnary.com/contact instead of a
+mailbox: the landing footer (Contact; the duplicate Support link is gone,
+Report abuse goes to /acceptable-use#report-abuse), and the contact lines in
+the privacy, terms, refund and acceptable use pages. The dashboard
+SupportPage (/support) does the same in place of support@ordnary.com and
+abuse@ordnary.com.

@@ -1,0 +1,14 @@
+Second sidebar jumped in width between pages
+2026-10-11
+
+The sub-menus next to the main sidebar (domain, mailbox, My Account,
+My Organization) had no width of their own, so each one sized to its
+longest label: 167px on a domain, 151px for the mailbox menu, 109px on
+My Account. The content column moved sideways on every navigation between
+them.
+.sidemenu + .sidemenu in app.css is now flex: none with width: 12rem
+(168px, the width of the domain menu, its widest). Longer labels are cut
+off by the existing ellipsis on .sidemenu li. Measured live after the
+deploy: 168px with the content starting at x=332 on both a domain page
+and /account.
+Bumped index.html to /app.css?v=4.

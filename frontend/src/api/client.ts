@@ -346,18 +346,6 @@ export const api = {
       body: JSON.stringify({ firstName, lastName, username }),
     }),
 
-  updateAccountEmail: (email: string, currentPassword: string) =>
-    request<Customer>("/api/account/email", {
-      method: "PATCH",
-      body: JSON.stringify({ email, currentPassword }),
-    }),
-
-  updateAccountPassword: (currentPassword: string, newPassword: string) =>
-    request<{ ok: boolean }>("/api/account/password", {
-      method: "PATCH",
-      body: JSON.stringify({ currentPassword, newPassword }),
-    }),
-
   terminateAccount: (currentPassword: string) =>
     request<{ ok: boolean }>("/api/account", {
       method: "DELETE",

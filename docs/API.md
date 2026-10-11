@@ -24,8 +24,8 @@ role. The raw key is shown once at creation and never stored, so it cannot be
 recovered - only replaced.
 
 Keys deliberately cannot reach `/api/account/*` or `/api/account/api-keys`.
-Those are cookie-only, so a leaked key cannot mint more keys, change the
-sign-in email, or delete the account.
+Those are cookie-only, so a leaked key cannot mint more keys or delete the
+account.
 
 Keys are for server-to-server callers. CORS only allows `Content-Type`, so a
 key cannot be used from browser JavaScript on the dashboard origin - putting

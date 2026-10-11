@@ -235,16 +235,6 @@ func (s *Store) UpdateCustomerProfileFields(ctx context.Context, customerID, fir
 	return err
 }
 
-func (s *Store) UpdateCustomerEmail(ctx context.Context, customerID, email string) error {
-	_, err := s.conn.ExecContext(ctx, `UPDATE customers SET email = $1 WHERE id = $2`, email, customerID)
-	return err
-}
-
-func (s *Store) UpdateCustomerPassword(ctx context.Context, customerID, passwordHash string) error {
-	_, err := s.conn.ExecContext(ctx, `UPDATE customers SET password_hash = $1 WHERE id = $2`, passwordHash, customerID)
-	return err
-}
-
 func (s *Store) UpdateCustomerLastSignIn(ctx context.Context, customerID string) error {
 	_, err := s.conn.ExecContext(ctx, `UPDATE customers SET last_sign_in_at = now() WHERE id = $1`, customerID)
 	return err

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-11  Email Domains redesigned in the Dashboard's style
+            2026-10-11-email-domains-redesign.txt
+
 2026-10-11  Content scrolls on its own, sidebar stays put
             2026-10-11-independent-scrolling.txt
 

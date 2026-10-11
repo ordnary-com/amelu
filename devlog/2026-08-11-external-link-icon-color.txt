@@ -1,0 +1,17 @@
+External-link icon was a flat black PNG, never matched the link color
+11 August 2026
+
+Screenshot of the sidebar showed "Export to CSV" with a black icon next to
+gray link text - looked misaligned/off. The icon is a global
+a[target="_blank"]:after rule in app.css, applied to every external link
+in the app (Export to CSV in the mailboxes and aliases submenus,
+SECURITY.md links, etc). It was `content: url(data:image/png;base64,...)`,
+a flat 10x10 raster baked at whatever color it was drawn in - content: url()
+on a raster image can never pick up currentColor, so it stayed the same
+black regardless of the surrounding link's actual color (muted gray in the
+sidebar, link blue in body text, white on the blue header chrome).
+
+Replaced the PNG with a CSS mask: background-color: currentColor plus an
+inline SVG (Font Awesome's external-link-alt path) as mask-image. The icon
+now always matches whatever color the link text is, including on hover
+and across light/dark theme, instead of needing to be redrawn per context.

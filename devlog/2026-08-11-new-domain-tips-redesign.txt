@@ -1,0 +1,20 @@
+New Domain's floating tips card replaced with plain copy
+11 August 2026
+
+New Domain had a sticky sidebar TipsCard (carousel, dots, Tip 1 of 3,
+Back/Next buttons) next to the form. All three tips just restated content
+already written into the form itself - "skip the www" duplicated the intro
+paragraph, "DNS changes are required" duplicated the DNS Nameservers
+section, "default addresses save a step" duplicated the Default Email
+Addresses section. So the card wasn't adding information, just the same
+copy twice in two different widgets.
+
+Redesigned to match Import Mailboxes' style instead: single column,
+.import-form class, plain paragraphs in the normal flow, no card, no
+carousel state. Removed the page-local TipsCard function and TIPS array,
+and the now-unused .new-domain-layout/.new-domain-form rules in app.css.
+
+Left alone: components/TipsCard.tsx and the shared .tips-card CSS - that's
+a separate, reusable component that was never actually wired into
+NewDomainPage (it had its own local duplicate instead), unrelated to this
+change.

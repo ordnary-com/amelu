@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-11  Second sidebar jumped in width between pages
+            2026-10-11-fixed-width-sub-sidebar.txt
+
 2026-10-11  Loading screen before the dashboard looked broken
             2026-10-11-app-loading-screen.txt
 

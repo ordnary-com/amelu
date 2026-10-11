@@ -794,6 +794,14 @@ main h2 {
   /*background-color: #fdfdfd;*/
   /*overflow: hidden;*/
 }
+/* The domain, mailbox and account sub-menus would otherwise size to their
+   longest label, so the content column jumped sideways on every navigation
+   between them. 12rem fits the widest one (the domain menu); anything longer
+   is cut off by the ellipsis on .sidemenu li. */
+.sidemenu + .sidemenu {
+  flex: none;
+  width: 12rem;
+}
 .sidemenu li a { text-decoration: none; color: var(--text-muted); }
 .sidemenu li a:hover { text-decoration: underline; }
 /*.sidemenu li { background-color: #fafafa; }*/

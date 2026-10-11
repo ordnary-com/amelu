@@ -302,12 +302,6 @@ export function Layout() {
                 <li className={exact("/account/edit")}>
                   <Link to="/account/edit">General</Link>
                 </li>
-                <li className={exact("/account/email")}>
-                  <Link to="/account/email">Email</Link>
-                </li>
-                <li className={exact("/account/password")}>
-                  <Link to="/account/password">Password</Link>
-                </li>
                 <li className={exact("/account/appearance")}>
                   <Link to="/account/appearance">Appearance</Link>
                 </li>

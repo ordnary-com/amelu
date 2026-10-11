@@ -38,8 +38,6 @@ import { DnsRecordsPage } from "./pages/DnsRecordsPage";
 import { DeleteDomainPage } from "./pages/DeleteDomainPage";
 import { AccountOverviewPage } from "./pages/AccountOverviewPage";
 import { AccountGeneralPage } from "./pages/AccountGeneralPage";
-import { AccountEmailPage } from "./pages/AccountEmailPage";
-import { AccountPasswordPage } from "./pages/AccountPasswordPage";
 import { AccountAppearancePage } from "./pages/AccountAppearancePage";
 import { AccountApiKeysPage } from "./pages/AccountApiKeysPage";
 import { AccountTerminatePage } from "./pages/AccountTerminatePage";
@@ -142,8 +140,6 @@ export default function App() {
 
             <Route path="/account" element={<AccountOverviewPage />} />
             <Route path="/account/edit" element={<AccountGeneralPage />} />
-            <Route path="/account/email" element={<AccountEmailPage />} />
-            <Route path="/account/password" element={<AccountPasswordPage />} />
             <Route path="/account/appearance" element={<AccountAppearancePage />} />
             <Route path="/account/api-keys" element={<AccountApiKeysPage />} />
             <Route path="/account/terminate" element={<AccountTerminatePage />} />

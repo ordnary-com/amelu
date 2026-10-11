@@ -29,15 +29,11 @@ export function AccountOverviewPage() {
               Manage
             </div>
           </md-list-item>
-          <md-list-item
-            type="link"
-            href="/account/email"
-            onClick={(e: React.MouseEvent) => goTo(e, "/account/email")}
-          >
+          <md-list-item type="text">
             <div slot="headline">Sign-in Email</div>
             <div slot="supporting-text">{customer.email}</div>
             <div slot="end" className="light">
-              Manage
+              Managed by Ordnary
             </div>
           </md-list-item>
           <md-list-item type="text">

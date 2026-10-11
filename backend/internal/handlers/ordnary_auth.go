@@ -74,8 +74,7 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 // first-time Ordnary login, matching Signup's shape. There's no password to
 // set, so it gets a random, never-shown, never-usable hash - CheckPassword
 // will simply never match it, which is fine since this account can only ever
-// sign in via Ordnary until/unless the customer sets a password separately
-// (see PATCH /api/account/password).
+// sign in via Ordnary.
 func (a *App) provisionOrdnaryCustomer(r *http.Request, email, name string) (*db.Customer, error) {
 	if name == "" {
 		name = email

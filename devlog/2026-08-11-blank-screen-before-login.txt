@@ -1,0 +1,20 @@
+Root route rendered nothing while the auth check was in flight
+11 August 2026
+
+Reported as "login screen isn't always immediately visible." The actual
+bug was upstream of LoginPage entirely. Every real route, including "/",
+sits behind ProtectedRoute (App.tsx), and ProtectedRoute returned null
+while AuthContext's api.me() call was still pending on first load.
+
+Most visits land on "/", not "/login" directly, so the sequence was:
+render nothing -> wait for /api/me -> get 401 -> Navigate to /login ->
+LoginPage finally renders. The blank stretch is proportional to how long
+/api/me takes (cold backend, slow network), which is why it only showed
+up "sometimes" - a fast response made the gap invisible.
+
+Fixed ProtectedRoute.tsx to render the same "Loading..." text used by
+AcceptInvitePage instead of null while loading is true.
+
+Not touched: LoginPage.module.css's 0.4s fadeIn on .loginCard. That's a
+deliberate entrance animation, not a bug - once the blank-screen race
+above is closed, it just reads as a normal fade-in.

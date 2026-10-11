@@ -1908,16 +1908,6 @@ margin: 0.2ch;
   background-color: rgba(255, 99, 92, 0.12);
 }
 
-.new-domain-layout {
-  display: flex;
-  gap: 2.5rem;
-  align-items: flex-start;
-}
-.new-domain-form {
-  flex: 1;
-  min-width: 0;
-}
-
 .tips-card {
   position: sticky;
   top: 1.5rem;

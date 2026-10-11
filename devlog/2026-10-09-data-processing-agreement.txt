@@ -1,0 +1,11 @@
+Data Processing Agreement on amelu.org/dpa
+2026-10-09
+
+Customers had no Article 28 GDPR processor agreement to point to. The
+landing site now has /dpa (amelu-landing src/pages/DataProcessingAgreement.tsx):
+Ordnary as processor for mail and mailbox data, the customer as controller,
+security measures, 48 hour breach notice, deletion within 30 days of account
+closure, yearly audit right, and the sub-processors OVH GmbH (mail servers,
+Germany), Cloudflare, Neon and Resend. It applies automatically through the
+Terms of Service, which got a Data processing section linking to it.
+Also added to the footer legal links, sitemap.xml and the prerender route list.

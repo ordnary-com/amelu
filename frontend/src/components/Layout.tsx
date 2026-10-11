@@ -39,6 +39,9 @@ export function Layout() {
   const onDnsArea = domainId != null && path.startsWith(`/domains/${domainId}/dns`);
   const onSpamArea = domainId != null && path.startsWith(`/domains/${domainId}/spam`);
   const onMailboxDetailArea = domainId != null && mailboxId != null && path.startsWith(`/domains/${domainId}/mailboxes/${mailboxId}`);
+  // Pages built from the dashboard's hero + grey cards layout, which runs to
+  // the edges of .container instead of sitting in its padding.
+  const dashboardStyle = path === "/" || path === "/domains";
 
   return (
     <>
@@ -343,11 +346,11 @@ export function Layout() {
         </div>
 
         <div className="container" ref={containerRef}>
-          <div className={`inner-container ${path === "/" ? "inner-container-flush" : ""}`}>
+          <div className={`inner-container ${dashboardStyle ? "inner-container-flush" : ""}`}>
             <Outlet />
           </div>
 
-          <footer className={path === "/" ? "dashboard-footer" : ""}>
+          <footer className={dashboardStyle ? "dashboard-footer" : ""}>
             <div className="copyright">
               Made for the world in the Netherlands{" "}
               <img src="https://flagcdn.com/w20/nl.png" width="20" height="15" alt="Netherlands flag" />

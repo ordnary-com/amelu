@@ -1876,6 +1876,76 @@ margin: 0.2ch;
   color: var(--text-muted);
 }
 
+.domain-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.domain-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.1rem;
+  min-height: 7.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--surface);
+  text-decoration: none;
+  color: var(--text);
+}
+a.domain-card:hover {
+  text-decoration: none;
+  background-color: var(--surface-raised);
+}
+.domain-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.domain-card-top .action-card-main {
+  flex: 1;
+}
+.domain-card-top .action-card-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.domain-card-health {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+.health-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.health-check.fail .health-dot {
+  background-color: #f28b82;
+}
+.health-check.unknown .health-dot {
+  background-color: var(--border);
+}
+.dashboard-warn {
+  font-size: 18px;
+  color: #f9ab00;
+  flex-shrink: 0;
+}
+.domain-card-skeleton {
+  justify-content: center;
+}
+.domain-card-add {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-style: dashed;
+  background-color: transparent;
+  color: var(--link);
+}
+
 .dashboard-section-buttons {
   display: flex;
   gap: 0.75rem;

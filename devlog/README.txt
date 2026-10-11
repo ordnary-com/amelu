@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-11  Loading screen before the dashboard looked broken
+            2026-10-11-app-loading-screen.txt
+
 2026-10-11  Email and Password removed from My Account, sign-in is Ordnary-only
             2026-10-11-account-email-password-removed.txt
 

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  2.0: Mailbox pages
+            2026-10-12-beta-mailbox-pages.txt
+
 2026-10-12  2.0: Mailboxes on a domain
             2026-10-12-beta-mailboxes.txt
 

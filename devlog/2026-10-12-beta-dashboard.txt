@@ -1,0 +1,13 @@
+2.0: dashboard home
+2026-10-12
+
+The home page of the beta dashboard: greeting hero with Changelog and
+Support links (icon-only on phones), the six quick actions of the current
+dashboard with its 26px icons, one card per email domain with its status
+badge and MX/SPF/DKIM chips plus a dashed card to add one, and a side
+column with the plan (domain usage bar, red when over the limit, Upgrade)
+and the latest invoice.
+The DNS chips come from GET /api/domains/{id}/dns per domain, checked once
+and shared with other pages (DomainHealthChecks). DKIM shows grey "not
+checked" rather than red, because that endpoint returns no _domainkey
+records yet and every domain would look broken.

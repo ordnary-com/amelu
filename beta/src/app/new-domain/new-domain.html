@@ -1,0 +1,201 @@
+<nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
+  <a routerLink="/domains" class="hover:text-ink hover:underline">Email Domains</a>
+  <amelu-icon name="chevronRight" [size]="12" />
+  <span class="text-ink">New domain</span>
+</nav>
+
+@if (result(); as done) {
+  <div class="max-w-2xl space-y-5">
+    <amelu-alert kind="success" [title]="done.domain.name + ' is added'">
+      Set its DNS records next, so mail for it reaches Amelu.
+    </amelu-alert>
+
+    @if (done.addresses.length > 0) {
+      <section>
+        <h2 [class]="ui.sectionTitle">Default addresses</h2>
+        <p class="-mt-2 mb-3 text-[13px] text-muted">
+          These passwords are shown only once. Save them now, or set new ones from each mailbox later.
+        </p>
+        <ul [class]="ui.card + ' overflow-hidden'">
+          @for (address of done.addresses; track address.address) {
+            <li class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-4 py-3 last:border-b-0">
+              <span class="min-w-40 flex-1 truncate text-[14px] font-medium">{{ address.address }}</span>
+              @if (address.password) {
+                <code class="rounded-md bg-bg px-2.5 py-1 font-mono text-[12px]">{{ address.password }}</code>
+                <button type="button" [class]="ui.outline" (click)="copy(address)">
+                  <amelu-icon [name]="copied() === address.address ? 'check' : 'copy'" [size]="14" />
+                  {{ copied() === address.address ? 'Copied' : 'Copy' }}
+                </button>
+              } @else {
+                <span class="text-[13px] text-bad">{{ address.error }}</span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <div class="flex flex-wrap gap-2">
+      <a [routerLink]="'/domains/' + done.domain.id + '/dns'" [class]="ui.primary">Set up DNS</a>
+      <a [routerLink]="'/domains/' + done.domain.id" [class]="ui.outline">Go to domain</a>
+    </div>
+  </div>
+} @else {
+  <h1 class="text-[22px] font-bold tracking-[-0.4px]">Add an email domain</h1>
+  <p class="mt-1.5 max-w-2xl text-[13px] text-muted">
+    The domain is the part after the &#64; in your email addresses. Bring one you already own; you keep it at your current registrar.
+  </p>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <form class="min-w-0 space-y-6" (submit)="submit($event)">
+      @if (atLimit()) {
+        <amelu-alert kind="warning" title="Your plan's domains are all in use">
+          {{ usage()!.plan }} includes {{ usage()!.max }} {{ usage()!.max === 1 ? 'domain' : 'domains' }}.
+          <a routerLink="/billing/plans" class="font-bold underline">Upgrade</a> to add another.
+        </amelu-alert>
+      }
+      @if (error(); as message) {
+        <amelu-alert kind="error" title="The domain wasn't added" [dismissible]="true" (dismissed)="error.set(null)">
+          {{ message }}
+        </amelu-alert>
+      }
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Domain name</h2>
+        <div [class]="ui.card + ' p-4'">
+          <label for="domain-name" [class]="ui.label">Domain</label>
+          <div
+            class="mt-1.5 flex h-10 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
+          >
+            <span class="flex h-full items-center border-r border-line px-3 text-[13px] text-muted select-none">you&#64;</span>
+            <input
+              id="domain-name"
+              class="h-full w-full min-w-0 bg-transparent px-3 text-[14px] outline-none placeholder:text-muted"
+              placeholder="mydomain.com"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              autofocus
+              required
+              [value]="input()"
+              (input)="input.set($any($event.target).value)"
+            />
+          </div>
+          @if (cleaned(); as name) {
+            <p [class]="ui.hint">We'll add <span class="font-medium text-ink">{{ name }}</span>.</p>
+          }
+          @if (www()) {
+            <p class="mt-1 text-[12px] text-warn">
+              You most likely want this without "www.", so addresses look like you&#64;{{ name().slice(4) }}.
+              <button type="button" class="cursor-pointer font-semibold underline" (click)="input.set(name().slice(4))">
+                Use {{ name().slice(4) }}
+              </button>
+            </p>
+          }
+        </div>
+      </section>
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Nameservers</h2>
+        <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Nameservers">
+          <label class="flex cursor-pointer gap-3 rounded-lg border-2 border-accent bg-surface p-4">
+            <input type="radio" name="nameservers" value="external" checked class="mt-0.5 accent-accent" />
+            <span>
+              <span class="block text-[14px] font-semibold">Keep my current DNS</span>
+              <span class="mt-0.5 block text-[13px] text-muted">You add a few records where your DNS lives. We show which ones, and check them.</span>
+            </span>
+          </label>
+          <label class="flex cursor-not-allowed gap-3 rounded-lg border border-line bg-surface p-4 opacity-60">
+            <input type="radio" name="nameservers" value="amelu" disabled class="mt-0.5" />
+            <span>
+              <span class="flex items-center gap-2 text-[14px] font-semibold">
+                Amelu nameservers
+                <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-muted uppercase">Soon</span>
+              </span>
+              <span class="mt-0.5 block text-[13px] text-muted">Point your domain at us and every record is set for you.</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Default addresses</h2>
+        <label [class]="ui.card + ' flex cursor-pointer gap-3 p-4'">
+          <input
+            type="checkbox"
+            class="mt-0.5 size-4 accent-accent"
+            [checked]="createDefaults()"
+            (change)="createDefaults.set($any($event.target).checked)"
+          />
+          <span class="min-w-0">
+            <span class="block text-[14px] font-semibold">Create the standard addresses</span>
+            <span class="mt-0.5 block text-[13px] text-muted">
+              Email standards expect these to exist on every domain. They count as mailboxes on your plan.
+            </span>
+            <span class="mt-2.5 flex flex-wrap gap-1.5">
+              @for (localPart of defaults; track localPart) {
+                <span class="rounded bg-bg px-2 py-0.5 font-mono text-[12px]" [class.text-muted]="!createDefaults()">
+                  {{ localPart }}&#64;{{ valid() ? name() : 'mydomain.com' }}
+                </span>
+              }
+            </span>
+          </span>
+        </label>
+      </section>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy() || atLimit()">
+          {{ busy() ? 'Adding...' : 'Add domain' }}
+        </button>
+        <a routerLink="/domains" class="text-[13px] font-medium text-muted hover:text-ink hover:underline">Cancel</a>
+      </div>
+    </form>
+
+    <aside class="space-y-6">
+      <section>
+        <h2 [class]="ui.sectionTitle">What happens next</h2>
+        <ol [class]="ui.card + ' space-y-4 p-4'">
+          @for (step of steps; track step.title; let i = $index) {
+            <li class="flex gap-3">
+              <span
+                class="flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-bold"
+                [class]="i === 0 ? 'bg-accent text-white' : 'bg-bg text-muted'"
+              >
+                {{ i + 1 }}
+              </span>
+              <span>
+                <span class="block text-[13px] font-semibold">{{ step.title }}</span>
+                <span class="block text-[13px] text-muted">{{ step.text }}</span>
+              </span>
+            </li>
+          }
+        </ol>
+      </section>
+
+      @if (usage(); as plan) {
+        @if (used() !== null) {
+          <section [class]="ui.card + ' p-4'">
+            <div class="flex items-baseline justify-between gap-3 text-[13px]">
+              <span class="text-muted">Domains on {{ plan.plan }}</span>
+              <span><span class="font-bold">{{ used() }}</span> of {{ plan.max }}</span>
+            </div>
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+              <div
+                class="h-full rounded-full"
+                [class]="atLimit() ? 'bg-bad' : 'bg-accent'"
+                [style.width.%]="usedPercent()"
+              ></div>
+            </div>
+          </section>
+        }
+      }
+
+      <section [class]="ui.card + ' p-4'">
+        <h2 class="text-[14px] font-bold">Already use this domain for email?</h2>
+        <p class="mt-1 text-[13px] leading-relaxed text-muted">
+          Mail keeps going to your old provider until you change the MX records, so you can set up mailboxes here first and switch when you're ready.
+        </p>
+      </section>
+    </aside>
+  </div>
+}

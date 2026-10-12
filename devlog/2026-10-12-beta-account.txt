@@ -1,0 +1,12 @@
+2.0: My Account
+2026-10-12
+
+My Account in the beta dashboard, with Overview, Appearance and API Keys
+tabs. There is no General tab any more: name, photo, email and two-step
+verification are managed in the Ordnary account, so the overview shows them
+read-only with a link there, plus role and last sign-in. The username isn't
+shown; it's only used internally.
+Appearance has Dark, Light and System tiles with a small preview. API Keys
+lists keys with prefix, created and last used, creates one and shows the raw
+key once with Copy, and asks before revoking. The terminate card links to
+/account/terminate.

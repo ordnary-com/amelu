@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  2.0: My Account
+            2026-10-12-beta-account.txt
+
 2026-10-12  2.0: Email Domains, domain overview and New Domain
             2026-10-12-beta-email-domains.txt
 

@@ -1,0 +1,41 @@
+<h2 [class]="ui.sectionTitle">Appearance</h2>
+<div [class]="ui.card + ' p-4'">
+  <p class="text-[13px] text-muted">Choose how Amelu looks. System follows your device setting and switches along with it.</p>
+
+  <div class="mt-4 grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Theme">
+    @for (option of options; track option.value) {
+      <label
+        class="flex cursor-pointer flex-col gap-2.5 rounded-lg border p-3 hover:bg-bg/60"
+        [class]="theme.choice() === option.value ? 'border-accent ring-2 ring-accent/30' : 'border-line'"
+      >
+        <input type="radio" name="theme" class="sr-only" [value]="option.value" [checked]="theme.choice() === option.value" (change)="theme.set(option.value)" />
+        <!-- Miniature of the shell in that theme -->
+        <span class="flex h-16 overflow-hidden rounded-md border border-line" aria-hidden="true">
+          @switch (option.value) {
+            @case ('dark') {
+              <span class="w-1/4 bg-[#151517]"></span><span class="flex-1 rounded-tl-md bg-[#1b1b1c]"></span>
+            }
+            @case ('light') {
+              <span class="w-1/4 bg-[#0043ce]"></span><span class="flex-1 rounded-tl-md bg-white"></span>
+            }
+            @default {
+              <span class="w-1/4 bg-[#151517]"></span><span class="flex-1 rounded-tl-md bg-[linear-gradient(135deg,#1b1b1c_50%,#ffffff_50%)]"></span>
+            }
+          }
+        </span>
+        <span>
+          <span class="block text-[13px] font-semibold">{{ option.label }}</span>
+          <span class="block text-[12px] text-muted">{{ option.hint }}</span>
+        </span>
+      </label>
+    }
+  </div>
+
+  <p class="mt-4 text-[12px] text-muted">
+    @if (theme.choice() === 'system') {
+      Your device is currently set to {{ theme.resolved() }}.
+    } @else {
+      Applies right away, and only on this device.
+    }
+  </p>
+</div>

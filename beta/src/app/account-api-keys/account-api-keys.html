@@ -1,0 +1,140 @@
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="space-y-4">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+
+    @if (newKey(); as key) {
+      <amelu-alert kind="warning" title="Copy this key now" [dismissible]="true" (dismissed)="newKey.set(null)">
+        <p>It isn't stored and can't be shown again.</p>
+        <div class="mt-2.5 flex items-center gap-2">
+          <code class="min-w-0 flex-1 truncate rounded-md bg-black/10 px-2.5 py-1.5 font-mono text-[12px]">{{ key }}</code>
+          <button
+            type="button"
+            class="inline-flex h-8 flex-none cursor-pointer items-center gap-1.5 rounded-md bg-[#14171f] px-3 text-[13px] font-medium text-white hover:bg-black"
+            (click)="copyKey()"
+          >
+            <amelu-icon [name]="copied() ? 'check' : 'copy'" [size]="14" />
+            {{ copied() ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+        API keys
+        @if (keys(); as list) {
+          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
+        }
+      </h2>
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (keys() === undefined) {
+          @for (i of [1, 2]; track i) {
+            <div class="space-y-2 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+              <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+              <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        } @else {
+          @for (key of keys(); track key.id) {
+            <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
+              <div class="min-w-0 flex-1">
+                <div class="truncate text-[13px] font-medium">{{ key.name }}</div>
+                <div class="mt-0.5 truncate text-[12px] text-muted">
+                  <span class="font-mono">{{ key.prefix }}…</span>
+                  · created {{ key.createdAt | date: 'd MMM y' }} ·
+                  @if (key.lastUsedAt) {
+                    last used {{ key.lastUsedAt | date: 'd MMM y, HH:mm' }}
+                  } @else {
+                    never used
+                  }
+                </div>
+              </div>
+              <button
+                type="button"
+                class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
+                (click)="revokeTarget.set(key)"
+              >
+                Revoke
+              </button>
+            </div>
+          } @empty {
+            <amelu-empty-state title="No API keys yet">
+              Create a key to manage domains and mailboxes from your own scripts.
+            </amelu-empty-state>
+          }
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Create a key</h2>
+      <form [class]="ui.card + ' flex flex-wrap items-end gap-3 p-4'" (submit)="create($event)">
+        <label class="min-w-56 flex-1">
+          <span [class]="ui.label">Name</span>
+          <input
+            [class]="ui.input"
+            placeholder="eg. provisioning script"
+            [value]="name()"
+            (input)="name.set($any($event.target).value)"
+            required
+          />
+        </label>
+        <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="creating()">
+          {{ creating() ? 'Creating...' : 'Create key' }}
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <aside class="space-y-4">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Using a key</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        An API key lets a script or service call the Amelu API as you, with the same permissions your account has. Send
+        it as a bearer token:
+      </p>
+      <code class="mt-2 block rounded-md bg-bg px-2.5 py-1.5 font-mono text-[12px]">Authorization: Bearer amelu_live_...</code>
+    </section>
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Treat it like a password</h2>
+      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-warn"></span>
+          Anything holding a key can manage your domains and mailboxes.
+        </li>
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          A key can't change your account or create other keys. That still needs you signed in.
+        </li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+@if (revokeTarget(); as target) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeRevoke()">
+    <div
+      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      role="alertdialog"
+      aria-modal="true"
+      [attr.aria-label]="'Revoke ' + target.name"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 class="text-[15px] font-bold">Revoke {{ target.name }}?</h3>
+      <p class="mt-2 text-[13px] leading-relaxed text-muted">
+        Anything still using this key stops working immediately. This can't be undone, so a replacement has to be a new
+        key.
+      </p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" [class]="ui.outline" (click)="closeRevoke()" [disabled]="revoking()">Cancel</button>
+        <button type="button" [class]="ui.danger" (click)="confirmRevoke()" [disabled]="revoking()">
+          {{ revoking() ? 'Revoking...' : 'Yes, revoke it' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

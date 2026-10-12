@@ -1,0 +1,67 @@
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section>
+    <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+      Invoices
+      @if (invoices(); as list) {
+        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
+      }
+    </h2>
+    <div [class]="ui.card + ' overflow-x-auto'">
+      @if (invoices() === undefined) {
+        <div class="space-y-3 p-4" aria-hidden="true">
+          <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+          <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+        </div>
+      } @else if (invoices() === null) {
+        <amelu-empty-state title="Your invoices couldn't be loaded" [error]="true" />
+      } @else if (invoices()!.length === 0) {
+        <amelu-empty-state title="No invoices yet">
+          Invoices appear here automatically once your account moves to a paid plan.
+          <a actions routerLink="/billing/plans" [class]="ui.outline">View plans</a>
+        </amelu-empty-state>
+      } @else {
+        <table class="w-full text-[13px]">
+          <thead>
+            <tr class="border-b border-line text-left text-[12px] text-muted">
+              <th class="px-4 py-2.5 font-medium">Invoice</th>
+              <th class="px-2 py-2.5 font-medium">Date</th>
+              <th class="px-2 py-2.5 font-medium">Status</th>
+              <th class="px-2 py-2.5 text-right font-medium">Total</th>
+              <th class="px-4 py-2.5"><span class="sr-only">Links</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (invoice of invoices(); track invoice.id) {
+              <tr class="border-b border-line last:border-b-0 hover:bg-bg/60">
+                <td class="px-4 py-3 font-medium whitespace-nowrap">{{ invoice.number || invoice.id }}</td>
+                <td class="px-2 py-3 whitespace-nowrap text-muted">{{ invoice.createdAt | date: 'd MMM y' }}</td>
+                <td class="px-2 py-3">
+                  <span [class]="badge(invoiceStatus[invoice.status].tone)">{{ invoiceStatus[invoice.status].label }}</span>
+                </td>
+                <td class="px-2 py-3 text-right whitespace-nowrap tabular-nums">
+                  {{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}
+                </td>
+                <td class="px-4 py-3 text-right whitespace-nowrap">
+                  @if (invoice.hostedInvoiceUrl) {
+                    <a [href]="invoice.hostedInvoiceUrl" target="_blank" rel="noreferrer" class="text-[12px] font-medium text-link hover:underline">View</a>
+                  }
+                  @if (invoice.invoicePdf) {
+                    <a [href]="invoice.invoicePdf" target="_blank" rel="noreferrer" class="ml-3 text-[12px] font-medium text-link hover:underline">PDF</a>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </section>
+
+  <aside [class]="ui.card + ' p-4'">
+    <h2 class="text-[14px] font-bold">About invoices</h2>
+    <p class="mt-1 text-[13px] leading-relaxed text-muted">
+      Every invoice issued to your account, synced directly from Stripe. Open one to see the details or download it as
+      a PDF.
+    </p>
+  </aside>
+</div>

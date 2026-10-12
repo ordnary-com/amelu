@@ -1,0 +1,124 @@
+@if (checkout() === 'success') {
+  <amelu-alert class="mb-5" kind="success" title="Thanks! Your subscription is now active." />
+} @else if (checkout() === 'cancelled') {
+  <amelu-alert class="mb-5" kind="warning" title="Checkout was cancelled">Your plan hasn't changed.</amelu-alert>
+}
+@if (error(); as message) {
+  <amelu-alert class="mb-5" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
+    {{ message }}
+  </amelu-alert>
+}
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="space-y-6">
+    <section>
+      <h2 [class]="ui.sectionTitle">Subscription</h2>
+      <div [class]="ui.card">
+        @if (overview() === undefined) {
+          <div class="space-y-2 p-4" aria-hidden="true">
+            <span class="block h-4 w-24 animate-pulse rounded bg-bg"></span>
+            <span class="block h-3 w-56 animate-pulse rounded bg-bg"></span>
+          </div>
+        } @else if (overview() === null) {
+          <amelu-empty-state title="Your billing info couldn't be loaded" [error]="true" />
+        } @else {
+          <div class="flex flex-wrap items-center gap-4 border-b border-line p-4">
+            <div class="min-w-0 flex-1">
+              <div class="text-[12px] text-muted">Current plan</div>
+              <div class="text-[22px] leading-tight font-bold">{{ overview()!.plan.name }}</div>
+              <div class="mt-0.5 text-[13px] text-muted">{{ priceLine(overview()!) }}</div>
+            </div>
+            <a routerLink="/billing/plans" [class]="ui.outline">Change plan</a>
+          </div>
+          <dl class="text-[13px]">
+            <div class="flex items-center gap-4 border-b border-line px-4 py-3">
+              <dt class="w-40 flex-none text-muted">Status</dt>
+              <dd>
+                @if (overview()!.subscriptionStatus; as status) {
+                  <span [class]="badge(subscriptionStatus[status]?.tone ?? 'neutral')">{{ subscriptionStatus[status]?.label ?? status }}</span>
+                } @else {
+                  <span class="text-muted">No active subscription</span>
+                }
+              </dd>
+            </div>
+            <div class="flex items-center gap-4 px-4 py-3">
+              <dt class="w-40 flex-none text-muted">Payment method</dt>
+              <dd [class.text-muted]="!overview()!.hasPaymentMethod">
+                {{ overview()!.hasPaymentMethod ? 'On file' : 'None on file' }}
+              </dd>
+            </div>
+          </dl>
+        }
+      </div>
+    </section>
+
+    <section>
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 class="text-[14px] font-bold">Recent invoices</h2>
+        <a routerLink="/billing/invoices" class="text-[12px] text-muted hover:text-ink hover:underline">View all</a>
+      </div>
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (invoices() === undefined) {
+          <div class="px-4 py-3" aria-hidden="true"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></div>
+        } @else {
+          @for (invoice of (invoices() ?? []).slice(0, 3); track invoice.id) {
+            <a
+              [href]="invoice.hostedInvoiceUrl"
+              target="_blank"
+              rel="noreferrer"
+              class="group flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-bg/60"
+            >
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-[13px] font-medium group-hover:underline">{{ invoice.number || invoice.id }}</span>
+                <span class="block text-[12px] text-muted">{{ invoice.createdAt | date: 'd MMM y' }}</span>
+              </span>
+              <span class="text-[13px] tabular-nums">{{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}</span>
+              <span [class]="badge(invoiceStatus[invoice.status].tone)">{{ invoiceStatus[invoice.status].label }}</span>
+            </a>
+          } @empty {
+            <amelu-empty-state title="No invoices yet" [compact]="true">
+              They show up here once you're billed.
+            </amelu-empty-state>
+          }
+        }
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-6">
+    @if (domainUsage(); as usage) {
+      <section>
+        <h2 [class]="ui.sectionTitle">Usage</h2>
+        <div [class]="ui.card + ' space-y-3 p-4'">
+          <div>
+            <div class="flex items-baseline justify-between gap-3 text-[13px]">
+              <span class="text-muted">Domains</span>
+              <span [class.text-bad]="usage.over"><span class="font-bold">{{ usage.used }}</span> of {{ usage.limit }}</span>
+            </div>
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+              <div class="h-full rounded-full" [class]="usage.over ? 'bg-bad' : 'bg-accent'" [style.width.%]="usage.percent"></div>
+            </div>
+            @if (usage.over) {
+              <p class="mt-1.5 text-[12px] text-bad">You're over your plan's domain limit.</p>
+            }
+          </div>
+          <div class="flex items-baseline justify-between gap-3 text-[13px]">
+            <span class="text-muted">Mailboxes per domain</span>
+            <span>Up to <span class="font-bold">{{ overview()!.plan.maxMailboxesPerDomain }}</span></span>
+          </div>
+        </div>
+      </section>
+    }
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Manage subscription</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Update payment details, download invoices and cancel through Stripe's secure billing portal. Amelu never
+        handles your card details itself.
+      </p>
+      <button type="button" [class]="ui.primary + ' mt-3'" [disabled]="busy()" (click)="openPortal()">
+        {{ busy() ? 'Opening...' : 'Manage billing' }}
+      </button>
+    </section>
+  </aside>
+</div>

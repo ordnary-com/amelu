@@ -1,0 +1,14 @@
+2.0: Billing
+2026-10-12
+
+Billing in the beta dashboard with Overview, Plans and Invoices tabs.
+Overview: plan, price line, subscription status, payment method, the last
+three invoices, domain usage, and Manage subscription for the Stripe billing
+portal. The ?checkout=success/cancelled return shows a green or yellow
+alert. A free plan's price line says "No charge, no card needed" instead of
+repeating "Free" under the plan name.
+Plans: Free, Go and Pro with a Monthly/Yearly toggle and the yearly saving,
+Switch to (Stripe checkout) or Cancel plan, and the same feature lists as
+the current Plans page. Invoices: table with View and PDF links.
+Stripe still sends people back to the current dashboard after checkout or
+the portal; those return URLs are set in the backend.

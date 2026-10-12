@@ -1,0 +1,112 @@
+@if (error(); as message) {
+  <amelu-alert class="mb-5" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
+    {{ message }}
+  </amelu-alert>
+}
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <p class="text-[13px] text-muted">Compare plans and upgrade at any time. Changes are prorated automatically.</p>
+  @if (plans() && hasPaidPlans(plans()!)) {
+    <div class="inline-flex rounded-md border border-line p-0.5" role="radiogroup" aria-label="Billing period">
+      @for (option of [{ value: 'monthly', label: 'Monthly' }, { value: 'annual', label: 'Yearly' }]; track option.value) {
+        <button
+          type="button"
+          role="radio"
+          class="cursor-pointer rounded px-3 py-1 text-[12px] font-medium"
+          [class]="interval() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+          [attr.aria-checked]="interval() === option.value"
+          (click)="interval.set($any(option.value))"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+  }
+</div>
+
+@if (plans() === undefined) {
+  <div class="grid gap-4 lg:grid-cols-3" aria-hidden="true">
+    @for (i of [1, 2, 3]; track i) {
+      <div [class]="ui.card + ' h-80 animate-pulse'"></div>
+    }
+  </div>
+} @else if (plans() === null) {
+  <amelu-empty-state [class]="ui.card" title="Plans couldn't be loaded" [error]="true" />
+} @else {
+  <div class="grid gap-4 lg:grid-cols-3">
+    @for (plan of plans(); track plan.id) {
+      <section
+        class="flex flex-col rounded-lg border bg-surface p-5"
+        [class]="plan.current ? 'border-accent ring-2 ring-accent/30' : 'border-line'"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-[16px] font-bold">{{ plan.name }}</h2>
+          @if (plan.current) {
+            <span class="inline-flex items-center rounded bg-accent px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-white uppercase">
+              Current
+            </span>
+          }
+        </div>
+
+        <div class="mt-3 h-14">
+          @if (isFree(plan)) {
+            <div class="text-[28px] leading-none font-bold">Free</div>
+          } @else {
+            <div>
+              <span class="text-[28px] leading-none font-bold">{{ dollars(price(plan)) }}</span>
+              <span class="text-[13px] text-muted">/{{ interval() === 'monthly' ? 'month' : 'year' }}</span>
+            </div>
+            @if (interval() === 'annual') {
+              <div class="mt-1 text-[12px] font-medium text-ok">Save {{ dollars(savings(plan)) }} a year</div>
+            }
+          }
+        </div>
+
+        <div class="mt-4">
+          @if (!isFree(plan)) {
+            @if (plan.current) {
+              <button
+                type="button"
+                class="h-9 w-full cursor-pointer rounded-md border border-line text-[13px] font-medium text-bad hover:bg-bad/10 disabled:opacity-50"
+                [disabled]="busyKey() === plan.id + ':cancel'"
+                (click)="cancel(plan)"
+              >
+                Cancel plan
+              </button>
+            } @else {
+              <button
+                type="button"
+                [class]="ui.primary + ' h-9 w-full justify-center'"
+                [disabled]="!plan.purchasable || busyKey() === plan.id + ':' + interval()"
+                (click)="switchTo(plan)"
+              >
+                Switch to {{ plan.name }}
+              </button>
+            }
+          } @else {
+            <div class="flex h-9 items-center justify-center rounded-md bg-bg text-[13px] text-muted">
+              {{ plan.current ? 'Your current plan' : 'Included' }}
+            </div>
+          }
+        </div>
+
+        <ul class="mt-5 space-y-2 border-t border-line pt-4 text-[13px]">
+          <li class="flex gap-2.5">
+            <span class="mt-[7px] size-1.5 flex-none rounded-full bg-accent"></span>
+            <span><span class="font-semibold">{{ plan.maxDomains }}</span> email domain{{ plan.maxDomains === 1 ? '' : 's' }}</span>
+          </li>
+          <li class="flex gap-2.5">
+            <span class="mt-[7px] size-1.5 flex-none rounded-full bg-accent"></span>
+            <span><span class="font-semibold">{{ plan.maxMailboxesPerDomain }}</span> mailboxes per domain</span>
+          </li>
+          @for (perk of perks(plan); track perk) {
+            <li class="flex gap-2.5 text-muted">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/50"></span>
+              {{ perk }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+}

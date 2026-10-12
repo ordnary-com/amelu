@@ -1,42 +1,19 @@
-/* px rather than rem: app.css shrinks the root font size, and this has to
-   stand out from the page under it. */
+/* A strip across the top of .container (whose rounded corner clips it), with
+   the text lined up with the page content's own 2.5rem side padding. */
 .banner {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin: 28px 40px 0;
-  padding: 24px 28px;
-  border-radius: 16px;
-  background-color: #d93025;
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(217, 48, 37, 0.25);
-}
-
-.icon {
   flex: none;
-  width: 44px;
-  height: 44px;
-}
-
-.body {
-  flex: 1;
-}
-
-/* app.css caps paragraphs at a reading width; this runs the full card. */
-.title,
-.text {
   max-width: none;
-}
-
-.title {
-  margin: 0 0 6px;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.text {
   margin: 0;
-  font-size: 17px;
-  line-height: 1.4;
+  padding: 0.85rem 2.5rem;
+  background-color: #fce8e6;
+  border-bottom: 1px solid #f6c7c3;
+  color: #c5221f;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+:global([data-theme="dark"]) .banner {
+  background-color: rgba(242, 139, 130, 0.12);
+  border-bottom-color: rgba(242, 139, 130, 0.3);
+  color: #f28b82;
 }

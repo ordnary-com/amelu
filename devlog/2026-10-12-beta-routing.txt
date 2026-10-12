@@ -1,0 +1,13 @@
+2.0: Aliases, domain aliases, rewrites, catch-all and Bcc. captures
+2026-10-12
+
+The routing pages of a domain in the beta dashboard: address aliases (with
+filter, CSV import and export), domain aliases, pattern rewrites, the
+catch-all recipient and Bcc. captures, each with its create page.
+Deletes ask for confirmation; the old pages deleted on one click. "Deliver
+to" and "Redirect to mailbox" are a dropdown of the domain's mailboxes
+(free text if that list fails). Rewrites warn when no catch-all is set,
+since the API refuses them then (409), and turning the catch-all off while
+rewrites exist shows the API's refusal. A new domain alias can't be the
+domain itself. The list reloads after a failed rewrite or capture delete,
+because the API can drop the rule before the mail server update fails.

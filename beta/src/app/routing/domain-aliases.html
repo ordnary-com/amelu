@@ -1,0 +1,124 @@
+<amelu-page-header
+  title="Domain aliases"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Domain aliases' },
+  ]"
+>
+  Other domain names that also route mail to this domain's mailboxes. Add the alias domain's own DNS
+  records separately.
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'" [class]="ui.primary">
+    <amelu-icon name="plus" [size]="14" />
+    New domain alias
+  </a>
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section class="min-w-0 space-y-4">
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The domain alias wasn't removed"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <div>
+      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+        Alias domains
+        @if (aliases(); as list) {
+          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
+            list.length
+          }}</span>
+        }
+      </h2>
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (aliases() === null) {
+          <amelu-empty-state title="The domain aliases couldn't be loaded" [error]="true" />
+        } @else if (aliases(); as list) {
+          <ul>
+            @for (alias of list; track alias.name) {
+              <li
+                class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-bg/60"
+              >
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-[14px] font-medium">{{ alias.name }}</div>
+                  <div class="truncate text-[12px] text-muted">
+                    Delivers to the same addresses at {{ ctx.domain()?.name }}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
+                  (click)="deleteTarget.set(alias.name)"
+                >
+                  Delete
+                </button>
+              </li>
+            } @empty {
+              <li>
+                <amelu-empty-state title="No domain aliases yet">
+                  Add another domain you own, and mail to any address there arrives in the matching
+                  mailbox on
+                  {{ ctx.domain()?.name }}.
+                  <a
+                    actions
+                    [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'"
+                    [class]="ui.primary"
+                  >
+                    <amelu-icon name="plus" [size]="14" />
+                    New domain alias
+                  </a>
+                </amelu-empty-state>
+              </li>
+            }
+          </ul>
+        } @else {
+          <amelu-list-skeleton />
+        }
+      </div>
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">How it works</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        With example.org as an alias of {{ ctx.domain()?.name || 'this domain' }}, mail to
+        sales&#64;example.org is delivered as if it was sent to sales&#64;{{
+          ctx.domain()?.name || 'this domain'
+        }}. Mailboxes and aliases are only managed here, on the main domain.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">DNS for the alias domain</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Mail only arrives once the alias domain's MX records point at the same mail servers as this
+        domain. Set them at your DNS provider for the alias domain.
+      </p>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/dns'"
+        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+      >
+        See this domain's DNS records
+      </a>
+    </section>
+  </aside>
+</div>
+
+@if (deleteTarget(); as name) {
+  <amelu-confirm-delete
+    [title]="'Delete ' + name + '?'"
+    [busy]="deleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleteTarget.set(null)"
+  >
+    Mail sent to addresses at {{ name }} stops being delivered to {{ ctx.domain()?.name }}. You can
+    add the alias again later.
+  </amelu-confirm-delete>
+}

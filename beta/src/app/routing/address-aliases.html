@@ -1,0 +1,213 @@
+<amelu-page-header
+  title="Address aliases"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Address aliases' },
+  ]"
+>
+  Aliases redirect incoming messages to an existing mailbox and can coexist with mailboxes of the
+  same address.
+  <a
+    actions
+    [href]="'/api/domains/' + ctx.id() + '/address-aliases/export'"
+    [class]="ui.outline"
+    download
+    >Export CSV</a
+  >
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/aliases/import'" [class]="ui.outline"
+    >Import CSV</a
+  >
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/aliases/new'" [class]="ui.primary">
+    <amelu-icon name="plus" [size]="14" />
+    New alias
+  </a>
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section class="min-w-0 space-y-4">
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The alias wasn't removed"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <div>
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="flex items-center gap-2 text-[14px] font-bold">
+          Aliases
+          @if (aliases(); as list) {
+            <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
+              list.length
+            }}</span>
+          }
+        </h2>
+        @if (aliases()?.length) {
+          <label
+            class="flex h-8 w-56 items-center gap-2 rounded-md border border-line px-2.5 focus-within:border-accent"
+          >
+            <amelu-icon name="search" [size]="14" class="text-muted" />
+            <input
+              type="search"
+              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted"
+              placeholder="Filter aliases"
+              aria-label="Filter aliases"
+              [value]="search()"
+              (input)="search.set($any($event.target).value)"
+            />
+          </label>
+        }
+      </div>
+
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (aliases() === null) {
+          <amelu-empty-state title="The aliases couldn't be loaded" [error]="true" />
+        } @else if (filtered(); as rows) {
+          <ul>
+            @for (alias of rows; track alias.destinationMailboxId + ':' + alias.index) {
+              <li
+                class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-bg/60"
+              >
+                <div class="min-w-0 flex-1">
+                  <div class="truncate text-[14px] font-medium">{{ alias.address }}</div>
+                  <div class="truncate text-[12px] text-muted">
+                    Delivers to
+                    <a
+                      [routerLink]="
+                        '/domains/' + ctx.id() + '/mailboxes/' + alias.destinationMailboxId
+                      "
+                      class="text-link hover:underline"
+                      >{{ alias.destinationMailbox }}</a
+                    >
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
+                  (click)="deleteTarget.set(alias)"
+                >
+                  Delete
+                </button>
+              </li>
+            } @empty {
+              <li>
+                @if (search()) {
+                  <amelu-empty-state title="No matching aliases">
+                    No alias or destination matches "{{ search() }}".
+                    <button actions type="button" [class]="ui.outline" (click)="search.set('')">
+                      Clear filter
+                    </button>
+                  </amelu-empty-state>
+                } @else {
+                  <amelu-empty-state title="No address aliases yet">
+                    An alias is an extra address that delivers into one of your mailboxes, like
+                    hello&#64;{{ ctx.domain()?.name }}.
+                    <a
+                      actions
+                      [routerLink]="'/domains/' + ctx.id() + '/aliases/new'"
+                      [class]="ui.primary"
+                    >
+                      <amelu-icon name="plus" [size]="14" />
+                      New alias
+                    </a>
+                    <a
+                      actions
+                      [routerLink]="'/domains/' + ctx.id() + '/aliases/import'"
+                      [class]="ui.outline"
+                      >Import CSV</a
+                    >
+                  </amelu-empty-state>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <amelu-list-skeleton />
+        }
+      </div>
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">How aliases work</h2>
+      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          Mail to the alias lands in the destination mailbox, as if it was sent there directly.
+        </li>
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          Each alias delivers to exactly one mailbox on this domain. A mailbox can have many
+          aliases.
+        </li>
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          An alias can share its address with a mailbox. Enter only the part before the &#64;;
+          aliasing to other domains isn't possible.
+        </li>
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Bulk changes</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Export gives a CSV with one alias and its destination per row. Import takes the same format,
+        so you can edit an export and load it back.
+      </p>
+    </section>
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Related</h2>
+      <ul [class]="ui.card + ' overflow-hidden'">
+        <li>
+          <a
+            [routerLink]="'/domains/' + ctx.id() + '/domain-aliases'"
+            class="group flex items-center gap-3 border-b border-line px-4 py-2.5 hover:bg-bg/60"
+          >
+            <span class="min-w-0 flex-1">
+              <span class="block text-[13px] font-medium group-hover:underline"
+                >Domain aliases</span
+              >
+              <span class="block text-[12px] text-muted"
+                >Alias a whole other domain to this one</span
+              >
+            </span>
+            <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+          </a>
+        </li>
+        <li>
+          <a
+            [routerLink]="'/domains/' + ctx.id() + '/catchall'"
+            class="group flex items-center gap-3 px-4 py-2.5 hover:bg-bg/60"
+          >
+            <span class="min-w-0 flex-1">
+              <span class="block text-[13px] font-medium group-hover:underline"
+                >Catch-all recipient</span
+              >
+              <span class="block text-[12px] text-muted">Where mail to unknown addresses goes</span>
+            </span>
+            <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+          </a>
+        </li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+@if (deleteTarget(); as target) {
+  <amelu-confirm-delete
+    [title]="'Delete ' + target.address + '?'"
+    [busy]="deleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleteTarget.set(null)"
+  >
+    Mail sent to this address stops reaching {{ target.destinationMailbox }} and bounces instead,
+    unless a catch-all recipient picks it up. Mail already delivered stays where it is.
+  </amelu-confirm-delete>
+}

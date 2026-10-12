@@ -14,3 +14,4 @@ dashboard and was toned down to the strip.
 The text lives in one place, MAINTENANCE_NOTICE in frontend/src/maintenance.ts.
 Setting it to null hides both and needs a frontend redeploy (manual
 wrangler pages deploy, see docs/FRONTEND_DEPLOYS.md).
+Turned off again the same day (MAINTENANCE_NOTICE = null).

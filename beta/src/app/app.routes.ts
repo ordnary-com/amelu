@@ -9,6 +9,8 @@ import { AccountPage } from './account-page/account-page';
 import { AccountLayout } from './account-layout/account-layout';
 import { AccountAppearance } from './account-appearance/account-appearance';
 import { AccountApiKeys } from './account-api-keys/account-api-keys';
+import { OrganizationPage } from './organization-page/organization-page';
+import { ActivityPage } from './activity-page/activity-page';
 import { NotFound } from './not-found/not-found';
 
 export const routes: Routes = [
@@ -30,6 +32,8 @@ export const routes: Routes = [
           { path: 'api-keys', component: AccountApiKeys, title: 'API Keys · My Account · Amelu' },
         ],
       },
+      { path: 'organization', component: OrganizationPage, title: 'My Organization · Amelu' },
+      { path: 'organization/activity', component: ActivityPage, title: 'Activity Log · Amelu' },
       { path: '**', component: NotFound, title: 'Page not found · Amelu' },
     ],
   },

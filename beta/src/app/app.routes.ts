@@ -26,7 +26,14 @@ export const routes: Routes = [
       { path: '', component: Home, title: 'Amelu' },
       { path: 'domains', component: DomainsPage, title: 'Email Domains · Amelu' },
       { path: 'domains/new', component: NewDomain, title: 'New domain · Amelu' },
-      { path: 'domains/:domainId', component: DomainDetail, title: 'Domain · Amelu' },
+      {
+        path: 'domains/:domainId',
+        // Each group loads on first use. mailboxes before mailbox: mailboxes/new must win over mailboxes/:mailboxId.
+        children: [
+          { path: '', pathMatch: 'full', component: DomainDetail, title: 'Domain · Amelu' },
+          { path: '', loadChildren: () => import('./mailboxes/routes').then((m) => m.ROUTES) },
+        ],
+      },
       {
         path: 'account',
         component: AccountLayout,

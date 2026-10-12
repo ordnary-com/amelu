@@ -1,0 +1,13 @@
+2.0: Mailbox pages
+2026-10-12
+
+Every page of a single mailbox, at the old paths under
+/domains/{id}/mailboxes/{mailboxId}: overview, activity, logs, usage
+instructions (with copy buttons), enabled services, limits, password,
+internal access, identities, forwarding, delegation, expiration, listing
+settings, notes and delete. A shared layout loads GET /api/mailboxes/{id}
+once and keeps the header (address, status, display name) in step after
+changes.
+The old overview hard-coded "Internal access only", the IMAP/POP3/Sieve
+rows and "Expires: Never"; it now shows the real values with a Change link,
+and the attached notes it promised.

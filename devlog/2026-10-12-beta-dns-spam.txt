@@ -1,0 +1,14 @@
+2.0: DNS setup and spam filtering
+2026-10-12
+
+/domains/{id}/dns shows how many records are verified, the MX/SPF/DKIM
+summary and only the records still to add or fix; /dns/records lists every
+record with a filter. Each record has copy buttons for name and value, its
+live status, and what is actually published when it differs. Check again
+refetches GET /api/domains/{id}/dns and reloads the domain list when the
+result flips the domain between active and DNS pending. Automatic setup
+(Domain Connect) and the zone file download stay.
+Names are shown as the short host (@, _dmarc) providers ask for. The MX
+priority is shown as 10, hard-coded: the check response doesn't include it.
+Spam: overview, subject settings, sender lists and recipient denylist, with
+wildcards in the denylist caught before saving.

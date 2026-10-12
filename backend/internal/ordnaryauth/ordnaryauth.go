@@ -49,6 +49,7 @@ func (c *Config) scopes() []string   { return []string{"openid", "profile", "ema
 func (c *Config) codec() cookieCodec { return newCookieCodec(c.CookieSecret) }
 
 // User is derived from Ordnary identity's /api/oauth/userinfo response.
+// Name is empty when the Ordnary account has none set.
 type User struct {
 	ID            string
 	Name          string
@@ -216,11 +217,7 @@ func (c *Config) fetchUserInfo(ctx context.Context, accessToken string) (*User, 
 	if info.Email == "" {
 		return nil, errors.New("ordnary identity did not return an email for this user")
 	}
-	name := info.Name
-	if name == "" {
-		name = info.Email
-	}
-	return &User{ID: info.Sub, Name: name, Email: info.Email, EmailVerified: info.EmailVerified, Picture: info.Picture}, nil
+	return &User{ID: info.Sub, Name: info.Name, Email: info.Email, EmailVerified: info.EmailVerified, Picture: info.Picture}, nil
 }
 
 func parseErrorResponse(resp *http.Response) error {

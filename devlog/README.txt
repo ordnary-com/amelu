@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  2.0: DNS setup and spam filtering
+            2026-10-12-beta-dns-spam.txt
+
 2026-10-12  2.0: Aliases, domain aliases, rewrites, catch-all and Bcc. captures
             2026-10-12-beta-routing.txt
 

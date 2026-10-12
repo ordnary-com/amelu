@@ -1,0 +1,30 @@
+<a
+  [routerLink]="'/domains/' + domain().id"
+  class="group flex h-full min-h-[7.5rem] flex-col gap-4 rounded-lg border border-line bg-surface p-4 hover:bg-bg/60"
+>
+  <span class="flex items-center gap-3.5">
+    <amelu-action-icon name="domains" class="text-link" />
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="truncate text-[14px] font-medium group-hover:underline">{{ domain().name }}</span>
+      <span class="text-[12px] text-muted">Added {{ domain().createdAt | date: 'd MMM y' }}</span>
+    </span>
+    <span [class]="badge()">{{ status().label }}</span>
+  </span>
+  <span class="mt-auto flex items-center gap-1.5 border-t border-line pt-3">
+    <span class="mr-1 text-[11px] font-bold tracking-wide text-muted uppercase">DNS</span>
+    @if (checks(); as rows) {
+      @for (row of rows; track row.label) {
+        <span
+          class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide"
+          [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'"
+          [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')"
+        >
+          <span class="size-1.5 rounded-full" [class]="row.ok === null ? 'bg-muted/50' : row.ok ? 'bg-ok' : 'bg-bad'"></span>
+          {{ row.label }}
+        </span>
+      }
+    } @else {
+      <span class="h-4 w-32 animate-pulse rounded bg-bg"></span>
+    }
+  </span>
+</a>

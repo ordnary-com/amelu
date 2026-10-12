@@ -2,10 +2,12 @@ Maintenance notice on app.amelu.org
 2026-10-12
 
 A notice now says Amelu is undergoing maintenance and that some features
-may be temporarily unavailable. In the dashboard it is a large red banner
-across the full width, between the header and the page (a small pill in the
-header was too easy to miss); on the login page an amber box above the login
-button, so it is seen before signing in as well.
+may be temporarily unavailable. In the dashboard it is a large red card at the top of the content of every
+page; on the login page an amber box above the login button, so it is seen
+before signing in as well. The first version put a red bar under the header
+styled from app.css, which showed up unstyled: app.css is not content-hashed
+and was still cached from before the deploy (see 2026-07-31). The banner now
+has its own CSS module (MaintenanceBanner.module.css), bundled and hashed.
 The text lives in one place, MAINTENANCE_NOTICE in frontend/src/maintenance.ts.
 Setting it to null hides both and needs a frontend redeploy (manual
 wrangler pages deploy, see docs/FRONTEND_DEPLOYS.md).

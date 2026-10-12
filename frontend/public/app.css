@@ -499,29 +499,6 @@ header nav .avatar {
   flex: 1 auto;
   text-align: center;
 }
-/* Between <header> and <main> in the dashboard shell; flex: none keeps it
-   at its own height while <main> takes what is left of the viewport. */
-.maintenance-banner {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 18px 24px;
-  background-color: #d32f2f;
-  color: #ffffff;
-}
-.maintenance-banner svg {
-  flex: none;
-}
-.maintenance-banner strong {
-  display: block;
-  font-size: 1.5rem;
-  line-height: 1.2;
-}
-.maintenance-banner span {
-  font-size: 1.125rem;
-}
 
 form {
   display: inline;

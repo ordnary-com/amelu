@@ -1,0 +1,13 @@
+2.0: Domain activity, transfer, deactivate, delete, listing and notes
+2026-10-12
+
+The remaining domain pages in the beta dashboard: recent activity grouped
+by day with filters (admin.* events show "By Amelu support"), transfer
+ownership, deactivate or reactivate, delete, listing settings and attached
+notes.
+Delete now asks you to type the domain name before it goes ahead; the old
+page only had a button. After transfer, deactivate or delete the domain
+list reloads so the sidebar and badges follow. The notes text said "visible
+only to you" while domains belong to the organization; it now says so.
+There is no single-domain endpoint, so listing and notes read their values
+from GET /api/domains.

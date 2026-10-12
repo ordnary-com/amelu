@@ -1,0 +1,102 @@
+<amelu-page-header
+  title="Delete domain"
+  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Delete domain' }]"
+>
+  Permanently erase this domain and everything under it.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="min-w-0 space-y-6">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The domain wasn't deleted" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <amelu-alert kind="warning" title="This cannot be undone">
+      Every mailbox, message, alias, and setting under this domain is erased from the mail cluster.
+    </amelu-alert>
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Delete {{ ctx.domain()?.name ?? 'this domain' }}</h2>
+      <div [class]="ui.card + ' p-4'">
+        <p class="text-[13px] leading-relaxed">
+          Deleting a domain permanently erases it and every mailbox, message, alias, and setting under it from the mail
+          cluster. This cannot be undone and is not the same as deactivating a domain, which only pauses mail delivery
+          while keeping all data intact.
+        </p>
+        <p class="mt-2 text-[13px] leading-relaxed text-muted">
+          Use this when you need to permanently remove a domain's data, for example to fulfil a data subject's erasure
+          request under the GDPR, or because the domain is no longer in use.
+        </p>
+        <div class="mt-4 flex justify-end">
+          <button type="button" [class]="ui.danger" (click)="open()" [disabled]="!ctx.domain()">Delete this domain</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Only need a pause?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        <a [routerLink]="'/domains/' + ctx.id() + '/deactivate'" class="text-link hover:underline">Deactivate the domain</a>
+        to stop mail without losing anything. You can turn it back on at any time.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Moving it elsewhere?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        To hand the domain and its mail to another Amelu account,
+        <a [routerLink]="'/domains/' + ctx.id() + '/transfer'" class="text-link hover:underline">transfer ownership</a>
+        instead. Leaving Amelu? Export the mail you want to keep with your mail client first.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Who can delete</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Only the organization owner can delete a domain. The deletion is recorded in the organization's activity log.
+      </p>
+    </section>
+  </aside>
+</div>
+
+@if (confirming()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="close()">
+    <form
+      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      role="alertdialog"
+      aria-modal="true"
+      aria-label="Permanently delete this domain?"
+      (click)="$event.stopPropagation()"
+      (submit)="remove($event)"
+    >
+      <h3 class="text-[15px] font-bold">Permanently delete this domain?</h3>
+      <p class="mt-2 text-[13px] leading-relaxed text-muted">
+        This immediately and permanently erases the domain along with every mailbox, message, alias, and setting under
+        it. There is no way to recover this data afterwards.
+      </p>
+      <label for="confirm-name" class="mt-4 block text-[13px] font-medium">
+        Type <span class="font-mono font-semibold">{{ ctx.domain()?.name }}</span> to confirm
+      </label>
+      <input
+        id="confirm-name"
+        [class]="ui.input"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        autofocus
+        [value]="typed()"
+        (input)="typed.set($any($event.target).value)"
+      />
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" [class]="ui.outline" (click)="close()" [disabled]="busy()">Cancel</button>
+        <button type="submit" [class]="ui.danger" [disabled]="busy() || !matches()">
+          {{ busy() ? 'Deleting...' : 'Yes, permanently delete' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

@@ -1,0 +1,110 @@
+<amelu-page-header
+  title="Recent activity"
+  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Recent activity' }]"
+>
+  The last events recorded for this domain.
+</amelu-page-header>
+
+<div class="mb-5 flex flex-wrap gap-1.5" role="group" aria-label="Filter activity">
+  @for (option of filters; track option.value) {
+    <button
+      type="button"
+      class="h-7 cursor-pointer rounded-md px-2.5 text-[12px] font-medium"
+      [class]="filter() === option.value ? 'bg-ink text-surface' : 'bg-bg text-muted hover:text-ink'"
+      [attr.aria-pressed]="filter() === option.value"
+      (click)="filter.set(option.value)"
+    >
+      {{ option.label }}
+    </button>
+  }
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="min-w-0 space-y-6">
+    @if (days() === undefined) {
+      <div [class]="ui.card + ' overflow-hidden'" aria-hidden="true">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
+            <span class="size-2 animate-pulse rounded-full bg-bg"></span>
+            <span class="h-3 w-64 animate-pulse rounded bg-bg"></span>
+          </div>
+        }
+      </div>
+    } @else if (days() === null) {
+      <amelu-empty-state [class]="ui.card" title="Activity couldn't be loaded" [error]="true" />
+    } @else {
+      @for (group of days(); track group.day) {
+        <section>
+          <h2 class="mb-2 text-[12px] font-bold tracking-wide text-muted uppercase">{{ dayLabel(group.day) }}</h2>
+          <ol [class]="ui.card + ' overflow-hidden'">
+            @for (row of group.rows; track row.entry.id) {
+              <li class="flex items-start gap-3 border-b border-line px-4 py-3 last:border-b-0">
+                <span class="mt-[7px] size-2 flex-none rounded-full" [class]="dot[row.category]"></span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[13px] break-words">{{ row.entry.message }}</p>
+                  @if (row.bySupport) {
+                    <p class="mt-0.5 text-[12px] text-muted">By Amelu support</p>
+                  }
+                </div>
+                <time class="flex-none text-[12px] text-muted tabular-nums" [attr.datetime]="row.entry.createdAt">
+                  {{ row.entry.createdAt | date: 'HH:mm' }}
+                </time>
+              </li>
+            }
+          </ol>
+        </section>
+      } @empty {
+        @if (filter() === 'all') {
+          <amelu-empty-state [class]="ui.card" title="No activity recorded yet">
+            Changes to this domain, its mailboxes and its spam filtering are listed here as they happen.
+          </amelu-empty-state>
+        } @else {
+          <amelu-empty-state [class]="ui.card" title="Nothing in this category">
+            None of the recent events are of this kind.
+            <button actions type="button" [class]="ui.outline" (click)="filter.set('all')">Show all</button>
+          </amelu-empty-state>
+        }
+      }
+    }
+  </div>
+
+  <aside class="space-y-6">
+    <section>
+      <h2 [class]="ui.sectionTitle">Summary</h2>
+      <div [class]="ui.card + ' overflow-hidden text-[13px]'">
+        @for (item of summary(); track item.value) {
+          <button
+            type="button"
+            class="flex w-full cursor-pointer items-center gap-2.5 border-b border-line px-4 py-2.5 text-left last:border-b-0 hover:bg-bg/60"
+            [class.bg-bg]="filter() === item.value"
+            (click)="filter.set(filter() === item.value ? 'all' : item.value)"
+          >
+            <span class="size-2 flex-none rounded-full" [class]="dot[item.value]"></span>
+            <span class="flex-1">{{ item.label }}</span>
+            <span class="font-semibold tabular-nums">{{ item.count }}</span>
+          </button>
+        }
+        <p class="border-t border-line px-4 py-2.5 text-[12px] text-muted">
+          Counts cover the {{ entries()?.length ?? 0 }} most recent events. Click one to filter.
+        </p>
+      </div>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">What gets recorded</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Verification, mailboxes and aliases being added or removed, password changes, forwarding, catch-all and spam
+        filter changes, and changes to the domain itself. Only the last 50 events are kept on this page.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Looking for who did it?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        The organization's
+        <a routerLink="/organization/activity" class="text-link hover:underline">activity log</a>
+        shows which team member made each change, across all your domains.
+      </p>
+    </section>
+  </aside>
+</div>

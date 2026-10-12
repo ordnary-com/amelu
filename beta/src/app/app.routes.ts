@@ -35,6 +35,7 @@ export const routes: Routes = [
           { path: '', loadChildren: () => import('./mailbox/routes').then((m) => m.ROUTES) },
           { path: '', loadChildren: () => import('./routing/routes').then((m) => m.ROUTES) },
           { path: '', loadChildren: () => import('./dns-spam/routes').then((m) => m.ROUTES) },
+          { path: '', loadChildren: () => import('./domain-admin/routes').then((m) => m.ROUTES) },
         ],
       },
       {

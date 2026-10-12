@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  2.0: Domain activity, transfer, deactivate, delete, listing and notes
+            2026-10-12-beta-domain-admin.txt
+
 2026-10-12  2.0: DNS setup and spam filtering
             2026-10-12-beta-dns-spam.txt
 

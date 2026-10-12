@@ -1,0 +1,125 @@
+<amelu-mailbox-heading title="Overview">How this mailbox is set up right now. Click a row to change it.</amelu-mailbox-heading>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="space-y-6">
+    <section>
+      <h2 [class]="ui.sectionTitle">Details</h2>
+      <dl [class]="ui.card + ' overflow-hidden'">
+        @for (row of rows(); track row.label) {
+          <div class="flex items-center gap-4 border-b border-line px-4 py-2.5 last:border-b-0">
+            <dt class="w-32 flex-none sm:w-44 text-[13px] text-muted">{{ row.label }}</dt>
+            <dd class="min-w-0 flex-1 text-[13px]">
+              @if (row.value === undefined) {
+                <span class="block h-3 w-32 animate-pulse rounded bg-bg"></span>
+              } @else if (row.value === null) {
+                <span class="text-muted">Unknown</span>
+              } @else {
+                @if (row.value.badge) {
+                  <span [class]="row.value.badge">{{ row.value.text }}</span>
+                } @else {
+                  <span class="break-words" [class.text-muted]="row.value.muted">{{ row.value.text }}</span>
+                }
+              }
+            </dd>
+            @if (row.link) {
+              <a [routerLink]="ctx.base() + '/' + row.link" class="flex-none text-[13px] font-medium text-link hover:underline">Change</a>
+            }
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Name</h2>
+      <form [class]="ui.card + ' space-y-4 p-4'" (submit)="saveName($event)">
+        <label class="block">
+          <span [class]="ui.label">Name</span>
+          <input
+            [class]="ui.input"
+            placeholder="eg. Jane Doe"
+            [value]="displayName()"
+            [disabled]="!ctx.mailbox()"
+            (input)="displayName.set($any($event.target).value); nameSave.reset()"
+          />
+          <span [class]="ui.hint">Shown in the mailbox list, to tell mailboxes apart.</span>
+        </label>
+        <amelu-save-feedback [state]="nameSave" />
+        <button type="submit" [class]="ui.primary" [disabled]="nameSave.busy() || !nameChanged()">
+          {{ nameSave.busy() ? 'Saving...' : 'Save' }}
+        </button>
+      </form>
+    </section>
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Access</h2>
+      <div [class]="ui.card + ' space-y-4 p-4'">
+        @if (ctx.mailbox(); as mailbox) {
+          <p class="text-[13px] leading-relaxed text-muted">
+            @if (mailbox.status === 'active') {
+              Suspending stops this mailbox from sending, receiving and signing in. Its messages and settings are kept,
+              and you can activate it again at any time.
+            } @else {
+              This mailbox is suspended: it can't send, receive or sign in. Activating it restores access with everything
+              as it was.
+            }
+          </p>
+          <amelu-save-feedback [state]="statusSave" />
+          <button type="button" [class]="ui.outline" [disabled]="statusSave.busy()" (click)="toggleStatus()">
+            @if (statusSave.busy()) {
+              {{ mailbox.status === 'active' ? 'Suspending...' : 'Activating...' }}
+            } @else {
+              {{ mailbox.status === 'active' ? 'Suspend mailbox' : 'Activate mailbox' }}
+            }
+          </button>
+        } @else {
+          <span class="block h-3 w-2/3 animate-pulse rounded bg-bg"></span>
+        }
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-6">
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-[14px] font-bold">Notes</h2>
+        <a [routerLink]="ctx.base() + '/notes'" class="text-[13px] font-medium text-link hover:underline">Edit</a>
+      </div>
+      <div [class]="ui.card">
+        @if (notes(); as n) {
+          @if (n.notes.trim()) {
+            <p class="px-4 py-3 text-[13px] leading-relaxed break-words whitespace-pre-wrap">{{ n.notes }}</p>
+          } @else {
+            <amelu-empty-state title="No notes" [compact]="true">
+              Keep anything worth knowing about this mailbox here, like who uses it.
+            </amelu-empty-state>
+          }
+        } @else if (notes() === null) {
+          <amelu-empty-state title="Notes couldn't be loaded" [error]="true" [compact]="true" />
+        } @else {
+          <div class="space-y-3 px-4 py-4" aria-hidden="true">
+            <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+            <span class="block h-3 w-2/3 animate-pulse rounded bg-bg"></span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Use it in a mail app</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Sign in with the full address and the mailbox password. Incoming mail is IMAP, outgoing is SMTP, both on
+        <span class="font-mono text-[12px] text-ink">{{ server }}</span>.
+      </p>
+      <a [routerLink]="ctx.base() + '/usage'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
+        All server settings
+      </a>
+    </section>
+
+    @if (ctx.mailbox(); as mailbox) {
+      <section [class]="ui.card + ' p-4'">
+        <h2 class="text-[14px] font-bold">Created</h2>
+        <p class="mt-1 text-[13px] text-muted">{{ mailbox.createdAt | date: 'd MMMM y, HH:mm' }}</p>
+      </section>
+    }
+  </aside>
+</div>

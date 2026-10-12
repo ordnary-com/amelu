@@ -1,0 +1,12 @@
+2.0: Support, Changelog, Status and Terminate account
+2026-10-12
+
+The last pages of the beta dashboard outside a domain. Support keeps the old
+wording and contact link and adds what to include in a request. Changelog
+and Status are still static data in the page, as in the current dashboard;
+Status shows every service as operational by hand and needs a real health
+check before anyone relies on it.
+Terminate account calls DELETE /api/account with the current password and
+signs out, as before, behind a confirmation. Known problem: accounts that
+only ever signed in through Ordnary have no usable Amelu password, so they
+can't terminate here. That needs a backend change.

@@ -48,13 +48,7 @@ export function Layout() {
     <>
       <header>
         <img src="/amelu-logo.png" alt="Amelu" />
-        <div className="announcement">
-          {MAINTENANCE_NOTICE && (
-            <span className="maintenance-notice" role="status">
-              {MAINTENANCE_NOTICE}
-            </span>
-          )}
-        </div>
+        <div className="announcement"></div>
         <nav>
           <Link to="/changelog">Changelog</Link>
           <span className="separator">|</span>
@@ -65,6 +59,20 @@ export function Layout() {
           </button>
         </nav>
       </header>
+
+      {MAINTENANCE_NOTICE && (
+        <div className="maintenance-banner" role="alert">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div>
+            <strong>Maintenance in progress</strong>
+            <span>{MAINTENANCE_NOTICE}</span>
+          </div>
+        </div>
+      )}
 
       <main role="main">
         <div className="sidemenu-container">

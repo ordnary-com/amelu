@@ -106,8 +106,16 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := a.Stalwart.CreateDomain(r.Context(), name); err != nil {
-		a.Store.UpdateDomainStatus(r.Context(), domain.ID, "failed", err.Error())
-		writeError(w, http.StatusBadGateway, "failed to create domain in mail cluster: "+err.Error())
+		// Nothing exists in the mail cluster, so the domain shouldn't exist here
+		// either: drop the row, so it doesn't sit in the list and block a retry
+		// under the same name. Only if that fails is it kept, marked failed.
+		log.Printf("create domain %s in stalwart: %v", name, err)
+		if delErr := a.Store.DeleteDomainForOrganization(r.Context(), customer.OrganizationID.String, domain.ID); delErr != nil {
+			log.Printf("remove domain %s after failed stalwart create: %v", name, delErr)
+			a.Store.UpdateDomainStatus(r.Context(), domain.ID, "failed", err.Error())
+		}
+		// The underlying error names internal hosts, so it stays in the log.
+		writeError(w, http.StatusBadGateway, "the mail servers couldn't set up this domain, so it wasn't added. Try again in a moment.")
 		return
 	}
 	a.Store.UpdateDomainStatus(r.Context(), domain.ID, "dns_pending", "")

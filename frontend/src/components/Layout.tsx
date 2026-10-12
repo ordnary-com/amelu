@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { api, API_URL, type Domain } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { CsvImportHelp } from "./CsvImportHelp";
+import { MAINTENANCE_NOTICE } from "../maintenance";
 
 export function Layout() {
   const { customer, logout } = useAuth();
@@ -47,7 +48,13 @@ export function Layout() {
     <>
       <header>
         <img src="/amelu-logo.png" alt="Amelu" />
-        <div className="announcement"></div>
+        <div className="announcement">
+          {MAINTENANCE_NOTICE && (
+            <span className="maintenance-notice" role="status">
+              {MAINTENANCE_NOTICE}
+            </span>
+          )}
+        </div>
         <nav>
           <Link to="/changelog">Changelog</Link>
           <span className="separator">|</span>

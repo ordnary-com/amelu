@@ -1,0 +1,10 @@
+Maintenance notice on app.amelu.org
+2026-10-12
+
+A notice now says Amelu is undergoing maintenance and that some features
+may be temporarily unavailable. It shows in the dashboard header (the empty
+.announcement slot that was already there) and above the login button, so
+it is seen before signing in as well.
+The text lives in one place, MAINTENANCE_NOTICE in frontend/src/maintenance.ts.
+Setting it to null hides both and needs a frontend redeploy (manual
+wrangler pages deploy, see docs/FRONTEND_DEPLOYS.md).

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import styles from "./LoginPage.module.css";
 import { API_URL } from "../api/client";
+import { MAINTENANCE_NOTICE } from "../maintenance";
 
 // What the API's Ordnary callback redirects back with (see
 // backend/internal/handlers/ordnary_auth.go).
@@ -44,6 +45,12 @@ export function LoginPage() {
           Your own domain, your own mailboxes, fully managed. Set up email in minutes and let
           Amelu handle the rest.
         </p>
+
+        {MAINTENANCE_NOTICE && (
+          <p className={styles.notice} role="status">
+            {MAINTENANCE_NOTICE}
+          </p>
+        )}
 
         {error && (
           <p className={styles.error} role="alert">

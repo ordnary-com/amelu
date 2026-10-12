@@ -59,6 +59,7 @@ export const routes: Routes = [
           { path: 'invoices', component: BillingInvoices, title: 'Invoices · Billing · Amelu' },
         ],
       },
+      { path: '', loadChildren: () => import('./misc/routes').then((m) => m.ROUTES) },
       { path: '**', component: NotFound, title: 'Page not found · Amelu' },
     ],
   },

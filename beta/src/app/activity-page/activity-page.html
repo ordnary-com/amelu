@@ -1,0 +1,126 @@
+<div class="min-w-0">
+  <h1 class="text-[22px] font-bold tracking-[-0.4px]">Activity Log</h1>
+  <p class="mt-1.5 text-[13px] text-muted">
+    Recent team, invitation, domain, mailbox, and billing changes across your organization. What you can see here
+    depends on your role.
+  </p>
+</div>
+
+@if (error(); as message) {
+  <amelu-alert class="mt-5" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
+    {{ message }}
+  </amelu-alert>
+}
+
+<div class="mt-5 flex flex-wrap gap-1.5" role="group" aria-label="Filter activity">
+  @for (option of filters; track option.value) {
+    <button
+      type="button"
+      class="h-7 cursor-pointer rounded-md px-2.5 text-[12px] font-medium"
+      [class]="filter() === option.value ? 'bg-ink text-surface' : 'bg-bg text-muted hover:text-ink'"
+      [attr.aria-pressed]="filter() === option.value"
+      (click)="filter.set(option.value)"
+    >
+      {{ option.label }}
+    </button>
+  }
+</div>
+
+<div class="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+<div class="space-y-6">
+  @if (days() === undefined) {
+    <div [class]="ui.card + ' overflow-hidden'" aria-hidden="true">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
+          <span class="size-2 animate-pulse rounded-full bg-bg"></span>
+          <span class="h-3 w-64 animate-pulse rounded bg-bg"></span>
+        </div>
+      }
+    </div>
+  } @else {
+    @for (group of days(); track group.day) {
+      <section>
+        <h2 class="mb-2 text-[12px] font-bold tracking-wide text-muted uppercase">{{ dayLabel(group.day) }}</h2>
+        <ol [class]="ui.card + ' overflow-hidden'">
+          @for (row of group.rows; track row.entry.id) {
+            <li class="flex items-start gap-3 border-b border-line px-4 py-3 last:border-b-0">
+              <span class="mt-[7px] size-2 flex-none rounded-full" [class]="dot[row.category]"></span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[13px]">
+                  {{ row.text }}
+                  @if (row.entry.objectLabel) {
+                    <span class="font-semibold">{{ row.entry.objectLabel }}</span>
+                  }
+                </p>
+                <p class="mt-0.5 truncate text-[12px] text-muted">{{ row.entry.actorEmail }}</p>
+              </div>
+              <time class="flex-none text-[12px] text-muted tabular-nums" [attr.datetime]="row.entry.createdAt">
+                {{ row.entry.createdAt | date: 'HH:mm' }}
+              </time>
+            </li>
+          }
+        </ol>
+      </section>
+    } @empty {
+      @if (filter() === 'all') {
+        <amelu-empty-state [class]="ui.card" title="No activity yet">
+          Changes to domains, mailboxes, the team and billing are listed here as they happen.
+        </amelu-empty-state>
+      } @else {
+        <amelu-empty-state [class]="ui.card" title="Nothing in this category">
+          None of the events loaded so far are of this kind.
+          <button actions type="button" [class]="ui.outline" (click)="filter.set('all')">Show all</button>
+        </amelu-empty-state>
+      }
+    }
+
+    @if (entries()?.length && !exhausted()) {
+      <div class="flex justify-center">
+        <button type="button" [class]="ui.outline" [disabled]="loadingMore()" (click)="loadMore()">
+          {{ loadingMore() ? 'Loading...' : 'Load more' }}
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<aside class="space-y-6">
+  <section>
+    <h2 [class]="ui.sectionTitle">Summary</h2>
+    <div [class]="ui.card + ' overflow-hidden text-[13px]'">
+      @for (item of summary(); track item.value) {
+        <button
+          type="button"
+          class="flex w-full cursor-pointer items-center gap-2.5 border-b border-line px-4 py-2.5 text-left last:border-b-0 hover:bg-bg/60"
+          [class.bg-bg]="filter() === item.value"
+          (click)="filter.set(filter() === item.value ? 'all' : item.value)"
+        >
+          <span class="size-2 flex-none rounded-full" [class]="dot[item.value]"></span>
+          <span class="flex-1">{{ item.label }}</span>
+          <span class="font-semibold tabular-nums">{{ item.count }}</span>
+        </button>
+      }
+      <p class="border-t border-line px-4 py-2.5 text-[12px] text-muted">
+        Counts cover the {{ entries()?.length ?? 0 }} most recent events loaded. Click one to filter.
+      </p>
+    </div>
+  </section>
+
+  <section [class]="ui.card + ' p-4'">
+    <h2 class="text-[14px] font-bold">What gets logged</h2>
+    <p class="mt-1 text-[13px] leading-relaxed text-muted">
+      Every change made in the dashboard or through the API: domains, mailboxes, aliases, team members, invitations,
+      API keys and billing. Each event shows who made it and when.
+    </p>
+  </section>
+
+  <section [class]="ui.card + ' p-4'">
+    <h2 class="text-[14px] font-bold">Who sees what</h2>
+    <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+      <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-ok"></span>Owners and admins see everything.</li>
+      <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-warn"></span>Billing sees only billing events.</li>
+      <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>Helpdesk and read only see domain and mailbox events.</li>
+    </ul>
+  </section>
+</aside>
+</div>

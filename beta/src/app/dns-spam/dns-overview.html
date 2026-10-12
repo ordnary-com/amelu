@@ -1,0 +1,129 @@
+<amelu-page-header title="DNS setup" [crumbs]="crumbs()">
+  Add these records where your domain's DNS is hosted, usually your registrar. We look them up live, so you can see
+  when each one is right.
+  <button actions type="button" [class]="ui.outline" [disabled]="dns.checking()" (click)="dns.recheck()">
+    {{ dns.checking() ? 'Checking...' : 'Check again' }}
+  </button>
+  @if (dns.applyUrl(); as url) {
+    <a actions [href]="url" [class]="ui.primary">Set up automatically</a>
+  }
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="min-w-0 space-y-6">
+    @if (dns.error(); as message) {
+      @if (dns.records()) {
+        <amelu-alert kind="error" title="The check didn't finish" [dismissible]="true" (dismissed)="dns.error.set(null)">
+          {{ message }} The results below are from the previous check.
+        </amelu-alert>
+      }
+    }
+
+    @if (dns.summary(); as summary) {
+      @if (summary.allMatched) {
+        <amelu-alert kind="success" title="All records are set up">
+          Mail for {{ dns.domain()?.name }} reaches Amelu, and mail you send passes the checks receivers run.
+        </amelu-alert>
+      }
+
+      <section [class]="ui.card + ' p-4'">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <p class="text-[14px]">
+            <span class="font-bold">{{ summary.matched }} of {{ summary.total }}</span> records verified
+          </p>
+          @if (dns.checkedAt(); as at) {
+            <span class="text-[12px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</span>
+          }
+        </div>
+        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
+          <div class="h-full rounded-full" [class]="summary.allMatched ? 'bg-ok' : 'bg-accent'" [style.width.%]="percent()"></div>
+        </div>
+        <p class="mt-2 text-[12px] text-muted">{{ detail() }}</p>
+
+        @if (health(); as rows) {
+          <div class="mt-4 grid gap-2 sm:grid-cols-3">
+            @for (row of rows; track row.label) {
+              <div class="flex items-center gap-2.5 rounded-md border border-line px-3 py-2">
+                <span class="w-10 text-[11px] font-bold tracking-wide text-muted uppercase">{{ row.label }}</span>
+                <span class="min-w-0 flex-1 truncate text-[13px]">{{ row.what }}</span>
+                <span
+                  class="size-2 flex-none rounded-full"
+                  [class]="row.ok === null ? 'bg-muted/50' : row.ok ? 'bg-ok' : 'bg-bad'"
+                  [attr.title]="row.ok === null ? 'Unchecked' : row.ok ? 'OK' : 'Wrong'"
+                ></span>
+                <span class="sr-only">{{ row.ok === null ? 'Unchecked' : row.ok ? 'OK' : 'Wrong' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @else if (dns.records() === undefined) {
+      <div [class]="ui.card + ' space-y-3 p-4'" aria-hidden="true">
+        <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+        <span class="block h-1.5 w-full animate-pulse rounded bg-bg"></span>
+        <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
+      </div>
+    }
+
+    <section>
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 class="text-[14px] font-bold">{{ dns.summary()?.allMatched ? 'Records' : 'Records to add or fix' }}</h2>
+        <a [routerLink]="'/domains/' + dns.id() + '/dns/records'" class="text-[13px] font-medium text-link hover:underline">All records</a>
+      </div>
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (dns.records() === null) {
+          <amelu-empty-state title="The DNS records couldn't be checked" [error]="true">
+            {{ dns.error() }}
+          </amelu-empty-state>
+        } @else if (todo(); as records) {
+          @for (record of records; track $index) {
+            <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="border-b border-line px-4 py-4 last:border-b-0" />
+          } @empty {
+            <amelu-empty-state title="Nothing left to do">
+              Every record matches. Keep them in place: removing one later stops mail or hurts delivery.
+              <a actions [routerLink]="'/domains/' + dns.id() + '/dns/records'" [class]="ui.outline">View all records</a>
+            </amelu-empty-state>
+          }
+        } @else {
+          @for (i of [1, 2, 3]; track i) {
+            <div class="space-y-2.5 border-b border-line px-4 py-4 last:border-b-0" aria-hidden="true">
+              <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+              <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
+              <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        }
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-6">
+    @if (dns.applyUrl(); as url) {
+      <section [class]="ui.card + ' p-4'">
+        <h2 class="text-[14px] font-bold">Automatic setup</h2>
+        <p class="mt-1 text-[13px] leading-relaxed text-muted">
+          Your DNS provider supports automatic DNS setup. Sign in there, approve the change, and every record is added
+          for you.
+        </p>
+        <a [href]="url" [class]="ui.primary + ' mt-3'">Set up automatically</a>
+      </section>
+    }
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Import a zone file</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Many DNS providers can import every record at once from a BIND zone file, usually under DNS import and export.
+      </p>
+      <a [href]="dns.bindUrl()" [class]="ui.outline + ' mt-3'">Download zone file</a>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Adding records by hand</h2>
+      <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-muted">
+        <li>Copy each field into the matching field at your provider. Leave the TTL at its default.</li>
+        <li>Already have an MX or SPF record from another mail provider? Replace it, don't add a second one.</li>
+        <li>Changes can take a few minutes to an hour to show up. Use Check again after saving.</li>
+      </ul>
+    </section>
+  </aside>
+</div>

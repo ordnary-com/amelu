@@ -1,0 +1,121 @@
+<amelu-page-header title="DNS records" [crumbs]="crumbs()">
+  Add these records at your domain's DNS provider. Status reflects a live lookup.
+  <button actions type="button" [class]="ui.outline" [disabled]="dns.checking()" (click)="dns.recheck()">
+    {{ dns.checking() ? 'Checking...' : 'Check again' }}
+  </button>
+  <a actions [href]="dns.bindUrl()" [class]="ui.outline">Download zone file</a>
+  @if (dns.applyUrl(); as url) {
+    <a actions [href]="url" [class]="ui.primary">Set up automatically</a>
+  }
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section class="min-w-0 space-y-4">
+    @if (dns.error(); as message) {
+      @if (dns.records()) {
+        <amelu-alert kind="error" title="The check didn't finish" [dismissible]="true" (dismissed)="dns.error.set(null)">
+          {{ message }} The results below are from the previous check.
+        </amelu-alert>
+      }
+    }
+
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-[14px] font-bold">
+        @if (dns.summary(); as summary) {
+          {{ summary.matched }} of {{ summary.total }} verified
+        } @else {
+          Records
+        }
+      </h2>
+      <div class="flex rounded-md border border-line p-0.5" role="tablist">
+        @for (option of filters; track option.value) {
+          <button
+            type="button"
+            role="tab"
+            class="h-6 cursor-pointer rounded px-2.5 text-[12px] font-medium"
+            [class]="filter() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+            [attr.aria-selected]="filter() === option.value"
+            (click)="filter.set(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div [class]="ui.card + ' overflow-hidden'">
+      @if (dns.records() === null) {
+        <amelu-empty-state title="The DNS records couldn't be checked" [error]="true">
+          {{ dns.error() }}
+        </amelu-empty-state>
+      } @else if (filtered(); as records) {
+        @for (record of records; track $index) {
+          <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="border-b border-line px-4 py-4 last:border-b-0" />
+        } @empty {
+          @if (filter() === 'todo') {
+            <amelu-empty-state title="Nothing needs attention">Every record matches what we expect.</amelu-empty-state>
+          } @else if (filter() === 'matched') {
+            <amelu-empty-state title="No verified records yet">
+              Once you add the records at your DNS provider, they show up here after the next check.
+              <a actions [routerLink]="'/domains/' + dns.id() + '/dns'" [class]="ui.outline">Back to DNS setup</a>
+            </amelu-empty-state>
+          } @else {
+            <amelu-empty-state title="No records">The mail server didn't return any records for this domain.</amelu-empty-state>
+          }
+        }
+      } @else {
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="space-y-2.5 border-b border-line px-4 py-4 last:border-b-0" aria-hidden="true">
+            <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+            <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
+            <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
+          </div>
+        }
+      }
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    <section>
+      <h2 [class]="ui.sectionTitle">Status</h2>
+      <ul [class]="ui.card">
+        @if (counts(); as rows) {
+          @for (row of rows; track row.status) {
+            <li class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5 last:border-b-0">
+              <span [class]="row.class">{{ row.label }}</span>
+              <span class="text-[13px] font-semibold">{{ row.count }}</span>
+            </li>
+          }
+          @if (dns.checkedAt(); as at) {
+            <li class="px-4 py-2.5 text-[12px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</li>
+          }
+        } @else {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <li class="border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+              <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+            </li>
+          }
+        }
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Prefer to import?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Download the zone file and import it at your DNS provider. Most providers support BIND zone files, usually under
+        DNS import and export.
+      </p>
+      <a [href]="dns.bindUrl()" [class]="ui.outline + ' mt-3'">Download zone file</a>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">What the statuses mean</h2>
+      <dl class="mt-2 space-y-2 text-[13px]">
+        <div><dt class="font-medium">Verified</dt><dd class="text-muted">Published exactly as expected.</dd></div>
+        <div><dt class="font-medium">Wrong value</dt><dd class="text-muted">Something is published at this name, but not this value.</dd></div>
+        <div><dt class="font-medium">Missing</dt><dd class="text-muted">Nothing is published at this name yet.</dd></div>
+        <div><dt class="font-medium">Not checked</dt><dd class="text-muted">A record type we don't look up live.</dd></div>
+      </dl>
+    </section>
+  </aside>
+</div>

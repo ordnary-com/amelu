@@ -1,0 +1,78 @@
+<!-- Accent strip across the very top, as in ordnary-console; the account
+     badge hangs out of it in the same color. -->
+<div class="h-1 flex-none bg-badge"></div>
+
+<!-- Top bar: the logo's 14px left padding lines it up with the menu text below. -->
+<header class="flex h-16 flex-none items-stretch justify-between pr-5 pl-3.5 text-white">
+  <a routerLink="/" class="flex items-center">
+    <!-- amelu-logo.png is flat blue on transparent: brightness-0 invert turns it white. -->
+    <img src="/amelu-logo.png" alt="Amelu" class="h-[22px] brightness-0 invert" />
+  </a>
+  <amelu-account-menu />
+</header>
+
+<div class="flex min-h-0 flex-1">
+  <!-- Same menus as the current dashboard (frontend/src/components/Layout.tsx): the main
+       one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
+  <nav
+    class="flex min-h-0 flex-none pr-4 text-[14px]"
+    aria-label="Main"
+  >
+    <ul [class]="column + ' w-[210px]'">
+      <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Dashboard</span></a>
+      </li>
+      <li [class]="item" routerLinkActive="active">
+        <a routerLink="/domains" [class]="link"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Email Domains</span></a>
+      </li>
+      @for (domain of domains() ?? []; track domain.id) {
+        <li [class]="subitem" routerLinkActive="active">
+          <a [routerLink]="'/domains/' + domain.id" [class]="link"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">{{ domain.name }}</span></a>
+        </li>
+      }
+      <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="15px" strokeWidth="2.5" /><span class="truncate">New Domain</span></a>
+      </li>
+      <li [class]="item" routerLinkActive="active">
+        <a routerLink="/account" [class]="link"><ng-icon name="lucideUser" size="15px" strokeWidth="2.5" /><span class="truncate">My Account</span></a>
+      </li>
+      <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/organization" [class]="link"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span></a>
+      </li>
+      <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
+      </li>
+      <li [class]="item" routerLinkActive="active">
+        <a routerLink="/billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
+      </li>
+    </ul>
+
+    @for (menu of columns(); track menu.key) {
+      <ul [class]="column + ' w-48 border-l border-white/10 pl-1'" [attr.aria-label]="menu.label">
+        @for (entry of menu.items; track entry.link) {
+          <li
+            [class]="entry.sub ? subitem : item"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !entry.area }"
+          >
+            @if (entry.kind === 'download') {
+              <a [href]="entry.link" [class]="link"><span class="truncate">{{ entry.label }}</span></a>
+            } @else {
+              <a
+                [routerLink]="entry.link"
+                [class]="entry.kind === 'create' ? createLink : entry.kind === 'danger' ? dangerLink : entry.secondary ? secondaryLink : link"
+              >
+                <span class="truncate">{{ entry.label }}</span>
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </nav>
+
+  <!-- The rounded corner sits against the blue where top bar and sidebar meet. -->
+  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-surface px-5 py-6 lg:px-8 lg:py-8">
+    <router-outlet />
+  </main>
+</div>

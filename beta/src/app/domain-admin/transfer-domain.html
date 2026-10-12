@@ -1,0 +1,91 @@
+<amelu-page-header
+  title="Transfer ownership"
+  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Transfer ownership' }]"
+>
+  Transferring this domain moves it, and every mailbox and setting under it, to another Amelu account. You will lose
+  access to it immediately.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="startConfirm($event)">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The domain wasn't transferred" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">New owner</h2>
+      <div [class]="ui.card + ' p-4'">
+        <label for="new-owner" [class]="ui.label">New owner's email</label>
+        <input
+          id="new-owner"
+          type="email"
+          [class]="ui.input"
+          placeholder="eg. someone@example.com"
+          autocomplete="off"
+          required
+          [value]="email()"
+          (input)="email.set($any($event.target).value)"
+        />
+        <p [class]="ui.hint">The email address they sign in to Amelu with. They need an account already.</p>
+      </div>
+    </section>
+
+    <div class="flex justify-end">
+      <button type="submit" [class]="ui.danger" [disabled]="!trimmed() || !ctx.domain()">Transfer this domain</button>
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">What moves</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        The domain with all of its mailboxes, messages, aliases and settings. Mail keeps flowing during and after the
+        transfer; only who manages it changes.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Before you transfer</h2>
+      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+        <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>Only the organization owner can transfer a domain.</li>
+        <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>The new owner needs an existing Amelu account.</li>
+        <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>You can't undo it yourself; the new owner would have to transfer it back.</li>
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Just want mail to stop?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        <a [routerLink]="'/domains/' + ctx.id() + '/deactivate'" class="text-link hover:underline">Deactivate the domain</a>
+        instead. It pauses delivery and keeps everything in your account.
+      </p>
+    </section>
+  </aside>
+</div>
+
+@if (confirming()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="close()">
+    <div
+      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      role="alertdialog"
+      aria-modal="true"
+      aria-label="Transfer this domain?"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 class="text-[15px] font-bold">Transfer this domain?</h3>
+      <p class="mt-2 text-[13px] leading-relaxed text-muted">
+        This immediately moves {{ ctx.domain()?.name ?? 'the domain' }}, along with every mailbox and setting under it,
+        to <strong class="text-ink">{{ trimmed() }}</strong>. You will lose access to it right away, and this cannot be
+        undone by you afterwards.
+      </p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" [class]="ui.outline" (click)="close()" [disabled]="busy()">Cancel</button>
+        <button type="button" [class]="ui.danger" (click)="transfer()" [disabled]="busy()">
+          {{ busy() ? 'Transferring...' : 'Yes, transfer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

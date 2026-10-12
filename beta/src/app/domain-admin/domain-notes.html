@@ -1,0 +1,69 @@
+<amelu-page-header
+  title="Attached notes"
+  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Attached notes' }]"
+>
+  Free-form notes about this domain, visible only to your organization.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="save($event)">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The notes weren't saved" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+    @if (saved()) {
+      <amelu-alert kind="success" title="Saved" [dismissible]="true" (dismissed)="saved.set(false)">
+        Your notes for {{ ctx.domain()?.name ?? 'this domain' }} are up to date.
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Notes</h2>
+      @if (settings() === undefined) {
+        <div [class]="ui.card + ' space-y-3 p-4'" aria-hidden="true">
+          <span class="block h-3 w-24 animate-pulse rounded bg-bg"></span>
+          <span class="block h-40 animate-pulse rounded bg-bg"></span>
+        </div>
+      } @else if (settings() === null) {
+        <amelu-empty-state [class]="ui.card" title="Notes couldn't be loaded" [error]="true" />
+      } @else {
+        <div [class]="ui.card + ' p-4'">
+          <label for="domain-notes" [class]="ui.label">Notes</label>
+          <textarea
+            id="domain-notes"
+            rows="10"
+            class="mt-1.5 w-full resize-y rounded-md border border-line bg-transparent px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
+            placeholder="eg. Registrar, renewal date, who asked for this domain"
+            [value]="notes()"
+            (input)="edit($any($event.target).value)"
+          ></textarea>
+          <p [class]="ui.hint">Plain text. Leave it empty to remove the notes.</p>
+        </div>
+      }
+    </section>
+
+    <div class="flex justify-end">
+      <button type="submit" [class]="ui.primary" [disabled]="busy() || !settings() || !changed()">
+        {{ busy() ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">What notes are for</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Anything you want to remember about this domain: where it's registered, when it renews, which client or team
+        it belongs to, or why a setting is the way it is.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Who sees them</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Notes stay in the dashboard. They're never added to mail, DNS or anything the people you email can see.
+      </p>
+    </section>
+  </aside>
+</div>

@@ -1,0 +1,192 @@
+<amelu-page-header
+  title="Mailboxes"
+  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: base() }, { label: 'Mailboxes' }]"
+>
+  Every mailbox on {{ ctx.domain()?.name ?? 'this domain' }}. Open one to change its password, services, forwarding and more.
+  <a actions [routerLink]="base() + '/mailboxes/import'" [class]="ui.outline">Import CSV</a>
+  <a actions [routerLink]="base() + '/mailboxes/new'" [class]="ui.primary">
+    <amelu-icon name="plus" [size]="14" />
+    New mailbox
+  </a>
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section class="min-w-0 space-y-4">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The mailbox wasn't deleted" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+    @if (deleted(); as address) {
+      <amelu-alert kind="success" [title]="address + ' is deleted'" [dismissible]="true" (dismissed)="deleted.set(null)" />
+    }
+
+    <div>
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="flex items-center gap-2 text-[14px] font-bold">
+          All mailboxes
+          @if (mailboxes(); as list) {
+            <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
+          }
+        </h2>
+        <label class="flex h-8 w-56 items-center gap-2 rounded-md border border-line px-2.5 focus-within:border-accent">
+          <amelu-icon name="search" [size]="14" class="text-muted" />
+          <input
+            type="search"
+            class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted"
+            placeholder="Filter mailboxes"
+            aria-label="Filter mailboxes"
+            [value]="search()"
+            (input)="search.set($any($event.target).value)"
+          />
+        </label>
+      </div>
+
+      <div [class]="ui.card" class="overflow-hidden">
+        @if (mailboxes() === null) {
+          <amelu-empty-state title="The mailboxes couldn't be loaded" [error]="true" />
+        } @else if (filtered(); as rows) {
+          <ul>
+            @for (mailbox of rows; track mailbox.id) {
+              <li class="flex items-center border-b border-line last:border-b-0 hover:bg-bg/60">
+                <a [routerLink]="base() + '/mailboxes/' + mailbox.id" class="group flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-4">
+                  <span
+                    class="flex size-8 flex-none items-center justify-center rounded-full bg-accent-soft text-[13px] font-bold text-link uppercase"
+                    aria-hidden="true"
+                  >
+                    {{ (mailbox.displayName || mailbox.address)[0] }}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[14px] group-hover:underline">{{ mailbox.address }}</span>
+                    <span class="block truncate text-[12px] text-muted">
+                      {{ mailbox.displayName || 'No display name' }} · Added {{ mailbox.createdAt | date: 'd MMM y' }}
+                    </span>
+                  </span>
+                  @let status = this.status(mailbox);
+                  <span [class]="status.class">{{ status.label }}</span>
+                </a>
+                <div class="flex flex-none items-center gap-1 py-2.5 pr-4 pl-2">
+                  <button
+                    type="button"
+                    class="h-7 cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
+                    [attr.aria-label]="'Delete ' + mailbox.address"
+                    (click)="deleteTarget.set(mailbox)"
+                  >
+                    Delete
+                  </button>
+                  <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+                </div>
+              </li>
+            } @empty {
+              <li>
+                @if (search()) {
+                  <amelu-empty-state title="No matching mailboxes">
+                    No mailboxes match "{{ search() }}".
+                    <button actions type="button" [class]="ui.outline" (click)="search.set('')">Clear filter</button>
+                  </amelu-empty-state>
+                } @else {
+                  <amelu-empty-state title="No mailboxes yet">
+                    You haven't added any mailboxes on {{ ctx.domain()?.name ?? 'this domain' }} yet.
+                    <a actions [routerLink]="base() + '/mailboxes/new'" [class]="ui.primary">
+                      <amelu-icon name="plus" [size]="14" />
+                      Add your first mailbox
+                    </a>
+                    <a actions [routerLink]="base() + '/mailboxes/import'" [class]="ui.outline">Import CSV</a>
+                  </amelu-empty-state>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          @for (i of [1, 2, 3]; track i) {
+            <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+              <span class="size-8 animate-pulse rounded-full bg-bg"></span>
+              <span class="h-3 w-48 animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        }
+      </div>
+
+      @if (mailboxes()?.length) {
+        <p class="mt-3 text-[13px] text-muted">
+          <a [href]="exportUrl()" class="font-medium text-link hover:underline">Export to CSV</a>
+          · Passwords are never included in the export.
+        </p>
+      }
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    @if (usage(); as u) {
+      <section [class]="ui.card + ' p-4'">
+        <div class="flex items-baseline justify-between gap-3 text-[13px]">
+          <span class="text-muted">Mailboxes on {{ u.plan }}</span>
+          <span><span class="font-bold" [class.text-bad]="u.full">{{ u.used }}</span> of {{ u.max }}</span>
+        </div>
+        <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+          <div class="h-full rounded-full" [class]="u.full ? 'bg-bad' : 'bg-accent'" [style.width.%]="u.percent"></div>
+        </div>
+        <p class="mt-2 text-[12px] text-muted">
+          @if (u.full) {
+            This domain has used all its mailboxes.
+            <a routerLink="/billing/plans" class="font-medium text-link hover:underline">Upgrade</a> to add more.
+          } @else {
+            The limit counts per domain, so each domain has its own {{ u.max }}.
+          }
+        </p>
+      </section>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Mailbox settings</h2>
+      <ul [class]="ui.card" class="overflow-hidden">
+        @for (item of settings; track item.link) {
+          <li>
+            <a
+              [routerLink]="base() + '/' + item.link"
+              class="group flex items-center gap-3 border-b border-line px-4 py-2.5 hover:bg-bg/60"
+              [class.border-b-0]="$last"
+            >
+              <span class="min-w-0 flex-1">
+                <span class="block text-[13px] font-medium group-hover:underline">{{ item.label }}</span>
+                <span class="block text-[12px] text-muted">{{ item.hint }}</span>
+              </span>
+              <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Mailbox or alias?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        A mailbox stores mail and has its own password. If you only need another address that delivers into an existing mailbox,
+        <a [routerLink]="base() + '/aliases'" class="font-medium text-link hover:underline">add an alias</a> instead.
+      </p>
+    </section>
+  </aside>
+</div>
+
+@if (deleteTarget(); as target) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDelete()">
+    <div
+      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      role="alertdialog"
+      aria-modal="true"
+      [attr.aria-label]="'Delete ' + target.address"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 class="text-[15px] font-bold">Delete {{ target.address }}?</h3>
+      <p class="mt-2 text-[13px] leading-relaxed text-muted">
+        The mailbox and all mail in it are removed from the mail server. This can't be undone.
+      </p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" [class]="ui.outline" (click)="closeDelete()" [disabled]="deleting()">Cancel</button>
+        <button type="button" [class]="ui.danger" (click)="confirmDelete()" [disabled]="deleting()">
+          {{ deleting() ? 'Deleting...' : 'Yes, delete it' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

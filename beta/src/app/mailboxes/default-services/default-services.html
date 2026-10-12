@@ -1,0 +1,139 @@
+<amelu-page-header
+  title="Default mailbox services"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: base() },
+    { label: 'Mailboxes', link: base() + '/mailboxes' },
+    { label: 'Default services' },
+  ]"
+>
+  Once a new mailbox is provisioned, a default set of services will be activated based on this setting. This setting has no effect on
+  existing mailboxes on this domain.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The services weren't saved" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+    @if (success()) {
+      <amelu-alert kind="success" title="Default services saved" [dismissible]="true" (dismissed)="success.set(false)">
+        New mailboxes on {{ ctx.domain()?.name ?? 'this domain' }} start with these services.
+      </amelu-alert>
+    }
+
+    @if (saved() === null) {
+      <div [class]="ui.card">
+        <amelu-empty-state title="The default services couldn't be loaded" [error]="true" />
+      </div>
+    } @else {
+      <section>
+        <h2 [class]="ui.sectionTitle">Enabled services</h2>
+        <ul [class]="ui.card">
+          @for (service of services; track service.key) {
+            <li class="flex items-center gap-4 border-b border-line px-4 py-3 last:border-b-0">
+              <span class="min-w-0 flex-1">
+                <span class="block text-[14px] font-medium">{{ service.label }}</span>
+                <span class="block text-[12px] text-muted">{{ service.hint }}</span>
+              </span>
+              @if (draft(); as d) {
+                <button
+                  type="button"
+                  role="switch"
+                  class="relative h-5 w-9 flex-none cursor-pointer rounded-full transition-colors"
+                  [class]="d[service.key] ? 'bg-accent' : 'bg-line'"
+                  [attr.aria-checked]="d[service.key]"
+                  [attr.aria-label]="service.label"
+                  (click)="toggle(service.key)"
+                >
+                  <span
+                    class="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform"
+                    [class.translate-x-4]="d[service.key]"
+                  ></span>
+                </button>
+              } @else {
+                <span class="h-5 w-9 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Sieve filtering</h2>
+        <div [class]="ui.card">
+          <div class="flex items-center gap-4 px-4 py-3">
+            <span class="min-w-0 flex-1">
+              <span class="block text-[14px] font-medium">May access ManageSieve</span>
+              <span class="block text-[12px] text-muted">
+                Sieve is a programming language that can be used for email filtering. When enabled, custom scripts may be managed using the
+                ManageSieve protocol.
+              </span>
+            </span>
+            @if (draft(); as d) {
+              <button
+                type="button"
+                role="switch"
+                class="relative h-5 w-9 flex-none cursor-pointer rounded-full transition-colors"
+                [class]="d.maySieve ? 'bg-accent' : 'bg-line'"
+                [attr.aria-checked]="d.maySieve"
+                aria-label="May access ManageSieve"
+                (click)="toggle('maySieve')"
+              >
+                <span class="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform" [class.translate-x-4]="d.maySieve"></span>
+              </button>
+            } @else {
+              <span class="h-5 w-9 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+            }
+          </div>
+        </div>
+      </section>
+
+      @if (draft() && !draft()!.maySend && !draft()!.mayReceive) {
+        <amelu-alert kind="warning" title="New mailboxes won't send or receive mail">
+          With both sending and receiving off, a new mailbox can't be used for email until you turn them on for it.
+        </amelu-alert>
+      }
+
+      <div class="flex items-center gap-3">
+        <button type="submit" [class]="ui.primary" [disabled]="!dirty() || busy()">
+          {{ busy() ? 'Saving...' : 'Save changes' }}
+        </button>
+        @if (dirty()) {
+          <span class="text-[12px] text-muted">Unsaved changes</span>
+        }
+      </div>
+    }
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Keep it minimal</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        We recommend keeping the enabled services to the necessary minimum in order to reduce attack surface.
+      </p>
+      @if (draft()) {
+        <p class="mt-2 text-[12px] text-muted">{{ enabledCount() }} of 5 services on for new mailboxes.</p>
+      }
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Existing mailboxes</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        These defaults are only read when a mailbox is created. To change what an existing mailbox may do, open it from
+        <a [routerLink]="base() + '/mailboxes'" class="font-medium text-link hover:underline">all mailboxes</a>
+        and change its services there.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Storage caps</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        New mailboxes also get this domain's
+        <a [routerLink]="base() + '/mailboxes/limits'" class="font-medium text-link hover:underline">default limits</a>.
+      </p>
+    </section>
+  </aside>
+</div>

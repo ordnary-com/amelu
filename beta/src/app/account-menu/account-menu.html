@@ -1,0 +1,122 @@
+<!-- Same shape as ordnary-console's account menu: a badge hanging from the top
+     edge with who you are underneath, opening a panel flush below the bar. -->
+<button
+  type="button"
+  class="group flex h-full cursor-pointer flex-col items-end justify-start"
+  (click)="toggle()"
+  [attr.aria-expanded]="open()"
+  aria-haspopup="menu"
+>
+  <span class="flex max-w-[240px] items-center gap-1.5 rounded-b-md bg-badge px-3 py-1 text-[12px] font-bold text-white">
+    <span class="truncate">{{ customer()?.organizationName }}</span>
+    <amelu-icon name="chevronDown" [size]="12" class="transition-transform duration-150 group-aria-expanded:rotate-180" />
+  </span>
+  <span class="max-w-[240px] truncate pt-1 text-[13px] text-white/75 group-hover:text-white group-hover:underline">
+    {{ customer()?.name }}
+  </span>
+</button>
+
+@if (open()) {
+  <div
+    class="absolute top-full right-0 z-20 max-h-[calc(100vh-6rem)] w-[420px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-b-lg border border-line bg-popover p-5 text-ink shadow-md"
+    role="menu"
+    aria-label="Your account"
+  >
+    <div class="flex items-center justify-between">
+      <h3 class="text-[15px] font-bold">Your plan</h3>
+      <a routerLink="/billing/overview" [class]="link" (click)="open.set(false)">View billing</a>
+    </div>
+    <div class="mt-3 flex items-center justify-between">
+      <div>
+        <div class="text-[13px] font-bold">Current plan</div>
+        <div class="mt-1 text-[20px] font-bold">{{ customer()?.planTierName }}</div>
+      </div>
+      <a
+        routerLink="/billing/plans"
+        class="rounded-md border border-accent px-3 py-1.5 text-[12px] font-bold text-link hover:bg-accent/10"
+        (click)="open.set(false)"
+      >
+        View plans
+      </a>
+    </div>
+
+    <div class="my-4 h-px bg-line"></div>
+
+    <div class="flex items-center gap-3">
+      @if (showAvatar()) {
+        <img
+          [src]="customer()!.avatarUrl"
+          alt=""
+          class="size-10 flex-none rounded-full object-cover"
+          (error)="avatarFailed.set(true)"
+          referrerpolicy="no-referrer"
+        />
+      } @else {
+        <span class="flex size-10 flex-none items-center justify-center rounded-full bg-accent-soft text-[14px] font-semibold text-link">
+          {{ initials() }}
+        </span>
+      }
+      <div class="min-w-0">
+        <div class="truncate text-[13px] font-bold">{{ customer()?.name }}</div>
+        <div class="mt-0.5 flex items-center gap-1.5">
+          <button
+            type="button"
+            class="cursor-pointer text-muted hover:text-ink"
+            [attr.aria-label]="copied() ? 'Copied' : 'Copy email address'"
+            (click)="copyEmail()"
+          >
+            <amelu-icon [name]="copied() ? 'check' : 'copy'" [size]="14" />
+          </button>
+          <span class="truncate text-[13px]">{{ customer()?.email }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 space-y-3">
+      <div>
+        <div class="text-[13px] font-bold">Organization</div>
+        <div class="mt-0.5 truncate text-[13px]">{{ customer()?.organizationName }}</div>
+      </div>
+      <div>
+        <div class="text-[13px] font-bold">Role</div>
+        <div class="mt-0.5 text-[13px] capitalize">{{ customer()?.role }}</div>
+      </div>
+      <div>
+        <div class="text-[13px] font-bold">Theme</div>
+        <div class="mt-1 inline-flex rounded-md border border-line p-0.5" role="group" aria-label="Theme">
+          @for (option of themes; track option.value) {
+            <button
+              type="button"
+              class="cursor-pointer rounded px-3 py-1 text-[12px] font-medium"
+              [class]="theme.choice() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+              [attr.aria-pressed]="theme.choice() === option.value"
+              (click)="theme.set(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="my-4 h-px bg-line"></div>
+
+    <div class="space-y-1">
+      <a routerLink="/account" [class]="item" role="menuitem" (click)="open.set(false)">Account settings</a>
+      <a routerLink="/organization" [class]="item" role="menuitem" (click)="open.set(false)">Organization</a>
+      <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="item" role="menuitem">Ordnary account</a>
+      <a [href]="legacyUrl('/')" [class]="item" role="menuitem">Current dashboard</a>
+    </div>
+
+    <div class="mt-5 flex justify-end">
+      <button
+        type="button"
+        class="cursor-pointer rounded-md bg-accent px-4 py-1.5 text-[13px] font-bold text-white hover:brightness-110"
+        role="menuitem"
+        (click)="logout()"
+      >
+        Sign out
+      </button>
+    </div>
+  </div>
+}

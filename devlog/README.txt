@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  A domain the mail servers refused no longer stays in Amelu
+            2026-10-12-failed-domain-create-cleanup.txt
+
 2026-10-12  Name now comes from Ordnary on every sign-in
             2026-10-12-ordnary-name-sync.txt
 

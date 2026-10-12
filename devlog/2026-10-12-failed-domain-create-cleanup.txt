@@ -1,0 +1,16 @@
+A domain the mail servers refused no longer stays in Amelu
+2026-10-12
+
+POST /api/domains inserts the domains row first, then creates the domain in
+Stalwart. When that second call failed (seen as: create domain google.com:
+call stalwart: Post "http://marduk.mx.amelu.org:8080/jmap": EOF) the row was
+kept with status 'failed'. It showed up in the domain list and sidebar
+although nothing existed on the mail servers, and adding the same name again
+hit the unique name and returned "domain already exists".
+The handler now deletes the row again when the Stalwart call fails. Only if
+that delete fails is it kept as 'failed', as before.
+The response also passed the raw Stalwart error to the customer, including
+our internal host and port. It now says "the mail servers couldn't set up
+this domain, so it wasn't added. Try again in a moment."; the full error goes
+to the API log. Rows already stuck as 'failed' can still be removed with
+Delete Domain, which skips Stalwart for them.

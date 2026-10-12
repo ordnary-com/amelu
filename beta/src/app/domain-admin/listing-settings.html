@@ -1,0 +1,87 @@
+<amelu-page-header
+  title="Listing settings"
+  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Listing settings' }]"
+>
+  Control whether this domain appears in any public directory of Amelu domains.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="save($event)">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The setting wasn't saved" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+    @if (saved()) {
+      <amelu-alert kind="success" title="Saved" [dismissible]="true" (dismissed)="saved.set(false)">
+        {{ ctx.domain()?.name ?? 'This domain' }} is now {{ current() ? 'listed publicly' : 'not listed' }}.
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Public listing</h2>
+      @if (settings() === undefined) {
+        <div [class]="ui.card + ' flex items-center gap-3 p-4'" aria-hidden="true">
+          <span class="h-3 w-56 animate-pulse rounded bg-bg"></span>
+          <span class="ml-auto h-5 w-9 animate-pulse rounded-full bg-bg"></span>
+        </div>
+      } @else if (settings() === null) {
+        <amelu-empty-state [class]="ui.card" title="Listing setting couldn't be loaded" [error]="true" />
+      } @else {
+        <div [class]="ui.card + ' flex items-start gap-4 p-4'">
+          <div class="min-w-0 flex-1">
+            <p id="listing-label" class="text-[14px] font-semibold">List this domain publicly</p>
+            <p class="mt-0.5 text-[13px] text-muted">
+              Currently {{ current() ? 'listed' : 'not listed' }}.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-labelledby="listing-label"
+            [attr.aria-checked]="listed()"
+            class="relative mt-0.5 h-5 w-9 flex-none cursor-pointer rounded-full transition-colors"
+            [class]="listed() ? 'bg-accent' : 'bg-line'"
+            (click)="toggle()"
+          >
+            <span
+              class="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform"
+              [class.translate-x-4]="listed()"
+            ></span>
+          </button>
+        </div>
+      }
+    </section>
+
+    <div class="flex justify-end">
+      <button type="submit" [class]="ui.primary" [disabled]="busy() || !settings() || !changed()">
+        {{ busy() ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">What listing does</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        A listed domain may be shown by name in a public directory of domains hosted on Amelu. It doesn't expose any
+        mailboxes, addresses or mail.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Off by default</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        New domains are never listed until you turn this on. Mail delivery works the same either way.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Per mailbox</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Mailboxes have their own listing setting, under each mailbox in
+        <a [routerLink]="'/domains/' + ctx.id() + '/mailboxes'" class="text-link hover:underline">Mailboxes</a>.
+      </p>
+    </section>
+  </aside>
+</div>

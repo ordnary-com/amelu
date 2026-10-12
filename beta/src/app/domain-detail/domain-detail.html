@@ -1,0 +1,277 @@
+@if (domain() === null) {
+  <div class="mx-auto max-w-md py-16 text-center">
+    <h1 class="text-[22px] font-bold tracking-[-0.4px]">Domain not found</h1>
+    <p class="mt-2 text-[13px] text-muted">It may have been deleted, or it belongs to another organization.</p>
+    <a routerLink="/domains" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Email Domains</a>
+  </div>
+} @else {
+  <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
+    <a routerLink="/domains" class="hover:text-ink hover:underline">Email Domains</a>
+    <amelu-icon name="chevronRight" [size]="12" />
+    <span class="truncate text-ink">{{ domain()?.name }}</span>
+  </nav>
+
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="flex min-w-0 items-center gap-3.5">
+      <amelu-action-icon name="domains" class="text-link" />
+      <div class="min-w-0">
+        @if (domain(); as d) {
+          <h1 class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[22px] font-bold tracking-[-0.4px]">
+            <span class="truncate">{{ d.name }}</span>
+            <span [class]="status()!.class">{{ status()!.label }}</span>
+          </h1>
+          <p class="mt-1 text-[13px] text-muted">
+            Added {{ d.createdAt | date: 'd MMM y' }}
+            @if (d.verifiedAt) {
+              · Verified {{ d.verifiedAt | date: 'd MMM y' }}
+            }
+          </p>
+        } @else {
+          <span class="block h-6 w-56 animate-pulse rounded bg-bg"></span>
+          <span class="mt-2 block h-3 w-32 animate-pulse rounded bg-bg"></span>
+        }
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <a [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.outline">New alias</a>
+      <a [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">
+        <amelu-icon name="plus" [size]="14" />
+        New mailbox
+      </a>
+    </div>
+  </div>
+
+  @if (domain(); as d) {
+    @if (d.status !== 'active' || dnsBroken()) {
+      <amelu-alert kind="warning" class="mt-5" [title]="d.status === 'active' ? 'Some DNS records are wrong' : 'Finish setting up this domain'">
+        @if (d.status === 'active') {
+          Mail may bounce or land in spam until the records marked below match.
+        } @else {
+          Mail for {{ d.name }} only arrives once its DNS records point at Amelu.
+        }
+        <a [routerLink]="'/domains/' + d.id + '/dns'" class="font-bold underline">See the DNS records</a>
+      </amelu-alert>
+    }
+  }
+
+  <div class="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+    @for (stat of stats(); track stat.label) {
+      <a
+        [routerLink]="'/domains/' + id() + '/' + stat.link"
+        class="group rounded-lg border border-line bg-surface px-4 py-3 hover:bg-bg/60"
+      >
+        <span class="block text-[12px] text-muted group-hover:underline">{{ stat.label }}</span>
+        @if (stat.value === undefined) {
+          <span class="mt-2 block h-5 w-10 animate-pulse rounded bg-bg"></span>
+        } @else if (stat.value === null) {
+          <span class="mt-2 block text-[13px] text-muted">Unavailable</span>
+        } @else {
+          <span class="mt-0.5 block text-[22px] font-bold" [class.text-bad]="stat.full">
+            {{ stat.value }}
+            @if (stat.of) {
+              <span class="text-[13px] font-normal text-muted">of {{ stat.of }}</span>
+            }
+          </span>
+        }
+      </a>
+    }
+  </div>
+
+  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <section>
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-[14px] font-bold">All addresses</h2>
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex rounded-md border border-line p-0.5" role="tablist">
+            @for (option of kinds; track option.value) {
+              <button
+                type="button"
+                role="tab"
+                class="h-6 cursor-pointer rounded px-2.5 text-[12px] font-medium"
+                [class]="kind() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+                [attr.aria-selected]="kind() === option.value"
+                (click)="kind.set(option.value)"
+              >
+                {{ option.label }}
+              </button>
+            }
+          </div>
+          <label class="flex h-8 w-48 items-center gap-2 rounded-md border border-line px-2.5 focus-within:border-accent">
+            <amelu-icon name="search" [size]="14" class="text-muted" />
+            <input
+              type="search"
+              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted"
+              placeholder="Filter addresses"
+              aria-label="Filter addresses"
+              [value]="search()"
+              (input)="search.set($any($event.target).value)"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div [class]="ui.card" class="overflow-hidden">
+        @if (mailboxes() === null) {
+          <amelu-empty-state title="The addresses couldn't be loaded" [error]="true" />
+        } @else if (filtered(); as rows) {
+          @if (aliases() === null) {
+            <p class="border-b border-line bg-bg/60 px-4 py-2 text-[12px] text-muted">Aliases couldn't be loaded, so only mailboxes are listed.</p>
+          }
+          <ul>
+            @for (row of rows; track row.key) {
+              <li class="border-b border-line last:border-b-0">
+                <a [routerLink]="row.link" class="group flex items-center gap-3 px-4 py-2.5 hover:bg-bg/60">
+                  <span
+                    class="flex size-8 flex-none items-center justify-center rounded-full text-[13px] font-bold uppercase"
+                    [class]="row.kind === 'mailbox' ? 'bg-accent-soft text-link' : 'bg-bg text-muted'"
+                    aria-hidden="true"
+                  >
+                    {{ row.kind === 'mailbox' ? (row.name || row.address)[0] : '@' }}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[14px] group-hover:underline">
+                      @if (row.name) {
+                        <span class="font-semibold">{{ row.name }}</span>
+                        <span class="text-muted"> · </span>
+                      }
+                      {{ row.address }}
+                    </span>
+                    <span class="block truncate text-[12px] text-muted">{{ row.detail }}</span>
+                  </span>
+                  @if (row.badge; as badge) {
+                    <span [class]="badge.class">{{ badge.label }}</span>
+                  }
+                  <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+                </a>
+              </li>
+            } @empty {
+              <li>
+                @if (search()) {
+                  <amelu-empty-state title="No matching addresses">
+                    Nothing on this domain matches "{{ search() }}".
+                    <button actions type="button" [class]="ui.outline" (click)="search.set('')">Clear filter</button>
+                  </amelu-empty-state>
+                } @else if (kind() === 'aliases') {
+                  <amelu-empty-state title="No aliases yet">
+                    An alias is an extra address that delivers into one of your mailboxes, like hello&#64;{{ domain()?.name }}.
+                    <a actions [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.primary">New alias</a>
+                  </amelu-empty-state>
+                } @else {
+                  <amelu-empty-state title="No mailboxes yet">
+                    Create the first mailbox on {{ domain()?.name }}, then sign in from any mail app.
+                    <a actions [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">
+                      <amelu-icon name="plus" [size]="14" />
+                      New mailbox
+                    </a>
+                  </amelu-empty-state>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          @for (i of [1, 2, 3]; track i) {
+            <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+              <span class="size-8 animate-pulse rounded-full bg-bg"></span>
+              <span class="h-3 w-48 animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <aside class="space-y-6">
+      <section>
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="text-[14px] font-bold">DNS</h2>
+          <a [routerLink]="'/domains/' + id() + '/dns'" class="text-[13px] font-medium text-link hover:underline">All records</a>
+        </div>
+        <ul [class]="ui.card">
+          @if (dns(); as rows) {
+            @for (row of rows; track row.label) {
+              <li class="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0">
+                <span class="w-10 text-[11px] font-bold tracking-wide text-muted uppercase">{{ row.label }}</span>
+                <span class="min-w-0 flex-1 truncate text-[13px]">{{ row.what }}</span>
+                <span
+                  class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide uppercase"
+                  [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'"
+                >
+                  <span class="size-1.5 rounded-full" [class]="row.ok === null ? 'bg-muted/50' : row.ok ? 'bg-ok' : 'bg-bad'"></span>
+                  {{ row.ok === null ? 'Unchecked' : row.ok ? 'OK' : 'Wrong' }}
+                </span>
+              </li>
+            }
+          } @else {
+            @for (i of [1, 2, 3]; track i) {
+              <li class="border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+                <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+              </li>
+            }
+          }
+        </ul>
+      </section>
+
+      <section>
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="text-[14px] font-bold">Recent activity</h2>
+          <a [routerLink]="'/domains/' + id() + '/activity'" class="text-[13px] font-medium text-link hover:underline">View all</a>
+        </div>
+        <div [class]="ui.card">
+          @if (activity(); as entries) {
+            <ul>
+              @for (entry of entries; track entry.id) {
+                <li class="border-b border-line px-4 py-2.5 last:border-b-0">
+                  <span class="block text-[13px]">{{ entry.message }}</span>
+                  <span class="block text-[12px] text-muted">{{ entry.createdAt | date: 'd MMM, HH:mm' }}</span>
+                </li>
+              } @empty {
+                <li>
+                  <amelu-empty-state title="No activity yet" [compact]="true">
+                    Mailbox and alias changes on this domain show up here.
+                  </amelu-empty-state>
+                </li>
+              }
+            </ul>
+          } @else if (activity() === null) {
+            <amelu-empty-state title="Activity couldn't be loaded" [error]="true" [compact]="true" />
+          } @else {
+            <div class="space-y-3 px-4 py-4" aria-hidden="true">
+              <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+              <span class="block h-3 w-2/3 animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Settings</h2>
+        <ul [class]="ui.card" class="overflow-hidden">
+          @for (item of settings; track item.link) {
+            <li>
+              <a
+                [routerLink]="'/domains/' + id() + '/' + item.link"
+                class="group flex items-center gap-3 border-b border-line px-4 py-2.5 hover:bg-bg/60"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[13px] font-medium group-hover:underline">{{ item.label }}</span>
+                  <span class="block text-[12px] text-muted">{{ item.hint }}</span>
+                </span>
+                <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+              </a>
+            </li>
+          }
+          <li class="flex flex-wrap gap-x-4 gap-y-1 px-4 py-3 text-[13px]">
+            @for (item of manage; track item.link) {
+              <a
+                [routerLink]="'/domains/' + id() + '/' + item.link"
+                class="hover:underline"
+                [class]="item.link === 'delete' ? 'text-bad' : 'text-muted hover:text-ink'"
+              >
+                {{ item.label }}
+              </a>
+            }
+          </li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+}

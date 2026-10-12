@@ -67,6 +67,14 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 	if err := a.Store.UpdateCustomerAvatarURL(r.Context(), customer.ID, result.User.Picture); err != nil {
 		log.Printf("ordnary auth: store avatar for %s: %v", customer.ID, err)
 	}
+	// Name is managed in Ordnary only (Amelu has no form for it any more), so
+	// every sign-in copies it over; an Ordnary account without a name keeps
+	// whatever Amelu already had.
+	if name := strings.TrimSpace(result.User.Name); name != "" && name != customer.Name {
+		if err := a.Store.UpdateCustomerName(r.Context(), customer.ID, name); err != nil {
+			log.Printf("ordnary auth: store name for %s: %v", customer.ID, err)
+		}
+	}
 	a.startSession(w, r, customer.ID)
 
 	returnTo := result.ReturnTo

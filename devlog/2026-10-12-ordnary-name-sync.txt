@@ -1,0 +1,12 @@
+Name now comes from Ordnary on every sign-in
+2026-10-12
+
+First and last name are managed in the Ordnary account, but Amelu only took
+the name once, when it provisioned a customer, and kept its own copy after
+that. The Ordnary callback now copies userinfo "name" to customers.name on
+every login when it differs. An Ordnary account without a name no longer
+gets its email address as name: ordnaryauth used to fill Name with the email
+when the claim was empty, which would now overwrite a real name with an
+address on each login. The empty case keeps whatever Amelu has; a brand new
+customer still falls back to the email in provisionOrdnaryCustomer.
+The username column stays, it's only used for uniqueness and admin search.

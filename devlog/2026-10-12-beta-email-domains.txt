@@ -1,0 +1,15 @@
+2.0: Email Domains, domain overview and New Domain
+2026-10-12
+
+Email Domains lists every domain as a card with a filter, an overview of how
+many are active and have DNS set up, and a "needs attention" list linking to
+each domain's DNS page.
+/domains/{id} replaces the old "All Addresses" landing page: status and
+dates, a warning when the domain isn't active or a record is wrong, counts
+for mailboxes (against the plan's per-domain limit), address aliases,
+domain aliases and catch-all, one list of mailboxes and aliases with a
+Mailboxes/Aliases toggle, DNS status, recent activity and settings links.
+/domains/new keeps the old flow (optional admin/postmaster/abuse mailboxes
+with passwords shown once), strips pasted URLs or addresses down to the
+domain, offers to drop "www.", and blocks submitting when the plan's
+domains are all used.

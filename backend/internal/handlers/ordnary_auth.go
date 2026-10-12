@@ -64,6 +64,9 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.Store.UpdateCustomerLastSignIn(r.Context(), customer.ID)
+	if err := a.Store.UpdateCustomerAvatarURL(r.Context(), customer.ID, result.User.Picture); err != nil {
+		log.Printf("ordnary auth: store avatar for %s: %v", customer.ID, err)
+	}
 	a.startSession(w, r, customer.ID)
 
 	returnTo := result.ReturnTo

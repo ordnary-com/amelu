@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  Ordnary profile picture stored on sign-in
+            2026-10-12-ordnary-avatar.txt
+
 2026-10-12  Maintenance notice on app.amelu.org
             2026-10-12-maintenance-notice.txt
 

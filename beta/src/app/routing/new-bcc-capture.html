@@ -1,0 +1,113 @@
+<amelu-page-header
+  title="New Bcc. capture"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Bcc. captures', link: '/domains/' + ctx.id() + '/bccs' },
+    { label: 'New capture' },
+  ]"
+>
+  A copy of every message matching the pattern is silently delivered to the capture address, without
+  affecting normal delivery of the original.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The capture wasn't created"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Capture</h2>
+      <div [class]="ui.card + ' space-y-5 p-4'">
+        <div>
+          <label for="bcc-pattern" [class]="ui.label">Pattern</label>
+          <input
+            id="bcc-pattern"
+            [class]="ui.input + ' font-mono'"
+            [placeholder]="'eg. *@' + (ctx.domain()?.name || 'yourdomain.tld')"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            autofocus
+            required
+            [value]="pattern()"
+            (input)="pattern.set($any($event.target).value)"
+          />
+          <p [class]="ui.hint">Use * to match any run of characters.</p>
+        </div>
+
+        <div>
+          <label for="bcc-capture" [class]="ui.label">Copy to</label>
+          <input
+            id="bcc-capture"
+            type="email"
+            [class]="ui.input"
+            placeholder="eg. archive@example.com"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            required
+            [value]="capture()"
+            (input)="capture.set($any($event.target).value)"
+          />
+          <p [class]="ui.hint">A full email address. It doesn't have to be on this domain.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy()">
+        {{ busy() ? 'Creating...' : 'Create capture' }}
+      </button>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/bccs'"
+        class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
+        >Cancel</a
+      >
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Examples</h2>
+      <ul class="mt-2 space-y-2 text-[13px]">
+        <li>
+          <button
+            type="button"
+            class="cursor-pointer font-mono text-[12px] text-link hover:underline"
+            (click)="pattern.set('*@' + (ctx.domain()?.name ?? ''))"
+          >
+            *&#64;{{ ctx.domain()?.name || 'yourdomain.tld' }}
+          </button>
+          <span class="block text-[12px] text-muted">Capture everything on this domain</span>
+        </li>
+        <li>
+          <button
+            type="button"
+            class="cursor-pointer font-mono text-[12px] text-link hover:underline"
+            (click)="pattern.set('sales*@' + (ctx.domain()?.name ?? ''))"
+          >
+            sales*&#64;{{ ctx.domain()?.name || 'yourdomain.tld' }}
+          </button>
+          <span class="block text-[12px] text-muted">Every address starting with sales</span>
+        </li>
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Normal delivery is untouched</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        The original message still arrives in its mailbox as usual. Senders and recipients don't see
+        the copy.
+      </p>
+    </section>
+  </aside>
+</div>

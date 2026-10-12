@@ -1,0 +1,15 @@
+Amelu account stays linked when the Ordnary email changes
+2026-10-12
+
+The Ordnary callback matched customers on email alone and threw away the
+sub from userinfo. Changing your email in Ordnary meant the next login found
+no customer and provisioned a brand new, empty account and organization; the
+old one (domains, mailboxes, billing) was unreachable. Whoever registered in
+Ordnary with the old address next would have landed in it.
+Migration 0028 adds customers.ordnary_subject (TEXT UNIQUE). The callback now
+looks up by subject first and copies the current Ordnary email over. Customers
+without a subject yet are matched by email once and linked on that login.
+If the email match is already linked to another subject, login is refused
+with ordnary_account_mismatch instead of signing that user in. An email that
+another customer still holds is not copied over, only logged. The Stripe
+customer email is not updated.

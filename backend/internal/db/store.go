@@ -166,6 +166,63 @@ func (s *Store) GetCustomerByEmail(ctx context.Context, email string) (*Customer
 	return c, nil
 }
 
+func (s *Store) GetCustomerByOrdnarySubject(ctx context.Context, subject string) (*Customer, error) {
+	c := &Customer{}
+	err := s.conn.QueryRowContext(ctx, `
+		SELECT id, email, name, password_hash, plan_tier_id, organization_id, last_sign_in_at, created_at, first_name, last_name, username
+		FROM customers WHERE ordnary_subject = $1
+	`, subject).Scan(&c.ID, &c.Email, &c.Name, &c.PasswordHash, &c.PlanTierID, &c.OrganizationID, &c.LastSignInAt, &c.CreatedAt, &c.FirstName, &c.LastName, &c.Username)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// LinkCustomerOrdnarySubject ties a customer to an Ordnary user id, but only
+// if it isn't tied to one yet. ErrNotFound means the customer already belongs
+// to a different Ordnary user - e.g. someone who registered in Ordnary with an
+// email address the original owner has since changed away from.
+func (s *Store) LinkCustomerOrdnarySubject(ctx context.Context, customerID, subject string) error {
+	res, err := s.conn.ExecContext(ctx, `
+		UPDATE customers SET ordnary_subject = $2
+		WHERE id = $1 AND (ordnary_subject IS NULL OR ordnary_subject = $2)
+	`, customerID, subject)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// SyncCustomerEmail sets the customer's email to the one Ordnary now reports.
+// It's skipped when another customer already holds that address (an older
+// account not linked to Ordnary yet), so the unique constraint never fails a
+// login; the result reports whether the email was changed.
+func (s *Store) SyncCustomerEmail(ctx context.Context, customerID, email string) (bool, error) {
+	res, err := s.conn.ExecContext(ctx, `
+		UPDATE customers SET email = $2
+		WHERE id = $1 AND email <> $2
+		  AND NOT EXISTS (SELECT 1 FROM customers WHERE email = $2 AND id <> $1)
+	`, customerID, email)
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
 func (s *Store) GetCustomerByID(ctx context.Context, id string) (*Customer, error) {
 	c := &Customer{}
 	err := s.conn.QueryRowContext(ctx, `

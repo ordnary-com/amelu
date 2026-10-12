@@ -208,6 +208,9 @@ func (c *Config) fetchUserInfo(ctx context.Context, accessToken string) (*User, 
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, err
 	}
+	if info.Sub == "" {
+		return nil, errors.New("ordnary identity did not return a sub for this user")
+	}
 	if info.Email == "" {
 		return nil, errors.New("ordnary identity did not return an email for this user")
 	}

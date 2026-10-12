@@ -1,0 +1,13 @@
+2.0: My Organization and Activity Log
+2026-10-12
+
+My Organization lists members with a role select and Remove (with a
+confirmation), pending and expired invitations with Revoke, the
+organization's details, and an invite form. When no email delivery is set
+up the API returns the invite link, which is shown to copy instead.
+The Activity Log groups GET /api/organization/audit by local day (it was
+grouped by UTC day at first, putting late-evening events on the next day),
+filters by Team, Domains, Mailboxes, Billing and Account, loads older pages
+with Load more, and explains who sees what. That text follows
+authz.VisibleAuditObjectTypes: billing members only see billing events,
+helpdesk and read only see domain and mailbox events.

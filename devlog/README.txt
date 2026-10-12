@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  2.0: My Organization and Activity Log
+            2026-10-12-beta-organization.txt
+
 2026-10-12  2.0: My Account
             2026-10-12-beta-account.txt
 

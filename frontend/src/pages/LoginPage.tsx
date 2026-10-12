@@ -8,6 +8,7 @@ import { API_URL } from "../api/client";
 const ERRORS: Record<string, string> = {
   ordnary_auth_failed: "Sign-in failed. Please try again.",
   ordnary_email_unverified: "Verify your Ordnary account's email address, then sign in again.",
+  ordnary_account_mismatch: "This email address belongs to an Amelu account linked to a different Ordnary account. Contact support.",
 };
 
 export function LoginPage() {

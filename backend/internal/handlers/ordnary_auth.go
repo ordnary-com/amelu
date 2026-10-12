@@ -27,7 +27,8 @@ func (a *App) OrdnaryLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 // OrdnaryCallback exchanges the code, finds or provisions the matching
-// Amelu customer by email, and starts a normal Amelu session - identical to
+// Amelu customer by Ordnary user id (falling back to email for accounts
+// not linked yet), and starts a normal Amelu session - identical to
 // what Login/Signup do, just sourced from Ordnary identity instead of a
 // password form.
 func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
@@ -50,9 +51,11 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	email := strings.ToLower(strings.TrimSpace(result.User.Email))
 
-	customer, err := a.Store.GetCustomerByEmail(r.Context(), email)
-	if errors.Is(err, db.ErrNotFound) {
-		customer, err = a.provisionOrdnaryCustomer(r, email, result.User.Name)
+	customer, err := a.findOrProvisionOrdnaryCustomer(r, result.User.ID, email, result.User.Name)
+	if errors.Is(err, errOrdnaryAccountMismatch) {
+		log.Printf("ordnary auth: %s is already linked to another Ordnary user, refusing %s", email, result.User.ID)
+		http.Redirect(w, r, a.FrontendOrigin+"/login?error=ordnary_account_mismatch", http.StatusFound)
+		return
 	}
 	if err != nil {
 		log.Printf("ordnary auth: find or create customer: %v", err)
@@ -68,6 +71,48 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 		returnTo = "/domains"
 	}
 	http.Redirect(w, r, a.FrontendOrigin+returnTo, http.StatusFound)
+}
+
+var errOrdnaryAccountMismatch = errors.New("customer is linked to a different Ordnary user")
+
+// findOrProvisionOrdnaryCustomer resolves the customer by Ordnary's stable
+// user id first, so an email change in Ordnary keeps the same Amelu account
+// (and the new email is copied over). Customers from before that id was
+// stored are matched by email once and linked on the spot.
+func (a *App) findOrProvisionOrdnaryCustomer(r *http.Request, subject, email, name string) (*db.Customer, error) {
+	ctx := r.Context()
+
+	customer, err := a.Store.GetCustomerByOrdnarySubject(ctx, subject)
+	if err == nil {
+		changed, err := a.Store.SyncCustomerEmail(ctx, customer.ID, email)
+		if err != nil {
+			return nil, err
+		}
+		if changed {
+			customer.Email = email
+		} else if customer.Email != email {
+			log.Printf("ordnary auth: customer %s now has email %s in Ordnary, but another customer holds it; keeping %s", customer.ID, email, customer.Email)
+		}
+		return customer, nil
+	}
+	if !errors.Is(err, db.ErrNotFound) {
+		return nil, err
+	}
+
+	customer, err = a.Store.GetCustomerByEmail(ctx, email)
+	if errors.Is(err, db.ErrNotFound) {
+		customer, err = a.provisionOrdnaryCustomer(r, email, name)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := a.Store.LinkCustomerOrdnarySubject(ctx, customer.ID, subject); err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return nil, errOrdnaryAccountMismatch
+		}
+		return nil, err
+	}
+	return customer, nil
 }
 
 // provisionOrdnaryCustomer auto-creates an organization and customer for a

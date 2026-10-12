@@ -18,6 +18,9 @@ a JSON HTTP API. `pnpm dev` at the repo root starts both together.
   the single `Layout` wrapper). Every API call goes through the one typed
   client in `frontend/src/api/client.ts` (a `request<T>` wrapper plus one
   method per endpoint) - never `fetch` directly from a page.
+- `beta/` - the 2.0 dashboard being rebuilt page for page: Angular 22
+  (standalone, signals) with Tailwind v4, against the same Go API. See
+  `beta/README.md`. Until it replaces `frontend/`, login stays there.
 - `backend/` - Go, stdlib `net/http` with 1.22+ pattern routing
   (`mux.HandleFunc("GET /api/...", ...)` in `cmd/api/main.go`), no web
   framework. Postgres via `pgx`, no ORM - `internal/db/store.go` plus

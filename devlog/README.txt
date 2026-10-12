@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  2.0: dashboard home
+            2026-10-12-beta-dashboard.txt
+
 2026-10-12  Amelu 2.0 dashboard started in beta/
             2026-10-12-beta-scaffold.txt
 

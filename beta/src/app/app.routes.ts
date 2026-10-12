@@ -11,6 +11,10 @@ import { AccountAppearance } from './account-appearance/account-appearance';
 import { AccountApiKeys } from './account-api-keys/account-api-keys';
 import { OrganizationPage } from './organization-page/organization-page';
 import { ActivityPage } from './activity-page/activity-page';
+import { BillingLayout } from './billing-layout/billing-layout';
+import { BillingOverview } from './billing-overview/billing-overview';
+import { BillingPlans } from './billing-plans/billing-plans';
+import { BillingInvoices } from './billing-invoices/billing-invoices';
 import { NotFound } from './not-found/not-found';
 
 export const routes: Routes = [
@@ -34,6 +38,16 @@ export const routes: Routes = [
       },
       { path: 'organization', component: OrganizationPage, title: 'My Organization · Amelu' },
       { path: 'organization/activity', component: ActivityPage, title: 'Activity Log · Amelu' },
+      {
+        path: 'billing',
+        component: BillingLayout,
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          { path: 'overview', component: BillingOverview, title: 'Billing · Amelu' },
+          { path: 'plans', component: BillingPlans, title: 'Plans · Billing · Amelu' },
+          { path: 'invoices', component: BillingInvoices, title: 'Invoices · Billing · Amelu' },
+        ],
+      },
       { path: '**', component: NotFound, title: 'Page not found · Amelu' },
     ],
   },

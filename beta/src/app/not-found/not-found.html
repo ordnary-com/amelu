@@ -1,0 +1,12 @@
+<section class="w-full max-w-[480px] rounded-lg border border-line bg-surface p-6">
+  <p class="text-[11px] font-medium tracking-wide text-muted uppercase">Error 404</p>
+  <h1 class="mt-1.5 text-[22px] font-bold tracking-[-0.4px]">Page not found</h1>
+  <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
+    There's nothing at
+    <code class="rounded bg-bg px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{{ path() }}</code>. The page
+    may have moved, or it isn't part of the new dashboard yet.
+  </p>
+  <a routerLink="/" class="mt-5 inline-flex h-8 items-center rounded-md bg-accent px-2.5 text-[13px] font-medium text-white hover:bg-accent/80">
+    Go to the dashboard
+  </a>
+</section>

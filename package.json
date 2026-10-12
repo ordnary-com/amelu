@@ -6,7 +6,9 @@
     "dev": "concurrently -n frontend,backend -c blue,green \"pnpm dev:frontend\" \"pnpm dev:backend\"",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:backend": "bash -c 'cd backend && set -a && source .env && set +a && go run ./cmd/api'",
-    "build": "pnpm --filter frontend build"
+    "build": "pnpm --filter frontend build",
+    "dev:beta": "pnpm --filter beta start",
+    "build:beta": "pnpm --filter beta build"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

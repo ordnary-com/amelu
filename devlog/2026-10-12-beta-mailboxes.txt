@@ -1,0 +1,12 @@
+2.0: Mailboxes on a domain
+2026-10-12
+
+/domains/{id}/mailboxes and its pages in the beta dashboard: the list with
+filter, status badges and usage against the plan's per-domain limit, New
+mailbox (generated password shown once, then go to it or create another,
+blocked when the limit is reached), Import from CSV with a result per row,
+Default services and Default limits (0 shows as "No limit").
+Deleting from the list now asks first; the old list deleted on one click.
+The CSV help no longer says ForwardEmail, ExpirationDate and
+RemoveUponExpiration are "not implemented yet": the import applies them.
+InviteEmail is still ignored.

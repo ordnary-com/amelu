@@ -1,0 +1,211 @@
+<amelu-page-header
+  [title]="result() ? 'Mailbox added' : 'New mailbox'"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: base() },
+    { label: 'Mailboxes', link: base() + '/mailboxes' },
+    { label: 'New mailbox' },
+  ]"
+>
+  @if (!result()) {
+    Pick the address and its display name, then either generate a password or set one yourself.
+  }
+</amelu-page-header>
+
+@if (result(); as done) {
+  <div class="max-w-2xl space-y-5">
+    <amelu-alert kind="success" [title]="done.mailbox.address + ' was created'">
+      @if (done.mailbox.password) {
+        {{ done.generated ? 'With a generated password, shown only once.' : 'With the password you set.' }}
+      }
+    </amelu-alert>
+
+    @if (done.mailbox.password; as password) {
+      <section>
+        <h2 [class]="ui.sectionTitle">{{ done.generated ? 'Generated password' : 'Password' }}</h2>
+        <div [class]="ui.card + ' p-4'">
+          <div class="flex flex-wrap items-center gap-2">
+            <code class="min-w-0 flex-1 truncate rounded-md bg-bg px-2.5 py-1.5 font-mono text-[13px]">{{ password }}</code>
+            <button type="button" [class]="ui.outline" (click)="copy()">
+              <amelu-icon [name]="copied() ? 'check' : 'copy'" [size]="14" />
+              {{ copied() ? 'Copied' : 'Copy' }}
+            </button>
+          </div>
+          <p [class]="ui.hint">
+            Save it now. It can't be shown again, but you can set a new one from the mailbox at any time.
+          </p>
+        </div>
+      </section>
+    }
+
+    <div class="flex flex-wrap gap-2">
+      <a [routerLink]="base() + '/mailboxes/' + done.mailbox.id" [class]="ui.primary">Go to mailbox</a>
+      <button type="button" [class]="ui.outline" (click)="another()">Create another</button>
+      <a [routerLink]="base() + '/mailboxes'" [class]="ui.outline">Return to all mailboxes</a>
+    </div>
+  </div>
+} @else {
+  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <form class="min-w-0 space-y-6" autocomplete="off" (submit)="submit($event)">
+      @if (atLimit()) {
+        <amelu-alert kind="warning" title="This domain's mailboxes are all in use">
+          {{ usage()!.plan }} includes {{ usage()!.max }} {{ usage()!.max === 1 ? 'mailbox' : 'mailboxes' }} per domain.
+          <a routerLink="/billing/plans" class="font-bold underline">Upgrade</a> to add another.
+        </amelu-alert>
+      }
+      @if (error(); as message) {
+        <amelu-alert kind="error" title="The mailbox wasn't created" [dismissible]="true" (dismissed)="error.set(null)">
+          {{ message }}
+        </amelu-alert>
+      }
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Mailbox information</h2>
+        <div [class]="ui.card + ' space-y-4 p-4'">
+          <div>
+            <label for="mailbox-address" [class]="ui.label">Address</label>
+            <div
+              class="mt-1.5 flex h-9 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
+            >
+              <input
+                id="mailbox-address"
+                class="h-full w-full min-w-0 bg-transparent px-2.5 text-[13px] outline-none placeholder:text-muted"
+                placeholder="eg. myname"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                autofocus
+                required
+                [value]="localPart()"
+                (input)="localPart.set($any($event.target).value)"
+              />
+              <span class="flex h-full max-w-[60%] items-center truncate border-l border-line px-2.5 text-[13px] text-muted select-none">
+                &#64;{{ ctx.domain()?.name ?? '' }}
+              </span>
+            </div>
+          </div>
+          <label class="block">
+            <span [class]="ui.label">Name</span>
+            <input
+              [class]="ui.input"
+              placeholder="eg. John Smith"
+              autocomplete="off"
+              required
+              [value]="displayName()"
+              (input)="displayName.set($any($event.target).value)"
+            />
+            <span [class]="ui.hint + ' block'">Used for organizing your mailboxes in this panel.</span>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2 [class]="ui.sectionTitle">Password</h2>
+        <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Password method">
+          <label
+            class="flex cursor-pointer gap-3 rounded-lg bg-surface p-4"
+            [class]="method() === 'generate' ? 'border-2 border-accent' : 'border border-line'"
+          >
+            <input
+              type="radio"
+              name="password-method"
+              class="mt-0.5 accent-accent"
+              [checked]="method() === 'generate'"
+              (change)="method.set('generate')"
+            />
+            <span>
+              <span class="block text-[14px] font-semibold">Generate a password for me</span>
+              <span class="mt-0.5 block text-[13px] text-muted">A strong password, shown once after the mailbox is created.</span>
+            </span>
+          </label>
+          <label
+            class="flex cursor-pointer gap-3 rounded-lg bg-surface p-4"
+            [class]="method() === 'password' ? 'border-2 border-accent' : 'border border-line'"
+          >
+            <input
+              type="radio"
+              name="password-method"
+              class="mt-0.5 accent-accent"
+              [checked]="method() === 'password'"
+              (change)="method.set('password')"
+            />
+            <span>
+              <span class="block text-[14px] font-semibold">Set initial password</span>
+              <span class="mt-0.5 block text-[13px] text-muted">Type one yourself, for example to hand it over in person.</span>
+            </span>
+          </label>
+        </div>
+
+        @if (method() === 'password') {
+          <div [class]="ui.card + ' mt-3 p-4'">
+            <label for="mailbox-password" [class]="ui.label">Password</label>
+            <div class="flex items-center gap-2">
+              <input
+                id="mailbox-password"
+                [class]="ui.input"
+                [type]="showPassword() ? 'text' : 'password'"
+                autocomplete="new-password"
+                placeholder="eg. not 123456 or qwertz"
+                required
+                [value]="password()"
+                (input)="password.set($any($event.target).value)"
+              />
+              <button type="button" [class]="ui.outline + ' mt-1.5 h-9 flex-none'" (click)="showPassword.set(!showPassword())">
+                {{ showPassword() ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+          </div>
+        }
+      </section>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy() || atLimit()">
+          {{ busy() ? 'Creating...' : 'Create mailbox' }}
+        </button>
+        <a [routerLink]="base() + '/mailboxes'" class="text-[13px] font-medium text-muted hover:text-ink hover:underline">Cancel</a>
+      </div>
+    </form>
+
+    <aside class="space-y-6">
+      <section>
+        <h2 [class]="ui.sectionTitle">What happens next</h2>
+        <ol [class]="ui.card + ' space-y-4 p-4'">
+          @for (step of steps; track step.title; let i = $index) {
+            <li class="flex gap-3">
+              <span
+                class="flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-bold"
+                [class]="i === 0 ? 'bg-accent text-white' : 'bg-bg text-muted'"
+              >
+                {{ i + 1 }}
+              </span>
+              <span>
+                <span class="block text-[13px] font-semibold">{{ step.title }}</span>
+                <span class="block text-[13px] text-muted">{{ step.text }}</span>
+              </span>
+            </li>
+          }
+        </ol>
+      </section>
+
+      @if (usage(); as u) {
+        <section [class]="ui.card + ' p-4'">
+          <div class="flex items-baseline justify-between gap-3 text-[13px]">
+            <span class="text-muted">Mailboxes on this domain</span>
+            <span><span class="font-bold" [class.text-bad]="atLimit()">{{ u.used }}</span> of {{ u.max }}</span>
+          </div>
+        </section>
+      }
+
+      <section [class]="ui.card + ' p-4'">
+        <h2 class="text-[14px] font-bold">Adding many at once?</h2>
+        <p class="mt-1 text-[13px] leading-relaxed text-muted">
+          <a [routerLink]="base() + '/mailboxes/import'" class="font-medium text-link hover:underline">Import from CSV</a>
+          to create up to 100 mailboxes in one go. Change what new mailboxes may do under
+          <a [routerLink]="base() + '/mailboxes/services'" class="font-medium text-link hover:underline">default services</a>
+          and
+          <a [routerLink]="base() + '/mailboxes/limits'" class="font-medium text-link hover:underline">default limits</a>.
+        </p>
+      </section>
+    </aside>
+  </div>
+}

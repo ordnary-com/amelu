@@ -1,0 +1,130 @@
+<amelu-page-header
+  title="Default mailbox limits"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: base() },
+    { label: 'Mailboxes', link: base() + '/mailboxes' },
+    { label: 'Default limits' },
+  ]"
+>
+  Use mailbox limits to prevent abuse and keep costs under control. Each mailbox created will assume these default limits upon creation. These
+  settings have no effect on existing mailboxes.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="The limits weren't saved" [dismissible]="true" (dismissed)="error.set(null)">
+        {{ message }}
+      </amelu-alert>
+    }
+    @if (success()) {
+      <amelu-alert kind="success" title="Default limits saved" [dismissible]="true" (dismissed)="success.set(false)">
+        New mailboxes on {{ ctx.domain()?.name ?? 'this domain' }} start with these limits.
+      </amelu-alert>
+    }
+
+    @if (saved() === null) {
+      <div [class]="ui.card">
+        <amelu-empty-state title="The default limits couldn't be loaded" [error]="true" />
+      </div>
+    } @else {
+      <section>
+        <h2 [class]="ui.sectionTitle">Limits for new mailboxes</h2>
+        <div [class]="ui.card + ' grid gap-5 p-4 sm:grid-cols-2'">
+          <label class="block">
+            <span [class]="ui.label">Maximum stored messages</span>
+            @if (saved()) {
+              <div class="relative">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  [class]="ui.input + ' pr-20'"
+                  [value]="maxEmails()"
+                  (input)="set('emails', $any($event.target).value)"
+                />
+                <span class="pointer-events-none absolute top-1/2 right-2.5 mt-[3px] -translate-y-1/2 text-[12px] text-muted">messages</span>
+              </div>
+            } @else {
+              <span class="mt-1.5 block h-9 animate-pulse rounded-md bg-bg" aria-hidden="true"></span>
+            }
+            <span [class]="ui.hint + ' block'">
+              @if (maxEmails() === '0') {
+                No limit.
+              } @else {
+                Total messages a mailbox may hold.
+              }
+            </span>
+          </label>
+          <label class="block">
+            <span [class]="ui.label">Maximum disk usage</span>
+            @if (saved()) {
+              <div class="relative">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  inputmode="decimal"
+                  [class]="ui.input + ' pr-12'"
+                  [value]="maxDiskGb()"
+                  (input)="set('disk', $any($event.target).value)"
+                />
+                <span class="pointer-events-none absolute top-1/2 right-2.5 mt-[3px] -translate-y-1/2 text-[12px] text-muted">GB</span>
+              </div>
+            } @else {
+              <span class="mt-1.5 block h-9 animate-pulse rounded-md bg-bg" aria-hidden="true"></span>
+            }
+            <span [class]="ui.hint + ' block'">
+              @if (maxDiskGb() === '0') {
+                No limit.
+              } @else {
+                Total disk space a mailbox may use, in gigabytes.
+              }
+            </span>
+          </label>
+        </div>
+        @if (invalid()) {
+          <p class="mt-2 text-[12px] text-bad">Enter a number of 0 or more in both fields. Use 0 for no limit.</p>
+        }
+      </section>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" [class]="ui.primary" [disabled]="!dirty() || busy()">
+          {{ busy() ? 'Saving...' : 'Save changes' }}
+        </button>
+        @if (dirty()) {
+          <span class="text-[12px] text-muted">Unsaved changes</span>
+        }
+      </div>
+    }
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Totals, not throughput</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        These are total caps enforced by the mail server itself (total stored messages, total disk space), not a daily sending or receiving
+        limit. Use 0 for no limit.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Existing mailboxes</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        To alter existing mailboxes, open one from
+        <a [routerLink]="base() + '/mailboxes'" class="font-medium text-link hover:underline">all mailboxes</a>
+        and change its limits there.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Services</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Choose which services new mailboxes start with under
+        <a [routerLink]="base() + '/mailboxes/services'" class="font-medium text-link hover:underline">default services</a>.
+      </p>
+    </section>
+  </aside>
+</div>

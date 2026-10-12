@@ -1,0 +1,147 @@
+<section class="relative overflow-hidden rounded-lg bg-hero px-[22px] pt-16 pb-7 max-mobile:px-[18px] max-mobile:pt-14 max-mobile:pb-[22px]">
+  <!-- The lighter slanted panel on the right -->
+  <div class="absolute inset-y-0 right-0 w-[30%] bg-hero-light [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
+
+  <div class="absolute top-[18px] right-6 z-[1] flex gap-5 max-mobile:top-3.5 max-mobile:right-4 max-mobile:gap-4">
+    <a routerLink="/changelog" [class]="heroLink" aria-label="Changelog">
+      <amelu-icon name="map" [size]="16" /><span class="max-mobile:hidden">Changelog</span>
+    </a>
+    <a routerLink="/support" [class]="heroLink" aria-label="Support">
+      <amelu-icon name="lifebuoy" [size]="16" /><span class="max-mobile:hidden">Support</span>
+    </a>
+  </div>
+  <h1 class="relative text-[38px] font-bold tracking-[-0.01em] max-mobile:text-[30px]">
+    Hello{{ firstName() ? ', ' + firstName() : '' }}.
+  </h1>
+  <a routerLink="/organization/activity" class="relative mt-2 inline-block text-[17px] text-hero-ink hover:underline">
+    View all my activity
+  </a>
+</section>
+
+<amelu-quick-actions />
+
+<div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section>
+    <div [class]="sectionHeader">
+      <h2 [class]="cardTitle">
+        Your email domains
+        @if (domains(); as list) {
+          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
+        }
+      </h2>
+      <a routerLink="/domains" [class]="headerLink">View all</a>
+    </div>
+
+    @if (domains() === null) {
+      <amelu-empty-state class="rounded-lg border border-line" title="Your domains couldn't be loaded" [error]="true" />
+    } @else {
+      <!-- Same cards as the current dashboard's Domains page (frontend/src/pages/DomainsPage.tsx). -->
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+        @if (domains() === undefined) {
+          @for (i of [1, 2]; track i) {
+            <div class="flex min-h-[7.5rem] flex-col justify-center gap-2 rounded-lg border border-line p-4" aria-hidden="true">
+              <span class="h-3 w-32 animate-pulse rounded bg-bg"></span>
+              <span class="h-3 w-20 animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        } @else {
+          @for (domain of domains()!; track domain.id) {
+            <amelu-domain-card [domain]="domain" [health]="health()?.[domain.id]" />
+          }
+          <a
+            routerLink="/domains/new"
+            class="flex min-h-[7.5rem] items-center justify-center gap-2 rounded-lg border border-dashed border-line text-[14px] font-medium text-link hover:bg-bg/60"
+          >
+            <amelu-icon name="plus" [size]="18" />
+            Add a domain
+          </a>
+        }
+      </div>
+    }
+  </section>
+
+  <div class="space-y-6">
+    <section>
+      <div [class]="sectionHeader">
+        <h2 [class]="cardTitle">Your plan</h2>
+        <a routerLink="/billing/plans" [class]="headerLink">View plans</a>
+      </div>
+      <div [class]="panel">
+        @if (billing() === undefined) {
+          <p class="text-[13px] text-muted">Loading...</p>
+        } @else if (billing() === null) {
+          <amelu-empty-state class="-m-4" title="Your plan couldn't be loaded" [error]="true" [compact]="true" />
+        } @else {
+          <div class="flex items-center gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="text-[12px] text-muted">Current plan</div>
+              <div class="truncate text-[18px] leading-tight font-bold">{{ billing()!.plan.name }}</div>
+            </div>
+            <a
+              routerLink="/billing/plans"
+              class="rounded-md border border-accent px-2.5 py-1 text-[12px] font-bold text-link hover:bg-accent/10"
+            >
+              Upgrade
+            </a>
+          </div>
+
+          <div class="mt-4 space-y-3 border-t border-line pt-4">
+            @if (domainUsage(); as usage) {
+              <div>
+                <div class="flex items-baseline justify-between gap-3 text-[13px]">
+                  <span class="text-muted">Domains</span>
+                  <span [class.text-bad]="usage.over">
+                    <span class="font-bold">{{ usage.used }}</span> of {{ usage.limit }}
+                  </span>
+                </div>
+                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                  <div class="h-full rounded-full" [class]="usage.over ? 'bg-bad' : 'bg-accent'" [style.width.%]="usage.percent"></div>
+                </div>
+                @if (usage.over) {
+                  <p class="mt-1.5 text-[12px] text-bad">You're over your plan's domain limit.</p>
+                }
+              </div>
+            }
+            <div class="flex items-baseline justify-between gap-3 text-[13px]">
+              <span class="text-muted">Mailboxes per domain</span>
+              <span>Up to <span class="font-bold">{{ billing()!.plan.maxMailboxesPerDomain }}</span></span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section>
+      <div [class]="sectionHeader">
+        <h2 [class]="cardTitle">Latest invoice</h2>
+        <a routerLink="/billing/invoices" [class]="headerLink">View invoices</a>
+      </div>
+      <div [class]="panel">
+        @if (invoices() === undefined) {
+          <p class="text-[13px] text-muted">Loading...</p>
+        } @else if (latestInvoice(); as invoice) {
+          <div class="flex items-center gap-3">
+            <div class="min-w-0 flex-1">
+              <a
+                [href]="invoice.hostedInvoiceUrl"
+                target="_blank"
+                rel="noreferrer"
+                class="block truncate text-[14px] font-medium hover:underline"
+              >
+                {{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}
+              </a>
+              <div class="mt-0.5 truncate text-[12px] text-muted">
+                {{ invoice.number }} · {{ invoice.createdAt | date: 'd MMM y' }}
+              </div>
+            </div>
+            <span [class]="badge(invoiceStatus[invoice.status].tone)">{{ invoiceStatus[invoice.status].label }}</span>
+          </div>
+        } @else {
+          <amelu-empty-state class="-m-4" title="No invoices yet" [compact]="true">
+            They show up here once you're billed.
+          </amelu-empty-state>
+        }
+      </div>
+    </section>
+  </div>
+</div>

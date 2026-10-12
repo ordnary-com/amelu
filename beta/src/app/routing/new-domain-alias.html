@@ -1,0 +1,97 @@
+<amelu-page-header
+  title="New domain alias"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Domain aliases', link: '/domains/' + ctx.id() + '/domain-aliases' },
+    { label: 'New domain alias' },
+  ]"
+>
+  Mail sent to any address at the alias domain is delivered as if it was sent to the same address at
+  this domain.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The domain alias wasn't added"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Alias domain</h2>
+      <div [class]="ui.card + ' p-4'">
+        <label for="alias-domain" [class]="ui.label">Domain</label>
+        <input
+          id="alias-domain"
+          [class]="ui.input"
+          placeholder="eg. example.org"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          autofocus
+          required
+          [value]="name()"
+          (input)="name.set($any($event.target).value)"
+        />
+        @if (sameAsDomain()) {
+          <p class="mt-1 text-[12px] text-warn">
+            That's this domain itself. Enter a different domain you own.
+          </p>
+        } @else {
+          <p [class]="ui.hint">A domain you own, without "www." or an &#64;.</p>
+        }
+      </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+      <button
+        type="submit"
+        [class]="ui.primary"
+        [disabled]="!cleaned() || sameAsDomain() || busy()"
+      >
+        {{ busy() ? 'Adding...' : 'Create domain alias' }}
+      </button>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/domain-aliases'"
+        class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
+        >Cancel</a
+      >
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Don't forget DNS</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        You still need to point the alias domain's own MX records at the same mail servers. Until
+        then, mail for it keeps going wherever it goes today.
+      </p>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/dns'"
+        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+      >
+        See the MX records to use
+      </a>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Alias or separate domain?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        An alias shares every mailbox with {{ ctx.domain()?.name || 'this domain' }}. If the other
+        domain needs its own mailboxes, add it as a separate domain instead.
+      </p>
+      <a
+        routerLink="/domains/new"
+        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+        >Add a domain</a
+      >
+    </section>
+  </aside>
+</div>

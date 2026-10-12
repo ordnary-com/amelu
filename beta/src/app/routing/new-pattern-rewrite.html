@@ -1,0 +1,108 @@
+<amelu-page-header
+  title="New pattern rewrite"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Pattern rewrites', link: '/domains/' + ctx.id() + '/rewrites' },
+    { label: 'New rewrite' },
+  ]"
+>
+  Mail sent to an address matching the pattern is redirected to an existing mailbox instead of
+  bouncing.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (catchAll(); as catchAll) {
+      @if (!catchAll.address) {
+        <amelu-alert kind="warning" title="This domain has no catch-all recipient">
+          A rewrite only takes effect on mail that would otherwise hit the catch-all recipient, so
+          one has to be set first.
+          <a [routerLink]="'/domains/' + ctx.id() + '/catchall'" class="font-bold underline"
+            >Set a catch-all recipient</a
+          >
+        </amelu-alert>
+      }
+    }
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The rewrite wasn't created"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Rewrite</h2>
+      <div [class]="ui.card + ' space-y-5 p-4'">
+        <div>
+          <label for="rewrite-pattern" [class]="ui.label">Pattern</label>
+          <input
+            id="rewrite-pattern"
+            [class]="ui.input + ' font-mono'"
+            [placeholder]="'eg. sales-*@' + (ctx.domain()?.name || 'yourdomain.tld')"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            autofocus
+            required
+            [value]="pattern()"
+            (input)="pattern.set($any($event.target).value)"
+          />
+          <p [class]="ui.hint">Use * to match any run of characters.</p>
+        </div>
+
+        <amelu-mailbox-field
+          fieldId="rewrite-destination"
+          label="Redirect to mailbox"
+          [mailboxes]="mailboxes()"
+          [domainId]="ctx.id()"
+          [domainName]="ctx.domain()?.name ?? ''"
+          [(value)]="destination"
+        />
+      </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy()">
+        {{ busy() ? 'Creating...' : 'Create rewrite' }}
+      </button>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/rewrites'"
+        class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
+        >Cancel</a
+      >
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Examples</h2>
+      <ul class="mt-2 space-y-2 text-[13px]">
+        <li>
+          <code class="font-mono text-[12px]"
+            >sales-*&#64;{{ ctx.domain()?.name || 'yourdomain.tld' }}</code
+          >
+          <span class="block text-[12px] text-muted">Every address starting with sales-</span>
+        </li>
+        <li>
+          <code class="font-mono text-[12px]"
+            >*-invoices&#64;{{ ctx.domain()?.name || 'yourdomain.tld' }}</code
+          >
+          <span class="block text-[12px] text-muted">Every address ending in -invoices</span>
+        </li>
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Only for unknown addresses</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        This only takes effect on mail that would otherwise hit this domain's catch-all recipient.
+        Mail to an existing mailbox or alias is never rewritten.
+      </p>
+    </section>
+  </aside>
+</div>

@@ -1,0 +1,113 @@
+<amelu-page-header
+  title="New address alias"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Address aliases', link: '/domains/' + ctx.id() + '/aliases' },
+    { label: 'New alias' },
+  ]"
+>
+  Aliases redirect incoming messages to an existing mailbox and can coexist with mailboxes with the
+  same address.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The alias wasn't created"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle">Alias setup</h2>
+      <div [class]="ui.card + ' space-y-5 p-4'">
+        <div>
+          <label for="alias-address" [class]="ui.label">Original addressee</label>
+          <div
+            class="mt-1.5 flex h-9 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
+          >
+            <input
+              id="alias-address"
+              class="h-full w-full min-w-0 bg-transparent px-2.5 text-[13px] outline-none placeholder:text-muted"
+              placeholder="eg. nickname"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              autofocus
+              required
+              [value]="alias()"
+              (input)="alias.set($any($event.target).value)"
+            />
+            <span
+              class="flex h-full items-center border-l border-line px-2.5 text-[13px] text-muted select-none"
+              >&#64;{{ ctx.domain()?.name }}</span
+            >
+          </div>
+          <p [class]="ui.hint">
+            Only the local part is needed. Everything after the &#64; sign is removed, as aliasing
+            to other domains isn't possible.
+          </p>
+        </div>
+
+        <amelu-mailbox-field
+          fieldId="alias-destination"
+          label="Deliver to"
+          [mailboxes]="mailboxes()"
+          [domainId]="ctx.id()"
+          [domainName]="ctx.domain()?.name ?? ''"
+          [(value)]="destination"
+        />
+      </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+      <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy()">
+        {{ busy() ? 'Creating...' : 'Create alias' }}
+      </button>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/aliases'"
+        class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
+        >Cancel</a
+      >
+    </div>
+  </form>
+
+  <aside class="space-y-6">
+    @if (valid()) {
+      <section [class]="ui.card + ' p-4'">
+        <h2 class="text-[14px] font-bold">Preview</h2>
+        <p class="mt-2 text-[13px] leading-relaxed text-muted">
+          Mail to <span class="font-medium break-all text-ink">{{ preview().from }}</span> is
+          delivered to <span class="font-medium break-all text-ink">{{ preview().to }}</span
+          >.
+        </p>
+      </section>
+    }
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">One mailbox per alias</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Each alias address delivers to a single mailbox, and an address can only be used by one
+        alias on this domain. A mailbox can have as many aliases as you like.
+      </p>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Many at once?</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Paste a list of aliases and their mailboxes as CSV instead.
+      </p>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/aliases/import'"
+        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+        >Import from CSV</a
+      >
+    </section>
+  </aside>
+</div>

@@ -1,0 +1,142 @@
+<amelu-page-header
+  title="Catch-all recipient"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Catch-all recipient' },
+  ]"
+>
+  Mail sent to any address at this domain that doesn't match an existing mailbox or alias is
+  delivered here instead of bouncing.
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+    @if (saved(); as outcome) {
+      <amelu-alert
+        kind="success"
+        [title]="outcome === 'set' ? 'Catch-all recipient saved' : 'Catch-all turned off'"
+        [dismissible]="true"
+        (dismissed)="saved.set(null)"
+      >
+        @if (outcome === 'set') {
+          Mail to unknown addresses at {{ ctx.domain()?.name }} now goes to {{ current() }}.
+        } @else {
+          Mail to unknown addresses at {{ ctx.domain()?.name }} bounces again.
+        }
+      </amelu-alert>
+    }
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The catch-all recipient wasn't saved"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <section>
+      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+        Unmatched mail
+        @if (state() === 'ready') {
+          <span [class]="badge().class">{{ badge().label }}</span>
+        }
+      </h2>
+      <div [class]="ui.card">
+        @if (state() === 'failed') {
+          <amelu-empty-state title="The catch-all recipient couldn't be loaded" [error]="true" />
+        } @else {
+          <div class="p-4">
+            <label for="catchall-address" [class]="ui.label">Deliver unmatched mail to</label>
+            @if (state() === 'loading') {
+              <span
+                class="mt-1.5 block h-9 w-full animate-pulse rounded-md bg-bg"
+                aria-hidden="true"
+              ></span>
+            } @else {
+              <input
+                id="catchall-address"
+                type="email"
+                list="catchall-mailboxes"
+                [class]="ui.input"
+                [placeholder]="'eg. someone@' + (ctx.domain()?.name || 'yourdomain.tld')"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                [value]="address()"
+                (input)="address.set($any($event.target).value)"
+              />
+              <datalist id="catchall-mailboxes">
+                @for (mailbox of mailboxes() ?? []; track mailbox.id) {
+                  <option [value]="mailbox.address"></option>
+                }
+              </datalist>
+            }
+            <p [class]="ui.hint">Leave empty to bounce unmatched mail as usual.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 border-t border-line px-4 py-3">
+            <button
+              type="submit"
+              [class]="ui.primary"
+              [disabled]="state() !== 'ready' || !changed() || busy()"
+            >
+              {{ busy() ? 'Saving...' : 'Save' }}
+            </button>
+            @if (current()) {
+              <button
+                type="button"
+                class="h-8 cursor-pointer rounded-md px-3 text-[13px] font-medium text-bad hover:bg-bad/10 disabled:cursor-default disabled:opacity-50"
+                [disabled]="busy()"
+                (click)="save('')"
+              >
+                Turn off catch-all
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  </form>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Expect more spam</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Spammers often guess addresses. With a catch-all on, every guess lands in the recipient's
+        inbox instead of bouncing. An alias for each address you hand out is often the tidier
+        choice.
+      </p>
+      <a
+        [routerLink]="'/domains/' + ctx.id() + '/aliases'"
+        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+        >Address aliases</a
+      >
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Pattern rewrites</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Rewrites send part of the unmatched mail to other mailboxes, by pattern. They need a
+        catch-all recipient, so it can't be turned off while any exist.
+      </p>
+      <div
+        class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 text-[13px]"
+      >
+        <a
+          [routerLink]="'/domains/' + ctx.id() + '/rewrites'"
+          class="font-medium text-link hover:underline"
+          >Pattern rewrites</a
+        >
+        @if (rewrites() === undefined) {
+          <span class="h-3 w-8 animate-pulse rounded bg-bg"></span>
+        } @else if (rewrites(); as list) {
+          <span class="text-muted"
+            >{{ list.length }} {{ list.length === 1 ? 'rule' : 'rules' }}</span
+          >
+        }
+      </div>
+    </section>
+  </aside>
+</div>

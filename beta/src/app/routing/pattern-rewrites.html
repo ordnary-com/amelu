@@ -1,0 +1,158 @@
+<amelu-page-header
+  title="Pattern rewrites"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Pattern rewrites' },
+  ]"
+>
+  Redirect mail matching a wildcard pattern to an existing mailbox instead of bouncing.
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/rewrites/new'" [class]="ui.primary">
+    <amelu-icon name="plus" [size]="14" />
+    New pattern rewrite
+  </a>
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section class="min-w-0 space-y-4">
+    @if (catchAll(); as catchAll) {
+      @if (!catchAll.address) {
+        <amelu-alert kind="warning" title="Set a catch-all recipient first">
+          Rewrites only take effect on mail that would otherwise go to this domain's catch-all
+          recipient, and none is set.
+          <a [routerLink]="'/domains/' + ctx.id() + '/catchall'" class="font-bold underline"
+            >Set a catch-all recipient</a
+          >
+        </amelu-alert>
+      }
+    }
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The pattern rewrite wasn't removed"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <div>
+      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+        Rewrites
+        @if (rewrites(); as list) {
+          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
+            list.length
+          }}</span>
+        }
+      </h2>
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (rewrites() === null) {
+          <amelu-empty-state title="The pattern rewrites couldn't be loaded" [error]="true" />
+        } @else if (rewrites(); as list) {
+          <ul>
+            @for (rewrite of list; track rewrite.id) {
+              <li
+                class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-bg/60"
+              >
+                <div class="min-w-0 flex-1">
+                  <div class="truncate font-mono text-[13px] font-medium">
+                    {{ rewrite.pattern }}
+                  </div>
+                  <div class="truncate text-[12px] text-muted">
+                    Redirects to {{ rewrite.destination }}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
+                  (click)="deleteTarget.set(rewrite)"
+                >
+                  Delete
+                </button>
+              </li>
+            } @empty {
+              <li>
+                <amelu-empty-state title="No pattern rewrites yet">
+                  Catch a whole family of addresses, like everything starting with sales-, in one
+                  mailbox.
+                  <a
+                    actions
+                    [routerLink]="'/domains/' + ctx.id() + '/rewrites/new'"
+                    [class]="ui.primary"
+                  >
+                    <amelu-icon name="plus" [size]="14" />
+                    New pattern rewrite
+                  </a>
+                </amelu-empty-state>
+              </li>
+            }
+          </ul>
+        } @else {
+          <amelu-list-skeleton />
+        }
+      </div>
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Writing a pattern</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Use <code class="rounded bg-bg px-1 font-mono text-[12px]">*</code> to match any run of
+        characters:
+      </p>
+      <ul class="mt-2 space-y-1.5 text-[13px]">
+        <li>
+          <code class="font-mono text-[12px]"
+            >sales-*&#64;{{ ctx.domain()?.name || 'yourdomain.tld' }}</code
+          >
+          <span class="block text-[12px] text-muted">sales-eu, sales-us, sales-2026...</span>
+        </li>
+        <li>
+          <code class="font-mono text-[12px]"
+            >*-invoices&#64;{{ ctx.domain()?.name || 'yourdomain.tld' }}</code
+          >
+          <span class="block text-[12px] text-muted">acme-invoices, shop-invoices...</span>
+        </li>
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Where rewrites apply</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Existing mailboxes and aliases always win. A rewrite only catches mail that would otherwise
+        hit the catch-all recipient, and sends it to its own mailbox instead.
+      </p>
+      <div
+        class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 text-[13px]"
+      >
+        <span class="text-muted">Catch-all recipient</span>
+        @if (catchAll() === undefined) {
+          <span class="h-3 w-24 animate-pulse rounded bg-bg"></span>
+        } @else if (catchAll() === null) {
+          <span class="text-muted">Unavailable</span>
+        } @else {
+          <a
+            [routerLink]="'/domains/' + ctx.id() + '/catchall'"
+            class="truncate font-medium text-link hover:underline"
+          >
+            {{ catchAll()?.address || 'Not set' }}
+          </a>
+        }
+      </div>
+    </section>
+  </aside>
+</div>
+
+@if (deleteTarget(); as target) {
+  <amelu-confirm-delete
+    [title]="'Delete this rewrite?'"
+    [busy]="deleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleteTarget.set(null)"
+  >
+    Mail matching {{ target.pattern }} stops going to {{ target.destination }} and lands with the
+    catch-all recipient again.
+  </amelu-confirm-delete>
+}

@@ -1,0 +1,125 @@
+<amelu-page-header
+  title="Bcc. captures"
+  [crumbs]="[
+    { label: 'Email Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Bcc. captures' },
+  ]"
+>
+  Silently deliver a copy of mail matching a wildcard pattern to another address, without affecting
+  normal delivery.
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/bccs/new'" [class]="ui.primary">
+    <amelu-icon name="plus" [size]="14" />
+    New Bcc. capture
+  </a>
+</amelu-page-header>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <section class="min-w-0 space-y-4">
+    @if (error(); as message) {
+      <amelu-alert
+        kind="error"
+        title="The Bcc. capture wasn't removed"
+        [dismissible]="true"
+        (dismissed)="error.set(null)"
+      >
+        {{ message }}
+      </amelu-alert>
+    }
+
+    <div>
+      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+        Captures
+        @if (captures(); as list) {
+          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
+            list.length
+          }}</span>
+        }
+      </h2>
+      <div [class]="ui.card + ' overflow-hidden'">
+        @if (captures() === null) {
+          <amelu-empty-state title="The Bcc. captures couldn't be loaded" [error]="true" />
+        } @else if (captures(); as list) {
+          <ul>
+            @for (capture of list; track capture.id) {
+              <li
+                class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-bg/60"
+              >
+                <div class="min-w-0 flex-1">
+                  <div class="truncate font-mono text-[13px] font-medium">
+                    {{ capture.pattern }}
+                  </div>
+                  <div class="truncate text-[12px] text-muted">Copy to {{ capture.capture }}</div>
+                </div>
+                <button
+                  type="button"
+                  class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
+                  (click)="deleteTarget.set(capture)"
+                >
+                  Delete
+                </button>
+              </li>
+            } @empty {
+              <li>
+                <amelu-empty-state title="No Bcc. captures yet">
+                  Keep a copy of matching mail in an archive or a colleague's mailbox, without the
+                  sender or recipient noticing.
+                  <a
+                    actions
+                    [routerLink]="'/domains/' + ctx.id() + '/bccs/new'"
+                    [class]="ui.primary"
+                  >
+                    <amelu-icon name="plus" [size]="14" />
+                    New Bcc. capture
+                  </a>
+                </amelu-empty-state>
+              </li>
+            }
+          </ul>
+        } @else {
+          <amelu-list-skeleton />
+        }
+      </div>
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">How captures work</h2>
+      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          Applies to mail delivered to any mailbox on this domain.
+        </li>
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          The original is delivered as normal; the copy goes out on the side.
+        </li>
+        <li class="flex gap-2.5">
+          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+          The copy address can be on any domain, for example an archive.
+        </li>
+      </ul>
+    </section>
+
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">Mind the privacy rules</h2>
+      <p class="mt-1 text-[13px] leading-relaxed text-muted">
+        Copying someone's mail without them knowing can be restricted where you or they live. Let
+        mailbox users know when their mail is archived.
+      </p>
+    </section>
+  </aside>
+</div>
+
+@if (deleteTarget(); as target) {
+  <amelu-confirm-delete
+    [title]="'Delete this capture?'"
+    [busy]="deleting()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="deleteTarget.set(null)"
+  >
+    Mail matching {{ target.pattern }} stops being copied to {{ target.capture }}. Copies already
+    delivered stay where they are.
+  </amelu-confirm-delete>
+}

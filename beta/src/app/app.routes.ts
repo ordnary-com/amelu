@@ -33,6 +33,7 @@ export const routes: Routes = [
           { path: '', pathMatch: 'full', component: DomainDetail, title: 'Domain · Amelu' },
           { path: '', loadChildren: () => import('./mailboxes/routes').then((m) => m.ROUTES) },
           { path: '', loadChildren: () => import('./mailbox/routes').then((m) => m.ROUTES) },
+          { path: '', loadChildren: () => import('./routing/routes').then((m) => m.ROUTES) },
         ],
       },
       {

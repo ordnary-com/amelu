@@ -1,0 +1,16 @@
+Amelu 2.0 dashboard started in beta/
+2026-10-12
+
+A new Angular 22 app in beta/ (standalone components, signals, zoneless,
+Tailwind v4 through @tailwindcss/postcss) that rebuilds the customer
+dashboard page for page, against the same Go API. It's a pnpm workspace
+package next to frontend/: pnpm dev:beta serves it on :4200 and proxies
+/api to :8081 (proxy.conf.json), so the localhost session cookie from the
+current dashboard is reused and no CORS change was needed. Login stays in
+the current dashboard for now.
+This commit has the frame: top bar with the ordnary-console accent strip and
+account menu (plan, organization, theme, sign out), the sidebar with a menu
+column per level as in the current dashboard, dark mode by default with a
+light/system choice stored in localStorage (amelu-theme), Source Sans 3, and
+the shared pieces: api.ts, ui.ts, status.ts badges, solid alerts, empty
+states, page header with breadcrumb.

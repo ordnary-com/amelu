@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-12  Maintenance notice on app.amelu.org
+            2026-10-12-maintenance-notice.txt
+
 2026-10-12  Amelu account stays linked when the Ordnary email changes
             2026-10-12-ordnary-account-linked-by-id.txt
 

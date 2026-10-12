@@ -38,6 +38,7 @@ type profileResponse struct {
 	OrganizationName string  `json:"organizationName"`
 	Role             string  `json:"role"`
 	LastSignInAt     *string `json:"lastSignInAt,omitempty"`
+	AvatarURL        string  `json:"avatarUrl,omitempty"`
 }
 
 func toProfileResponse(p *db.CustomerProfile) profileResponse {
@@ -53,6 +54,7 @@ func toProfileResponse(p *db.CustomerProfile) profileResponse {
 		OrganizationID:   p.OrganizationID,
 		OrganizationName: p.OrganizationName,
 		Role:             p.Role,
+		AvatarURL:        p.AvatarURL.String,
 	}
 	if p.LastSignInAt.Valid {
 		formatted := p.LastSignInAt.Time.Format(http.TimeFormat)

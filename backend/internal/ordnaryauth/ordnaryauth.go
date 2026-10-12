@@ -54,6 +54,7 @@ type User struct {
 	Name          string
 	Email         string
 	EmailVerified bool
+	Picture       string
 }
 
 // loginState is the shape of the signed amelu_ordnary_oauth cookie carried
@@ -204,6 +205,7 @@ func (c *Config) fetchUserInfo(ctx context.Context, accessToken string) (*User, 
 		Name          string `json:"name"`
 		Email         string `json:"email"`
 		EmailVerified bool   `json:"email_verified"`
+		Picture       string `json:"picture"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, err
@@ -218,7 +220,7 @@ func (c *Config) fetchUserInfo(ctx context.Context, accessToken string) (*User, 
 	if name == "" {
 		name = info.Email
 	}
-	return &User{ID: info.Sub, Name: name, Email: info.Email, EmailVerified: info.EmailVerified}, nil
+	return &User{ID: info.Sub, Name: name, Email: info.Email, EmailVerified: info.EmailVerified, Picture: info.Picture}, nil
 }
 
 func parseErrorResponse(resp *http.Response) error {

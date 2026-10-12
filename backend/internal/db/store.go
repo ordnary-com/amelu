@@ -46,6 +46,7 @@ type CustomerProfile struct {
 	OrganizationName string
 	Role             string
 	LastSignInAt     sql.NullTime
+	AvatarURL        sql.NullString
 }
 
 type Domain struct {
@@ -259,13 +260,13 @@ func (s *Store) GetCustomerByUsername(ctx context.Context, username string) (*Cu
 func (s *Store) GetCustomerProfile(ctx context.Context, customerID string) (*CustomerProfile, error) {
 	p := &CustomerProfile{}
 	err := s.conn.QueryRowContext(ctx, `
-		SELECT c.id, c.email, c.name, c.plan_tier_id, pt.name, o.id, o.name, m.role, c.last_sign_in_at, c.first_name, c.last_name, c.username
+		SELECT c.id, c.email, c.name, c.plan_tier_id, pt.name, o.id, o.name, m.role, c.last_sign_in_at, c.first_name, c.last_name, c.username, c.avatar_url
 		FROM customers c
 		JOIN plan_tiers pt ON pt.id = c.plan_tier_id
 		JOIN organizations o ON o.id = c.organization_id
 		JOIN organization_members m ON m.customer_id = c.id
 		WHERE c.id = $1
-	`, customerID).Scan(&p.ID, &p.Email, &p.Name, &p.PlanTierID, &p.PlanTierName, &p.OrganizationID, &p.OrganizationName, &p.Role, &p.LastSignInAt, &p.FirstName, &p.LastName, &p.Username)
+	`, customerID).Scan(&p.ID, &p.Email, &p.Name, &p.PlanTierID, &p.PlanTierName, &p.OrganizationID, &p.OrganizationName, &p.Role, &p.LastSignInAt, &p.FirstName, &p.LastName, &p.Username, &p.AvatarURL)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -273,6 +274,11 @@ func (s *Store) GetCustomerProfile(ctx context.Context, customerID string) (*Cus
 		return nil, err
 	}
 	return p, nil
+}
+
+func (s *Store) UpdateCustomerAvatarURL(ctx context.Context, customerID, avatarURL string) error {
+	_, err := s.conn.ExecContext(ctx, `UPDATE customers SET avatar_url = NULLIF($2, '') WHERE id = $1`, customerID, avatarURL)
+	return err
 }
 
 func (s *Store) UpdateCustomerName(ctx context.Context, customerID, name string) error {

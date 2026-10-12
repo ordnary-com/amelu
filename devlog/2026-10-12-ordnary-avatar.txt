@@ -1,0 +1,11 @@
+Ordnary profile picture stored on sign-in
+2026-10-12
+
+The dashboard had no picture of the signed-in person; Ordnary already has
+one per account. ordnaryauth now reads the OIDC "picture" claim from
+/api/oauth/userinfo into User.Picture, and the Ordnary callback writes it to
+the new customers.avatar_url column (migration 0029) on every login, so a
+changed photo in Ordnary shows up on the next sign-in. An empty claim clears
+the column (NULLIF in UpdateCustomerAvatarURL). GET /api/me returns it as
+avatarUrl, omitted when there is none. A failed write is logged and doesn't
+block the login.

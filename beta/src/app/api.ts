@@ -124,10 +124,31 @@ export interface CreatedApiKey extends ApiKey {
   key: string;
 }
 
-/** The API's {"error": "..."} message, or the fallback when there isn't one. */
+// Mirrors the Go API's error body (handlers/json.go). For server faults
+// `error` already ends in a link to https://amelu.org/docs/errors#CODE.
+export interface ApiErrorBody {
+  error: string;
+  code?: string;
+  status?: number;
+  requestId?: string;
+  detail?: string;
+}
+
+/**
+ * The API's error sentence, or the fallback when there isn't one. Server
+ * faults get the request id appended so a customer can quote it.
+ */
 export function errorMessage(err: unknown, fallback: string): string {
-  if (err instanceof HttpErrorResponse && typeof err.error?.error === 'string') return err.error.error;
-  return fallback;
+  if (!(err instanceof HttpErrorResponse) || typeof err.error?.error !== 'string') return fallback;
+  const body = err.error as ApiErrorBody;
+  if (err.status >= 500 && body.requestId) return `${body.error} (request ${body.requestId})`;
+  return body.error;
+}
+
+/** The API's stable error code, e.g. MAIL_CLUSTER_UNREACHABLE, if the response carried one. */
+export function errorCode(err: unknown): string | undefined {
+  if (err instanceof HttpErrorResponse && typeof err.error?.code === 'string') return err.error.code;
+  return undefined;
 }
 
 export type BillingInterval = 'monthly' | 'annual';

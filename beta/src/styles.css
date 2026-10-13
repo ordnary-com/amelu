@@ -102,3 +102,38 @@
     @apply bg-bg font-sans text-[15px] leading-[1.4] text-ink antialiased;
   }
 }
+
+/* Full-screen loading state, as in the current dashboard (frontend/public/app.css). */
+.app-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  background-color: var(--chrome);
+}
+
+.app-loading::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 3px;
+  background-color: rgb(255 255 255 / 0.85);
+  animation: app-loading-bar 1.2s ease-in-out infinite;
+}
+
+@keyframes app-loading-bar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading::before {
+    animation-duration: 2.4s;
+  }
+}

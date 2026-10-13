@@ -12,10 +12,11 @@ import { DomainHealthChecks } from '../domain-health';
 import { DomainCard } from '../domain-card/domain-card';
 import { INVOICE_STATUS, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
+import { BetaBanner } from '../beta-banner/beta-banner';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard, BetaBanner],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-4' },

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-13  Webmail on webmail.amelu.org
+            2026-10-13-webmail.txt
+
 2026-10-13  2.0: the account confirmation only right after signing in
             2026-10-13-beta-account-found-once.txt
 

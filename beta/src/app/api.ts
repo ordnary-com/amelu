@@ -62,6 +62,9 @@ export interface Domain {
   status: 'provisioning' | 'dns_pending' | 'active' | 'failed' | 'suspended';
   createdAt: string;
   verifiedAt?: string;
+  /** The signed-in customer's own star and drag-and-drop position. */
+  favorite: boolean;
+  position?: number;
 }
 
 export interface DnsRecordCheck {
@@ -176,6 +179,14 @@ export class Api {
 
   listDomains() {
     return this.http.get<Domain[]>('/api/domains');
+  }
+
+  setDomainFavorite(id: string, favorite: boolean) {
+    return this.http.put<{ favorite: boolean }>(`/api/domains/${id}/favorite`, { favorite });
+  }
+
+  setDomainOrder(domainIds: string[]) {
+    return this.http.put<void>('/api/domains/order', { domainIds });
   }
 
   createDomain(name: string) {

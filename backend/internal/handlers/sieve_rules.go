@@ -421,7 +421,7 @@ func (a *App) CreatePatternRewrite(w http.ResponseWriter, r *http.Request) {
 
 	catchallLocalPart, err := a.currentCatchallLocalPart(r.Context(), domain)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeUpstreamError(w, "", err)
 		return
 	}
 	if catchallLocalPart == "" {
@@ -438,7 +438,7 @@ func (a *App) CreatePatternRewrite(w http.ResponseWriter, r *http.Request) {
 
 	if err := a.redeployPatternRewrites(r.Context(), domain, catchallLocalPart); err != nil {
 		a.Store.DeletePatternRewrite(r.Context(), domain.ID, created.ID)
-		writeError(w, http.StatusBadGateway, "could not deploy pattern rewrite to mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not deploy pattern rewrite to mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "pattern_rewrite.created", fmt.Sprintf("Added pattern rewrite %s -> %s", pattern, destination))
@@ -471,11 +471,11 @@ func (a *App) DeletePatternRewrite(w http.ResponseWriter, r *http.Request) {
 
 	catchallLocalPart, err := a.currentCatchallLocalPart(r.Context(), domain)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeUpstreamError(w, "", err)
 		return
 	}
 	if err := a.redeployPatternRewrites(r.Context(), domain, catchallLocalPart); err != nil {
-		writeError(w, http.StatusBadGateway, "rule deleted but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "rule deleted but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "pattern_rewrite.deleted", "Removed a pattern rewrite")
@@ -555,7 +555,7 @@ func (a *App) CreateBccCapture(w http.ResponseWriter, r *http.Request) {
 
 	if err := a.redeployToAllMailboxes(r.Context(), domain); err != nil {
 		a.Store.DeleteBccCapture(r.Context(), domain.ID, created.ID)
-		writeError(w, http.StatusBadGateway, "could not deploy bcc capture to mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not deploy bcc capture to mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "bcc_capture.created", fmt.Sprintf("Added bcc capture %s -> %s", pattern, capture))
@@ -587,7 +587,7 @@ func (a *App) DeleteBccCapture(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.redeployToAllMailboxes(r.Context(), domain); err != nil {
-		writeError(w, http.StatusBadGateway, "rule deleted but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "rule deleted but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "bcc_capture.deleted", "Removed a bcc capture")

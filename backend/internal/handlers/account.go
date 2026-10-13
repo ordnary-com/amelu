@@ -136,7 +136,7 @@ func (a *App) TerminateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := range domains {
 		if err := a.destroyDomainInStalwart(r.Context(), &domains[i]); err != nil {
-			writeError(w, http.StatusBadGateway, err.Error())
+			writeUpstreamError(w, "", err)
 			return
 		}
 	}

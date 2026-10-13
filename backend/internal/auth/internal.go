@@ -43,11 +43,11 @@ func SignInternalRequest(secret, method, path string, at time.Time) string {
 func RequireInternal(secret string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if secret == "" {
-			http.Error(w, `{"error":"internal jobs are not configured"}`, http.StatusServiceUnavailable)
+			writeError(w, http.StatusServiceUnavailable, "SERVICE_UNAVAILABLE", "internal jobs are not configured")
 			return
 		}
 		if !VerifySignedHeader(secret, r.Header.Get(InternalAuthHeader), r.Method, r.URL.Path) {
-			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
 			return
 		}
 		next(w, r)

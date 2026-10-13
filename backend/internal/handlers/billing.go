@@ -277,7 +277,7 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	stripePriceID, err := resolveStripePrice(priceRef)
 	if err != nil {
 		log.Printf("stripe: resolve price %s: %v", priceRef, err)
-		writeError(w, http.StatusBadGateway, "could not start checkout"+stripeErrorSuffix(err))
+		writeStripeError(w, "could not start checkout", err)
 		return
 	}
 
@@ -322,7 +322,7 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		log.Printf("stripe: create checkout session: %v", err)
-		writeError(w, http.StatusBadGateway, "could not start checkout"+stripeErrorSuffix(err))
+		writeStripeError(w, "could not start checkout", err)
 		return
 	}
 	a.Store.LogOrganizationAudit(r.Context(), actor.OrganizationID.String, &actor.ID, actor.Email,
@@ -522,6 +522,15 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 // to, e.g. " (resource_missing: line_items[0][price])", so a failure shown
 // to the customer can be traced without the container's logs. Stripe's own
 // message is left out: it can echo IDs and isn't written for customers.
+func writeStripeError(w http.ResponseWriter, what string, err error) {
+	var stripeErr *stripe.Error
+	if errors.As(err, &stripeErr) && stripeErr.Code != "" {
+		writeErrorCode(w, http.StatusBadGateway, "STRIPE_"+strings.ToUpper(string(stripeErr.Code)), what+stripeErrorSuffix(err), err.Error())
+		return
+	}
+	writeErrorCode(w, http.StatusBadGateway, "STRIPE_ERROR", what, err.Error())
+}
+
 func stripeErrorSuffix(err error) string {
 	var stripeErr *stripe.Error
 	if !errors.As(err, &stripeErr) || stripeErr.Code == "" {

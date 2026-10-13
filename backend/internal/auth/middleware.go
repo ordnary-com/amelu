@@ -24,7 +24,7 @@ func Require(store *db.Store, next http.HandlerFunc) http.HandlerFunc {
 		if key, ok := APIKeyFromRequest(r); ok {
 			customer, err := store.GetCustomerByAPIKeyHash(r.Context(), HashToken(key))
 			if err != nil {
-				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
 				return
 			}
 			next(w, r.WithContext(context.WithValue(r.Context(), customerContextKey, customer)))
@@ -47,13 +47,13 @@ func requireSession(store *db.Store, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token, err := TokenFromRequest(r)
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
 			return
 		}
 
 		customer, err := store.GetCustomerBySessionToken(r.Context(), HashToken(token))
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
 			return
 		}
 

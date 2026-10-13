@@ -44,9 +44,27 @@ func toMailboxResponse(m *db.Mailbox, domainName string) mailboxResponse {
 type httpError struct {
 	status  int
 	message string
+	// cause is the upstream error behind a 502, so the handler can report
+	// it with a proper code and detail via writeHTTPError.
+	cause error
 }
 
-func (e *httpError) Error() string { return e.message }
+func (e *httpError) Error() string {
+	if e.cause != nil {
+		return e.message + ": " + e.cause.Error()
+	}
+	return e.message
+}
+
+// writeHTTPError reports an error from createMailbox and friends.
+func writeHTTPError(w http.ResponseWriter, err error) {
+	var he *httpError
+	if errors.As(err, &he) && he.cause != nil {
+		writeUpstreamError(w, he.message, he.cause)
+		return
+	}
+	writeHTTPError(w, err)
+}
 
 func errStatus(err error) int {
 	var he *httpError
@@ -65,35 +83,35 @@ func errStatus(err error) int {
 func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.Domain, rawLocalPart, displayName, password string) (*db.Mailbox, string, error) {
 	localPart := strings.ToLower(strings.TrimSpace(rawLocalPart))
 	if localPart == "" {
-		return nil, "", &httpError{http.StatusBadRequest, "localPart is required"}
+		return nil, "", &httpError{status: http.StatusBadRequest, message: "localPart is required"}
 	}
 
 	_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, planTierID)
 	if err != nil {
-		return nil, "", &httpError{http.StatusInternalServerError, "could not check plan limits"}
+		return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
 	}
 	mailboxCount, err := a.Store.CountMailboxes(ctx, domain.ID)
 	if err != nil {
-		return nil, "", &httpError{http.StatusInternalServerError, "could not check plan limits"}
+		return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
 	}
 	if mailboxCount >= maxMailboxesPerDomain {
-		return nil, "", &httpError{http.StatusForbidden, "mailbox limit reached for your plan"}
+		return nil, "", &httpError{status: http.StatusForbidden, message: "mailbox limit reached for your plan"}
 	}
 
 	if password == "" {
 		password, err = generatePassword()
 		if err != nil {
-			return nil, "", &httpError{http.StatusInternalServerError, "could not generate password"}
+			return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not generate password"}
 		}
 	}
 
 	if _, err := a.Stalwart.CreateMailbox(ctx, localPart, domain.Name, password); err != nil {
-		return nil, "", &httpError{http.StatusBadGateway, "failed to create mailbox " + localPart + " in mail cluster: " + err.Error()}
+		return nil, "", &httpError{status: http.StatusBadGateway, message: "failed to create mailbox " + localPart + " in mail cluster", cause: err}
 	}
 
 	mailbox, err := a.Store.CreateMailbox(ctx, domain.ID, localPart, displayName)
 	if err != nil {
-		return nil, "", &httpError{http.StatusConflict, "mailbox " + localPart + " already exists or could not be recorded"}
+		return nil, "", &httpError{status: http.StatusConflict, message: "mailbox " + localPart + " already exists or could not be recorded"}
 	}
 
 	// Best-effort, same as deployDomainWideRulesToMailbox below - a hiccup
@@ -191,7 +209,7 @@ func (a *App) CreateMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 	mailbox, usedPassword, err := a.createMailbox(r.Context(), planTierID, domain, req.LocalPart, req.DisplayName, req.Password)
 	if err != nil {
-		writeError(w, errStatus(err), err.Error())
+		writeHTTPError(w, err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.created", "Mailbox "+mailbox.LocalPart+"@"+domain.Name+" created")
@@ -309,7 +327,7 @@ func (a *App) DeleteMailbox(w http.ResponseWriter, r *http.Request) {
 	// If it's already gone from Stalwart (e.g. removed out-of-band), that's
 	// fine - just clean up our own record of it.
 	if err := a.Stalwart.DeleteMailbox(r.Context(), mailbox.LocalPart, domain.Name); err != nil && !errors.Is(err, stalwart.ErrNotFound) {
-		writeError(w, http.StatusBadGateway, "failed to delete mailbox in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to delete mailbox in mail cluster", err)
 		return
 	}
 
@@ -340,7 +358,7 @@ func (a *App) SuspendMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SuspendMailbox(r.Context(), mailbox.LocalPart, domain.Name); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to suspend mailbox in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to suspend mailbox in mail cluster", err)
 		return
 	}
 
@@ -373,7 +391,7 @@ func (a *App) ActivateMailbox(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.ActivateMailbox(r.Context(), mailbox.LocalPart, domain.Name); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to activate mailbox in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to activate mailbox in mail cluster", err)
 		return
 	}
 
@@ -527,7 +545,7 @@ func (a *App) ImportMailboxesCSV(w http.ResponseWriter, r *http.Request) {
 
 		mailbox, usedPassword, err := a.createMailbox(r.Context(), planTierID, domain, localPart, displayName, password)
 		if err != nil {
-			results = append(results, importMailboxResult{Address: localPart + "@" + domain.Name, Error: err.Error()})
+			results = append(results, importMailboxResult{Address: localPart + "@" + domain.Name, Error: upstreamReason(err)})
 			continue
 		}
 

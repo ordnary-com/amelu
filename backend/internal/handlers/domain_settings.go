@@ -27,7 +27,7 @@ func (a *App) ListDomainAliases(w http.ResponseWriter, r *http.Request) {
 
 	stalwartDomain, err := a.Stalwart.GetDomain(r.Context(), domain.Name)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not load domain from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not load domain from mail cluster", err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (a *App) CreateDomainAlias(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.AddDomainAlias(r.Context(), domain.Name, aliasName); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to add domain alias in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to add domain alias in mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "domain_alias.created", "Added domain alias "+aliasName)
@@ -97,7 +97,7 @@ func (a *App) DeleteDomainAlias(w http.ResponseWriter, r *http.Request) {
 	aliasName := r.PathValue("alias")
 
 	if err := a.Stalwart.RemoveDomainAlias(r.Context(), domain.Name, aliasName); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to remove domain alias in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to remove domain alias in mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "domain_alias.deleted", "Removed domain alias "+aliasName)
@@ -122,7 +122,7 @@ func (a *App) GetCatchAll(w http.ResponseWriter, r *http.Request) {
 
 	stalwartDomain, err := a.Stalwart.GetDomain(r.Context(), domain.Name)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not load domain from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not load domain from mail cluster", err)
 		return
 	}
 	resp := catchAllResponse{}
@@ -159,7 +159,7 @@ func (a *App) UpdateCatchAll(w http.ResponseWriter, r *http.Request) {
 
 	stalwartDomain, err := a.Stalwart.GetDomain(r.Context(), domain.Name)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not load domain from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not load domain from mail cluster", err)
 		return
 	}
 	oldAddress := ""
@@ -180,14 +180,14 @@ func (a *App) UpdateCatchAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetCatchAllAddress(r.Context(), domain.Name, address); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to update catch-all in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to update catch-all in mail cluster", err)
 		return
 	}
 
 	oldLocalPart := strings.TrimSuffix(oldAddress, "@"+domain.Name)
 	newLocalPart := strings.TrimSuffix(address, "@"+domain.Name)
 	if err := a.syncPatternRewritesAfterCatchallChange(r.Context(), domain, oldLocalPart, newLocalPart); err != nil {
-		writeError(w, http.StatusBadGateway, "catch-all updated but pattern rewrites could not be moved: "+err.Error())
+		writeUpstreamError(w, "catch-all updated but pattern rewrites could not be moved", err)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (a *App) DeactivateDomain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetDomainEnabled(r.Context(), domain.Name, false); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to deactivate domain in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to deactivate domain in mail cluster", err)
 		return
 	}
 	if err := a.Store.UpdateDomainStatus(r.Context(), domain.ID, "suspended", ""); err != nil {
@@ -244,7 +244,7 @@ func (a *App) ReactivateDomain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetDomainEnabled(r.Context(), domain.Name, true); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to reactivate domain in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to reactivate domain in mail cluster", err)
 		return
 	}
 	if err := a.Store.UpdateDomainStatus(r.Context(), domain.ID, "dns_pending", ""); err != nil {

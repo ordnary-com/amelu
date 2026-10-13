@@ -236,7 +236,7 @@ func (a *App) AdminDeleteDomain(w http.ResponseWriter, r *http.Request, operator
 		return
 	}
 	if err := a.destroyDomainInStalwart(r.Context(), domain); err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeUpstreamError(w, "", err)
 		return
 	}
 	if err := a.Store.DeleteDomain(r.Context(), domain.CustomerID, domain.ID); err != nil {
@@ -293,12 +293,12 @@ func (a *App) AdminUpdateMailbox(w http.ResponseWriter, r *http.Request, operato
 		switch *req.Status {
 		case "suspended":
 			if err := a.Stalwart.SuspendMailbox(r.Context(), mailbox.LocalPart, domain.Name); err != nil {
-				writeError(w, http.StatusBadGateway, "failed to suspend mailbox in mail cluster: "+err.Error())
+				writeUpstreamError(w, "failed to suspend mailbox in mail cluster", err)
 				return
 			}
 		case "active":
 			if err := a.Stalwart.ActivateMailbox(r.Context(), mailbox.LocalPart, domain.Name); err != nil {
-				writeError(w, http.StatusBadGateway, "failed to activate mailbox in mail cluster: "+err.Error())
+				writeUpstreamError(w, "failed to activate mailbox in mail cluster", err)
 				return
 			}
 		default:
@@ -322,7 +322,7 @@ func (a *App) AdminDeleteMailbox(w http.ResponseWriter, r *http.Request, operato
 		return
 	}
 	if err := a.Stalwart.DeleteMailbox(r.Context(), mailbox.LocalPart, domain.Name); err != nil && !errors.Is(err, stalwart.ErrNotFound) {
-		writeError(w, http.StatusBadGateway, "failed to delete mailbox in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to delete mailbox in mail cluster", err)
 		return
 	}
 	if err := a.Store.DeleteMailbox(r.Context(), mailbox.ID); err != nil {
@@ -361,7 +361,7 @@ func (a *App) AdminResetMailboxPassword(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if err := a.sendMailboxPasswordInvite(r, mailbox, domain, recipient); err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeUpstreamError(w, "", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "admin.mailbox.password_reset_sent", "[admin:"+operator+"] Password reset sent for "+mailbox.LocalPart+"@"+domain.Name+" to "+recipient)

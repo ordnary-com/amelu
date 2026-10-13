@@ -1,0 +1,23 @@
+Error codes, request ids and a docs link in every server-fault error
+2026-10-13
+
+Errors from the mail cluster used to leak the raw Go error chain into the
+dashboard: "could not fetch expected DNS records from mail cluster: query
+domain x: call stalwart: Post "http://marduk.mx.amelu.org:8080/jmap": read
+tcp 10.176.41.159:52128->141.95.52.66:8080: read: connection reset by peer".
+
+Every error body is now {error, code, status, requestId, detail}. The
+stalwart client returns a typed *stalwart.Error (transport, timeout, auth,
+http, protocol, jmap) and handlers/json.go maps it to MAIL_CLUSTER_* codes
+via writeUpstreamError; the same example now reads "could not fetch expected
+DNS records from mail cluster: mail cluster unreachable (connection reset by
+peer). See https://amelu.org/docs/errors#MAIL_CLUSTER_UNREACHABLE". The
+full chain with hosts and ports moves to detail and to the server log, keyed
+by the request id. Stripe failures get STRIPE_<stripe code>.
+
+The auth middleware's plain-text "unauthorized" is JSON with the same
+shape now. New RequestID middleware sets X-Request-ID on every response (exposed via
+CORS); 5xx responses are logged as "[id] status CODE: message: detail".
+Both dashboards append "(request <id>)" to server-fault messages; 4xx input
+errors stay plain. amelu.org/docs/errors (landing, prerendered, in the
+sitemap) explains every code.

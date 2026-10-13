@@ -45,7 +45,7 @@ func (a *App) ListAddressAliases(w http.ResponseWriter, r *http.Request) {
 	for _, m := range mailboxes {
 		aliases, err := a.Stalwart.ListAccountAliases(r.Context(), m.LocalPart, domain.Name)
 		if err != nil {
-			writeError(w, http.StatusBadGateway, "could not load aliases for "+m.LocalPart+" from mail cluster: "+err.Error())
+			writeUpstreamError(w, "could not load aliases for "+m.LocalPart+" from mail cluster", err)
 			return
 		}
 		for _, alias := range aliases {
@@ -125,7 +125,7 @@ func (a *App) CreateAddressAlias(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := a.Stalwart.AddAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, localPart); err != nil {
-			results = append(results, createAddressAliasResult{Destination: destLocalPart, Error: err.Error()})
+			results = append(results, createAddressAliasResult{Destination: destLocalPart, Error: upstreamReason(err)})
 			continue
 		}
 		results = append(results, createAddressAliasResult{Destination: destLocalPart})
@@ -169,7 +169,7 @@ func (a *App) DeleteAddressAlias(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.RemoveAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, index); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to remove alias in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to remove alias in mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "alias.deleted", "Removed an alias from "+mailbox.LocalPart+"@"+domain.Name)
@@ -202,7 +202,7 @@ func (a *App) ExportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
 	for _, m := range mailboxes {
 		aliases, err := a.Stalwart.ListAccountAliases(r.Context(), m.LocalPart, domain.Name)
 		if err != nil {
-			writeError(w, http.StatusBadGateway, "could not load aliases for "+m.LocalPart+" from mail cluster: "+err.Error())
+			writeUpstreamError(w, "could not load aliases for "+m.LocalPart+" from mail cluster", err)
 			return
 		}
 		for _, alias := range aliases {
@@ -276,7 +276,7 @@ func (a *App) ImportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := a.Stalwart.AddAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, aliasLocalPart); err != nil {
-			results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart, Error: err.Error()})
+			results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart, Error: upstreamReason(err)})
 			continue
 		}
 		results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart})

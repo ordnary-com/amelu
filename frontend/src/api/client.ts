@@ -1,11 +1,35 @@
 export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
 
+// Mirrors the Go API's error body (handlers/json.go): `error` is the
+// sentence to show, which for server faults already ends in a link to
+// https://amelu.org/docs/errors#CODE; `requestId` matches the server log.
+interface ApiErrorBody {
+  error: string;
+  code?: string;
+  status?: number;
+  requestId?: string;
+  detail?: string;
+}
+
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
-    super(message);
+  code: string;
+  requestId?: string;
+  detail?: string;
+  constructor(status: number, body: ApiErrorBody) {
+    super(formatApiError(status, body));
     this.status = status;
+    this.code = body.code ?? `HTTP_${status}`;
+    this.requestId = body.requestId;
+    this.detail = body.detail;
   }
+}
+
+// Server faults carry the request id in the text so a customer can quote
+// it; input errors stay as plain sentences.
+function formatApiError(status: number, body: ApiErrorBody): string {
+  if (status >= 500 && body.requestId) return `${body.error} (request ${body.requestId})`;
+  return body.error;
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -19,14 +43,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!res.ok) {
-    let message = res.statusText;
+    let body: ApiErrorBody = { error: res.statusText };
     try {
-      const body = await res.json();
-      if (body?.error) message = body.error;
+      const parsed = await res.json();
+      if (parsed?.error) body = parsed;
     } catch {
       // response had no JSON body
     }
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, body);
   }
 
   if (res.status === 204) return undefined as T;

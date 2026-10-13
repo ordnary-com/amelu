@@ -63,12 +63,12 @@ func verifyAdminSignedHeader(secret, headerValue, method, path, operator string)
 func RequireAdmin(secret string, next func(w http.ResponseWriter, r *http.Request, operator string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if secret == "" {
-			http.Error(w, `{"error":"admin API is not configured"}`, http.StatusServiceUnavailable)
+			writeError(w, http.StatusServiceUnavailable, "SERVICE_UNAVAILABLE", "admin API is not configured")
 			return
 		}
 		operator := r.Header.Get(AdminOperatorHeader)
 		if operator == "" || !verifyAdminSignedHeader(secret, r.Header.Get(AdminSignatureHeader), r.Method, r.URL.Path, operator) {
-			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "unauthorized")
 			return
 		}
 		next(w, r, operator)

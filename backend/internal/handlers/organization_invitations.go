@@ -155,7 +155,7 @@ func (a *App) CreateInvitation(w http.ResponseWriter, r *http.Request) {
 			"This link expires in 7 days and can only be used once.\n\n" +
 			"If you weren't expecting this, you can safely ignore this email."
 		if _, err := a.Resend.SendEmail(r.Context(), email, subject, html, text); err != nil {
-			writeError(w, http.StatusBadGateway, "invitation created but could not send email: "+err.Error())
+			writeUpstreamError(w, "invitation created but could not send email", err)
 			return
 		}
 		resp.EmailSent = true

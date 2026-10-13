@@ -87,7 +87,7 @@ func (a *App) UpdateSpamSubjectSettings(w http.ResponseWriter, r *http.Request) 
 	domain.SpamJunkIfSubjectSpam = req.JunkIfSubjectSpam
 
 	if err := a.redeployToAllMailboxes(r.Context(), domain); err != nil {
-		writeError(w, http.StatusBadGateway, "settings saved but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "settings saved but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "spam.subject_settings_updated", "Updated spam subject handling settings")
@@ -144,7 +144,7 @@ func (a *App) UpdateSpamSenderLists(w http.ResponseWriter, r *http.Request) {
 	domain.SpamSenderJunklist = req.Junklist
 
 	if err := a.redeployToAllMailboxes(r.Context(), domain); err != nil {
-		writeError(w, http.StatusBadGateway, "lists saved but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "lists saved but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "spam.sender_lists_updated", "Updated sender denylist/junklist")
@@ -204,7 +204,7 @@ func (a *App) UpdateSpamRecipientDenylist(w http.ResponseWriter, r *http.Request
 	domain.SpamRecipientDenylist = req.Denylist
 
 	if err := a.redeployToAllMailboxes(r.Context(), domain); err != nil {
-		writeError(w, http.StatusBadGateway, "denylist saved but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "denylist saved but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "spam.recipient_denylist_updated", "Updated recipient denylist")

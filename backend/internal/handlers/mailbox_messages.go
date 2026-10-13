@@ -90,7 +90,7 @@ func (a *App) ListMailboxMessages(w http.ResponseWriter, r *http.Request) {
 
 	messages, total, err := a.Stalwart.ListMessages(r.Context(), mailbox.LocalPart, domain.Name, role, limit, position)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not read messages from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not read messages from mail cluster", err)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (a *App) GetMailboxMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not read message from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not read message from mail cluster", err)
 		return
 	}
 
@@ -204,7 +204,7 @@ func (a *App) SendMailboxMessage(w http.ResponseWriter, r *http.Request) {
 		HTMLBody: req.HTMLBody,
 	})
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not send message: "+err.Error())
+		writeUpstreamError(w, "could not send message", err)
 		return
 	}
 

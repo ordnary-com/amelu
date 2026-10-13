@@ -117,8 +117,7 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 			log.Printf("remove domain %s after failed stalwart create: %v", name, delErr)
 			a.Store.UpdateDomainStatus(r.Context(), domain.ID, "failed", err.Error())
 		}
-		// The underlying error names internal hosts, so it stays in the log.
-		writeError(w, http.StatusBadGateway, "the mail servers couldn't set up this domain, so it wasn't added. Try again in a moment.")
+		writeUpstreamError(w, "the domain was not added because the mail cluster couldn't set it up", err)
 		return
 	}
 	a.Store.UpdateDomainStatus(r.Context(), domain.ID, "dns_pending", "")
@@ -188,7 +187,7 @@ func (a *App) DeleteDomain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.destroyDomainInStalwart(r.Context(), domain); err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeUpstreamError(w, "", err)
 		return
 	}
 

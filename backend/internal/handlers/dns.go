@@ -34,7 +34,7 @@ func (a *App) GetDomainDNS(w http.ResponseWriter, r *http.Request) {
 
 	stalwartDomain, err := a.Stalwart.GetDomain(r.Context(), domain.Name)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not fetch expected DNS records from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not fetch expected DNS records from mail cluster", err)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (a *App) GetDomainBindFile(w http.ResponseWriter, r *http.Request) {
 
 	stalwartDomain, err := a.Stalwart.GetDomain(r.Context(), domain.Name)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not fetch DNS records from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not fetch DNS records from mail cluster", err)
 		return
 	}
 

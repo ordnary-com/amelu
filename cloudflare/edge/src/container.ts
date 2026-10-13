@@ -35,5 +35,6 @@ export class AmeluOriginContainer extends Container<Env> {
     ORDNARY_COOKIE_SECRET: workerEnv.ORDNARY_COOKIE_SECRET ?? "",
     AMELU_ADMIN_SHARED_SECRET: workerEnv.AMELU_ADMIN_SHARED_SECRET ?? "",
     INTERNAL_JOBS_SHARED_SECRET: workerEnv.INTERNAL_JOBS_SHARED_SECRET ?? "",
+    WEBMAIL_SSO_SECRET: workerEnv.WEBMAIL_SSO_SECRET ?? "",
   };
 }

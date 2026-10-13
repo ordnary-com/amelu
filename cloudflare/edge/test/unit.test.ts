@@ -30,6 +30,14 @@ describe("cors", () => {
     expect(headers.get("Vary")).toBe("Origin");
   });
 
+  it("echoes a request Origin only when it's on the configured list", () => {
+    const origins = "https://app.amelu.org, https://beta.amelu.org";
+    expect(corsHeaders(origins, "https://beta.amelu.org").get("Access-Control-Allow-Origin")).toBe("https://beta.amelu.org");
+    expect(corsHeaders(origins, "https://app.amelu.org").get("Access-Control-Allow-Origin")).toBe("https://app.amelu.org");
+    expect(corsHeaders(origins, "https://evil.example").get("Access-Control-Allow-Origin")).toBe("https://app.amelu.org");
+    expect(corsHeaders(origins, null).get("Access-Control-Allow-Origin")).toBe("https://app.amelu.org");
+  });
+
   it("detects preflight requests", () => {
     const req = new Request("https://api.amelu.org/api/domains", { method: "OPTIONS" });
     expect(isPreflight(req)).toBe(true);

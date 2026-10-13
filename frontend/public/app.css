@@ -477,6 +477,24 @@ header .org-name strong a:hover { text-decoration: underline; }
 header .trial-ending { background-color: rgba(253, 227, 138, 0.16); border-radius: 3px; }
 
 header nav { display: flex; align-items: center; gap: 0.5rem; }
+header nav .beta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: inherit;
+}
+header nav .beta-link:hover { text-decoration: underline; }
+header nav .beta-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
 header nav .avatar {
   width: 1.75rem;
   height: 1.75rem;

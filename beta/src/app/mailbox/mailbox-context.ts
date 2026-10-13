@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Mailbox } from '../api';
 import { LoadErrors } from '../load-errors';
-import { errorMessage } from '../api';
+import { errorCode, errorMessage } from '../api';
 import { MailboxApi } from './mailbox-api';
 
 // undefined while loading, null when the request failed
@@ -65,7 +65,7 @@ export function perMailbox<T>(load: (id: string) => Observable<T>): WritableSign
         load(id).pipe(
           map((value): Loaded<T> => value),
           catchError((err) => {
-            errors.last.set(errorMessage(err, 'Could not load'));
+            errors.set(errorMessage(err, 'Could not load'), errorCode(err) ?? null);
             return of(null);
           }),
           startWith(undefined),

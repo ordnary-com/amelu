@@ -170,7 +170,7 @@
           The alias export uses this same format, so it can be edited and imported again.
         </p>
         <a
-          [href]="'/api/domains/' + ctx.id() + '/address-aliases/export'"
+          [href]="exportUrl()"
           download
           class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
         >

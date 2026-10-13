@@ -50,8 +50,9 @@ func main() {
 	app := &handlers.App{
 		Store:                    db.NewStore(conn),
 		Stalwart:                 stalwart.NewClient(cfg.StalwartBaseURL, cfg.StalwartUser, cfg.StalwartPassword),
-		CookieSecure:             strings.HasPrefix(cfg.CORSOrigin, "https://"),
-		FrontendOrigin:           cfg.CORSOrigin,
+		CookieSecure:             strings.HasPrefix(cfg.CORSOrigins[0], "https://"),
+		FrontendOrigin:           cfg.CORSOrigins[0],
+		FrontendOrigins:          cfg.CORSOrigins,
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
 	}
 
@@ -323,7 +324,7 @@ func main() {
 	// through the edge Worker before CORS or any route even runs. Empty
 	// secret (today's default) makes it a no-op passthrough. See
 	// docs/cloudflare/TUNNEL.md and SECURITY.md.
-	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigin, mux))
+	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigins, handlers.RequestID(mux)))
 	if err := http.ListenAndServe(cfg.HTTPAddr, handler); err != nil {
 		log.Fatalf("serve: %v", err)
 	}

@@ -1,0 +1,11 @@
+2.0: Beta notice on the dashboard
+2026-10-13
+
+The dashboard (home) has a card right under the "Hello, <name>" hero
+(beta-banner/beta-banner.ts, included from home.html): a Beta pill,
+"You're using the new Amelu dashboard, which is still being built", and
+links to /changelog, the GitHub repo (github.com/ordnary-com/amelu) and the
+current dashboard on app.amelu.org. The close button hides it and remembers
+that in localStorage (amelu.beta-banner.dismissed), per browser. It first
+sat as a strip under the accent line in the shell, on every page; moved to
+the dashboard only so it reads as a note rather than chrome.

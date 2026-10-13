@@ -1,0 +1,13 @@
+Avatars on team members and in the activity log
+2026-10-13
+
+GET /api/organization/members now returns avatarUrl per member and the
+organization audit list returns actorAvatarUrl per entry, both from
+customers.avatar_url (the Ordnary picture, migration 0029). The audit query
+LEFT JOINs customers on actor_customer_id, so entries from deleted members
+still come back, just without a picture. Both fields are omitted when empty.
+
+In the 2.0 dashboard a shared amelu-avatar component (beta/src/app/avatar.ts)
+shows the picture, or initials when there is none or it fails to load. My
+Organization uses it in the member list; the Activity Log shows a small one
+in front of the actor's email.

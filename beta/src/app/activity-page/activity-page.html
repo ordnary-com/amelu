@@ -52,7 +52,10 @@
                     <span class="font-semibold">{{ row.entry.objectLabel }}</span>
                   }
                 </p>
-                <p class="mt-0.5 truncate text-[12px] text-muted">{{ row.entry.actorEmail }}</p>
+                <p class="mt-1 flex items-center gap-1.5 text-[12px] text-muted">
+                  <amelu-avatar class="size-4" [size]="16" [src]="row.entry.actorAvatarUrl" [email]="row.entry.actorEmail" />
+                  <span class="truncate">{{ row.entry.actorEmail }}</span>
+                </p>
               </div>
               <time class="flex-none text-[12px] text-muted tabular-nums" [attr.datetime]="row.entry.createdAt">
                 {{ row.entry.createdAt | date: 'HH:mm' }}

@@ -54,9 +54,23 @@ export interface MailboxLimits {
   maxDiskQuotaBytes: number;
 }
 
+export interface RepairResult {
+  address: string;
+  domainRecreated: boolean;
+  mailboxRecreated: boolean;
+  /** Only when the mailbox was recreated: the new password, shown once. */
+  password?: string;
+  error?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MailboxApi {
   private readonly http = inject(HttpClient);
+
+  /** Recreates the mailbox (and its domain) in the mail cluster when the cluster lost it. */
+  repair(id: string) {
+    return this.http.post<RepairResult>(`/api/mailboxes/${id}/repair`, {});
+  }
 
   get(id: string) {
     return this.http.get<Mailbox>(`/api/mailboxes/${id}`);

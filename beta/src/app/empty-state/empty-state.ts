@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { LoadErrors } from '../load-errors';
 
 /**
  * What a list or card shows when there's nothing in it, or when it couldn't
@@ -17,6 +18,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
           <ng-content />
           @if (error()) {
             Try again in a moment.
+            @if (errors.last(); as message) {
+              <p class="mt-1.5 font-mono text-[11px] break-words text-muted">{{ message }}</p>
+            }
           }
         </div>
         <div class="flex flex-wrap gap-2 empty:hidden" [class]="compact() ? 'mt-2.5' : 'mt-4 justify-center'">
@@ -38,6 +42,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   host: { class: 'block' },
 })
 export class EmptyState {
+  protected readonly errors = inject(LoadErrors);
   readonly title = input.required<string>();
   readonly compact = input(false);
   /** The request failed: red title and a reload button. */

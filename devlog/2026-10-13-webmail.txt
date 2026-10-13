@@ -19,3 +19,14 @@ to have. The Angular app is gone; the API routes stay (docs/WEBMAIL.md).
 The admin password in the local backend/.env was stale, and the failed
 logins it caused got my IP banned by Stalwart (security.authentication-ban,
 removed with x:BlockedIp/set). The local .env now uses the recovery admin.
+
+Later the same day: "Open in webmail" on a mailbox page (2.0 dashboard).
+GET /api/mailboxes/{id}/webmail redirects to webmail.amelu.org with a token
+signed by WEBMAIL_SSO_SECRET (60 s). The Roundcube plugin amelu_sso checks
+it, has the cluster issue an app password on the mailbox (x:AppPassword/set
+as admin) and signs in with that, so IMAP and SMTP run as the real user; the
+app password goes at logout and is replaced on the next sign-in. SASL authzid
+impersonation was tried first and works for IMAP but not for SMTP ("You are
+not allowed to send from this address"). PHP's json_encode escapes the slash
+in "x:Domain/query" and the cluster refuses that; the plugin encodes with
+JSON_UNESCAPED_SLASHES.

@@ -54,6 +54,8 @@ func main() {
 		FrontendOrigin:           cfg.CORSOrigins[0],
 		FrontendOrigins:          cfg.CORSOrigins,
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
+		WebmailURL:               cfg.WebmailURL,
+		WebmailSSOSecret:         cfg.WebmailSSOSecret,
 	}
 
 	if cfg.DomainConnectPrivateKey != "" {
@@ -312,6 +314,10 @@ func main() {
 	mux.HandleFunc("POST /api/billing/checkout", auth.Require(app.Store, app.CreateCheckoutSession))
 	mux.HandleFunc("POST /api/billing/portal", auth.Require(app.Store, app.CreateBillingPortalSession))
 	mux.HandleFunc("GET /api/billing/invoices", auth.Require(app.Store, app.ListInvoices))
+
+	// "Open in webmail" from the dashboard: a plain link, so the browser
+	// follows the redirect into Roundcube (docs/WEBMAIL.md).
+	mux.HandleFunc("GET /api/mailboxes/{id}/webmail", auth.Require(app.Store, app.OpenMailboxWebmail))
 
 	// Webmail (docs/WEBMAIL.md): mailbox users with their own session cookie.
 	mux.HandleFunc("POST /api/webmail/login", app.WebmailLogin)

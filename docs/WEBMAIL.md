@@ -29,6 +29,32 @@ as-is with `X-Forwarded-Host`/`X-Forwarded-Proto`, rewrites a `Location`
 that names the origin, and nothing else. Port 8443 is open in ufw; the
 certificate is what protects it.
 
+## "Open in webmail" from the dashboard
+
+A mailbox page in the 2.0 dashboard has **Open in webmail**: a plain link to
+`GET /api/mailboxes/{id}/webmail`. The API (anyone who may manage mailboxes)
+answers with a redirect to `webmail.amelu.org/?_task=login&_sso=<token>`,
+where the token is `base64url({email, exp})` plus an HMAC-SHA256 over it with
+`WEBMAIL_SSO_SECRET`, valid for 60 seconds, and writes
+`mailbox.webmail_opened` to the organization's audit log.
+
+The Roundcube plugin `amelu_sso` (`plugins/amelu_sso/` on the host, a copy
+in `cloudflare/webmail/roundcube/`) verifies the token with the same secret
+(`AMELU_SSO_SECRET` in `/opt/amelu-webmail/.env`), then asks the cluster as
+admin (`x:AppPassword/set` on the mailbox's account, over
+`http://172.18.0.1:8080`, opened in ufw for the Docker network) for a fresh
+**app password** described "Amelu webmail (dashboard sign-in)" and signs the
+browser in with it. IMAP and SMTP therefore run as the real mailbox; nothing
+needs the mailbox password. The app password is removed when the person logs
+out, and replaced on the next dashboard sign-in, so a mailbox never carries
+more than one. A session that simply expires leaves it until then.
+
+Impersonation via SASL authzid was tried first: IMAP accepts it, but SMTP
+refuses `MAIL FROM` for anyone but the authenticated admin.
+
+The secret lives in three places: the edge Worker secret `WEBMAIL_SSO_SECRET`
+(passed to the container), the local `backend/.env`, and the host's `.env`.
+
 ## Operating it
 
 ```bash

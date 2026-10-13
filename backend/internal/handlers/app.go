@@ -51,4 +51,9 @@ type App struct {
 	// unavailable rather than failing startup, same convention as
 	// DomainConnect/Resend/Stripe above. See internal/ordnaryauth.
 	Ordnary *ordnaryauth.Config
+
+	// WebmailURL and WebmailSSOSecret back "Open in webmail" (webmail_sso.go);
+	// an empty secret reports unavailable.
+	WebmailURL       string
+	WebmailSSOSecret string
 }

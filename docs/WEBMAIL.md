@@ -15,6 +15,7 @@ On the mail host marduk (141.95.52.66, root via `~/.ssh/amelu_fleet`), in
 | `config/custom.inc.php` | Amelu branding (`product_name`, `skin_logo`), `des_key`, Sieve host, TLS verification for IMAP/SMTP. Mode 644, the web server reads it |
 | `config/amelu-logo.png` | The logo, mounted into `skins/elastic/images/` (Apache only serves the skin and plugin folders, a top-level `images/` gives 404) |
 | `plugins/amelu_theme/` | A one-file plugin that loads `amelu.css` after the skin: every Elastic rule using the skin's light blue `#37beff`, recoloured to Amelu blue `#0043ce` (dark mode: `#4d84ff` text, `#0051fe` fills). `regenerate.sh` rebuilds it from the container's compiled CSS; run it after a Roundcube upgrade |
+| `enigma` volume | Per-user PGP keys for Roundcube's built-in encryption (plugin `enigma`, GnuPG in the image). Settings › Encryption works without the Mailvelope extension |
 | `nginx/webmail.conf` | TLS on 8443 with the host's Let's Encrypt certificate (`/etc/letsencrypt` bind-mounted), proxying to Roundcube with `Host: webmail.amelu.org`; resolves the container name per request so a recreated Roundcube container is picked up |
 
 Mail settings come from the compose environment: IMAP `ssl://marduk.mx.amelu.org:993`,

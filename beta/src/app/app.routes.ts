@@ -17,6 +17,7 @@ import { BillingInvoices } from './billing-invoices/billing-invoices';
 import { NotFound } from './not-found/not-found';
 
 export const routes: Routes = [
+  { path: 'login', loadComponent: () => import('./login/login').then((m) => m.Login), title: 'Sign in · Amelu' },
   {
     path: '',
     component: Shell,

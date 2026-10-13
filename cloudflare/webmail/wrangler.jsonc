@@ -1,0 +1,12 @@
+// webmail.amelu.org: a thin proxy in front of Roundcube, which runs on the
+// mail host (marduk, /opt/amelu-webmail, nginx on 8443 with the host's own
+// certificate). The Worker gives it the public hostname and Cloudflare's
+// TLS without opening Roundcube to the internet by name. See docs/WEBMAIL.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-webmail",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "observability": { "enabled": true },
+  "routes": [{ "pattern": "webmail.amelu.org", "custom_domain": true }]
+}

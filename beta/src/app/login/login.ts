@@ -86,7 +86,7 @@ export class Login {
   protected async continue(): Promise<void> {
     if (this.busy()) return;
     await this.showOverlay('Opening your dashboard');
-    this.session.confirm();
+    this.session.clearLoginPending();
     await this.router.navigateByUrl(this.returnTo());
   }
 
@@ -95,6 +95,7 @@ export class Login {
   protected async useAnotherAccount(): Promise<void> {
     if (this.busy()) return;
     await Promise.all([this.showOverlay('Signing you out'), this.session.signOut()]);
+    this.session.markLoginPending();
     window.location.href = ordnaryLoginUrl(this.returnTo(), true);
   }
 
@@ -104,6 +105,7 @@ export class Login {
     event.preventDefault();
     if (this.busy()) return;
     await this.showOverlay('Signing you in with Ordnary');
+    this.session.markLoginPending();
     window.location.href = this.loginUrl();
   }
 

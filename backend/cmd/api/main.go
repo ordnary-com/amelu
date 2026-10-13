@@ -203,6 +203,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/domains", auth.Require(app.Store, app.CreateDomain))
 	mux.HandleFunc("GET /api/domains", auth.Require(app.Store, app.ListDomains))
+	mux.HandleFunc("PUT /api/domains/order", auth.Require(app.Store, app.SetDomainOrder))
+	mux.HandleFunc("PUT /api/domains/{id}/favorite", auth.Require(app.Store, app.SetDomainFavorite))
 	mux.HandleFunc("DELETE /api/domains/{id}", auth.Require(app.Store, app.DeleteDomain))
 	mux.HandleFunc("GET /api/domains/{id}/dns", auth.Require(app.Store, app.GetDomainDNS))
 	mux.HandleFunc("GET /api/domains/{id}/domain-connect", auth.Require(app.Store, app.GetDomainConnect))

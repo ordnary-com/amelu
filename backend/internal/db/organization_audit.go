@@ -19,6 +19,8 @@ type OrganizationAuditEntry struct {
 	Metadata        json.RawMessage
 	RequestIP       sql.NullString
 	CreatedAt       time.Time
+	// ActorAvatarURL is the actor's current Ordnary picture, when they still exist.
+	ActorAvatarURL sql.NullString
 }
 
 // LogOrganizationAudit appends one entry to the organization's audit trail.
@@ -57,18 +59,20 @@ func (s *Store) ListOrganizationAudit(ctx context.Context, organizationID string
 	var err error
 	if objectTypes == nil {
 		rows, err = s.conn.QueryContext(ctx, `
-			SELECT id, organization_id, actor_customer_id, actor_email, action, object_type, object_id, object_label, metadata, request_ip, created_at
-			FROM organization_audit_log
-			WHERE organization_id = $1 AND created_at < $2
-			ORDER BY created_at DESC
+			SELECT a.id, a.organization_id, a.actor_customer_id, a.actor_email, a.action, a.object_type, a.object_id, a.object_label, a.metadata, a.request_ip, a.created_at, c.avatar_url
+			FROM organization_audit_log a
+			LEFT JOIN customers c ON c.id = a.actor_customer_id
+			WHERE a.organization_id = $1 AND a.created_at < $2
+			ORDER BY a.created_at DESC
 			LIMIT $3
 		`, organizationID, before, limit)
 	} else {
 		rows, err = s.conn.QueryContext(ctx, `
-			SELECT id, organization_id, actor_customer_id, actor_email, action, object_type, object_id, object_label, metadata, request_ip, created_at
-			FROM organization_audit_log
-			WHERE organization_id = $1 AND created_at < $2 AND object_type = ANY($3)
-			ORDER BY created_at DESC
+			SELECT a.id, a.organization_id, a.actor_customer_id, a.actor_email, a.action, a.object_type, a.object_id, a.object_label, a.metadata, a.request_ip, a.created_at, c.avatar_url
+			FROM organization_audit_log a
+			LEFT JOIN customers c ON c.id = a.actor_customer_id
+			WHERE a.organization_id = $1 AND a.created_at < $2 AND a.object_type = ANY($3)
+			ORDER BY a.created_at DESC
 			LIMIT $4
 		`, organizationID, before, objectTypes, limit)
 	}
@@ -80,7 +84,7 @@ func (s *Store) ListOrganizationAudit(ctx context.Context, organizationID string
 	var out []OrganizationAuditEntry
 	for rows.Next() {
 		var e OrganizationAuditEntry
-		if err := rows.Scan(&e.ID, &e.OrganizationID, &e.ActorCustomerID, &e.ActorEmail, &e.Action, &e.ObjectType, &e.ObjectID, &e.ObjectLabel, &e.Metadata, &e.RequestIP, &e.CreatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.OrganizationID, &e.ActorCustomerID, &e.ActorEmail, &e.Action, &e.ObjectType, &e.ObjectID, &e.ObjectLabel, &e.Metadata, &e.RequestIP, &e.CreatedAt, &e.ActorAvatarURL); err != nil {
 			return nil, err
 		}
 		out = append(out, e)

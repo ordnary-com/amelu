@@ -186,13 +186,26 @@ export interface Invoice {
 }
 
 /**
- * Same-origin /api calls: `ng serve` proxies them to the Go API on :8081
- * (proxy.conf.json), so the session cookie the API set on localhost is sent
- * and no CORS change is needed for this app.
+ * Calls /api/... paths; apiOriginInterceptor points them at the API host in
+ * production. In development `ng serve` proxies them to :8081.
  */
+/** One Amelu item from Ordnary's changelog feed, via GET /api/changelog. */
+export interface ChangelogEntry {
+  id: string;
+  title: string;
+  /** YYYY-MM-DD, empty when the feed item had no usable date. */
+  date: string;
+  link: string;
+  notes: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class Api {
   private readonly http = inject(HttpClient);
+
+  listChangelog() {
+    return this.http.get<{ entries: ChangelogEntry[] }>('/api/changelog');
+  }
 
   me() {
     return this.http.get<Customer>('/api/me');

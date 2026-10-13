@@ -7,6 +7,7 @@ import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { ImportAliasResult, RoutingApi } from './routing-api';
+import { apiUrl } from '../config';
 
 const FIELDS = [
   {
@@ -32,6 +33,7 @@ export class ImportAliases {
   private readonly routing = inject(RoutingApi);
   protected readonly ui = UI;
   protected readonly ctx = injectDomain();
+  protected readonly exportUrl = computed(() => apiUrl(`/api/domains/${this.ctx.id()}/address-aliases/export`));
   protected readonly fields = FIELDS;
 
   protected readonly csv = signal('');

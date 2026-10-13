@@ -1,16 +1,19 @@
 {
   "name": "beta",
-  "version": "0.0.0",
+  "version": "2.0.0-beta",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "start": "pnpm build-info && ng serve",
+    "build": "pnpm build-info && ng build",
+    "watch": "pnpm build-info && ng build --watch --configuration development",
+    "test": "pnpm build-info && ng test",
+    "build-info": "node scripts/build-info.mjs",
+    "deploy": "pnpm build && wrangler deploy"
   },
   "private": true,
   "packageManager": "pnpm@9.15.9",
   "dependencies": {
+    "@angular/cdk": "^22.2.0",
     "@angular/common": "^22.2.0",
     "@angular/compiler": "^22.2.0",
     "@angular/core": "^22.2.0",
@@ -33,6 +36,7 @@
     "prettier": "^3.8.1",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.111.0"
   }
 }

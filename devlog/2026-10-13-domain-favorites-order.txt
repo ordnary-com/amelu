@@ -1,0 +1,17 @@
+Favorite, sort and drag domains
+2026-10-13
+
+Domains can be starred and put in your own order, per customer: new table
+customer_domain_preferences (migration 0030) with favorite and position per
+customer and domain. GET /api/domains now returns favorite and position.
+PUT /api/domains/{id}/favorite takes {"favorite": bool};
+PUT /api/domains/order takes {"domainIds": [...]}, first to last, and
+rejects ids from another organization or listed twice. Domains without a
+position go after the ordered ones, newest first.
+
+2.0 dashboard: a star on every domain card; starred domains show in their
+own Favorites group on top, and first in the sidebar and on the home page.
+"Your order" lets you drag cards by a handle (Angular CDK drag-drop, only
+loaded with the Domains page, which is now lazy). Other sorts: name A to Z
+and Z to A, newest, oldest, and status (problems first). The sort is
+remembered in localStorage.

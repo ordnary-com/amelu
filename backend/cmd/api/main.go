@@ -50,8 +50,9 @@ func main() {
 	app := &handlers.App{
 		Store:                    db.NewStore(conn),
 		Stalwart:                 stalwart.NewClient(cfg.StalwartBaseURL, cfg.StalwartUser, cfg.StalwartPassword),
-		CookieSecure:             strings.HasPrefix(cfg.CORSOrigin, "https://"),
-		FrontendOrigin:           cfg.CORSOrigin,
+		CookieSecure:             strings.HasPrefix(cfg.CORSOrigins[0], "https://"),
+		FrontendOrigin:           cfg.CORSOrigins[0],
+		FrontendOrigins:          cfg.CORSOrigins,
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
 	}
 
@@ -128,6 +129,8 @@ func main() {
 	// Cloudflare Tunnel connector and the edge Worker's origin health
 	// check. See docs/cloudflare/TUNNEL.md and EDGE_WORKER.md.
 	mux.HandleFunc("GET /api/healthz", app.Healthz)
+	// Public: it only mirrors Ordnary's own public changelog feed.
+	mux.HandleFunc("GET /api/changelog", app.GetChangelog)
 
 	// Internal-only: HMAC-signed shared secret (auth.RequireInternal), and
 	// must never be routed to by the public edge Worker or exposed outside
@@ -201,6 +204,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/domains", auth.Require(app.Store, app.CreateDomain))
 	mux.HandleFunc("GET /api/domains", auth.Require(app.Store, app.ListDomains))
+	mux.HandleFunc("PUT /api/domains/order", auth.Require(app.Store, app.SetDomainOrder))
+	mux.HandleFunc("PUT /api/domains/{id}/favorite", auth.Require(app.Store, app.SetDomainFavorite))
 	mux.HandleFunc("DELETE /api/domains/{id}", auth.Require(app.Store, app.DeleteDomain))
 	mux.HandleFunc("GET /api/domains/{id}/dns", auth.Require(app.Store, app.GetDomainDNS))
 	mux.HandleFunc("GET /api/domains/{id}/domain-connect", auth.Require(app.Store, app.GetDomainConnect))
@@ -319,7 +324,7 @@ func main() {
 	// through the edge Worker before CORS or any route even runs. Empty
 	// secret (today's default) makes it a no-op passthrough. See
 	// docs/cloudflare/TUNNEL.md and SECURITY.md.
-	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigin, mux))
+	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigins, handlers.RequestID(mux)))
 	if err := http.ListenAndServe(cfg.HTTPAddr, handler); err != nil {
 		log.Fatalf("serve: %v", err)
 	}

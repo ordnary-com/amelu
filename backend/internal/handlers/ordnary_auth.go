@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"strings"
 
 	"amelu/backend/internal/auth"
 	"amelu/backend/internal/db"
+	"amelu/backend/internal/ordnaryauth"
 )
 
 // OrdnaryLogin redirects to Ordnary identity's authorize endpoint. See
@@ -23,7 +25,33 @@ func (a *App) OrdnaryLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "login with Ordnary account is not configured")
 		return
 	}
-	a.Ordnary.Login(w, r)
+	origin := a.FrontendOrigin
+	if o := r.URL.Query().Get("origin"); o != "" {
+		if !slices.Contains(a.FrontendOrigins, o) {
+			writeError(w, http.StatusBadRequest, "unknown origin")
+			return
+		}
+		origin = o
+	}
+	a.Ordnary.Login(w, r, origin, r.URL.Query().Get("switch") == "1")
+}
+
+// loginOrigin is the dashboard to send the browser back to after the Ordnary
+// round trip: the one that started it, when that's still an allowed origin.
+func (a *App) loginOrigin(result *ordnaryauth.CallbackResult) string {
+	if result != nil && slices.Contains(a.FrontendOrigins, result.Origin) {
+		return result.Origin
+	}
+	return a.FrontendOrigin
+}
+
+// safeReturnTo keeps returnTo a path on the dashboard: "//evil.example" or
+// "@evil.example" appended to the origin would leave the site.
+func safeReturnTo(returnTo string) string {
+	if !strings.HasPrefix(returnTo, "/") || strings.HasPrefix(returnTo, "//") || strings.HasPrefix(returnTo, "/\\") {
+		return "/domains"
+	}
+	return returnTo
 }
 
 // OrdnaryCallback exchanges the code, finds or provisions the matching
@@ -42,11 +70,11 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 		// The redirect only says that it failed; the reason (state mismatch,
 		// a refused code exchange, userinfo) is only ever visible here.
 		log.Printf("ordnary auth: callback: %v", err)
-		http.Redirect(w, r, a.FrontendOrigin+"/login?error=ordnary_auth_failed", http.StatusFound)
+		http.Redirect(w, r, a.loginOrigin(result)+"/login?error=ordnary_auth_failed", http.StatusFound)
 		return
 	}
 	if !result.User.EmailVerified {
-		http.Redirect(w, r, a.FrontendOrigin+"/login?error=ordnary_email_unverified", http.StatusFound)
+		http.Redirect(w, r, a.loginOrigin(result)+"/login?error=ordnary_email_unverified", http.StatusFound)
 		return
 	}
 	email := strings.ToLower(strings.TrimSpace(result.User.Email))
@@ -54,7 +82,7 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 	customer, err := a.findOrProvisionOrdnaryCustomer(r, result.User.ID, email, result.User.Name)
 	if errors.Is(err, errOrdnaryAccountMismatch) {
 		log.Printf("ordnary auth: %s is already linked to another Ordnary user, refusing %s", email, result.User.ID)
-		http.Redirect(w, r, a.FrontendOrigin+"/login?error=ordnary_account_mismatch", http.StatusFound)
+		http.Redirect(w, r, a.loginOrigin(result)+"/login?error=ordnary_account_mismatch", http.StatusFound)
 		return
 	}
 	if err != nil {
@@ -77,11 +105,7 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	a.startSession(w, r, customer.ID)
 
-	returnTo := result.ReturnTo
-	if returnTo == "" {
-		returnTo = "/domains"
-	}
-	http.Redirect(w, r, a.FrontendOrigin+returnTo, http.StatusFound)
+	http.Redirect(w, r, a.loginOrigin(result)+safeReturnTo(result.ReturnTo), http.StatusFound)
 }
 
 var errOrdnaryAccountMismatch = errors.New("customer is linked to a different Ordnary user")

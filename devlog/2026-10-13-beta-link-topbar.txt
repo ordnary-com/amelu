@@ -1,0 +1,9 @@
+Beta link in the old dashboard's top bar
+2026-10-13
+
+app.amelu.org's header now has a "Beta | Try the new dashboard" link to
+https://beta.amelu.org, left of the Changelog link, with a small outlined
+pill on the brand-blue chrome (header nav .beta-link / .beta-pill in
+app.css). Deployed to Cloudflare Pages (amelu-frontend, main) with vite
+build, since pnpm build still trips over the pre-existing md-dialog onClose
+type errors.

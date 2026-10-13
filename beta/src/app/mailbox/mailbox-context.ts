@@ -3,6 +3,8 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Mailbox } from '../api';
+import { LoadErrors } from '../load-errors';
+import { errorMessage } from '../api';
 import { MailboxApi } from './mailbox-api';
 
 // undefined while loading, null when the request failed
@@ -56,12 +58,16 @@ export class MailboxContext {
  */
 export function perMailbox<T>(load: (id: string) => Observable<T>): WritableSignal<Loaded<T>> {
   const state = signal<Loaded<T>>(undefined);
+  const errors = inject(LoadErrors);
   toObservable(inject(MailboxContext).id)
     .pipe(
       switchMap((id) =>
         load(id).pipe(
           map((value): Loaded<T> => value),
-          catchError(() => of(null)),
+          catchError((err) => {
+            errors.last.set(errorMessage(err, 'Could not load'));
+            return of(null);
+          }),
           startWith(undefined),
         ),
       ),

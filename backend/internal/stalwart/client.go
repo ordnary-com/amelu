@@ -117,45 +117,49 @@ func (c *Client) call(ctx context.Context, method string, args any) (json.RawMes
 
 	body, err := json.Marshal(req)
 	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
+		return nil, &Error{Kind: KindProtocol, Method: method, Err: fmt.Errorf("marshal request: %w", err)}
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/jmap", bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("build request: %w", err)
+		return nil, &Error{Kind: KindProtocol, Method: method, Err: fmt.Errorf("build request: %w", err)}
 	}
 	httpReq.SetBasicAuth(c.user, c.password)
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.http.Do(httpReq)
 	if err != nil {
-		return nil, fmt.Errorf("call stalwart: %w", err)
+		return nil, transportError(method, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		var errBody bytes.Buffer
 		errBody.ReadFrom(resp.Body)
-		return nil, fmt.Errorf("stalwart returned %s: %s", resp.Status, errBody.String())
+		kind := KindHTTP
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+			kind = KindAuth
+		}
+		return nil, &Error{Kind: kind, Method: method, Status: resp.StatusCode, Err: errors.New(errBody.String())}
 	}
 
 	var jresp jmapResponse
 	if err := json.NewDecoder(resp.Body).Decode(&jresp); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
+		return nil, &Error{Kind: KindProtocol, Method: method, Err: fmt.Errorf("decode response: %w", err)}
 	}
 	if len(jresp.MethodResponses) == 0 {
-		return nil, fmt.Errorf("empty methodResponses from stalwart")
+		return nil, &Error{Kind: KindProtocol, Method: method, Err: errors.New("empty methodResponses")}
 	}
 
 	// Each method response is itself [name, args, callID].
 	var tuple [3]json.RawMessage
 	if err := json.Unmarshal(jresp.MethodResponses[0], &tuple); err != nil {
-		return nil, fmt.Errorf("decode method response tuple: %w", err)
+		return nil, &Error{Kind: KindProtocol, Method: method, Err: fmt.Errorf("decode method response tuple: %w", err)}
 	}
 
 	var respMethod string
 	if err := json.Unmarshal(tuple[0], &respMethod); err != nil {
-		return nil, fmt.Errorf("decode method response name: %w", err)
+		return nil, &Error{Kind: KindProtocol, Method: method, Err: fmt.Errorf("decode method response name: %w", err)}
 	}
 	if respMethod == "error" {
 		var jmapErr struct {
@@ -163,7 +167,7 @@ func (c *Client) call(ctx context.Context, method string, args any) (json.RawMes
 			Description string `json:"description"`
 		}
 		json.Unmarshal(tuple[1], &jmapErr)
-		return nil, fmt.Errorf("stalwart jmap error: %s: %s", jmapErr.Type, jmapErr.Description)
+		return nil, &Error{Kind: KindJMAP, Method: method, JMAPType: jmapErr.Type, Err: errors.New(jmapErr.Description)}
 	}
 
 	return tuple[1], nil

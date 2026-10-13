@@ -1,0 +1,13 @@
+// The webmail on webmail.amelu.org: static files only, no Worker code.
+// Deploy with `pnpm deploy:webmail` from the repo root (builds, then uploads).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-webmail",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./dist/webmail/browser",
+    // Client-side routes (/folder/..., /login, ...) all serve index.html.
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "webmail.amelu.org", "custom_domain": true }]
+}

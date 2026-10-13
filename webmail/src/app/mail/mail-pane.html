@@ -1,0 +1,300 @@
+<!-- List pane -->
+<section
+  class="flex w-full min-w-0 flex-col border-line md:w-[380px] md:flex-none md:border-r lg:w-[420px]"
+  [class.max-md:hidden]="messageId()"
+>
+  <div class="flex-none border-b border-line px-3 pt-3 pb-2">
+    <form class="relative" (ngSubmit)="submitSearch()">
+      <amelu-icon
+        name="search"
+        [size]="15"
+        class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted"
+      />
+      <input
+        id="mail-search"
+        type="search"
+        name="q"
+        [class]="ui.input + ' mt-0 pl-8'"
+        placeholder="Search mail"
+        [(ngModel)]="search"
+        autocomplete="off"
+      />
+      @if (searching()) {
+        <button
+          type="button"
+          class="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded p-0.5 text-muted hover:text-ink"
+          aria-label="Clear search"
+          (click)="clearSearch()"
+        >
+          <amelu-icon name="close" [size]="14" />
+        </button>
+      }
+    </form>
+    <div class="mt-2 flex items-center gap-1">
+      <input
+        type="checkbox"
+        class="ml-1 size-3.5 cursor-pointer accent-accent"
+        aria-label="Select all"
+        [checked]="allSelected()"
+        (change)="toggleAll()"
+      />
+      <h1 class="ml-1 min-w-0 flex-1 truncate text-[14px] font-bold">
+        {{ title() }}
+        @if (messages()?.length) {
+          <span class="font-normal text-muted">{{ total() }}</span>
+        }
+      </h1>
+      @if (!searching()) {
+        <button
+          type="button"
+          class="h-6 cursor-pointer rounded-md px-2 text-[12px] font-medium"
+          [class]="unreadOnly() ? 'bg-ink text-surface' : 'text-muted hover:text-ink'"
+          [attr.aria-pressed]="unreadOnly()"
+          (click)="unreadOnly.set(!unreadOnly())"
+        >
+          Unread
+        </button>
+        <button
+          type="button"
+          class="h-6 cursor-pointer rounded-md px-2 text-[12px] font-medium"
+          [class]="flaggedOnly() ? 'bg-ink text-surface' : 'text-muted hover:text-ink'"
+          [attr.aria-pressed]="flaggedOnly()"
+          (click)="flaggedOnly.set(!flaggedOnly())"
+        >
+          Flagged
+        </button>
+      }
+      <button
+        type="button"
+        [class]="ui.iconButton + ' size-7'"
+        aria-label="Refresh"
+        (click)="load()"
+      >
+        <amelu-icon name="refresh" [size]="15" />
+      </button>
+    </div>
+  </div>
+
+  @if (anySelected()) {
+    <div
+      class="flex flex-none flex-wrap items-center gap-1 border-b border-line bg-bg px-2 py-1.5 text-[12px]"
+    >
+      <span class="px-1 font-medium">{{ selected().size }} selected</span>
+      <button
+        type="button"
+        [class]="ui.ghost + ' h-7'"
+        (click)="markSeen(true)"
+        [disabled]="busy()"
+      >
+        Read
+      </button>
+      <button
+        type="button"
+        [class]="ui.ghost + ' h-7'"
+        (click)="markSeen(false)"
+        [disabled]="busy()"
+      >
+        Unread
+      </button>
+      <button type="button" [class]="ui.ghost + ' h-7'" (click)="flag(true)" [disabled]="busy()">
+        Flag
+      </button>
+      <button type="button" [class]="ui.ghost + ' h-7'" (click)="flag(false)" [disabled]="busy()">
+        Unflag
+      </button>
+      <div class="relative">
+        <button
+          type="button"
+          [class]="ui.ghost + ' h-7'"
+          (click)="movePicker.set(!movePicker())"
+          [disabled]="busy()"
+        >
+          Move <amelu-icon name="chevronDown" [size]="12" />
+        </button>
+        @if (movePicker()) {
+          <div class="fixed inset-0 z-20" (click)="movePicker.set(false)"></div>
+          <ul
+            class="absolute left-0 z-30 mt-1 max-h-72 w-56 overflow-y-auto rounded-lg border border-line bg-popover p-1 shadow-lg"
+            role="menu"
+          >
+            @for (target of moveTargets(); track target.id) {
+              <li>
+                <button
+                  type="button"
+                  class="block w-full cursor-pointer truncate rounded-md px-2 py-1.5 text-left text-[13px] hover:bg-bg"
+                  role="menuitem"
+                  (click)="move(target)"
+                >
+                  {{ target.name }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+      @if (isJunk()) {
+        <button type="button" [class]="ui.ghost + ' h-7'" (click)="spam(false)" [disabled]="busy()">
+          Not spam
+        </button>
+      } @else {
+        <button type="button" [class]="ui.ghost + ' h-7'" (click)="spam(true)" [disabled]="busy()">
+          Spam
+        </button>
+      }
+      <button
+        type="button"
+        [class]="ui.ghost + ' h-7 text-bad'"
+        (click)="remove()"
+        [disabled]="busy()"
+      >
+        {{ isTrash() ? 'Delete forever' : 'Delete' }}
+      </button>
+    </div>
+  }
+
+  @if (error(); as message) {
+    <amelu-alert class="m-3" kind="error" [dismissible]="true" (dismissed)="error.set(null)">{{
+      message
+    }}</amelu-alert>
+  }
+
+  <div class="min-h-0 flex-1 overflow-y-auto">
+    @if (messages() === undefined) {
+      <div aria-hidden="true">
+        @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+          <div class="space-y-2 border-b border-line px-4 py-3">
+            <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+            <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
+          </div>
+        }
+      </div>
+    } @else if (messages() === null) {
+      <amelu-empty-state title="The messages couldn't be loaded" [error]="true" (retry)="load()">
+        {{ error() }}
+      </amelu-empty-state>
+    } @else {
+      <ul>
+        @for (message of messages(); track message.id) {
+          <li
+            class="group flex cursor-pointer gap-2 border-b border-line px-3 py-2.5 hover:bg-bg"
+            [class.bg-accent-soft]="messageId() === message.id"
+            [class.bg-bg]="selected().has(message.id) && messageId() !== message.id"
+            (click)="open(message)"
+          >
+            <input
+              type="checkbox"
+              class="mt-1 size-3.5 flex-none cursor-pointer accent-accent"
+              [attr.aria-label]="'Select ' + message.subject"
+              [checked]="selected().has(message.id)"
+              (click)="toggle(message.id, $event)"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline gap-2">
+                <span
+                  class="min-w-0 flex-1 truncate text-[13px]"
+                  [class.font-bold]="!message.seen"
+                  >{{ from(message) }}</span
+                >
+                <time
+                  class="flex-none text-[11px] text-muted tabular-nums"
+                  [attr.datetime]="message.receivedAt"
+                  >{{ date(message) }}</time
+                >
+              </div>
+              <div class="flex items-center gap-1.5">
+                @if (!message.seen) {
+                  <span class="size-1.5 flex-none rounded-full bg-accent"></span>
+                }
+                <span
+                  class="min-w-0 flex-1 truncate text-[13px]"
+                  [class.font-semibold]="!message.seen"
+                  >{{ message.subject || '(no subject)' }}</span
+                >
+                @if (message.draft) {
+                  <span class="flex-none text-[11px] text-bad">Draft</span>
+                }
+                @if (message.hasAttachments) {
+                  <amelu-icon name="paperclip" [size]="13" class="text-muted" />
+                }
+                @if (message.answered) {
+                  <amelu-icon name="reply" [size]="13" class="text-muted" />
+                }
+                @if (message.forwarded) {
+                  <amelu-icon name="forward" [size]="13" class="text-muted" />
+                }
+                <button
+                  type="button"
+                  class="flex-none cursor-pointer rounded p-0.5"
+                  [class]="message.flagged ? 'text-warn' : 'text-muted/40 hover:text-muted'"
+                  [attr.aria-label]="message.flagged ? 'Remove flag' : 'Flag'"
+                  (click)="toggleFlag(message, $event)"
+                >
+                  <amelu-icon [name]="message.flagged ? 'starFilled' : 'star'" [size]="14" />
+                </button>
+              </div>
+              <p class="mt-0.5 truncate text-[12px] text-muted">{{ message.preview }}</p>
+            </div>
+          </li>
+        } @empty {
+          @if (searching()) {
+            <amelu-empty-state title="Nothing found"
+              >No messages match "{{ q() }}".</amelu-empty-state
+            >
+          } @else if (unreadOnly() || flaggedOnly()) {
+            <amelu-empty-state title="Nothing here"
+              >No {{ unreadOnly() ? 'unread' : 'flagged' }} messages in this folder.
+              <button
+                actions
+                type="button"
+                [class]="ui.outline"
+                (click)="unreadOnly.set(false); flaggedOnly.set(false)"
+              >
+                Show all
+              </button>
+            </amelu-empty-state>
+          } @else {
+            <amelu-empty-state title="This folder is empty"
+              >Messages you receive show up here.</amelu-empty-state
+            >
+          }
+        }
+      </ul>
+      @if (messages()!.length < total()) {
+        <div class="p-3 text-center">
+          <button
+            type="button"
+            [class]="ui.outline"
+            (click)="loadMore()"
+            [disabled]="loadingMore()"
+          >
+            {{ loadingMore() ? 'Loading' : 'Load more' }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+</section>
+
+<!-- Message pane -->
+<section class="min-w-0 flex-1" [class.max-md:hidden]="!messageId()">
+  @if (messageId(); as id) {
+    <amelu-message-view
+      [messageId]="id"
+      [inTrash]="isTrash()"
+      [inJunk]="isJunk()"
+      [folders]="moveTargets()"
+      (back)="closeMessage()"
+      (seen)="markSeen($event, [id])"
+      (flagged)="flag($event, [id])"
+      (deleted)="remove([id])"
+      (moved)="move($event, [id])"
+      (spam)="spam($event, [id])"
+    />
+  } @else {
+    <div class="hidden h-full items-center justify-center md:flex">
+      <amelu-empty-state title="No message open"
+        >Pick a message from the list, or press c to write a new one.</amelu-empty-state
+      >
+    </div>
+  }
+</section>

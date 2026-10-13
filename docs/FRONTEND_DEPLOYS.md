@@ -85,3 +85,17 @@ first: `https://app.amelu.org,https://beta.amelu.org`. The edge Worker and
 the Go API both read it as a comma separated list. Change it together with a
 code deploy (`wrangler deploy --env production --secrets-file <file>`) so the
 secret and the code that parses it go out as one version.
+
+## The webmail (webmail.amelu.org)
+
+`webmail/` is served the same way as the 2.0 dashboard: static files from
+the Worker `amelu-webmail` (`webmail/wrangler.jsonc`, custom domain
+`webmail.amelu.org`, SPA fallback). Deploy from the repo root:
+
+```bash
+pnpm deploy:webmail   # ng build, then wrangler deploy
+```
+
+The API must list `https://webmail.amelu.org` in `ALLOWED_ORIGIN` (edge
+Worker secret, which also becomes the container's `CORS_ORIGIN`) or every
+call from it is refused by CORS. See `docs/WEBMAIL.md`.

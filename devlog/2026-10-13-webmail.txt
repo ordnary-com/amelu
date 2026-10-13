@@ -1,0 +1,32 @@
+Webmail on webmail.amelu.org
+2026-10-13
+
+A mail client for the people who use a mailbox, next to the dashboards for
+the people who manage them. New Angular app in webmail/ (same stack and
+look as beta/, served from the Worker amelu-webmail, pnpm dev:webmail on
+:4300). Sign-in is the full address plus mailbox password, not Ordnary ID.
+Three panes: folders (with unread counts, own folders can be created,
+renamed and deleted), the list (search, unread and flagged filters, load
+more, multi-select with read/unread, flag, move, delete, spam) and the open
+message. Message HTML goes through DOMPurify into a sandboxed iframe
+without scripts; images from the internet stay hidden until "Show images".
+Compose with recipient chips, attachments uploaded with progress, a draft
+saved every 10 seconds and on close, reply, reply all and forward with the
+quoted text. Settings: name and signature, out of office, password.
+The API it talks to is /api/webmail/*, described in docs/WEBMAIL.md.
+
+Backend: 25 routes under /api/webmail (handlers/webmail*.go). Sign-in opens
+a JMAP session on the cluster as the user (GET /.well-known/jmap with the
+mailbox password; 401 is a wrong password), which also yields the account
+id; after that every call uses the admin credentials plus that id, as the
+dashboard's message endpoints do, so no password is stored. Sessions are
+the amelu_webmail cookie (path /api/webmail, 30 days) in the new
+webmail_sessions table (migration 0031), separate from customer sessions.
+The Stalwart client gained stalwart/webmail.go (folders, queries with
+text/unread/flagged filters, flags, move, destroy, blob up/download,
+drafts, send with onSuccessUpdateEmail, identity signature,
+VacationResponse, Quota, password) with tests against a fake JMAP server.
+CORS now allows X-File-Name (upload file names), backend and edge.
+Not run against the live cluster yet: the admin password in the local
+backend/.env is stale, and the failed logins it causes got my IP banned by
+Stalwart (security.authentication-ban); removed via x:BlockedIp/set.

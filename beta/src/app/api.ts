@@ -27,6 +27,7 @@ export interface Member {
   role: OrganizationRole;
   createdAt: string;
   isSelf: boolean;
+  avatarUrl?: string;
 }
 
 export interface Invitation {
@@ -46,6 +47,7 @@ export interface CreateInvitationResult extends Invitation {
 export interface AuditEntry {
   id: string;
   actorEmail: string;
+  actorAvatarUrl?: string;
   action: string;
   objectType: string;
   objectId?: string;

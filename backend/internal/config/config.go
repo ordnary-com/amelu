@@ -86,11 +86,21 @@ type Config struct {
 	// internal/auth/admin.go. Empty disables the entire /internal/admin/*
 	// surface (fails closed), same convention as InternalJobsSharedSecret.
 	AdminSharedSecret string
+
+	// Webmail single sign-on (docs/WEBMAIL.md): "Open in webmail" on a
+	// mailbox redirects to WebmailURL with a token signed by
+	// WebmailSSOSecret, which the Roundcube plugin amelu_sso verifies.
+	// Empty secret means the button reports unavailable, same convention
+	// as the other optional integrations.
+	WebmailURL       string
+	WebmailSSOSecret string
 }
 
 func Load() (*Config, error) {
 	cfg := &Config{
 		HTTPAddr:         getEnv("HTTP_ADDR", ":8081"),
+		WebmailURL:       getEnv("WEBMAIL_URL", "https://webmail.amelu.org"),
+		WebmailSSOSecret: os.Getenv("WEBMAIL_SSO_SECRET"),
 		DatabaseURL:      os.Getenv("DATABASE_URL"),
 		StalwartBaseURL:  os.Getenv("STALWART_BASE_URL"),
 		StalwartUser:     os.Getenv("STALWART_ADMIN_USER"),

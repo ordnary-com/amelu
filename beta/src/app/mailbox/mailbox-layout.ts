@@ -3,13 +3,16 @@ import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
+import { Icon } from '../icon';
+import { UI } from '../ui';
+import { apiUrl } from '../config';
 import { MAILBOX_STATUS, badgeClass } from '../status';
 import { MailboxContext } from './mailbox-context';
 
 /** Header and the shared mailbox for every /domains/:domainId/mailboxes/:mailboxId page. */
 @Component({
   selector: 'amelu-mailbox-layout',
-  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe],
+  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe, Icon],
   providers: [MailboxContext],
   template: `
     @if (mailbox() === null) {
@@ -32,6 +35,12 @@ import { MailboxContext } from './mailbox-context';
         } @else {
           <span class="block h-3 w-48 animate-pulse rounded bg-bg"></span>
         }
+        @if (mailbox(); as m) {
+          <!-- A real link: the API answers with a redirect into webmail, signed in as this mailbox. -->
+          <a actions [href]="webmailUrl()" target="_blank" rel="noreferrer" [class]="ui.outline">
+            Open in webmail <amelu-icon name="external" [size]="14" />
+          </a>
+        }
       </amelu-page-header>
 
       <router-outlet />
@@ -42,6 +51,8 @@ import { MailboxContext } from './mailbox-context';
 })
 export class MailboxLayout {
   private readonly ctx = inject(MailboxContext);
+  protected readonly ui = UI;
+  protected readonly webmailUrl = computed(() => apiUrl(`/api/mailboxes/${this.ctx.id()}/webmail`));
   private readonly domainCtx = injectDomain();
   protected readonly mailbox = this.ctx.mailbox;
 

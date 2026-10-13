@@ -109,6 +109,8 @@ func (c *Client) call(ctx context.Context, method string, args any) (json.RawMes
 			"urn:ietf:params:jmap:sieve",
 			"urn:ietf:params:jmap:mail",
 			"urn:ietf:params:jmap:submission",
+			"urn:ietf:params:jmap:vacationresponse",
+			"urn:ietf:params:jmap:quota",
 		},
 		MethodCalls: []any{
 			[]any{method, args, "c1"},

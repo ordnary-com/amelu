@@ -22,6 +22,10 @@ a JSON HTTP API. `pnpm dev` at the repo root starts both together.
   (standalone, signals) with Tailwind v4, against the same Go API. See
   `beta/README.md`. It has its own Ordnary sign-in page; `CORS_ORIGIN`
   lists both dashboards.
+- `webmail/` - the mail client for mailbox users on webmail.amelu.org:
+  Angular 22 like `beta/`, but signed in with the mailbox address and
+  password, against `/api/webmail/*`. See `docs/WEBMAIL.md` for the
+  contract and how sessions differ from the dashboard's.
 - `backend/` - Go, stdlib `net/http` with 1.22+ pattern routing
   (`mux.HandleFunc("GET /api/...", ...)` in `cmd/api/main.go`), no web
   framework. Postgres via `pgx`, no ORM - `internal/db/store.go` plus
@@ -48,6 +52,8 @@ a JSON HTTP API. `pnpm dev` at the repo root starts both together.
 ```
 pnpm install
 pnpm dev        # starts frontend (:5173) and backend (:8081) together
+pnpm dev:beta   # the 2.0 dashboard on :4200, proxies /api to :8081
+pnpm dev:webmail # the webmail on :4300, proxies /api to :8081
 ```
 
 Needs `backend/.env` (copy `backend/.env.example`) and a reachable Postgres

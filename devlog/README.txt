@@ -24,6 +24,36 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-13  2.0: Beta notice on the dashboard
+            2026-10-13-beta-banner.txt
+
+2026-10-13  2.0: Changelog comes from Ordnary's feed
+            2026-10-13-beta-changelog-feed.txt
+
+2026-10-13  Error codes, request ids and a docs link in server-fault errors
+            2026-10-13-error-codes.txt
+
+2026-10-13  Beta link in the old dashboard's top bar
+            2026-10-13-beta-link-topbar.txt
+
+2026-10-13  2.0 dashboard live on beta.amelu.org
+            2026-10-13-beta-live.txt
+
+2026-10-13  Favorite, sort and drag domains
+            2026-10-13-domain-favorites-order.txt
+
+2026-10-13  Avatars on team members and in the activity log
+            2026-10-13-member-avatars.txt
+
+2026-10-13  2.0: New 404 page
+            2026-10-13-beta-404.txt
+
+2026-10-13  2.0: Confirm the account before going in
+            2026-10-13-beta-account-found.txt
+
+2026-10-13  2.0: Own sign-in page in the new dashboard
+            2026-10-13-beta-login.txt
+
 2026-10-12  2.0: Support, Changelog, Status and Terminate account
             2026-10-12-beta-support-status.txt
 

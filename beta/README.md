@@ -11,8 +11,9 @@ pnpm dev:beta     # this app on :4200, /api proxied to :8081
 pnpm build:beta
 ```
 
-Sign in through the current dashboard first: login (via Ordnary) still lives
-there, and the session cookie it sets on localhost is what this app uses.
+Signing in happens on this app's own /login page (via Ordnary). The API
+must list this app's origin in `CORS_ORIGIN` (`http://localhost:4200`
+locally) so the Ordnary callback sends you back here.
 
 Layout of `src/app`:
 

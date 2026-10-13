@@ -64,6 +64,7 @@ type loginState struct {
 	State        string `json:"state"`
 	CodeVerifier string `json:"codeVerifier"`
 	ReturnTo     string `json:"returnTo"`
+	Origin       string `json:"origin,omitempty"`
 }
 
 type tokenResponse struct {
@@ -91,17 +92,39 @@ func (e *APIError) Error() string {
 }
 
 // Login redirects the browser to Ordnary identity's authorize endpoint.
-func (c *Config) Login(w http.ResponseWriter, r *http.Request) {
+// origin is the dashboard that started the login (already checked by the
+// caller); it comes back unchanged in CallbackResult. With switchAccount the
+// browser first goes through Ordnary's sign-in form, so someone already
+// signed in to Ordnary can pick a different account instead of being let
+// straight through as the current one.
+func (c *Config) Login(w http.ResponseWriter, r *http.Request, origin string, switchAccount bool) {
 	state := createRandomString(16)
 	verifier, challenge := createPKCEPair()
 	returnTo := r.URL.Query().Get("returnTo")
 
-	ls := loginState{State: state, CodeVerifier: verifier, ReturnTo: returnTo}
+	ls := loginState{State: state, CodeVerifier: verifier, ReturnTo: returnTo, Origin: origin}
 	w.Header().Set("Set-Cookie", serializeCookie(cookieName, c.codec().encodeSigned(ls), cookieOpts{
 		maxAge: 600, httpOnly: true, production: c.Production,
 	}))
 
-	http.Redirect(w, r, c.authorizationURL(state, challenge), http.StatusFound)
+	target := c.authorizationURL(state, challenge)
+	if switchAccount {
+		target = c.signInURL(target)
+	}
+	http.Redirect(w, r, target, http.StatusFound)
+}
+
+// signInURL is Ordnary's sign-in form, returning to authorizeURL afterwards.
+// reauth=1 keeps the form from skipping itself when a session already exists.
+// prompt=login can't be used for this: Ordnary keeps it in the URL it returns
+// to after signing in, which asks for a login again, and again.
+func (c *Config) signInURL(authorizeURL string) string {
+	u, _ := url.Parse(c.Issuer + "/v2/signin")
+	q := u.Query()
+	q.Set("reauth", "1")
+	q.Set("returnTo", authorizeURL)
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 func (c *Config) authorizationURL(state, codeChallenge string) string {
@@ -122,6 +145,7 @@ func (c *Config) authorizationURL(state, codeChallenge string) string {
 type CallbackResult struct {
 	User     User
 	ReturnTo string
+	Origin   string
 }
 
 // Callback validates the OAuth state, exchanges the code, and fetches the
@@ -152,7 +176,7 @@ func (c *Config) Callback(w http.ResponseWriter, r *http.Request) (*CallbackResu
 	if err != nil {
 		return nil, err
 	}
-	return &CallbackResult{User: *user, ReturnTo: ls.ReturnTo}, nil
+	return &CallbackResult{User: *user, ReturnTo: ls.ReturnTo, Origin: ls.Origin}, nil
 }
 
 func (c *Config) exchangeCode(ctx context.Context, code, codeVerifier string) (*tokenResponse, error) {

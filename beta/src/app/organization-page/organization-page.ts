@@ -8,13 +8,14 @@ import { Alert } from '../alert/alert';
 import { ROLE, badgeClass } from '../status';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { Avatar } from '../avatar';
 
 const ASSIGNABLE_ROLES: OrganizationRole[] = ['owner', 'admin', 'helpdesk', 'billing', 'read_only'];
 
 /** The current dashboard's /organization: details, team members and invitations. */
 @Component({
   selector: 'amelu-organization-page',
-  imports: [EmptyState, DatePipe, RouterLink, Alert],
+  imports: [EmptyState, DatePipe, RouterLink, Alert, Avatar],
   templateUrl: './organization-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -67,12 +68,6 @@ export class OrganizationPage {
       this.invitations.set(this.invitations() ?? []);
       this.error.set(errorMessage(err, 'Could not load organization'));
     }
-  }
-
-  protected initials(name: string, email: string): string {
-    const parts = (name || email).trim().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return (name || email).slice(0, 2).toUpperCase();
   }
 
   protected async changeRole(member: Member, role: OrganizationRole): Promise<void> {

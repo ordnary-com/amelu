@@ -1,0 +1,8 @@
+2.0: new 404 page
+2026-10-13
+
+The not-found page in the 2.0 dashboard was a small card. It is now plain
+content on the page: a large 404, the path that doesn't exist, "Go to the
+dashboard" and "Go back" (history back), links to Email domains, My account
+and Service status, and a link to Support. The login page is now lazy
+loaded, which keeps the initial bundle under the 500 kB budget.

@@ -10,6 +10,7 @@ import { Icon } from '../icon';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
+import { apiUrl } from '../config';
 
 /** The current dashboard's /domains/:id/aliases: every address alias across the domain's mailboxes. */
 @Component({
@@ -24,6 +25,7 @@ export class AddressAliases {
   private readonly routing = inject(RoutingApi);
   protected readonly ui = UI;
   protected readonly ctx = injectDomain();
+  protected readonly exportUrl = computed(() => apiUrl(`/api/domains/${this.ctx.id()}/address-aliases/export`));
 
   private readonly resource = domainResource(this.ctx.id, (id) => this.api.listAddressAliases(id));
   protected readonly aliases = this.resource.value;

@@ -12,6 +12,7 @@ import (
 type auditEntryResponse struct {
 	ID          string         `json:"id"`
 	ActorEmail  string         `json:"actorEmail"`
+	ActorAvatar string         `json:"actorAvatarUrl,omitempty"`
 	Action      string         `json:"action"`
 	ObjectType  string         `json:"objectType"`
 	ObjectID    string         `json:"objectId,omitempty"`
@@ -67,6 +68,7 @@ func (a *App) ListOrganizationAudit(w http.ResponseWriter, r *http.Request) {
 		out = append(out, auditEntryResponse{
 			ID:          e.ID,
 			ActorEmail:  e.ActorEmail,
+			ActorAvatar: e.ActorAvatarURL.String,
 			Action:      e.Action,
 			ObjectType:  e.ObjectType,
 			ObjectID:    e.ObjectID.String,

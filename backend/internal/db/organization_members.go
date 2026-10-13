@@ -27,6 +27,8 @@ type OrganizationMember struct {
 	Name           string
 	Role           string
 	CreatedAt      time.Time
+	// AvatarURL is only filled in by ListOrganizationMembers.
+	AvatarURL sql.NullString
 }
 
 // GetMemberRole is the core tenant-isolation + authz lookup: every mutating
@@ -52,7 +54,7 @@ func (s *Store) GetMemberRole(ctx context.Context, organizationID, customerID st
 // first, joined onto the customer for display fields.
 func (s *Store) ListOrganizationMembers(ctx context.Context, organizationID string) ([]OrganizationMember, error) {
 	rows, err := s.conn.QueryContext(ctx, `
-		SELECT m.id, m.organization_id, m.customer_id, c.email, c.name, m.role, m.created_at
+		SELECT m.id, m.organization_id, m.customer_id, c.email, c.name, m.role, m.created_at, c.avatar_url
 		FROM organization_members m
 		JOIN customers c ON c.id = m.customer_id
 		WHERE m.organization_id = $1
@@ -66,7 +68,7 @@ func (s *Store) ListOrganizationMembers(ctx context.Context, organizationID stri
 	var out []OrganizationMember
 	for rows.Next() {
 		var m OrganizationMember
-		if err := rows.Scan(&m.ID, &m.OrganizationID, &m.CustomerID, &m.Email, &m.Name, &m.Role, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.OrganizationID, &m.CustomerID, &m.Email, &m.Name, &m.Role, &m.CreatedAt, &m.AvatarURL); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

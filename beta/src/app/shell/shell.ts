@@ -5,6 +5,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { Domains } from '../domains';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NgIcon, provideIcons } from '@ng-icons/core';
+import { apiUrl } from '../config';
 import {
   lucideBuilding2,
   lucideCreditCard,
@@ -41,7 +42,7 @@ const LINK =
   host: { class: 'flex h-screen flex-col bg-chrome' },
 })
 export class Shell {
-  protected readonly domains = inject(Domains).list;
+  protected readonly domains = inject(Domains).arranged;
 
   // The shell sits above the domain routes, so it reads ids from the URL rather than route params.
   private readonly router = inject(Router);
@@ -113,7 +114,7 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
       { label: 'Import from CSV', link: `${d}/mailboxes/import`, sub: true },
       { label: 'Default Services', link: `${d}/mailboxes/services`, sub: true },
       { label: 'Default Limits', link: `${d}/mailboxes/limits`, sub: true },
-      { label: 'Export to CSV', link: `/api${d}/mailboxes/export`, sub: true, kind: 'download' },
+      { label: 'Export to CSV', link: apiUrl(`/api${d}/mailboxes/export`), sub: true, kind: 'download' },
     );
   }
   domain.push({ label: 'Address Aliases', link: `${d}/aliases`, area: true });
@@ -121,7 +122,7 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
     domain.push(
       { label: 'New Alias', link: `${d}/aliases/new`, sub: true, kind: 'create' },
       { label: 'Import from CSV', link: `${d}/aliases/import`, sub: true },
-      { label: 'Export to CSV', link: `/api${d}/address-aliases/export`, sub: true, kind: 'download' },
+      { label: 'Export to CSV', link: apiUrl(`/api${d}/address-aliases/export`), sub: true, kind: 'download' },
     );
   }
   domain.push({ label: 'Domain Aliases', link: `${d}/domain-aliases`, area: true });

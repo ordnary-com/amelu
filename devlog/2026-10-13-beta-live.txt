@@ -1,0 +1,15 @@
+2.0 dashboard live on beta.amelu.org
+2026-10-13
+
+beta/ is deployed as the Worker amelu-beta (static assets only, custom
+domain beta.amelu.org, single-page-application fallback); pnpm deploy:beta
+builds and uploads it. In production the app calls https://api.amelu.org:
+api-origin.interceptor.ts prefixes /api/ requests and sends the cookie, and
+the CSV export links use apiUrl().
+
+The edge Worker's CORS now reads ALLOWED_ORIGIN as a comma separated list and
+echoes the request Origin only when it is listed, like the Go API. The
+production secret is https://app.amelu.org,https://beta.amelu.org, deployed
+together with the new Worker and origin image in one wrangler deploy
+(--secrets-file), so app.amelu.org never saw a half-applied state. Migrations
+0029 and 0030 ran on the production database at container start.

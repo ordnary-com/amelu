@@ -1,0 +1,23 @@
+2.0: own sign-in page, login returns to the dashboard that started it
+2026-10-13
+
+The 2.0 dashboard sent signed-out visitors to the old dashboard's /login.
+It now has its own /login page (beta/src/app/login) with the same "Sign in
+with Ordnary" button and error messages; the auth guard sends you there with
+returnTo set, and logout lands there too. Next to the card is a carousel of
+five Unsplash photos (beta/public/login, credits in CREDITS.txt) that
+changes every 6 seconds, and stays put with prefers-reduced-motion.
+
+CORS_ORIGIN is now a comma separated list (first entry stays the primary for
+emailed links and Stripe redirects). The CORS middleware echoes the request
+Origin only when it is on that list. GET /api/auth/ordnary/login takes an
+optional origin parameter, checked against the list and kept in the signed
+login-state cookie; the callback redirects back to that origin, errors
+included. returnTo must now be a path: "//evil.example" or "@evil.example"
+fall back to /domains instead of leaving the site.
+
+The legal line links to amelu.org/terms, /acceptable-use and /privacy. At
+the bottom of the page: version and commit (scripts/build-info.mjs writes
+src/app/build-info.ts before every start, build and test), build time, the
+edge location from /cdn-cgi/trace (e.g. AMS, NL, HTTP/2, TLS 1.3) and the
+round trip to GET /api/healthz.

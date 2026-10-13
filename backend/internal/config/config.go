@@ -5,6 +5,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -16,7 +17,10 @@ type Config struct {
 	StalwartUser     string
 	StalwartPassword string
 
-	CORSOrigin string
+	// CORSOrigins are the dashboards allowed to call this API with cookies,
+	// from CORS_ORIGIN as a comma separated list. The first one is the
+	// primary dashboard: emailed links and Stripe redirects point there.
+	CORSOrigins []string
 
 	// Domain Connect (Cloudflare "fix DNS automatically" flow) is optional:
 	// until the template is approved by Cloudflare (see
@@ -91,7 +95,7 @@ func Load() (*Config, error) {
 		StalwartBaseURL:  os.Getenv("STALWART_BASE_URL"),
 		StalwartUser:     os.Getenv("STALWART_ADMIN_USER"),
 		StalwartPassword: os.Getenv("STALWART_ADMIN_PASSWORD"),
-		CORSOrigin:       getEnv("CORS_ORIGIN", "http://localhost:5173"),
+		CORSOrigins:      splitList(getEnv("CORS_ORIGIN", "http://localhost:5173")),
 
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),
@@ -149,4 +153,14 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func splitList(v string) []string {
+	var out []string
+	for _, part := range strings.Split(v, ",") {
+		if part = strings.TrimSpace(part); part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
 }

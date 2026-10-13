@@ -5,6 +5,7 @@ import { Api, AuditEntry, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { Avatar } from '../avatar';
 
 type Category = 'all' | 'team' | 'domains' | 'mailboxes' | 'billing' | 'account';
 
@@ -41,7 +42,7 @@ interface Row {
 /** The current dashboard's /organization/activity, grouped by day with a filter. */
 @Component({
   selector: 'amelu-activity-page',
-  imports: [EmptyState, DatePipe, Alert],
+  imports: [EmptyState, DatePipe, Alert, Avatar],
   templateUrl: './activity-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

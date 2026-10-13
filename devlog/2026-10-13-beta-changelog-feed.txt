@@ -1,0 +1,17 @@
+2.0: Changelog comes from Ordnary's feed
+2026-10-13
+
+The beta Changelog page was a hand-maintained list of three releases from
+July. It now shows Amelu's entries from https://ordnary.com/changelog/rss.xml.
+The feed has no CORS headers, so the Go API mirrors it: GET /api/changelog
+(public, handlers/changelog.go) fetches the feed, keeps the items with
+<category>Amelu</category>, strips the "Amelu: " title prefix, splits the
+flattened "- one - two" descriptions into notes and caches the result for
+10 minutes, serving the stale copy if the feed is down. Failures come back
+as a 502 with code UPSTREAM_ERROR.
+
+The page lists title, date and notes per change and links to the full
+Ordnary changelog and its RSS feed. The Latest change card shows the
+commit the build comes from (hash linked to GitHub, subject, date, version),
+from build-info.ts, which now also records commitSubject and commitDate. The old dashboard's
+static list is untouched.

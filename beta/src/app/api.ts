@@ -27,6 +27,7 @@ export interface Member {
   role: OrganizationRole;
   createdAt: string;
   isSelf: boolean;
+  avatarUrl?: string;
 }
 
 export interface Invitation {
@@ -46,6 +47,7 @@ export interface CreateInvitationResult extends Invitation {
 export interface AuditEntry {
   id: string;
   actorEmail: string;
+  actorAvatarUrl?: string;
   action: string;
   objectType: string;
   objectId?: string;
@@ -60,6 +62,9 @@ export interface Domain {
   status: 'provisioning' | 'dns_pending' | 'active' | 'failed' | 'suspended';
   createdAt: string;
   verifiedAt?: string;
+  /** The signed-in customer's own star and drag-and-drop position. */
+  favorite: boolean;
+  position?: number;
 }
 
 export interface DnsRecordCheck {
@@ -119,10 +124,31 @@ export interface CreatedApiKey extends ApiKey {
   key: string;
 }
 
-/** The API's {"error": "..."} message, or the fallback when there isn't one. */
+// Mirrors the Go API's error body (handlers/json.go). For server faults
+// `error` already ends in a link to https://amelu.org/docs/errors#CODE.
+export interface ApiErrorBody {
+  error: string;
+  code?: string;
+  status?: number;
+  requestId?: string;
+  detail?: string;
+}
+
+/**
+ * The API's error sentence, or the fallback when there isn't one. Server
+ * faults get the request id appended so a customer can quote it.
+ */
 export function errorMessage(err: unknown, fallback: string): string {
-  if (err instanceof HttpErrorResponse && typeof err.error?.error === 'string') return err.error.error;
-  return fallback;
+  if (!(err instanceof HttpErrorResponse) || typeof err.error?.error !== 'string') return fallback;
+  const body = err.error as ApiErrorBody;
+  if (err.status >= 500 && body.requestId) return `${body.error} (request ${body.requestId})`;
+  return body.error;
+}
+
+/** The API's stable error code, e.g. MAIL_CLUSTER_UNREACHABLE, if the response carried one. */
+export function errorCode(err: unknown): string | undefined {
+  if (err instanceof HttpErrorResponse && typeof err.error?.code === 'string') return err.error.code;
+  return undefined;
 }
 
 export type BillingInterval = 'monthly' | 'annual';
@@ -160,13 +186,26 @@ export interface Invoice {
 }
 
 /**
- * Same-origin /api calls: `ng serve` proxies them to the Go API on :8081
- * (proxy.conf.json), so the session cookie the API set on localhost is sent
- * and no CORS change is needed for this app.
+ * Calls /api/... paths; apiOriginInterceptor points them at the API host in
+ * production. In development `ng serve` proxies them to :8081.
  */
+/** One Amelu item from Ordnary's changelog feed, via GET /api/changelog. */
+export interface ChangelogEntry {
+  id: string;
+  title: string;
+  /** YYYY-MM-DD, empty when the feed item had no usable date. */
+  date: string;
+  link: string;
+  notes: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class Api {
   private readonly http = inject(HttpClient);
+
+  listChangelog() {
+    return this.http.get<{ entries: ChangelogEntry[] }>('/api/changelog');
+  }
 
   me() {
     return this.http.get<Customer>('/api/me');
@@ -174,6 +213,14 @@ export class Api {
 
   listDomains() {
     return this.http.get<Domain[]>('/api/domains');
+  }
+
+  setDomainFavorite(id: string, favorite: boolean) {
+    return this.http.put<{ favorite: boolean }>(`/api/domains/${id}/favorite`, { favorite });
+  }
+
+  setDomainOrder(domainIds: string[]) {
+    return this.http.put<void>('/api/domains/order', { domainIds });
   }
 
   createDomain(name: string) {

@@ -27,6 +27,7 @@ type memberResponse struct {
 	Role      string `json:"role"`
 	CreatedAt string `json:"createdAt"`
 	IsSelf    bool   `json:"isSelf"`
+	AvatarURL string `json:"avatarUrl,omitempty"`
 }
 
 func toMemberResponse(m *db.OrganizationMember, actingCustomerID string) memberResponse {
@@ -37,6 +38,7 @@ func toMemberResponse(m *db.OrganizationMember, actingCustomerID string) memberR
 		Role:      m.Role,
 		CreatedAt: m.CreatedAt.Format(http.TimeFormat),
 		IsSelf:    m.CustomerID == actingCustomerID,
+		AvatarURL: m.AvatarURL.String,
 	}
 }
 

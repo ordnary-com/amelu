@@ -13,8 +13,8 @@ On the mail host marduk (141.95.52.66, root via `~/.ssh/amelu_fleet`), in
 | --- | --- |
 | `compose.yml` | `roundcube/roundcubemail:1.6.x-apache` (SQLite in the `db` volume) and `nginx:alpine` |
 | `config/custom.inc.php` | Amelu branding (`product_name`, `skin_logo`), `des_key`, Sieve host, TLS verification for IMAP/SMTP. Mode 644, the web server reads it |
-| `config/amelu-logo.png` | The logo, mounted into Roundcube's `images/` |
-| `nginx/webmail.conf` | TLS on 8443 with the host's Let's Encrypt certificate (`/etc/letsencrypt` bind-mounted), proxying to Roundcube with `Host: webmail.amelu.org` |
+| `config/amelu-logo.png` | The logo, mounted into `skins/elastic/images/` (Apache only serves the skin and plugin folders, a top-level `images/` gives 404) |
+| `nginx/webmail.conf` | TLS on 8443 with the host's Let's Encrypt certificate (`/etc/letsencrypt` bind-mounted), proxying to Roundcube with `Host: webmail.amelu.org`; resolves the container name per request so a recreated Roundcube container is picked up |
 
 Mail settings come from the compose environment: IMAP `ssl://marduk.mx.amelu.org:993`,
 SMTP `ssl://marduk.mx.amelu.org:465` with the user's own credentials, Sieve

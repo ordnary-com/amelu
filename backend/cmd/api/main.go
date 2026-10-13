@@ -313,6 +313,32 @@ func main() {
 	mux.HandleFunc("POST /api/billing/portal", auth.Require(app.Store, app.CreateBillingPortalSession))
 	mux.HandleFunc("GET /api/billing/invoices", auth.Require(app.Store, app.ListInvoices))
 
+	// Webmail (docs/WEBMAIL.md): mailbox users with their own session cookie.
+	mux.HandleFunc("POST /api/webmail/login", app.WebmailLogin)
+	mux.HandleFunc("POST /api/webmail/logout", app.WebmailLogout)
+	mux.HandleFunc("GET /api/webmail/me", auth.RequireWebmail(app.Store, app.WebmailMe))
+	mux.HandleFunc("GET /api/webmail/folders", auth.RequireWebmail(app.Store, app.WebmailListFolders))
+	mux.HandleFunc("POST /api/webmail/folders", auth.RequireWebmail(app.Store, app.WebmailCreateFolder))
+	mux.HandleFunc("PATCH /api/webmail/folders/{id}", auth.RequireWebmail(app.Store, app.WebmailUpdateFolder))
+	mux.HandleFunc("DELETE /api/webmail/folders/{id}", auth.RequireWebmail(app.Store, app.WebmailDeleteFolder))
+	mux.HandleFunc("GET /api/webmail/messages", auth.RequireWebmail(app.Store, app.WebmailListMessages))
+	mux.HandleFunc("GET /api/webmail/messages/{id}", auth.RequireWebmail(app.Store, app.WebmailGetMessage))
+	mux.HandleFunc("GET /api/webmail/messages/{id}/raw", auth.RequireWebmail(app.Store, app.WebmailRawMessage))
+	mux.HandleFunc("POST /api/webmail/messages/flags", auth.RequireWebmail(app.Store, app.WebmailSetFlags))
+	mux.HandleFunc("POST /api/webmail/messages/move", auth.RequireWebmail(app.Store, app.WebmailMoveMessages))
+	mux.HandleFunc("POST /api/webmail/messages/delete", auth.RequireWebmail(app.Store, app.WebmailDeleteMessages))
+	mux.HandleFunc("POST /api/webmail/messages/spam", auth.RequireWebmail(app.Store, app.WebmailSpam))
+	mux.HandleFunc("GET /api/webmail/blobs/{blobId}", auth.RequireWebmail(app.Store, app.WebmailDownloadBlob))
+	mux.HandleFunc("POST /api/webmail/blobs", auth.RequireWebmail(app.Store, app.WebmailUploadBlob))
+	mux.HandleFunc("POST /api/webmail/drafts", auth.RequireWebmail(app.Store, app.WebmailCreateDraft))
+	mux.HandleFunc("PUT /api/webmail/drafts/{id}", auth.RequireWebmail(app.Store, app.WebmailUpdateDraft))
+	mux.HandleFunc("DELETE /api/webmail/drafts/{id}", auth.RequireWebmail(app.Store, app.WebmailDeleteDraft))
+	mux.HandleFunc("POST /api/webmail/send", auth.RequireWebmail(app.Store, app.WebmailSend))
+	mux.HandleFunc("GET /api/webmail/settings", auth.RequireWebmail(app.Store, app.WebmailGetSettings))
+	mux.HandleFunc("PUT /api/webmail/settings/identity", auth.RequireWebmail(app.Store, app.WebmailUpdateIdentity))
+	mux.HandleFunc("PUT /api/webmail/settings/vacation", auth.RequireWebmail(app.Store, app.WebmailUpdateVacation))
+	mux.HandleFunc("POST /api/webmail/settings/password", auth.RequireWebmail(app.Store, app.WebmailChangePassword))
+
 	// Public - Stripe calls this directly, never a logged-in customer. The
 	// webhook signature (verified inside StripeWebhook) is the only trust
 	// boundary.

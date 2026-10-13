@@ -88,14 +88,6 @@ secret and the code that parses it go out as one version.
 
 ## The webmail (webmail.amelu.org)
 
-`webmail/` is served the same way as the 2.0 dashboard: static files from
-the Worker `amelu-webmail` (`webmail/wrangler.jsonc`, custom domain
-`webmail.amelu.org`, SPA fallback). Deploy from the repo root:
-
-```bash
-pnpm deploy:webmail   # ng build, then wrangler deploy
-```
-
-The API must list `https://webmail.amelu.org` in `ALLOWED_ORIGIN` (edge
-Worker secret, which also becomes the container's `CORS_ORIGIN`) or every
-call from it is refused by CORS. See `docs/WEBMAIL.md`.
+Roundcube on the mail host, fronted by the Worker `amelu-webmail`
+(`cloudflare/webmail`). `pnpm deploy:webmail` deploys the Worker; Roundcube
+itself is updated on the host. See `docs/WEBMAIL.md`.

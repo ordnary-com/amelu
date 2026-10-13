@@ -12,6 +12,7 @@ import { Icon } from '../../icon';
 import { MAILBOX_STATUS, badgeClass } from '../../status';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
+import { apiUrl } from '../../config';
 
 /** The current dashboard's "All Mailboxes" page: every mailbox on one domain. */
 @Component({
@@ -76,7 +77,7 @@ export class MailboxesPage {
   });
 
   protected readonly base = computed(() => `/domains/${this.ctx.id()}`);
-  protected readonly exportUrl = computed(() => `/api/domains/${this.ctx.id()}/mailboxes/export`);
+  protected readonly exportUrl = computed(() => apiUrl(`/api/domains/${this.ctx.id()}/mailboxes/export`));
 
   protected readonly settings = [
     { label: 'Import from CSV', hint: 'Create up to 100 mailboxes at once', link: 'mailboxes/import' },

@@ -1,0 +1,19 @@
+2.0: "We found your Amelu account" before going in
+2026-10-13
+
+Signing in, or coming back with a session, no longer drops you straight
+into the 2.0 dashboard. The first visit in a browser tab, including the one
+right after the Ordnary callback, goes to /login, which shows the account
+(avatar, name, email, organization) with "Yes, continue" and "Use another
+account". The choice is kept per tab in sessionStorage
+(amelu.account-confirmed).
+
+"Use another account" ends the Amelu session (POST /api/logout) and calls
+GET /api/auth/ordnary/login with switch=1, which sends the browser to
+Ordnary's /v2/signin?reauth=1 with the authorize URL as returnTo, so the
+sign-in form shows even while Ordnary is still signed in. prompt=login
+doesn't work for this: Ordnary keeps it in its returnTo and asks again.
+
+Signing in, continuing and switching accounts show the old dashboard's
+loading screen (.app-loading: chrome colour with a bar running along the
+top) for at least 700 ms before moving on, so the step is visible.

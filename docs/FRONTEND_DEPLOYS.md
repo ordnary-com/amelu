@@ -67,3 +67,21 @@ Find the previous good deployment ID, then re-promote it via the dashboard
 (Deployments -> [deployment] -> "Rollback to this deployment") - there is
 currently no CLI command for promoting an old deployment to production, it
 must be done from the dashboard.
+
+## The 2.0 dashboard (beta.amelu.org)
+
+`beta/` is served as static files from the Worker `amelu-beta`
+(`beta/wrangler.jsonc`, custom domain `beta.amelu.org`, SPA fallback to
+`index.html`). Deploy from the repo root:
+
+```bash
+pnpm deploy:beta   # ng build, then wrangler deploy
+```
+
+In production it calls `https://api.amelu.org` (`API_ORIGIN` in
+`beta/src/app/config.ts`, applied by `api-origin.interceptor.ts`). For that
+to work the API's `ALLOWED_ORIGIN` secret lists both dashboards, current one
+first: `https://app.amelu.org,https://beta.amelu.org`. The edge Worker and
+the Go API both read it as a comma separated list. Change it together with a
+code deploy (`wrangler deploy --env production --secrets-file <file>`) so the
+secret and the code that parses it go out as one version.

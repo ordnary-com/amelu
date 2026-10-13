@@ -128,6 +128,8 @@ func main() {
 	// Cloudflare Tunnel connector and the edge Worker's origin health
 	// check. See docs/cloudflare/TUNNEL.md and EDGE_WORKER.md.
 	mux.HandleFunc("GET /api/healthz", app.Healthz)
+	// Public: it only mirrors Ordnary's own public changelog feed.
+	mux.HandleFunc("GET /api/changelog", app.GetChangelog)
 
 	// Internal-only: HMAC-signed shared secret (auth.RequireInternal), and
 	// must never be routed to by the public edge Worker or exposed outside

@@ -23,6 +23,9 @@ type domainResponse struct {
 	VerifiedAt     *string `json:"verifiedAt,omitempty"`
 	Notes          string  `json:"notes"`
 	PubliclyListed bool    `json:"publiclyListed"`
+	// The signed-in customer's own arrangement; only set by ListDomains.
+	Favorite bool `json:"favorite"`
+	Position *int `json:"position,omitempty"`
 }
 
 func toDomainResponse(d *db.Domain) domainResponse {
@@ -143,9 +146,23 @@ func (a *App) ListDomains(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prefs, err := a.Store.ListDomainPreferences(r.Context(), customer.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not list domains")
+		return
+	}
+
 	out := make([]domainResponse, 0, len(domains))
 	for i := range domains {
-		out = append(out, toDomainResponse(&domains[i]))
+		resp := toDomainResponse(&domains[i])
+		if p, ok := prefs[domains[i].ID]; ok {
+			resp.Favorite = p.Favorite
+			if p.Position.Valid {
+				position := int(p.Position.Int32)
+				resp.Position = &position
+			}
+		}
+		out = append(out, resp)
 	}
 	writeJSON(w, http.StatusOK, out)
 }

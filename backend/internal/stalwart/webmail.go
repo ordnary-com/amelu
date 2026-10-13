@@ -240,6 +240,12 @@ type Mail struct {
 
 type jmapMail struct {
 	jmapEmail
+	// Shadows jmapEmail.HTMLBody: JMAP lists the text/plain part under
+	// htmlBody too when there is no HTML, and that must not be rendered as HTML.
+	HTMLParts []struct {
+		PartID string `json:"partId"`
+		Type   string `json:"type"`
+	} `json:"htmlBody"`
 	BCC        []Address       `json:"bcc"`
 	References []string        `json:"references"`
 	SentAt     string          `json:"sentAt"`
@@ -395,7 +401,7 @@ func (c *Client) GetMail(ctx context.Context, accountID, id string) (*Mail, erro
 		MessageID: nonNilStr(e.MessageID), InReplyTo: nonNilStr(e.InReplyTo), References: nonNilStr(e.References),
 		SentAt:      e.SentAt,
 		TextBody:    e.bodyFor(e.TextBody),
-		HTMLBody:    e.bodyFor(e.HTMLBody),
+		HTMLBody:    e.htmlOnly(),
 		Attachments: make([]MailAttachment, 0, len(e.Parts)),
 		BlobID:      e.BlobID,
 	}
@@ -405,6 +411,21 @@ func (c *Client) GetMail(ctx context.Context, accountID, id string) (*Mail, erro
 		})
 	}
 	return m, nil
+}
+
+// htmlOnly joins the HTML body parts, and only those: a message without an
+// HTML alternative gets an empty HTMLBody, so the client shows the text.
+func (e *jmapMail) htmlOnly() string {
+	var b strings.Builder
+	for _, p := range e.HTMLParts {
+		if p.Type != "text/html" {
+			continue
+		}
+		if v, ok := e.BodyValues[p.PartID]; ok {
+			b.WriteString(v.Value)
+		}
+	}
+	return b.String()
 }
 
 func nonNil(a []Address) []Address {

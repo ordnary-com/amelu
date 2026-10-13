@@ -51,7 +51,7 @@ func (a *App) InviteMailboxPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.sendMailboxPasswordInvite(r, mailbox, domain, recipient); err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeUpstreamError(w, "", err)
 		return
 	}
 	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
@@ -169,7 +169,7 @@ func (a *App) CompletePasswordReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetMailboxPassword(r.Context(), mailbox.LocalPart, domain.Name, req.Password); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to set password in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to set password in mail cluster", err)
 		return
 	}
 	if err := a.Store.MarkPasswordResetTokenUsed(r.Context(), rec.ID); err != nil {

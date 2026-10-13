@@ -91,7 +91,7 @@ func (a *App) UpdateMailboxServices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetMailboxDisabledPermissions(r.Context(), mailbox.LocalPart, domain.Name, disabled); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to update services in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to update services in mail cluster", err)
 		return
 	}
 	if err := a.Store.UpdateMailboxServices(r.Context(), mailbox.ID, req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve); err != nil {
@@ -129,7 +129,7 @@ func (a *App) SetMailboxPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetMailboxPassword(r.Context(), mailbox.LocalPart, domain.Name, req.Password); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to update password in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to update password in mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.password_changed", "Password changed for "+mailbox.LocalPart+"@"+domain.Name)
@@ -175,7 +175,7 @@ func (a *App) UpdateMailboxInternalAccess(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if err := a.deployDomainWideRulesToMailbox(r.Context(), domain, mailbox.LocalPart); err != nil {
-		writeError(w, http.StatusBadGateway, "setting saved but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "setting saved but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.internal_access_updated", "Updated internal access setting for "+mailbox.LocalPart+"@"+domain.Name)
@@ -221,7 +221,7 @@ func (a *App) UpdateMailboxDelegation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := a.deployDomainWideRulesToMailbox(r.Context(), domain, mailbox.LocalPart); err != nil {
-		writeError(w, http.StatusBadGateway, "delegation saved but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "delegation saved but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.delegation_updated", "Updated delegation for "+mailbox.LocalPart+"@"+domain.Name)
@@ -292,7 +292,7 @@ func (a *App) CreateMailboxForward(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := a.deployDomainWideRulesToMailbox(r.Context(), domain, mailbox.LocalPart); err != nil {
 		a.Store.DeleteMailboxForward(r.Context(), mailbox.ID, created.ID)
-		writeError(w, http.StatusBadGateway, "could not deploy forward to mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not deploy forward to mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.forward_created", "Added forward to "+destination+" for "+mailbox.LocalPart+"@"+domain.Name)
@@ -319,7 +319,7 @@ func (a *App) DeleteMailboxForward(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := a.deployDomainWideRulesToMailbox(r.Context(), domain, mailbox.LocalPart); err != nil {
-		writeError(w, http.StatusBadGateway, "forward deleted but could not update mail cluster: "+err.Error())
+		writeUpstreamError(w, "forward deleted but could not update mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.forward_deleted", "Removed a forward for "+mailbox.LocalPart+"@"+domain.Name)
@@ -524,7 +524,7 @@ func (a *App) UpdateMailboxLimits(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.Stalwart.SetMailboxQuotas(r.Context(), mailbox.LocalPart, domain.Name, req.MaxEmails, req.MaxDiskQuotaBytes); err != nil {
-		writeError(w, http.StatusBadGateway, "failed to update limits in mail cluster: "+err.Error())
+		writeUpstreamError(w, "failed to update limits in mail cluster", err)
 		return
 	}
 	if err := a.Store.UpdateMailboxLimits(r.Context(), mailbox.ID, req.MaxEmails, req.MaxDiskQuotaBytes); err != nil {
@@ -554,7 +554,7 @@ func (a *App) ListMailboxIdentities(w http.ResponseWriter, r *http.Request) {
 	}
 	identities, err := a.Stalwart.ListIdentities(r.Context(), mailbox.LocalPart, domain.Name)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not load identities from mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not load identities from mail cluster", err)
 		return
 	}
 	out := make([]identityResponse, len(identities))
@@ -592,7 +592,7 @@ func (a *App) CreateMailboxIdentity(w http.ResponseWriter, r *http.Request) {
 
 	identity, err := a.Stalwart.CreateIdentity(r.Context(), mailbox.LocalPart, domain.Name, strings.TrimSpace(req.Name), email)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not create identity in mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not create identity in mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.identity_created", "Added identity "+email+" for "+mailbox.LocalPart+"@"+domain.Name)
@@ -611,7 +611,7 @@ func (a *App) DeleteMailboxIdentity(w http.ResponseWriter, r *http.Request) {
 	identityID := r.PathValue("identityId")
 
 	if err := a.Stalwart.DeleteIdentity(r.Context(), mailbox.LocalPart, domain.Name, identityID); err != nil {
-		writeError(w, http.StatusBadGateway, "could not delete identity in mail cluster: "+err.Error())
+		writeUpstreamError(w, "could not delete identity in mail cluster", err)
 		return
 	}
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.identity_deleted", "Removed an identity for "+mailbox.LocalPart+"@"+domain.Name)
@@ -668,12 +668,12 @@ func (a *App) GetMailboxRecentLogs(w http.ResponseWriter, r *http.Request) {
 
 	incoming, err := a.Stalwart.ListRecentEmails(r.Context(), mailbox.LocalPart, domain.Name, "inbox", 20)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not load incoming messages: "+err.Error())
+		writeUpstreamError(w, "could not load incoming messages", err)
 		return
 	}
 	outgoing, err := a.Stalwart.ListRecentEmails(r.Context(), mailbox.LocalPart, domain.Name, "sent", 20)
 	if err != nil {
-		writeError(w, http.StatusBadGateway, "could not load outgoing messages: "+err.Error())
+		writeUpstreamError(w, "could not load outgoing messages", err)
 		return
 	}
 	writeJSON(w, http.StatusOK, recentLogsResponse{Incoming: incoming, Outgoing: outgoing})

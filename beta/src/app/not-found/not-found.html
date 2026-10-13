@@ -1,12 +1,30 @@
-<section class="w-full max-w-[480px] rounded-lg border border-line bg-surface p-6">
-  <p class="text-[11px] font-medium tracking-wide text-muted uppercase">Error 404</p>
-  <h1 class="mt-1.5 text-[22px] font-bold tracking-[-0.4px]">Page not found</h1>
-  <p class="mt-1.5 text-[13px] leading-relaxed text-muted">
+<div class="w-full max-w-[520px]">
+  <p class="text-[56px] leading-none font-bold tracking-[-2px] text-accent">404</p>
+  <h1 class="mt-4 text-[22px] font-bold tracking-[-0.4px]">This page doesn't exist</h1>
+  <p class="mt-2 text-[14px] leading-relaxed text-muted">
     There's nothing at
-    <code class="rounded bg-bg px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{{ path() }}</code>. The page
-    may have moved, or it isn't part of the new dashboard yet.
+    <code class="rounded bg-surface px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{{ path() }}</code>. It may
+    have moved, or it isn't part of the new dashboard yet.
   </p>
-  <a routerLink="/" class="mt-5 inline-flex h-8 items-center rounded-md bg-accent px-2.5 text-[13px] font-medium text-white hover:bg-accent/80">
-    Go to the dashboard
-  </a>
-</section>
+
+  <div class="mt-6 flex gap-2">
+    <a routerLink="/" [class]="ui.primary">Go to the dashboard</a>
+    <button type="button" (click)="back()" [class]="ui.outline">Go back</button>
+  </div>
+
+  <p class="mt-10 text-[11px] font-medium tracking-wide text-muted uppercase">Or try</p>
+  <ul class="mt-1">
+    @for (link of links; track link.path) {
+      <li>
+        <a [routerLink]="link.path" class="group flex items-baseline gap-2 py-1.5 text-[13px]">
+          <span class="font-medium text-link group-hover:underline">{{ link.label }}</span>
+          <span class="text-muted">{{ link.hint }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <p class="mt-8 text-[13px] text-muted">
+    Still stuck? <a routerLink="/support" class="text-link hover:underline">Contact support</a>.
+  </p>
+</div>

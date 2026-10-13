@@ -1,0 +1,13 @@
+2.0: the account confirmation only right after signing in
+2026-10-13
+
+"We found your Amelu account. Continue with it?" came back in every new
+browser tab, and after a tab was restored, because the confirmation was
+kept per tab in sessionStorage (amelu.account-confirmed) and the auth guard
+demanded it on every page. With a valid session the dashboard now just
+opens, in every tab, until the session expires.
+
+The step still shows once after signing in: the login page sets
+amelu.login-pending in sessionStorage before leaving for Ordnary (sign in
+and Use another account), the guard sends a tab with that flag to /login
+after the callback, and Yes, continue clears it. Signing out clears it too.

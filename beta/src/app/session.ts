@@ -2,9 +2,11 @@ import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Api, Customer } from './api';
 
-// Per browser tab: set once the person has said "yes, that's me" on the
-// sign-in page, so they're asked once per tab, also right after signing in.
-const CONFIRMED_KEY = 'amelu.account-confirmed';
+// Per browser tab: set when this tab leaves for Ordnary's sign-in, so the
+// callback's landing shows "we found your account" once; cleared when the
+// person continues. With a session and no pending sign-in, the dashboard
+// just opens, in every tab, until the session expires.
+const PENDING_KEY = 'amelu.login-pending';
 
 /** The signed-in customer, loaded once per page load from GET /api/me. */
 @Injectable({ providedIn: 'root' })
@@ -22,21 +24,24 @@ export class Session {
     }
   }
 
-  /** Whether this tab already confirmed the account it's signed in with. */
-  confirmed(): boolean {
-    return storage()?.getItem(CONFIRMED_KEY) === this.customer()?.id;
+  /** Whether this tab is on its way back from Ordnary's sign-in. */
+  loginPending(): boolean {
+    return storage()?.getItem(PENDING_KEY) === '1';
   }
 
-  confirm(): void {
-    const id = this.customer()?.id;
-    if (id) storage()?.setItem(CONFIRMED_KEY, id);
+  markLoginPending(): void {
+    storage()?.setItem(PENDING_KEY, '1');
+  }
+
+  clearLoginPending(): void {
+    storage()?.removeItem(PENDING_KEY);
   }
 
   /** Ends the Amelu session without leaving the page. */
   async signOut(): Promise<void> {
     await firstValueFrom(this.api.logout()).catch(() => undefined);
     this.customer.set(null);
-    storage()?.removeItem(CONFIRMED_KEY);
+    this.clearLoginPending();
   }
 
   async logout(): Promise<void> {
@@ -46,7 +51,7 @@ export class Session {
 }
 
 // sessionStorage can throw (blocked storage, some private modes); without it
-// the account is simply asked about on every visit.
+// the confirmation step after signing in is simply skipped.
 function storage(): Storage | null {
   try {
     return window.sessionStorage;

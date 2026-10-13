@@ -50,6 +50,10 @@ export function Layout() {
         <img src="/amelu-logo.png" alt="Amelu" />
         <div className="announcement"></div>
         <nav>
+          <a className="beta-link" href="https://beta.amelu.org" title="Switch to the new 2.0 dashboard">
+            <span className="beta-pill">Beta</span> Try the new dashboard
+          </a>
+          <span className="separator">|</span>
           <Link to="/changelog">Changelog</Link>
           <span className="separator">|</span>
           Signed in as <strong>{customer?.email}</strong>

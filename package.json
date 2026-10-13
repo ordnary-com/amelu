@@ -10,9 +10,7 @@
     "dev:beta": "pnpm --filter beta start",
     "build:beta": "pnpm --filter beta build",
     "deploy:beta": "pnpm --filter beta run deploy",
-    "dev:webmail": "pnpm --filter webmail start",
-    "build:webmail": "pnpm --filter webmail build",
-    "deploy:webmail": "pnpm --filter webmail run deploy"
+    "deploy:webmail": "cd cloudflare/webmail && npm run deploy"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

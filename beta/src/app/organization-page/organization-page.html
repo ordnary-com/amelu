@@ -35,9 +35,7 @@
         } @else {
           @for (member of members(); track member.id) {
             <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
-              <span class="flex size-8 flex-none items-center justify-center rounded-full bg-accent-soft text-[12px] font-semibold text-link">
-                {{ initials(member.name, member.email) }}
-              </span>
+              <amelu-avatar class="size-8" [src]="member.avatarUrl" [name]="member.name" [email]="member.email" />
               <div class="min-w-0 flex-1">
                 <div class="truncate text-[13px] font-medium">
                   {{ member.name }}

@@ -318,6 +318,9 @@ func main() {
 	// "Open in webmail" from the dashboard: a plain link, so the browser
 	// follows the redirect into Roundcube (docs/WEBMAIL.md).
 	mux.HandleFunc("GET /api/mailboxes/{id}/webmail", auth.Require(app.Store, app.OpenMailboxWebmail))
+	// Recreate what the mail cluster lost (docs/OPERATIONS: 2026-08-23 data loss).
+	mux.HandleFunc("POST /api/mailboxes/{id}/repair", auth.Require(app.Store, app.RepairMailbox))
+	mux.HandleFunc("POST /api/domains/{id}/mailboxes/repair", auth.Require(app.Store, app.RepairDomainMailboxes))
 
 	// Webmail (docs/WEBMAIL.md): mailbox users with their own session cookie.
 	mux.HandleFunc("POST /api/webmail/login", app.WebmailLogin)

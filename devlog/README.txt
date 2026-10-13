@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-13  Repair mailboxes the mail cluster lost
+            2026-10-13-mailbox-repair.txt
+
 2026-10-13  Webmail on webmail.amelu.org, with Roundcube
             2026-10-13-webmail.txt
 

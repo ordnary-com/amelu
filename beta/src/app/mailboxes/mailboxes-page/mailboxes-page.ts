@@ -12,6 +12,7 @@ import { Icon } from '../../icon';
 import { MAILBOX_STATUS, badgeClass } from '../../status';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
+import { RepairResult } from '../../mailbox/mailbox-api';
 import { apiUrl } from '../../config';
 
 /** The current dashboard's "All Mailboxes" page: every mailbox on one domain. */
@@ -88,6 +89,22 @@ export class MailboxesPage {
   protected readonly deleteTarget = signal<Mailbox | null>(null);
   protected readonly deleting = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  protected readonly repairing = signal(false);
+  protected readonly repairResult = signal<{ checked: number; repaired: RepairResult[] } | null>(null);
+
+  protected async repairAll(): Promise<void> {
+    this.repairing.set(true);
+    this.error.set(null);
+    try {
+      this.repairResult.set(await firstValueFrom(this.mailboxesApi.repairAll(this.ctx.id())));
+      this.reloads.update((n) => n + 1);
+    } catch (err) {
+      this.error.set(errorMessage(err, 'Could not repair the mailboxes'));
+    } finally {
+      this.repairing.set(false);
+    }
+  }
   protected readonly deleted = signal<string | null>(null);
 
   protected status(mailbox: Mailbox) {

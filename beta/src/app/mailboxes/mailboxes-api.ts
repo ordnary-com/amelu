@@ -1,4 +1,5 @@
 import { HttpClient } from '@angular/common/http';
+import { RepairResult } from '../mailbox/mailbox-api';
 import { Injectable, inject } from '@angular/core';
 import { Mailbox } from '../api';
 
@@ -25,6 +26,11 @@ export interface ImportMailboxResult {
 @Injectable({ providedIn: 'root' })
 export class MailboxesApi {
   private readonly http = inject(HttpClient);
+
+  /** Recreates every mailbox of the domain the mail cluster lost; lists them with new passwords. */
+  repairAll(domainId: string) {
+    return this.http.post<{ checked: number; repaired: RepairResult[] }>(`/api/domains/${domainId}/mailboxes/repair`, {});
+  }
 
   // An empty password makes the API generate one; either way the response carries the password that was set.
   createMailbox(domainId: string, body: { localPart: string; displayName: string; password: string }) {

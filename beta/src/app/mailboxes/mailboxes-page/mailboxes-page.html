@@ -3,12 +3,35 @@
   [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: base() }, { label: 'Mailboxes' }]"
 >
   Every mailbox on {{ ctx.domain()?.name ?? 'this domain' }}. Open one to change its password, services, forwarding and more.
+  <button actions type="button" [class]="ui.outline" (click)="repairAll()" [disabled]="repairing()" title="Recreate mailboxes the mail servers lost">
+    {{ repairing() ? 'Checking…' : 'Repair on mail servers' }}
+  </button>
   <a actions [routerLink]="base() + '/mailboxes/import'" [class]="ui.outline">Import CSV</a>
   <a actions [routerLink]="base() + '/mailboxes/new'" [class]="ui.primary">
     <amelu-icon name="plus" [size]="14" />
     New mailbox
   </a>
 </amelu-page-header>
+
+@if (repairResult(); as r) {
+  <amelu-alert class="mt-5" [kind]="r.repaired.length ? 'success' : 'warning'" [title]="r.repaired.length ? 'Mailboxes repaired' : 'Nothing to repair'" [dismissible]="true" (dismissed)="repairResult.set(null)">
+    @if (r.repaired.length) {
+      <p>New passwords, shown only now:</p>
+      <ul class="mt-1 space-y-0.5">
+        @for (m of r.repaired; track m.address) {
+          <li class="font-mono text-[13px]">
+            {{ m.address }}
+            @if (m.password) { <span class="font-bold select-all">{{ m.password }}</span> }
+            @if (m.error) { <span>{{ m.error }}</span> }
+            @if (m.domainRecreated) { <span>(domain recreated, new DKIM key: check DNS)</span> }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p>All {{ r.checked }} mailboxes of this domain exist on the mail servers.</p>
+    }
+  </amelu-alert>
+}
 
 <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
   <section class="min-w-0 space-y-4">

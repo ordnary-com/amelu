@@ -4,6 +4,12 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Icon } from '../icon';
+import { Alert } from '../alert/alert';
+import { LoadErrors } from '../load-errors';
+import { MailboxApi, RepairResult } from './mailbox-api';
+import { firstValueFrom } from 'rxjs';
+import { errorMessage } from '../api';
+import { signal } from '@angular/core';
 import { UI } from '../ui';
 import { apiUrl } from '../config';
 import { MAILBOX_STATUS, badgeClass } from '../status';
@@ -12,7 +18,7 @@ import { MailboxContext } from './mailbox-context';
 /** Header and the shared mailbox for every /domains/:domainId/mailboxes/:mailboxId page. */
 @Component({
   selector: 'amelu-mailbox-layout',
-  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe, Icon],
+  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe, Icon, Alert],
   providers: [MailboxContext],
   template: `
     @if (mailbox() === null) {
@@ -43,6 +49,33 @@ import { MailboxContext } from './mailbox-context';
         }
       </amelu-page-header>
 
+      @if (repaired(); as r) {
+        <amelu-alert class="mb-5" kind="success" title="Mailbox repaired">
+          @if (r.mailboxRecreated) {
+            <p>{{ r.address }} exists on the mail servers again. Its new password, shown only now:</p>
+            <p class="mt-1 font-mono text-[14px] font-bold select-all">{{ r.password }}</p>
+          } @else {
+            <p>{{ r.address }} already existed on the mail servers; nothing was changed.</p>
+          }
+          @if (r.domainRecreated) {
+            <p class="mt-1">The domain was recreated too, with a new DKIM key: check the DNS records page.</p>
+          }
+          <p class="mt-2"><button type="button" class="cursor-pointer font-medium underline" (click)="reload()">Reload the page</button></p>
+        </amelu-alert>
+      } @else if (missingInCluster()) {
+        <amelu-alert class="mb-5" kind="warning" title="This mailbox is missing on the mail servers">
+          <p>Amelu knows it, but the mail cluster has no account for it, so mail, passwords and settings can't be loaded or changed. Repair recreates it with a new password; mail that was in it is not recovered.</p>
+          @if (repairError(); as message) {
+            <p class="mt-1 font-semibold">{{ message }}</p>
+          }
+          <p class="mt-2">
+            <button type="button" [class]="ui.primary" (click)="repair()" [disabled]="repairing()">
+              {{ repairing() ? 'Repairing…' : 'Repair mailbox' }}
+            </button>
+          </p>
+        </amelu-alert>
+      }
+
       <router-outlet />
     }
   `,
@@ -53,6 +86,30 @@ export class MailboxLayout {
   private readonly ctx = inject(MailboxContext);
   protected readonly ui = UI;
   protected readonly webmailUrl = computed(() => apiUrl(`/api/mailboxes/${this.ctx.id()}/webmail`));
+
+  private readonly api = inject(MailboxApi);
+  private readonly errors = inject(LoadErrors);
+  protected readonly missingInCluster = computed(() => this.errors.code() === 'MAIL_CLUSTER_NOT_FOUND');
+  protected readonly repairing = signal(false);
+  protected readonly repaired = signal<RepairResult | null>(null);
+  protected readonly repairError = signal<string | null>(null);
+
+  protected async repair(): Promise<void> {
+    this.repairing.set(true);
+    this.repairError.set(null);
+    try {
+      this.repaired.set(await firstValueFrom(this.api.repair(this.ctx.id())));
+      this.errors.set(null);
+    } catch (err) {
+      this.repairError.set(errorMessage(err, 'Could not repair the mailbox'));
+    } finally {
+      this.repairing.set(false);
+    }
+  }
+
+  protected reload(): void {
+    location.reload();
+  }
   private readonly domainCtx = injectDomain();
   protected readonly mailbox = this.ctx.mailbox;
 

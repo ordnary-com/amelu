@@ -1,0 +1,18 @@
+Repair mailboxes the mail cluster lost
+2026-10-13
+
+Mailboxes from before the Stalwart data loss of 2026-08-23 exist in Amelu's
+database but not in the cluster, so every cluster-backed page failed with
+MAIL_CLUSTER_NOT_FOUND ("could not load incoming messages: object not found
+in mail cluster"). POST /api/mailboxes/{id}/repair recreates the domain in
+Stalwart when it is missing (new DKIM key, status back to dns_pending) and
+the account with a fresh password, then re-applies the domain defaults and
+spam/capture rules, like creation does. POST
+/api/domains/{id}/mailboxes/repair does the same for every mailbox of a
+domain and lists the recreated ones with their passwords.
+
+2.0 dashboard: perMailbox now records the failed load's message and code
+(load-errors.ts) and the error empty-states print the message. A mailbox
+page whose load failed with MAIL_CLUSTER_NOT_FOUND shows a warning with
+"Repair mailbox"; the domain's Mailboxes page has "Repair on mail servers".
+Old mail is not recovered by any of this.

@@ -9,4 +9,11 @@ import { Injectable, signal } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class LoadErrors {
   readonly last = signal<string | null>(null);
+  /** The API's error code of that failure, e.g. MAIL_CLUSTER_NOT_FOUND. */
+  readonly code = signal<string | null>(null);
+
+  set(message: string | null, code: string | null = null): void {
+    this.last.set(message);
+    this.code.set(code);
+  }
 }

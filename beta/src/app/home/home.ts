@@ -34,7 +34,7 @@ export class Home {
   protected readonly headerLink = 'text-[12px] text-muted hover:text-ink hover:underline';
 
   // undefined while loading, null when the request failed
-  protected readonly domains = inject(Domains).list;
+  protected readonly domains = inject(Domains).arranged;
   protected readonly health = inject(DomainHealthChecks).byId;
   protected readonly billing = toSignal(this.api.billingOverview().pipe(catchError(() => of(null))));
   protected readonly invoices = toSignal(this.api.listInvoices().pipe(catchError(() => of(null))));

@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth.guard';
 import { Shell } from './shell/shell';
 import { Home } from './home/home';
-import { DomainsPage } from './domains-page/domains-page';
 import { DomainDetail } from './domain-detail/domain-detail';
 import { NewDomain } from './new-domain/new-domain';
 import { AccountPage } from './account-page/account-page';
@@ -24,7 +23,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', component: Home, title: 'Amelu' },
-      { path: 'domains', component: DomainsPage, title: 'Email Domains · Amelu' },
+      {
+        path: 'domains',
+        loadComponent: () => import('./domains-page/domains-page').then((m) => m.DomainsPage),
+        title: 'Email Domains · Amelu',
+      },
       { path: 'domains/new', component: NewDomain, title: 'New domain · Amelu' },
       {
         path: 'domains/:domainId',

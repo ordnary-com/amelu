@@ -5,6 +5,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { Domains } from '../domains';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NgIcon, provideIcons } from '@ng-icons/core';
+import { apiUrl } from '../config';
 import {
   lucideBuilding2,
   lucideCreditCard,

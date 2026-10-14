@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [main]
+    branches: [main, "2.0.0"]
     paths:
       - "backend/**"
       - ".github/workflows/go.yml"

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-14  Database tests actually run in CI
+            2026-10-14-db-tests-in-ci.txt
+
 2026-10-13  Repair mailboxes the mail cluster lost
             2026-10-13-mailbox-repair.txt
 

@@ -9,10 +9,10 @@ import (
 )
 
 // testStore connects to the Postgres instance named by DATABASE_URL and
-// applies migrations, same as cmd/api/main.go does at startup. Skipped
-// entirely when DATABASE_URL isn't set (e.g. in CI, which doesn't
-// provision Postgres for the Go job) - run these locally with a real
-// database to exercise them: DATABASE_URL=... go test ./internal/db/...
+// applies migrations, same as cmd/api/main.go does at startup. Skipped when
+// DATABASE_URL isn't set so a plain `go test ./...` works without a
+// database; CI (go.yml) provides one, so these always run there. Locally:
+// DATABASE_URL=... go test ./internal/db/...
 func testStore(t *testing.T) *Store {
 	t.Helper()
 	dsn := os.Getenv("DATABASE_URL")

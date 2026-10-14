@@ -1,0 +1,14 @@
+Database tests actually run in CI
+2026-10-14
+
+The 14 tests for organisation members, invitations and the audit log
+(internal/db/organization_*_test.go) call testStore, which skips the test
+when DATABASE_URL is unset. go.yml never started a Postgres, so the Go job
+went green without running a single one of them. With 2.0 about to change
+that layer (invitations, members), a broken query or migration there would
+have passed CI. Pointed out by an outside reader of the public repo.
+
+go.yml now starts a postgres:18 service container and sets DATABASE_URL
+for the go test step, so all 14 run on every push and pull request. Pushes
+to the 2.0.0 branch trigger the Go job too, not only main. All 14 passed
+against a fresh database with every migration applied.

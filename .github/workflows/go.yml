@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: [main]
+    branches: [main, "2.0.0"]
     paths:
       - "backend/**"
       - ".github/workflows/go.yml"
@@ -18,6 +18,22 @@ concurrency:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    # The organisation, invitation and audit-log tests in internal/db skip
+    # themselves without DATABASE_URL, so CI needs a real Postgres to run them.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: amelu
+          POSTGRES_PASSWORD: amelu
+          POSTGRES_DB: amelu_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U amelu -d amelu_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
@@ -35,4 +51,6 @@ jobs:
         run: go vet ./...
 
       - name: go test
+        env:
+          DATABASE_URL: postgres://amelu:amelu@localhost:5432/amelu_test?sslmode=disable
         run: go test ./...

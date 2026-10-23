@@ -1,29 +1,46 @@
-<section class="relative overflow-hidden rounded-lg bg-hero px-[22px] pt-16 pb-7 max-mobile:px-[18px] max-mobile:pt-14 max-mobile:pb-[22px]">
+<section class="relative overflow-hidden rounded-lg bg-hero px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
   <!-- The lighter slanted panel on the right -->
   <div class="absolute inset-y-0 right-0 w-[30%] bg-hero-light [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
 
-  <div class="absolute top-[18px] right-6 z-[1] flex gap-5 max-mobile:top-3.5 max-mobile:right-4 max-mobile:gap-4">
-    <a routerLink="/changelog" [class]="heroLink" aria-label="Changelog">
-      <amelu-icon name="map" [size]="16" /><span class="max-mobile:hidden">Changelog</span>
-    </a>
-    <a routerLink="/support" [class]="heroLink" aria-label="Support">
-      <amelu-icon name="lifebuoy" [size]="16" /><span class="max-mobile:hidden">Support</span>
-    </a>
-    @if (discordUrl) {
-      <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink" aria-label="Discord">
-        <amelu-icon name="discord" [size]="16" /><span class="max-mobile:hidden">Discord</span>
+  <!-- Beta notice left, links right, in one row so they never overlap at any width. -->
+  <div class="relative z-[1] flex items-start justify-between gap-6 max-mobile:gap-4">
+    <div class="min-w-0 max-w-[620px] text-[13px] text-hero-ink" role="note">
+      <p class="flex items-start gap-2 font-semibold">
+        <span class="mt-px inline-flex h-[18px] flex-none items-center rounded-[3px] bg-accent px-1.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase">Beta</span>
+        <span>You're using the new Amelu dashboard, which is still being built.</span>
+      </p>
+      <p class="mt-0.5 leading-relaxed text-hero-ink/80">
+        See <a routerLink="/changelog" class="font-medium text-link hover:underline">what changed</a>,
+        follow along or report a problem on
+        <a [href]="githubUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">GitHub</a>,
+        or switch back to the
+        <a [href]="legacyUrl" class="font-medium text-link hover:underline">current dashboard</a>
+        any time.
+      </p>
+    </div>
+
+    <div class="flex flex-none gap-5 pt-px max-mobile:gap-4">
+      <a routerLink="/changelog" [class]="heroLink" aria-label="Changelog">
+        <amelu-icon name="map" [size]="16" /><span class="max-mobile:hidden">Changelog</span>
       </a>
-    }
+      <a routerLink="/support" [class]="heroLink" aria-label="Support">
+        <amelu-icon name="lifebuoy" [size]="16" /><span class="max-mobile:hidden">Support</span>
+      </a>
+      @if (discordUrl) {
+        <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink" aria-label="Discord">
+          <amelu-icon name="discord" [size]="16" /><span class="max-mobile:hidden">Discord</span>
+        </a>
+      }
+    </div>
   </div>
-  <h1 class="relative text-[38px] font-bold tracking-[-0.01em] max-mobile:text-[30px]">
+
+  <h1 class="relative mt-9 text-[38px] font-bold tracking-[-0.01em] max-mobile:mt-7 max-mobile:text-[30px]">
     Hello{{ firstName() ? ', ' + firstName() : '' }}.
   </h1>
   <a routerLink="/organization/activity" class="relative mt-2 inline-block text-[17px] text-hero-ink hover:underline">
     View all my activity
   </a>
 </section>
-
-<amelu-beta-banner />
 
 <amelu-quick-actions />
 

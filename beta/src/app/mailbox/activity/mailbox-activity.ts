@@ -32,7 +32,7 @@ import { MailboxHeading } from '../shared/heading';
               </ol>
             </section>
           } @empty {
-            <amelu-empty-state [class]="ui.card" title="No activity recorded yet">
+            <amelu-empty-state [class]="ui.card" title="No activity recorded yet" illustration="in-progress">
               Changes to this mailbox, like a new password or forward, show up here.
             </amelu-empty-state>
           }

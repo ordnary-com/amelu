@@ -15,7 +15,7 @@
       } @else if (invoices() === null) {
         <amelu-empty-state title="Your invoices couldn't be loaded" [error]="true" />
       } @else if (invoices()!.length === 0) {
-        <amelu-empty-state title="No invoices yet">
+        <amelu-empty-state title="No invoices yet" illustration="invoice">
           Invoices appear here automatically once your account moves to a paid plan.
           <a actions routerLink="/billing/plans" [class]="ui.outline">View plans</a>
         </amelu-empty-state>

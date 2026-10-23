@@ -147,17 +147,17 @@
             } @empty {
               <li>
                 @if (search()) {
-                  <amelu-empty-state title="No matching addresses">
+                  <amelu-empty-state title="No matching addresses" illustration="file-search">
                     Nothing on this domain matches "{{ search() }}".
                     <button actions type="button" [class]="ui.outline" (click)="search.set('')">Clear filter</button>
                   </amelu-empty-state>
                 } @else if (kind() === 'aliases') {
-                  <amelu-empty-state title="No aliases yet">
+                  <amelu-empty-state title="No aliases yet" illustration="envelope">
                     An alias is an extra address that delivers into one of your mailboxes, like hello&#64;{{ domain()?.name }}.
                     <a actions [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.primary">New alias</a>
                   </amelu-empty-state>
                 } @else {
-                  <amelu-empty-state title="No mailboxes yet">
+                  <amelu-empty-state title="No mailboxes yet" illustration="empty-mailbox">
                     Create the first mailbox on {{ domain()?.name }}, then sign in from any mail app.
                     <a actions [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">
                       <amelu-icon name="plus" [size]="14" />

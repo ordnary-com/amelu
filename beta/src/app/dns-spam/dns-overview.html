@@ -79,7 +79,7 @@
           @for (record of records; track $index) {
             <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="border-b border-line px-4 py-4 last:border-b-0" />
           } @empty {
-            <amelu-empty-state title="Nothing left to do">
+            <amelu-empty-state title="Nothing left to do" illustration="all-checked">
               Every record matches. Keep them in place: removing one later stops mail or hurts delivery.
               <a actions [routerLink]="'/domains/' + dns.id() + '/dns/records'" [class]="ui.outline">View all records</a>
             </amelu-empty-state>

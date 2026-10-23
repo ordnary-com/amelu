@@ -1,0 +1,13 @@
+2.0: Build and connection footer in the dashboard too
+2026-10-23
+
+The line with the version, commit, edge location and API response time
+(amelu-tech-info, login/tech-info.ts) only showed on the sign-in page. Once
+signed in there was no way to see which build you were on, which is the
+first thing we ask when someone reports a problem.
+
+The shell now renders the same component at the end of the main content
+area, under every dashboard page. The router outlet sits in a flex column
+with min-h-full, so on short pages the footer drops to the bottom of the
+panel instead of hanging right under the content. It checks /api/healthz
+and /cdn-cgi/trace once, when the shell loads, not on every navigation.

@@ -6,6 +6,7 @@ import { Domains } from '../domains';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { apiUrl } from '../config';
+import { TechInfo } from '../login/tech-info';
 import {
   lucideBuilding2,
   lucideCreditCard,
@@ -25,7 +26,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, NgIcon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, NgIcon, TechInfo],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({

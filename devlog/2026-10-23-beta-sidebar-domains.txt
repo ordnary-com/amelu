@@ -1,0 +1,12 @@
+2.0: Sidebar shows three domains and a View all link
+2026-10-23
+
+Under Email Domains the sidebar listed every domain the organisation has.
+On Go (25 domains) or Pro (100) that pushed My Account, My Organization and
+Billing far down the menu.
+
+shell.ts now shows the first three from Domains.arranged, the same order as
+the domains page: favorites first, then the custom order, then newest. When
+there are more, a muted "View all" link to /domains follows. If you're on a
+domain further down the list, that domain is added below the three, so the
+one you're working in always stays visible and highlighted.

@@ -9,6 +9,11 @@
     <a routerLink="/support" [class]="heroLink" aria-label="Support">
       <amelu-icon name="lifebuoy" [size]="16" /><span class="max-mobile:hidden">Support</span>
     </a>
+    @if (discordUrl) {
+      <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink" aria-label="Discord">
+        <amelu-icon name="discord" [size]="16" /><span class="max-mobile:hidden">Discord</span>
+      </a>
+    }
   </div>
   <h1 class="relative text-[38px] font-bold tracking-[-0.01em] max-mobile:text-[30px]">
     Hello{{ firstName() ? ', ' + firstName() : '' }}.

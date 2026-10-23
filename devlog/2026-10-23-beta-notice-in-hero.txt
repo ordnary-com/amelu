@@ -1,0 +1,14 @@
+2.0: Beta notice moved into the greeting card
+2026-10-23
+
+The beta notice was its own card under the greeting ("You're using the new
+Amelu dashboard, which is still being built."), with a circleAlert icon, a
+rounded-full Beta pill that sat a pixel or two off the text, and a close
+button. It read like an error and took a whole row on the home page.
+
+It now sits at the top of the greeting card itself, left of the Changelog,
+Support and Discord links. Those links used to be absolutely positioned;
+notice and links now share one flex row, so they can't overlap at any
+width. The Beta badge is an 18px box with 3px corners, aligned to the first
+line. No icon, no close button: the amelu.beta-banner.dismissed flag and
+the beta-banner component are gone, and GITHUB_URL moved to config.ts.

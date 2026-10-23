@@ -73,6 +73,12 @@
 
   <!-- The rounded corner sits against the blue where top bar and sidebar meet. -->
   <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-surface px-5 py-6 lg:px-8 lg:py-8">
-    <router-outlet />
+    <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->
+    <div class="flex min-h-full flex-col">
+      <div class="flex-1">
+        <router-outlet />
+      </div>
+      <amelu-tech-info class="pt-10" />
+    </div>
   </main>
 </div>

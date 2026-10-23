@@ -60,6 +60,13 @@
   --warn: #c98500;
   --bad: #d92d20;
 
+  /* The undraw illustrations in empty states, recolored by role (public/illustrations). */
+  --ill-accent: var(--accent);
+  --ill-white: #ffffff;
+  --ill-light: #ebedf1;
+  --ill-mid: #c9cdd4;
+  --ill-dark: #3c4250;
+
   color-scheme: light;
 }
 
@@ -88,6 +95,11 @@
   --ok: #3fbf8a;
   --warn: #e0a23a;
   --bad: #ff6467;
+
+  --ill-white: #2c2c2e;
+  --ill-light: #313134;
+  --ill-mid: #4a4a4f;
+  --ill-dark: #a7abb3;
 
   color-scheme: dark;
 }

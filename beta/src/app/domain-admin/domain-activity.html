@@ -55,11 +55,11 @@
         </section>
       } @empty {
         @if (filter() === 'all') {
-          <amelu-empty-state [class]="ui.card" title="No activity recorded yet">
+          <amelu-empty-state [class]="ui.card" title="No activity recorded yet" illustration="in-progress">
             Changes to this domain, its mailboxes and its spam filtering are listed here as they happen.
           </amelu-empty-state>
         } @else {
-          <amelu-empty-state [class]="ui.card" title="Nothing in this category">
+          <amelu-empty-state [class]="ui.card" title="Nothing in this category" illustration="no-data">
             None of the recent events are of this kind.
             <button actions type="button" [class]="ui.outline" (click)="filter.set('all')">Show all</button>
           </amelu-empty-state>

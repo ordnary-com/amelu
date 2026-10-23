@@ -49,7 +49,7 @@ import { MailboxHeading } from '../shared/heading';
                   </button>
                 </div>
               } @empty {
-                <amelu-empty-state title="Not forwarding yet">Add an address below to start sending copies there.</amelu-empty-state>
+                <amelu-empty-state title="Not forwarding yet" illustration="message-sent">Add an address below to start sending copies there.</amelu-empty-state>
               }
             } @else if (forwards() === null) {
               <amelu-empty-state title="Forwards couldn't be loaded" [error]="true" />

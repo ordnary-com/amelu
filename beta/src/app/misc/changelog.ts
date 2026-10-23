@@ -48,7 +48,7 @@ import { BUILD_INFO } from '../build-info';
                 </ul>
               </li>
             } @empty {
-              <amelu-empty-state title="No changes published yet">
+              <amelu-empty-state title="No changes published yet" illustration="happy-news">
                 Amelu's entries from the Ordnary changelog show up here as they are published.
               </amelu-empty-state>
             }

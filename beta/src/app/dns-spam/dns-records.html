@@ -53,14 +53,14 @@
           <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="border-b border-line px-4 py-4 last:border-b-0" />
         } @empty {
           @if (filter() === 'todo') {
-            <amelu-empty-state title="Nothing needs attention">Every record matches what we expect.</amelu-empty-state>
+            <amelu-empty-state title="Nothing needs attention" illustration="all-checked">Every record matches what we expect.</amelu-empty-state>
           } @else if (filter() === 'matched') {
-            <amelu-empty-state title="No verified records yet">
+            <amelu-empty-state title="No verified records yet" illustration="domain-names">
               Once you add the records at your DNS provider, they show up here after the next check.
               <a actions [routerLink]="'/domains/' + dns.id() + '/dns'" [class]="ui.outline">Back to DNS setup</a>
             </amelu-empty-state>
           } @else {
-            <amelu-empty-state title="No records">The mail server didn't return any records for this domain.</amelu-empty-state>
+            <amelu-empty-state title="No records" illustration="no-data">The mail server didn't return any records for this domain.</amelu-empty-state>
           }
         }
       } @else {

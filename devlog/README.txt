@@ -24,6 +24,24 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-23  2.0: Illustrations in empty states
+            2026-10-23-beta-empty-state-illustrations.txt
+
+2026-10-23  2.0: Sidebar shows three domains and a View all link
+            2026-10-23-beta-sidebar-domains.txt
+
+2026-10-23  2.0: Build and connection footer in the dashboard too
+            2026-10-23-beta-footer-in-dashboard.txt
+
+2026-10-23  2.0: Beta notice moved into the greeting card
+            2026-10-23-beta-notice-in-hero.txt
+
+2026-10-23  Unlimited storage on every plan
+            2026-10-23-unlimited-storage.txt
+
+2026-10-23  2.0: Discord link on the home page
+            2026-10-23-beta-discord-link.txt
+
 2026-10-14  Database tests actually run in CI
             2026-10-14-db-tests-in-ci.txt
 

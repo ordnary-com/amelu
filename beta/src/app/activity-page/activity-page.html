@@ -66,11 +66,11 @@
       </section>
     } @empty {
       @if (filter() === 'all') {
-        <amelu-empty-state [class]="ui.card" title="No activity yet">
+        <amelu-empty-state [class]="ui.card" title="No activity yet" illustration="in-progress">
           Changes to domains, mailboxes, the team and billing are listed here as they happen.
         </amelu-empty-state>
       } @else {
-        <amelu-empty-state [class]="ui.card" title="Nothing in this category">
+        <amelu-empty-state [class]="ui.card" title="Nothing in this category" illustration="no-data">
           None of the events loaded so far are of this kind.
           <button actions type="button" [class]="ui.outline" (click)="filter.set('all')">Show all</button>
         </amelu-empty-state>

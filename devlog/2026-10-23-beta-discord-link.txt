@@ -1,0 +1,13 @@
+2.0: Discord link on the home page
+2026-10-23
+
+The home page header had Changelog and Support in the top right of the
+greeting card, but no way to reach the community. There's now a third link,
+Discord, with Discord's own logo (a new filled "discord" icon in icon.ts).
+It opens discord.gg/ordnary, the Ordnary Community server, in a new tab. On
+mobile only the icon shows, like the other two.
+
+The invite lives in one constant, DISCORD_URL in beta/src/app/config.ts. An
+empty value hides the link, so a dead invite never ends up on the page. The
+first invite we tried, discord.gg/ordnary, came back as "Unknown Invite"
+from Discord's API until the vanity URL was set up on the server.

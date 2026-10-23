@@ -12,6 +12,7 @@ import { EmptyState } from '../empty-state/empty-state';
 // Copied from frontend/src/pages/BillingPlansPage.tsx.
 const PERKS_BY_PLAN: Record<string, string[]> = {
   free: [
+    'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',
@@ -21,7 +22,7 @@ const PERKS_BY_PLAN: Record<string, string[]> = {
   go: [
     '10,000 incoming messages/day',
     '2,000 outgoing messages/day',
-    '25 GB storage per mailbox',
+    'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',
@@ -31,7 +32,7 @@ const PERKS_BY_PLAN: Record<string, string[]> = {
   pro: [
     '50,000 incoming messages/day',
     '10,000 outgoing messages/day',
-    '100 GB storage per mailbox',
+    'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',

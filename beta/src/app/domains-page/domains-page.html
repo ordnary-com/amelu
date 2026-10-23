@@ -142,7 +142,7 @@
           </amelu-domain-card>
         } @empty {
           @if (search() && !favorites().length) {
-            <amelu-empty-state class="rounded-lg border border-line md:col-span-2 2xl:col-span-3" title="No matching domains">
+            <amelu-empty-state class="rounded-lg border border-line md:col-span-2 2xl:col-span-3" title="No matching domains" illustration="file-search">
               Nothing matches "{{ search() }}".
               <button actions type="button" [class]="ui.outline" (click)="search.set('')">Clear filter</button>
             </amelu-empty-state>

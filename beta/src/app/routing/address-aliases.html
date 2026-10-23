@@ -97,14 +97,14 @@
             } @empty {
               <li>
                 @if (search()) {
-                  <amelu-empty-state title="No matching aliases">
+                  <amelu-empty-state title="No matching aliases" illustration="file-search">
                     No alias or destination matches "{{ search() }}".
                     <button actions type="button" [class]="ui.outline" (click)="search.set('')">
                       Clear filter
                     </button>
                   </amelu-empty-state>
                 } @else {
-                  <amelu-empty-state title="No address aliases yet">
+                  <amelu-empty-state title="No address aliases yet" illustration="envelope">
                     An alias is an extra address that delivers into one of your mailboxes, like
                     hello&#64;{{ ctx.domain()?.name }}.
                     <a

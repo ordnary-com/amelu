@@ -46,7 +46,7 @@ import { MailboxHeading } from '../shared/heading';
                   </button>
                 </div>
               } @empty {
-                <amelu-empty-state title="No identities yet">Add one below to send under another name or address.</amelu-empty-state>
+                <amelu-empty-state title="No identities yet" illustration="profile">Add one below to send under another name or address.</amelu-empty-state>
               }
             } @else if (identities() === null) {
               <amelu-empty-state title="Identities couldn't be loaded" [error]="true" />

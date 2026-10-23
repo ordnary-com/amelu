@@ -103,12 +103,12 @@
             } @empty {
               <li>
                 @if (search()) {
-                  <amelu-empty-state title="No matching mailboxes">
+                  <amelu-empty-state title="No matching mailboxes" illustration="file-search">
                     No mailboxes match "{{ search() }}".
                     <button actions type="button" [class]="ui.outline" (click)="search.set('')">Clear filter</button>
                   </amelu-empty-state>
                 } @else {
-                  <amelu-empty-state title="No mailboxes yet">
+                  <amelu-empty-state title="No mailboxes yet" illustration="empty-mailbox">
                     You haven't added any mailboxes on {{ ctx.domain()?.name ?? 'this domain' }} yet.
                     <a actions [routerLink]="base() + '/mailboxes/new'" [class]="ui.primary">
                       <amelu-icon name="plus" [size]="14" />

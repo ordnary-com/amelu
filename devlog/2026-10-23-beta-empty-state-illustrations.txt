@@ -1,0 +1,16 @@
+2.0: Illustrations in empty states
+2026-10-23
+
+Every empty list and failed load in the 2.0 dashboard was a bold title and
+a line of grey text in a big white card. amelu-empty-state now takes an
+illustration input, and 25 of them have one: an empty mailbox for "No
+mailboxes yet", a magnifier for every "No matching ..." search, an invoice
+for "No invoices yet", and so on. Every failed load (error set) gets the
+server-down one automatically. Compact side cards stay text only.
+
+The 15 SVGs come from undraw.co and live in public/illustrations. Their
+purple, greys and near-black were rewritten to --ill-accent, --ill-white,
+--ill-light, --ill-mid and --ill-dark (styles.css), and the component
+inlines the SVG instead of using an img, so they follow light and dark mode.
+Each file is fetched once and cached. One clipPath id was "a" and is now
+ill-authentication-a, since several inline SVGs can share a page.

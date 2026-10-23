@@ -11,9 +11,10 @@ interface Edge {
 }
 
 /**
- * Build and connection details at the bottom of the sign-in page, handy when
- * someone reports a problem. The edge details come from /cdn-cgi/trace, which
- * the edge network answers on every proxied hostname; locally there is none.
+ * Build and connection details at the bottom of the sign-in page and the
+ * dashboard, handy when someone reports a problem. The edge details come from
+ * /cdn-cgi/trace, which the edge network answers on every proxied hostname;
+ * locally there is none.
  */
 @Component({
   selector: 'amelu-tech-info',

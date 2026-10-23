@@ -9,6 +9,7 @@ import { apiUrl } from '../config';
 import { TechInfo } from '../login/tech-info';
 import {
   lucideBuilding2,
+  lucideChevronRight,
   lucideCreditCard,
   lucideGlobe,
   lucideHistory,
@@ -31,6 +32,7 @@ const LINK =
   viewProviders: [
     provideIcons({
       lucideBuilding2,
+      lucideChevronRight,
       lucideCreditCard,
       lucideGlobe,
       lucideHistory,
@@ -57,6 +59,15 @@ export class Shell {
 
   protected readonly columns = computed(() => menuColumns(this.at()));
 
+  // The first few domains under Email Domains, plus the one you're on if it's further down.
+  protected readonly sidebarDomains = computed(() => {
+    const all = this.domains() ?? [];
+    const shown = all.slice(0, SIDEBAR_DOMAINS);
+    const current = all.find((d) => d.id === this.at().domainId);
+    return current && !shown.includes(current) ? [...shown, current] : shown;
+  });
+  protected readonly hiddenDomains = computed(() => (this.domains()?.length ?? 0) - SIDEBAR_DOMAINS);
+
   // Each menu column scrolls on its own, so a long domain menu doesn't drag the main one along.
   protected readonly column =
     'flex-none overflow-y-auto pb-4 [scrollbar-color:rgb(255_255_255/0.3)_transparent] [scrollbar-width:thin]';
@@ -72,6 +83,8 @@ export class Shell {
   protected readonly secondaryLink = `text-white/50 ${LINK}`;
   protected readonly createLink = `text-create ${LINK}`;
 }
+
+const SIDEBAR_DOMAINS = 3;
 
 interface MenuEntry {
   label: string;

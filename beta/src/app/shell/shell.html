@@ -25,9 +25,14 @@
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/domains" [class]="link"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Email Domains</span></a>
       </li>
-      @for (domain of domains() ?? []; track domain.id) {
+      @for (domain of sidebarDomains(); track domain.id) {
         <li [class]="subitem" routerLinkActive="active">
           <a [routerLink]="'/domains/' + domain.id" [class]="link"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">{{ domain.name }}</span></a>
+        </li>
+      }
+      @if (hiddenDomains() > 0) {
+        <li [class]="subitem">
+          <a routerLink="/domains" [class]="secondaryLink"><ng-icon name="lucideChevronRight" size="15px" strokeWidth="2.5" /><span class="truncate">View all</span></a>
         </li>
       }
       <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">

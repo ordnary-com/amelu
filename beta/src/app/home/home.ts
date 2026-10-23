@@ -13,6 +13,7 @@ import { DomainCard } from '../domain-card/domain-card';
 import { INVOICE_STATUS, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
 import { BetaBanner } from '../beta-banner/beta-banner';
+import { DISCORD_URL } from '../config';
 
 @Component({
   selector: 'amelu-home',
@@ -26,6 +27,7 @@ export class Home {
   private readonly session = inject(Session);
 
   protected readonly invoiceStatus = INVOICE_STATUS;
+  protected readonly discordUrl = DISCORD_URL;
   protected readonly badge = badgeClass;
 
   protected readonly heroLink = 'flex items-center gap-1.5 text-[13px] font-semibold hover:text-link';

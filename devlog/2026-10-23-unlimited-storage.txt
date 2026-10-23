@@ -1,0 +1,13 @@
+Unlimited storage on every plan
+2026-10-23
+
+The plan lists said "25 GB storage per mailbox" on Go and "100 GB storage
+per mailbox" on Pro, and nothing on Free. None of it was enforced:
+CreateMailbox sends Stalwart no quota, max_disk_quota_bytes defaults to 0
+and is then not sent at all, so every mailbox on every plan had no storage
+limit. A customer asking how much storage Free includes is what showed it.
+
+All three plans now say "Unlimited storage per mailbox", in both dashboards
+(BillingPlansPage.tsx and billing-plans.ts) and on amelu.org. The Terms of
+Service still list storage among the plan limits; that's legal text and
+hasn't been changed yet.

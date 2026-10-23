@@ -14,6 +14,7 @@ function cellClass(current: boolean, extra?: string) {
 // tier and the ceilings on the two API-driven limits actually differ.
 const PERKS_BY_PLAN: Record<string, { icon: string; label: string }[]> = {
   free: [
+    { icon: "database", label: "Unlimited storage per mailbox" },
     { icon: "forward_to_inbox", label: "Forwarding & catch-all addresses" },
     { icon: "alternate_email", label: "Unlimited address & domain aliases" },
     { icon: "shield", label: "Spam filtering & pattern rewrites" },
@@ -23,7 +24,7 @@ const PERKS_BY_PLAN: Record<string, { icon: string; label: string }[]> = {
   go: [
     { icon: "download", label: "10,000 incoming messages/day" },
     { icon: "upload", label: "2,000 outgoing messages/day" },
-    { icon: "database", label: "25 GB storage per mailbox" },
+    { icon: "database", label: "Unlimited storage per mailbox" },
     { icon: "forward_to_inbox", label: "Forwarding & catch-all addresses" },
     { icon: "alternate_email", label: "Unlimited address & domain aliases" },
     { icon: "shield", label: "Spam filtering & pattern rewrites" },
@@ -33,7 +34,7 @@ const PERKS_BY_PLAN: Record<string, { icon: string; label: string }[]> = {
   pro: [
     { icon: "download", label: "50,000 incoming messages/day" },
     { icon: "upload", label: "10,000 outgoing messages/day" },
-    { icon: "database", label: "100 GB storage per mailbox" },
+    { icon: "database", label: "Unlimited storage per mailbox" },
     { icon: "forward_to_inbox", label: "Forwarding & catch-all addresses" },
     { icon: "alternate_email", label: "Unlimited address & domain aliases" },
     { icon: "shield", label: "Spam filtering & pattern rewrites" },

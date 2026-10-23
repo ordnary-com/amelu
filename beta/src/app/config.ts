@@ -31,6 +31,9 @@ export function ordnaryLoginUrl(returnTo: string, switchAccount = false): string
   return `${API_ORIGIN}/api/auth/ordnary/login?${query}`;
 }
 
+/** The public repository, linked from the beta notice on the home page. */
+export const GITHUB_URL = 'https://github.com/ordnary-com/amelu';
+
 /** Where people manage their Ordnary account (name, photo, email, security). */
 export const ORDNARY_ACCOUNT_URL = 'https://accounts.ordnary.com';
 

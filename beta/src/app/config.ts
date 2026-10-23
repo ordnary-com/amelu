@@ -33,3 +33,9 @@ export function ordnaryLoginUrl(returnTo: string, switchAccount = false): string
 
 /** Where people manage their Ordnary account (name, photo, email, security). */
 export const ORDNARY_ACCOUNT_URL = 'https://accounts.ordnary.com';
+
+/**
+ * Invite to the Ordnary Discord server, linked from the home page. Empty
+ * hides the link.
+ */
+export const DISCORD_URL = 'https://discord.gg/ordnary';

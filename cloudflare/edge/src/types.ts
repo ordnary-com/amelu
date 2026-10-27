@@ -52,4 +52,5 @@ export interface Env {
   ORDNARY_COOKIE_SECRET?: string;
   AMELU_ADMIN_SHARED_SECRET?: string;
   INTERNAL_JOBS_SHARED_SECRET?: string;
+  WEBMAIL_SSO_SECRET?: string;
 }

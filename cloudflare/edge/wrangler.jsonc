@@ -73,7 +73,12 @@
         "bindings": [
           { "class_name": "AmeluOriginContainer", "name": "AMELU_ORIGIN" }
         ]
-      }
+      },
+      // Amelu's transactional mail (password set-up/reset, invitations),
+      // relayed for the Go origin by src/mail.ts. Only from onboarding@.
+      "send_email": [
+        { "name": "EMAIL", "allowed_sender_addresses": ["onboarding@ordnary.com"] }
+      ]
     }
   }
   // Secrets (ORIGIN_SHARED_SECRET, ALLOWED_ORIGIN, DATABASE_URL and the

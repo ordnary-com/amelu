@@ -64,7 +64,7 @@ plan, rollback procedures: that's all in
 - Backend: Go 1.26, stdlib `net/http`, `pgx` (no ORM, no framework)
 - Mail: [Stalwart](https://stalw.art), talked to via its admin API
 - Billing: Stripe
-- Transactional email: [Resend](https://resend.com)
+- Transactional email: Cloudflare Email Sending, relayed for the Go origin by the edge Worker
 - Edge/CDN/DNS: Cloudflare (Pages, Workers, Containers, Queues, Workflows, R2)
 - Everything glued together with pnpm workspaces
 
@@ -95,7 +95,7 @@ That starts the frontend at `http://localhost:5173` and the backend at
 automatically on backend startup, no separate migrate command to remember or
 forget.
 
-The rest of the integrations (Domain Connect, Resend, Stripe, "Login with
+The rest of the integrations (Domain Connect, mail, Stripe, "Login with
 Ordnary account") follow the same pattern: if the config is missing, the
 feature just shrugs and reports itself unavailable at request time instead
 of crashing on startup. `backend/.env.example` has the full list of

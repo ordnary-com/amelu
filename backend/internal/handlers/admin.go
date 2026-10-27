@@ -346,7 +346,7 @@ func (a *App) AdminResetMailboxPassword(w http.ResponseWriter, r *http.Request, 
 	if !ok {
 		return
 	}
-	if a.Resend == nil {
+	if a.Mailer == nil {
 		writeError(w, http.StatusServiceUnavailable, "password reset emails aren't configured on this server")
 		return
 	}

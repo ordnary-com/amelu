@@ -8,6 +8,9 @@ import { applyNoStore, applySecurityHeaders } from "./security";
 // wrangler's Durable Object migrations require the class to be exported
 // from the Worker's main entrypoint module.
 export { AmeluOriginContainer } from "./container";
+// Required for the container's outbound interception (the mail.internal relay
+// in src/container.ts): the runtime routes intercepted requests through it.
+export { ContainerProxy } from "@cloudflare/containers";
 
 // Public edge health check - answered entirely at the edge, no origin
 // call, so it stays accurate even during an origin/Tunnel outage (the

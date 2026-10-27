@@ -10,7 +10,7 @@
 // implemented in Go here yet, since that needs a real Cloudflare account
 // and bucket to test against (see config.Load's convention of "missing
 // config = feature unavailable", which an R2Store constructor would
-// follow the same way Resend/Stripe/DomainConnect already do).
+// follow the same way Mailer/Stripe/DomainConnect already do).
 package objectstore
 
 import (
@@ -28,10 +28,10 @@ import (
 type Kind string
 
 const (
-	KindCSVExport      Kind = "csv-export"
-	KindImportTemp     Kind = "import-temp"
-	KindReport         Kind = "report"
-	KindSupportBundle  Kind = "support-bundle"
+	KindCSVExport       Kind = "csv-export"
+	KindImportTemp      Kind = "import-temp"
+	KindReport          Kind = "report"
+	KindSupportBundle   Kind = "support-bundle"
 	KindEncryptedBackup Kind = "encrypted-backup"
 )
 

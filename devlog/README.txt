@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-27  Mail through Cloudflare Email Sending instead of Resend
+            2026-10-27-mail-via-cloudflare.txt
+
 2026-10-23  2.0: Illustrations in empty states
             2026-10-23-beta-empty-state-illustrations.txt
 

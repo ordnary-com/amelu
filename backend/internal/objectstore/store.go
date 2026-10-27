@@ -28,10 +28,10 @@ import (
 type Kind string
 
 const (
-	KindCSVExport      Kind = "csv-export"
-	KindImportTemp     Kind = "import-temp"
-	KindReport         Kind = "report"
-	KindSupportBundle  Kind = "support-bundle"
+	KindCSVExport       Kind = "csv-export"
+	KindImportTemp      Kind = "import-temp"
+	KindReport          Kind = "report"
+	KindSupportBundle   Kind = "support-bundle"
 	KindEncryptedBackup Kind = "encrypted-backup"
 )
 

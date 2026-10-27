@@ -23,6 +23,10 @@ export interface Env {
   // container is no longer reached over the public internet.
   ORIGIN_SHARED_SECRET: string;
 
+  // Cloudflare Email Sending, used by the mail relay for the Go origin
+  // (src/mail.ts). Restricted to onboarding@ordnary.com in wrangler.jsonc.
+  EMAIL?: SendEmail;
+
   // Exact single origin allowed to make credentialed requests (CORS).
   ALLOWED_ORIGIN: string;
 
@@ -39,7 +43,6 @@ export interface Env {
   STALWART_ADMIN_PASSWORD: string;
   // Optional features - backend reports them unavailable at request time
   // if unset, does not fail startup:
-  RESEND_API_KEY?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   DOMAIN_CONNECT_PRIVATE_KEY?: string;
@@ -52,4 +55,5 @@ export interface Env {
   ORDNARY_COOKIE_SECRET?: string;
   AMELU_ADMIN_SHARED_SECRET?: string;
   INTERNAL_JOBS_SHARED_SECRET?: string;
+  WEBMAIL_SSO_SECRET?: string;
 }

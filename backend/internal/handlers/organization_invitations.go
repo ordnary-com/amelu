@@ -71,7 +71,7 @@ type createInvitationResponse struct {
 
 // CreateInvitation invites a new teammate by email. Owner and admin only;
 // an admin can never invite someone as owner (authz.CanAssignRole). The raw
-// token is only ever emailed (via Resend) or, when Resend isn't configured,
+// token is only ever emailed (via the mailer) or, when mail isn't configured,
 // returned in the response as devInviteUrl so local development still
 // works end to end - and only outside production (CookieSecure), so a
 // misconfigured prod deployment can never leak a working invite link in
@@ -140,7 +140,7 @@ func (a *App) CreateInvitation(w http.ResponseWriter, r *http.Request) {
 	link := a.FrontendOrigin + "/accept-invite/" + rawToken
 	resp := createInvitationResponse{invitationResponse: toInvitationResponse(inv)}
 
-	if a.Resend != nil {
+	if a.Mailer != nil {
 		orgName := "an organization"
 		if org, err := a.Store.GetOrganizationByID(r.Context(), customer.OrganizationID.String); err == nil {
 			orgName = org.Name
@@ -154,7 +154,7 @@ func (a *App) CreateInvitation(w http.ResponseWriter, r *http.Request) {
 			"Accept your invitation here: " + link + "\n\n" +
 			"This link expires in 7 days and can only be used once.\n\n" +
 			"If you weren't expecting this, you can safely ignore this email."
-		if _, err := a.Resend.SendEmail(r.Context(), email, subject, html, text); err != nil {
+		if _, err := a.Mailer.SendEmail(r.Context(), email, subject, html, text); err != nil {
 			writeUpstreamError(w, "invitation created but could not send email", err)
 			return
 		}

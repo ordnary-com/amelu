@@ -12,8 +12,8 @@ import (
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/domainconnect"
 	"amelu/backend/internal/handlers"
+	"amelu/backend/internal/mailer"
 	"amelu/backend/internal/ordnaryauth"
-	"amelu/backend/internal/resend"
 	"amelu/backend/internal/stalwart"
 
 	"github.com/stripe/stripe-go/v81"
@@ -72,10 +72,10 @@ func main() {
 		log.Printf("domain connect: DOMAIN_CONNECT_PRIVATE_KEY not set, \"fix automatically\" will report unsupported for every domain")
 	}
 
-	if cfg.ResendAPIKey != "" {
-		app.Resend = resend.NewClient(cfg.ResendAPIKey, cfg.ResendFromEmail, cfg.ResendFromName)
+	if cfg.MailRelayURL != "" {
+		app.Mailer = mailer.NewClient(cfg.MailRelayURL, cfg.MailFromEmail, cfg.MailFromName)
 	} else {
-		log.Printf("resend: RESEND_API_KEY not set, password reset invite emails will report unavailable")
+		log.Printf("mailer: MAIL_RELAY_URL not set, password reset and invite emails will report unavailable")
 	}
 
 	if cfg.OrdnaryIssuer != "" && cfg.OrdnaryClientID != "" && cfg.OrdnaryRedirectURI != "" && cfg.OrdnaryCookieSecret != "" {

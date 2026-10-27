@@ -42,8 +42,9 @@ a JSON HTTP API. `pnpm dev` at the repo root starts both together.
 - Optional integrations all follow the same convention: missing
   config/API key means the feature reports "unavailable" at request time,
   never a startup failure. See `internal/config/config.go`. Currently:
-  Stalwart (required), Domain Connect (Cloudflare DNS auto-fix), Resend
-  (transactional email), Stripe (billing).
+  Stalwart (required), Domain Connect (Cloudflare DNS auto-fix), mail
+  (MAIL_RELAY_URL: Cloudflare Email Sending through the edge Worker, see
+  cloudflare/edge/src/mail.ts), Stripe (billing).
 
 ## Running locally
 

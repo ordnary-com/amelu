@@ -1,6 +1,7 @@
 import { Container } from "@cloudflare/containers";
 import { env } from "cloudflare:workers";
 import type { Env } from "./types";
+import { relayMail } from "./mail";
 
 const workerEnv = env as unknown as Env;
 
@@ -22,7 +23,8 @@ export class AmeluOriginContainer extends Container<Env> {
     STALWART_ADMIN_PASSWORD: workerEnv.STALWART_ADMIN_PASSWORD,
     CORS_ORIGIN: workerEnv.ALLOWED_ORIGIN,
     ORIGIN_SHARED_SECRET: workerEnv.ORIGIN_SHARED_SECRET,
-    RESEND_API_KEY: workerEnv.RESEND_API_KEY ?? "",
+    // Mail goes out through the edge (src/mail.ts), see outboundByHost below.
+    MAIL_RELAY_URL: "http://mail.internal/send",
     STRIPE_SECRET_KEY: workerEnv.STRIPE_SECRET_KEY ?? "",
     STRIPE_WEBHOOK_SECRET: workerEnv.STRIPE_WEBHOOK_SECRET ?? "",
     DOMAIN_CONNECT_PRIVATE_KEY: workerEnv.DOMAIN_CONNECT_PRIVATE_KEY ?? "",
@@ -38,3 +40,11 @@ export class AmeluOriginContainer extends Container<Env> {
     WEBMAIL_SSO_SECRET: workerEnv.WEBMAIL_SSO_SECRET ?? "",
   };
 }
+
+// The container's outbound requests to mail.internal are handled here, in the
+// Worker, instead of leaving for the internet: that's how the Go origin sends
+// mail with this Worker's EMAIL binding (src/mail.ts). Plain HTTP on port 80;
+// the hostname only resolves inside the container network.
+AmeluOriginContainer.outboundByHost = {
+  "mail.internal": (request: Request, env: unknown) => relayMail(request, env as Env),
+};

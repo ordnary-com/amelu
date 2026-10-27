@@ -34,9 +34,9 @@ type Config struct {
 	// Password reset invite emails are optional too: absent, the "send
 	// reset link" action just reports the feature unavailable rather than
 	// failing startup - same convention as Domain Connect above.
-	ResendAPIKey    string
-	ResendFromEmail string
-	ResendFromName  string
+	MailRelayURL  string
+	MailFromEmail string
+	MailFromName  string
 
 	// Stripe billing is optional in the same vein: absent, /api/billing/*
 	// reports the feature unavailable instead of failing startup. Both must
@@ -69,7 +69,7 @@ type Config struct {
 	OriginSharedSecret string
 
 	// "Login with Ordnary account" (see internal/ordnaryauth) is optional
-	// in the same vein as Domain Connect/Resend/Stripe above: until all of
+	// in the same vein as Domain Connect/mail/Stripe above: until all of
 	// OrdnaryIssuer/ClientID/RedirectURI/OrdnaryCookieSecret are set, the
 	// feature reports unavailable rather than failing startup.
 	// OrdnaryClientSecret is only required for a confidential client - the
@@ -111,9 +111,9 @@ func Load() (*Config, error) {
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),
 		DomainConnectRedirectURI:  os.Getenv("DOMAIN_CONNECT_REDIRECT_URI"),
 
-		ResendAPIKey:    os.Getenv("RESEND_API_KEY"),
-		ResendFromEmail: getEnv("RESEND_FROM_EMAIL", "onboarding@ordnary.com"),
-		ResendFromName:  getEnv("RESEND_FROM_NAME", "Amelu"),
+		MailRelayURL:  os.Getenv("MAIL_RELAY_URL"),
+		MailFromEmail: getEnv("MAIL_FROM_EMAIL", "onboarding@ordnary.com"),
+		MailFromName:  getEnv("MAIL_FROM_NAME", "Amelu"),
 
 		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),

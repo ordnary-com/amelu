@@ -32,7 +32,7 @@ func (a *App) InviteMailboxPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if a.Resend == nil {
+	if a.Mailer == nil {
 		writeError(w, http.StatusServiceUnavailable, "password reset emails aren't configured on this server")
 		return
 	}
@@ -85,7 +85,7 @@ func (a *App) sendMailboxPasswordInvite(r *http.Request, mailbox *db.Mailbox, do
 		"This link expires in 24 hours and can only be used once.\n\n" +
 		"If you weren't expecting this, you can safely ignore this email."
 
-	if _, err := a.Resend.SendEmail(r.Context(), recipient, subject, html, text); err != nil {
+	if _, err := a.Mailer.SendEmail(r.Context(), recipient, subject, html, text); err != nil {
 		return errors.New("could not send invite email: " + err.Error())
 	}
 

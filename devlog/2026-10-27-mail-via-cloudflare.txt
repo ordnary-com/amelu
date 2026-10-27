@@ -1,0 +1,17 @@
+Mail through Cloudflare Email Sending instead of Resend
+2026-10-27
+
+Resend failed every send from 2026-10-26 14:20 UTC on, so "Set up your
+password" and organization invitation mails never arrived. The Go origin
+now sends through Cloudflare Email Sending instead.
+
+The container can't hold a Workers binding, so it POSTs each mail to
+http://mail.internal/send (MAIL_RELAY_URL, set in container.ts). The edge
+Worker intercepts that hostname for the container (outboundByHost) and
+sends it with its EMAIL send_email binding, restricted to
+onboarding@ordnary.com (cloudflare/edge/src/mail.ts). The hostname only
+resolves inside the container network, so the relay has no public route.
+
+backend/internal/resend is now backend/internal/mailer, with a 20 second
+timeout. RESEND_API_KEY, RESEND_FROM_EMAIL and RESEND_FROM_NAME are gone;
+MAIL_FROM_EMAIL and MAIL_FROM_NAME replace the last two.

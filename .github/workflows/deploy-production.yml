@@ -81,7 +81,6 @@ jobs:
           echo "${{ secrets.STALWART_BASE_URL }}" | npx wrangler secret put STALWART_BASE_URL --env production
           echo "${{ secrets.STALWART_ADMIN_USER }}" | npx wrangler secret put STALWART_ADMIN_USER --env production
           echo "${{ secrets.STALWART_ADMIN_PASSWORD }}" | npx wrangler secret put STALWART_ADMIN_PASSWORD --env production
-          echo "${{ secrets.RESEND_API_KEY }}" | npx wrangler secret put RESEND_API_KEY --env production
           echo "${{ secrets.STRIPE_SECRET_KEY }}" | npx wrangler secret put STRIPE_SECRET_KEY --env production
           echo "${{ secrets.STRIPE_WEBHOOK_SECRET }}" | npx wrangler secret put STRIPE_WEBHOOK_SECRET --env production
           echo "${{ secrets.DOMAIN_CONNECT_PRIVATE_KEY }}" | npx wrangler secret put DOMAIN_CONNECT_PRIVATE_KEY --env production

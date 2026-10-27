@@ -50,7 +50,7 @@ npx wrangler secret put STALWART_ADMIN_USER --env production
 npx wrangler secret put STALWART_ADMIN_PASSWORD --env production
 # ...and the rest of the origin's env vars - see SECRETS.md's full
 # inventory and cloudflare/edge/src/container.ts's envVars for the
-# complete list (Resend, Stripe, Domain Connect, Ordnary, admin/internal
+# complete list (Stripe, Domain Connect, Ordnary, admin/internal
 # shared secrets).
 npx wrangler deploy --env production
 ```

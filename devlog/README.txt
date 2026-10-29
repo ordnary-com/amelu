@@ -24,6 +24,12 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-29  Overlay when the API is slow or unreachable, no more login flash
+            2026-10-29-connection-overlay.txt
+
+2026-10-29  Email template for service incidents
+            2026-10-29-incident-email-template.txt
+
 2026-10-27  Mail through Cloudflare Email Sending instead of Resend
             2026-10-27-mail-via-cloudflare.txt
 

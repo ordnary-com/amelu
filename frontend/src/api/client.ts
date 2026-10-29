@@ -359,7 +359,7 @@ export const api = {
 
   logout: () => request<{ ok: boolean }>("/api/logout", { method: "POST" }),
 
-  me: () => request<Customer>("/api/me"),
+  me: (signal?: AbortSignal) => request<Customer>("/api/me", { signal }),
 
   updateAccountName: (name: string) =>
     request<Customer>("/api/account/name", { method: "PATCH", body: JSON.stringify({ name }) }),

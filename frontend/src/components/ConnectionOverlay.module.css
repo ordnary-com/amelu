@@ -1,0 +1,112 @@
+/* Sits on the blue .app-loading screen, which keeps its progress bar
+   running behind it while checks continue. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fade-in 200ms ease-out;
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  padding: 2rem;
+  border-radius: 16px;
+  background-color: var(--surface);
+  color: var(--text);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.logo {
+  display: block;
+  height: 28px;
+  width: auto;
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  margin: 0 0 0.5rem 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 23px;
+  color: var(--text-muted);
+}
+
+.notice {
+  margin: 1rem 0 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background-color: #fce8e6;
+  color: #c5221f;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+}
+
+.reassure {
+  margin: 1rem 0 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background-color: var(--surface-deep);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primary {
+  border: 0;
+  background-color: var(--link);
+  color: var(--md-sys-color-on-primary);
+}
+
+.secondary {
+  border: 1px solid var(--border);
+  background-color: transparent;
+  color: var(--link);
+}
+
+:global([data-theme="dark"]) .notice {
+  background-color: rgba(242, 139, 130, 0.12);
+  color: #f28b82;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop {
+    animation: none;
+  }
+}

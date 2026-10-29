@@ -1,0 +1,16 @@
+Email template for service incidents
+2026-10-29
+
+From about 15:15 CET the Amelu API (api.amelu.org) timed out on every
+request: the infrastructure the API container runs on had elevated error
+rates. app.amelu.org, webmail.amelu.org and the MX hosts (marduk, ishtar)
+kept answering, so mail itself was not affected.
+
+docs/emails/service-incident.html and .txt are the notice for all
+customers: what still works (mail, mail apps, webmail), what doesn't
+(dashboard sign-in, changing mailboxes/domains/settings, the API) and a
+link to ordnary.com/status. It's sent from Ordnary, so the HTML is
+rendered with layout() from identity's apps/accounts/lib/email/template.ts.
+
+There is no bulk send in Amelu yet. The normal mailer goes through the
+same container as the API, so it can't send this notice during the outage.

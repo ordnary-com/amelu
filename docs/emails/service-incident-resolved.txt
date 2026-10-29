@@ -1,0 +1,19 @@
+Subject: Resolved: the Amelu dashboard is working normally again
+
+Hi,
+
+Earlier today we let you know that the Amelu dashboard and API were unavailable. That issue has been resolved, and everything is working normally again.
+
+What happened: from around 15:15 to 17:30 CET today (29 October), a problem in part of the infrastructure behind Amelu made the dashboard and API unavailable or very slow. Your email was not affected during this time, and no data was lost.
+
+You can sign in to the dashboard and manage your mailboxes, domains and settings as usual. If you postponed a change, you can make it now: https://app.amelu.org
+
+If something still doesn't work as it should, email support@ordnary.com and we'll look into it.
+
+Sorry for the inconvenience, and thanks for your patience.
+
+The Ordnary team
+
+--
+You're receiving this email because it's an important message about your Amelu service.
+Ordnary - https://ordnary.com - Proudly made in the Netherlands

@@ -1,0 +1,20 @@
+Overlay when the API is slow or unreachable, no more login flash
+2026-10-29
+
+Opening the dashboard after a quiet period often showed a blank blue
+screen for seconds: the API container sleeps after 10 minutes
+(sleepAfter in cloudflare/edge/src/container.ts) and has to start first.
+Worse, AuthContext treated every failed GET /api/me as signed out, so a
+timeout or 5xx during that start sent people with a valid session to
+/login, which flashed by until the next page load succeeded.
+
+Now only a 4xx from /api/me means signed out. Network errors, timeouts
+(15 s per attempt) and 5xx are retried after 1, 2 and 4 s, then every 15 s.
+ConnectionOverlay shows over the loading screen: "taking longer than
+usual" after 6 s, "currently unreachable" once the retries ran out, with
+Try again, the status page, webmail, and MAINTENANCE_NOTICE when set.
+It continues by itself as soon as the API answers.
+
+The beta has the same fix: Session.load() in beta/src/app/session.ts
+retries instead of returning false, and ConnectionOverlay sits in the root
+component over the guard's wait.

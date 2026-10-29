@@ -1,0 +1,29 @@
+Subject: The Amelu dashboard is currently unavailable
+
+Hi,
+
+Since around 15:15 CET today (29 October), part of the infrastructure behind Amelu is having problems. Because of this, the Amelu dashboard at app.amelu.org and the Amelu API are unavailable or very slow right now.
+
+Your email is not affected. Your mailboxes run on separate mail servers, so receiving and sending mail keeps working as usual.
+
+Working normally:
+- Receiving and sending email
+- Your mail apps (Outlook, Apple Mail, Thunderbird, your phone)
+- Webmail at webmail.amelu.org
+
+Unavailable for now:
+- Signing in to the dashboard
+- Adding or changing mailboxes, domains and settings
+- Requests to the Amelu API
+
+No data has been lost and nothing in your account has changed. There's nothing you need to do. If a change in the dashboard can wait, we recommend waiting until this is resolved.
+
+We're following this closely and will email you again once everything is back to normal. You can also follow along on our status page: https://ordnary.com/status
+
+Sorry for the inconvenience, and thanks for your patience.
+
+The Ordnary team
+
+--
+You're receiving this email because it's an important message about your Amelu service.
+Ordnary - https://ordnary.com - Proudly made in the Netherlands

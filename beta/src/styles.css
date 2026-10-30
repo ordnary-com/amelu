@@ -1,10 +1,10 @@
-@import "@fontsource-variable/source-sans-3";
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "Source Sans 3 Variable", sans-serif, -apple-system, "system-ui", "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Google Sans Text", "Google Sans", Arial, Helvetica, sans-serif;
+  --font-display: "Google Sans Display", "Google Sans", "Google Sans Text", Arial, sans-serif;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -43,14 +43,14 @@
   --ink: #14171f;
   --ink-soft: #3c4250;
   --muted: #5c6370;
-  --accent: #0043ce;
-  --accent-soft: #dfe6fb;
-  --link: #0043ce;
+  --accent: #0051fe;
+  --accent-soft: #dfe7ff;
+  --link: #0047e0;
 
-  /* The current dashboard's blue chrome */
-  --chrome: #0043ce;
-  --chrome-active: #0032a0;
-  --badge: #0032a0;
+  /* Blue chrome in Web Services' Ordnary blue */
+  --chrome: #0051fe;
+  --chrome-active: #0041cc;
+  --badge: #0041cc;
 
   --hero: #dfe3f3;
   --hero-light: #e9ecf7;
@@ -70,36 +70,39 @@
   color-scheme: light;
 }
 
-/* ordnary-console's dark palette (its :root.dark block). */
+/* Ordnary Web Services' dark palette (ordnary-console, :root.dark): a dark
+   slate page, slightly lighter cards and chrome, Ordnary blue. */
 :root.dark {
-  --bg: #2c2c2e;
-  --surface: #1b1b1c;
-  --popover: #232326;
-  --line: rgb(255 255 255 / 0.08);
-  --ink: #f9fafb;
-  --ink-soft: #d1d5db;
-  --muted: #adb2b8;
+  /* As in Web Services: the content pane (surface) a step darker than the
+     chrome, the panels inside it (bg) the colour of the chrome. */
+  --bg: #171d25;
+  --surface: #14191f;
+  --popover: #1d242e;
+  --line: #43464f;
+  --ink: #dedee3;
+  --ink-soft: #c4c5cc;
+  --muted: #a4a4ac;
   --accent: #0051fe;
   --accent-soft: rgb(0 81 254 / 0.2);
   /* #0051fe is too dark for small text on these backgrounds */
   --link: #4d84ff;
 
-  --chrome: #151517;
-  --chrome-active: #2c2c2e;
+  --chrome: #171d25;
+  --chrome-active: #262d38;
   --badge: #0051fe;
 
-  --hero: #232838;
-  --hero-light: #2a3042;
+  --hero: #1d242e;
+  --hero-light: #262d38;
   --hero-ink: #c3cbe6;
 
   --ok: #3fbf8a;
   --warn: #e0a23a;
   --bad: #ff6467;
 
-  --ill-white: #2c2c2e;
-  --ill-light: #313134;
-  --ill-mid: #4a4a4f;
-  --ill-dark: #a7abb3;
+  --ill-white: #14191f;
+  --ill-light: #262d38;
+  --ill-mid: #43464f;
+  --ill-dark: #a4a4ac;
 
   color-scheme: dark;
 }
@@ -147,5 +150,15 @@
 @media (prefers-reduced-motion: reduce) {
   .app-loading::before {
     animation-duration: 2.4s;
+  }
+}
+
+/* Headings in Google Sans Display, like Web Services and ordnary.com. Base
+   layer, so a page's own font class still wins. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
   }
 }

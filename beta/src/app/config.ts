@@ -1,16 +1,6 @@
 import { isDevMode } from '@angular/core';
 
 /**
- * The current React dashboard. Pages that haven't been rebuilt in this app
- * link to it.
- */
-export const LEGACY_ORIGIN = isDevMode() ? 'http://localhost:5173' : 'https://app.amelu.org';
-
-export function legacyUrl(path: string): string {
-  return LEGACY_ORIGIN + path;
-}
-
-/**
  * The Go API. In development `ng serve` proxies /api to it (proxy.conf.json),
  * so it's the same origin; in production it's its own host.
  */

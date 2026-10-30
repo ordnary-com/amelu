@@ -1,10 +1,10 @@
-@import "@fontsource-variable/source-sans-3";
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "Source Sans 3 Variable", sans-serif, -apple-system, "system-ui", "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Google Sans Text", "Google Sans", Arial, Helvetica, sans-serif;
+  --font-display: "Google Sans Display", "Google Sans", "Google Sans Text", Arial, sans-serif;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -147,5 +147,15 @@
 @media (prefers-reduced-motion: reduce) {
   .app-loading::before {
     animation-duration: 2.4s;
+  }
+}
+
+/* Headings in Google Sans Display, like Web Services and ordnary.com. Base
+   layer, so a page's own font class still wins. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
   }
 }

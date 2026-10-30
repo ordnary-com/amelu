@@ -24,6 +24,12 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-30  The 2.0 dashboard moves to app.amelu.org
+            2026-10-30-beta-to-app.txt
+
+2026-10-30  2.0 dashboard in the Ordnary Web Services look
+            2026-10-30-web-services-look.txt
+
 2026-10-29  Overlay when the API is slow or unreachable, no more login flash
             2026-10-29-connection-overlay.txt
 

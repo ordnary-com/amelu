@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ordnaryLoginUrl } from '../config';
 import { Session } from '../session';
+import { DitherShader } from './dither-shader';
 import { TechInfo } from './tech-info';
 
 // What the API's Ordnary callback redirects back with
@@ -14,29 +15,31 @@ const ERRORS: Record<string, string> = {
     'This email address belongs to an Amelu account linked to a different Ordnary account. Contact support.',
 };
 
-// Photos in public/login, credits in public/login/CREDITS.txt.
-const SLIDES = [
-  { image: '/login/work-1.webp', title: 'Email on your own domain', text: 'Addresses your customers recognise, set up in minutes.' },
-  { image: '/login/work-2.webp', title: 'Built for teams', text: 'Mailboxes, aliases and shared addresses for everyone you work with.' },
-  { image: '/login/work-3.webp', title: 'Fully managed', text: 'Spam filtering, DNS checks and security handled for you.' },
-  { image: '/login/work-4.webp', title: 'Work from anywhere', text: 'Use the mail app you already like, on every device.' },
-  { image: '/login/work-5.webp', title: 'Hosted in the EU', text: 'Your mail and data stay on servers in the EU, under EU privacy law.' },
-];
-
-const SLIDE_INTERVAL_MS = 6000;
 const OVERLAY_MIN_MS = 700;
 
+/** The legal links of the amelu.org footer, plus where to get help. */
+const FOOTER_LINKS = [
+  { label: 'Contact', href: 'https://ordnary.com/contact' },
+  { label: 'Privacy', href: 'https://amelu.org/privacy' },
+  { label: 'Terms', href: 'https://amelu.org/terms' },
+  { label: 'Acceptable use', href: 'https://amelu.org/acceptable-use' },
+  { label: 'Refunds', href: 'https://amelu.org/refund-policy' },
+  { label: 'DPA', href: 'https://amelu.org/dpa' },
+];
+
 /**
- * Sign in through Ordnary. Someone with a session gets asked first whether to
- * continue with that account or sign in with another one.
+ * Sign in through Ordnary, in the layout of the Web Services sign-in: a wide
+ * brand panel with an animated dither, the sign-in on the right and a footer bar
+ * across the bottom. The button shows straight away; someone who turns out to
+ * have a session goes on to the dashboard without being asked.
  */
 @Component({
   selector: 'amelu-login',
-  imports: [TechInfo],
+  imports: [DitherShader, TechInfo],
   templateUrl: './login.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'flex min-h-dvh flex-col items-center gap-6 p-4',
+    class: 'flex min-h-dvh flex-col bg-[#171d25] text-[#dedee3] [color-scheme:dark]',
     '(window:pageshow)': 'onPageShow($event)',
   },
 })
@@ -57,46 +60,18 @@ export class Login {
   protected readonly loginUrl = computed(() => ordnaryLoginUrl(this.returnTo()));
 
   private readonly session = inject(Session);
-  /** 'checking' until GET /api/me answers, then 'found' with a session or 'signin' without. */
-  protected readonly view = signal<'checking' | 'found' | 'signin'>('checking');
-  protected readonly customer = this.session.customer;
-  protected readonly avatarFailed = signal(false);
-  protected readonly initials = computed(() => {
-    const customer = this.customer();
-    const source = (customer?.name || customer?.email || '').trim();
-    const parts = source.split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return source.slice(0, 2).toUpperCase();
-  });
   /** The message on the loading overlay while it's shown, null when hidden. */
   protected readonly overlay = signal<string | null>(null);
   protected readonly busy = computed(() => this.overlay() !== null);
 
-  protected readonly slides = SLIDES;
-  protected readonly slide = signal(0);
-  private timer?: ReturnType<typeof setInterval>;
+  protected readonly footerLinks = FOOTER_LINKS;
+  protected readonly year = new Date().getFullYear();
 
   constructor() {
-    this.restartTimer();
-    inject(DestroyRef).onDestroy(() => clearInterval(this.timer));
-
-    void this.session.load().then((signedIn) => this.view.set(signedIn ? 'found' : 'signin'));
-  }
-
-  protected async continue(): Promise<void> {
-    if (this.busy()) return;
-    await this.showOverlay('Opening your dashboard');
-    this.session.clearLoginPending();
-    await this.router.navigateByUrl(this.returnTo());
-  }
-
-  // Ends the Amelu session, then has Ordnary show its sign-in form even
-  // though Ordnary itself is still signed in as the old account.
-  protected async useAnotherAccount(): Promise<void> {
-    if (this.busy()) return;
-    await Promise.all([this.showOverlay('Signing you out'), this.session.signOut()]);
-    this.session.markLoginPending();
-    window.location.href = ordnaryLoginUrl(this.returnTo(), true);
+    void this.session.load().then((signedIn) => {
+      if (!signedIn) return;
+      void this.router.navigateByUrl(this.returnTo(), { replaceUrl: true });
+    });
   }
 
   protected async start(event: MouseEvent): Promise<void> {
@@ -105,7 +80,6 @@ export class Login {
     event.preventDefault();
     if (this.busy()) return;
     await this.showOverlay('Signing you in with Ordnary');
-    this.session.markLoginPending();
     window.location.href = this.loginUrl();
   }
 
@@ -114,18 +88,6 @@ export class Login {
   private showOverlay(message: string): Promise<void> {
     this.overlay.set(message);
     return new Promise((resolve) => setTimeout(resolve, OVERLAY_MIN_MS));
-  }
-
-  protected show(index: number): void {
-    this.slide.set(index);
-    this.restartTimer();
-  }
-
-  // Clicking a dot starts the wait for the next slide over.
-  private restartTimer(): void {
-    clearInterval(this.timer);
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    this.timer = setInterval(() => this.slide.update((i) => (i + 1) % SLIDES.length), SLIDE_INTERVAL_MS);
   }
 
   // Going back here restores the page from the back/forward cache with the

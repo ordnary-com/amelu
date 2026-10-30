@@ -18,6 +18,17 @@ import { NotFound } from './not-found/not-found';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./login/login').then((m) => m.Login), title: 'Sign in · Amelu' },
+  // Links the API emails; no session needed.
+  {
+    path: 'reset-password/:token',
+    loadComponent: () => import('./token-pages/reset-password').then((m) => m.ResetPassword),
+    title: 'Set a password · Amelu',
+  },
+  {
+    path: 'accept-invite/:token',
+    loadComponent: () => import('./token-pages/accept-invite').then((m) => m.AcceptInvite),
+    title: 'Accept invitation · Amelu',
+  },
   {
     path: '',
     component: Shell,

@@ -30,6 +30,14 @@ export interface Member {
   avatarUrl?: string;
 }
 
+export interface InvitationDetails {
+  valid: boolean;
+  email?: string;
+  role?: OrganizationRole;
+  organizationName?: string;
+  existingAccount?: boolean;
+}
+
 export interface Invitation {
   id: string;
   email: string;
@@ -317,5 +325,23 @@ export class Api {
 
   logout() {
     return this.http.post<{ ok: boolean }>('/api/logout', {});
+  }
+
+  // The links the API emails: a mailbox password link and an organization
+  // invitation. Neither needs a session.
+  passwordResetToken(token: string) {
+    return this.http.get<{ valid: boolean; address?: string }>(`/api/password-reset/${encodeURIComponent(token)}`);
+  }
+
+  completePasswordReset(token: string, password: string) {
+    return this.http.post<{ ok: boolean }>(`/api/password-reset/${encodeURIComponent(token)}`, { password });
+  }
+
+  invitation(token: string) {
+    return this.http.get<InvitationDetails>(`/api/invitations/${encodeURIComponent(token)}`);
+  }
+
+  acceptInvitation(token: string, body: { password: string; firstName: string; lastName: string; username: string }) {
+    return this.http.post<Customer>(`/api/invitations/${encodeURIComponent(token)}/accept`, body);
   }
 }

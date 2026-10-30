@@ -12,7 +12,7 @@ import { DomainHealthChecks } from '../domain-health';
 import { DomainCard } from '../domain-card/domain-card';
 import { INVOICE_STATUS, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
-import { DISCORD_URL, GITHUB_URL, legacyUrl } from '../config';
+import { DISCORD_URL, GITHUB_URL } from '../config';
 
 @Component({
   selector: 'amelu-home',
@@ -28,7 +28,6 @@ export class Home {
   protected readonly invoiceStatus = INVOICE_STATUS;
   protected readonly discordUrl = DISCORD_URL;
   protected readonly githubUrl = GITHUB_URL;
-  protected readonly legacyUrl = legacyUrl('/');
   protected readonly badge = badgeClass;
 
   protected readonly heroLink = 'flex items-center gap-1.5 text-[13px] font-semibold hover:text-link';

@@ -1,0 +1,18 @@
+2.0 dashboard in the Ordnary Web Services look
+2026-10-30
+
+The beta's sign-in (beta/src/app/login) now looks like the Web Services
+sign-in in ordnary-console: a wide black panel with an animated dither
+in Amelu blue (login/dither-shader.ts, Paper Shaders, @paper-design/shaders
+added to beta) and the white Amelu icon, the sign-in on the right, a
+footer bar with the amelu.org legal links. Always dark, #171d25 with a
+#0051fe pill button. The photo carousel is gone.
+
+Sign-in is direct now: no more "We found your Amelu account, continue?"
+step. With a session /login goes straight on, and the loginPending flag in
+session.ts and auth.guard.ts is removed.
+
+The whole beta uses Google Sans Text and Display (was Source Sans 3) and
+the Web Services dark palette in styles.css: page #14191f, cards and
+chrome #171d25, lines #43464f, text #dedee3. Light mode keeps its greys
+with #0051fe as the blue.

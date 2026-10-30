@@ -3,129 +3,79 @@
   <div class="app-loading" role="progressbar" [attr.aria-label]="message"></div>
 }
 
-<div class="my-auto flex w-full max-w-[880px] items-stretch gap-4">
-  <section
-    class="flex w-full shrink-0 flex-col justify-center rounded-lg border border-line bg-surface p-8 mobile:w-[400px]"
-  >
-    <!-- amelu-logo.png is flat blue on transparent: brightness-0 invert turns it white. -->
-    <img src="/amelu-logo.png" alt="Amelu" class="h-7 self-start dark:brightness-0 dark:invert" />
+<!-- Split sign-in, like the Web Services one and in its colours (always dark,
+     whatever the dashboard theme): a wide brand panel with an animated dither on
+     the left, the sign-in on the right, a footer bar of links across the
+     bottom. Below lg the brand panel drops away and only the sign-in remains. -->
+<div class="grid flex-1 lg:grid-cols-[minmax(0,13fr)_minmax(0,7fr)]">
+  <!-- Brand panel: an animated dither in Amelu blue. -->
+  <aside class="relative hidden overflow-hidden bg-black lg:flex lg:flex-col lg:p-12">
+    <amelu-dither-shader />
+    <!-- amelu-icon.png is flat blue on transparent: brightness-0 invert turns it white. -->
+    <img src="/amelu-icon.png" alt="Amelu" class="relative h-10 w-auto self-start brightness-0 invert" />
+  </aside>
 
-    @switch (view()) {
-      @case ('checking') {
-        <div class="mt-6 h-[132px]" aria-busy="true"></div>
-      }
-      @case ('found') {
-        <p class="mt-5 text-[13px] leading-relaxed text-muted">We found your Amelu account. Continue with it?</p>
+  <!-- Sign-in panel -->
+  <main class="flex flex-col border-white/10 px-6 py-8 sm:px-12 lg:border-l lg:py-12">
+    <img src="/amelu-icon.png" alt="Amelu" class="h-10 w-auto self-start brightness-0 invert lg:hidden" />
 
-        @if (customer(); as me) {
-          <div class="mt-4 flex items-center gap-3 rounded-md border border-line p-3">
-            @if (me.avatarUrl && !avatarFailed()) {
-              <img
-                [src]="me.avatarUrl"
-                alt=""
-                class="size-10 flex-none rounded-full object-cover"
-                (error)="avatarFailed.set(true)"
-                referrerpolicy="no-referrer"
-              />
-            } @else {
-              <span
-                class="flex size-10 flex-none items-center justify-center rounded-full bg-accent-soft text-[14px] font-semibold text-link"
-              >
-                {{ initials() }}
-              </span>
-            }
-            <div class="min-w-0">
-              <div class="truncate text-[14px] font-semibold">{{ me.name || me.email }}</div>
-              <div class="truncate text-[12px] text-muted">
-                {{ me.name ? me.email + ' · ' : '' }}{{ me.organizationName }}
-              </div>
-            </div>
-          </div>
-        }
+    <div class="m-auto w-full max-w-[420px] py-10">
+      <h1 class="text-[22px] font-semibold tracking-[-0.2px]">Sign in to Amelu</h1>
+      <p class="mt-1.5 text-[14px] leading-relaxed text-[#a4a4ac]">
+        Use your Ordnary account to manage your domains, mailboxes and billing.
+      </p>
 
-        <button
-          type="button"
-          (click)="continue()"
-          [disabled]="busy()"
-          class="mt-5 flex h-10 w-full cursor-pointer items-center justify-center rounded-md bg-accent text-[14px] font-medium text-white hover:bg-accent/80 disabled:cursor-default disabled:opacity-70"
-        >
-          Yes, continue
-        </button>
-        <button
-          type="button"
-          (click)="useAnotherAccount()"
-          [disabled]="busy()"
-          class="mt-2 flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-line text-[14px] font-medium hover:bg-bg disabled:cursor-default disabled:opacity-70"
-        >
-          Use another account
-        </button>
-      }
-      @default {
-        <p class="mt-5 text-[13px] leading-relaxed text-muted">
-          Your own domain, your own mailboxes, fully managed. Sign in with your Ordnary account to continue.
+      @if (error(); as message) {
+        <p class="mt-6 rounded-lg border border-bad/30 bg-bad/10 px-3 py-2 text-[13px] text-bad" role="alert">
+          {{ message }}
         </p>
-
-        @if (error(); as message) {
-          <p class="mt-5 rounded-md border border-bad/30 bg-bad/10 px-3 py-2 text-[13px] text-bad" role="alert">
-            {{ message }}
-          </p>
-        }
-
-        <a
-          [href]="loginUrl()"
-          (click)="start($event)"
-          [attr.aria-disabled]="busy()"
-          class="mt-6 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-accent text-[14px] font-medium text-white hover:bg-accent/80"
-        >
-          <img src="/ordnary-mark-blue.png" alt="" class="size-4 brightness-0 invert" />
-          Sign in with Ordnary
-        </a>
       }
-    }
 
-    <p class="mt-6 text-[11px] leading-relaxed text-muted">
-      By signing in, you agree to Amelu's
-      <a href="https://amelu.org/terms" target="_blank" rel="noopener" class="text-link hover:underline">Terms of Service</a>
-      and
-      <a href="https://amelu.org/acceptable-use" target="_blank" rel="noopener" class="text-link hover:underline">Acceptable Use Policy</a>.
-      The
-      <a href="https://amelu.org/privacy" target="_blank" rel="noopener" class="text-link hover:underline">Privacy Policy</a>
-      explains how we handle your data. We'll email you about your account and its security when needed.
-    </p>
-  </section>
-
-  <div
-    class="relative hidden min-h-[480px] flex-1 overflow-hidden rounded-lg border border-line bg-chrome mobile:block"
-    aria-roledescription="carousel"
-    aria-label="About Amelu"
-  >
-    @for (item of slides; track item.image; let i = $index) {
-      <div
-        class="absolute inset-0 transition-opacity duration-700"
-        [class.opacity-0]="slide() !== i"
-        [attr.aria-hidden]="slide() !== i"
+      <a
+        [href]="loginUrl()"
+        (click)="start($event)"
+        [attr.aria-disabled]="busy()"
+        class="mt-8 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#0051fe] text-[14px] font-medium text-white transition-colors hover:bg-[#1a62ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4d84ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#171d25]"
       >
-        <img [src]="item.image" alt="" class="size-full object-cover" [attr.loading]="i === 0 ? 'eager' : 'lazy'" />
-        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-6 pt-20 pb-12">
-          <p class="text-[18px] font-bold text-white">{{ item.title }}</p>
-          <p class="mt-1 max-w-[340px] text-[13px] leading-relaxed text-white/85">{{ item.text }}</p>
-        </div>
-      </div>
-    }
+        Continue with Ordnary account
+      </a>
 
-    <div class="absolute bottom-5 left-6 flex gap-1.5">
-      @for (item of slides; track item.image; let i = $index) {
-        <button
-          type="button"
-          class="h-1.5 cursor-pointer rounded-full transition-all"
-          [class]="slide() === i ? 'w-5 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/80'"
-          [attr.aria-label]="'Show slide ' + (i + 1)"
-          [attr.aria-current]="slide() === i"
-          (click)="show(i)"
-        ></button>
-      }
+      <p class="mt-8 text-[12px] leading-[1.6] text-[#a4a4ac]">
+        By continuing, you agree to Amelu's
+        <a href="https://amelu.org/terms" target="_blank" rel="noopener" class="text-[#4d84ff] underline-offset-2 hover:underline">Terms of Service</a>
+        and
+        <a href="https://amelu.org/acceptable-use" target="_blank" rel="noopener" class="text-[#4d84ff] underline-offset-2 hover:underline">Acceptable Use Policy</a>.
+        The
+        <a href="https://amelu.org/privacy" target="_blank" rel="noopener" class="text-[#4d84ff] underline-offset-2 hover:underline">Privacy Policy</a>
+        explains how we handle your data. We'll email you about your account and its security when needed.
+      </p>
     </div>
-  </div>
+
+    <div class="flex justify-center">
+      <!-- The blue mark made flat white. -->
+      <img src="/ordnary-mark-blue.png" alt="Ordnary" class="size-6 brightness-0 invert" />
+    </div>
+  </main>
 </div>
 
-<amelu-tech-info />
+<!-- Footer bar: the amelu.org legal links, then its copyright and company line. -->
+<footer class="border-t border-white/10 bg-[#141518] px-6 py-6 text-center text-[12px] text-[#a4a4ac]">
+  <nav class="flex flex-wrap justify-center gap-x-5 gap-y-2">
+    @for (link of footerLinks; track link.href) {
+      <a [href]="link.href" target="_blank" rel="noopener" class="transition-colors hover:text-[#dedee3]">{{ link.label }}</a>
+    }
+  </nav>
+  <p class="mx-auto mt-4 max-w-3xl leading-relaxed">
+    © {{ year }} Amelu, a product by Ordnary. All rights reserved. Amelu and its product names, logos and marks are
+    trademarks of Ordnary. Unauthorised use is strictly prohibited.
+  </p>
+  <p class="mt-1 flex flex-wrap items-center justify-center gap-x-1.5">
+    <span>KVK 95732888 · D-U-N-S 965740890 ·</span>
+    <span class="inline-flex items-center gap-1.5">
+      Proudly made in the
+      <img src="https://flagicons.lipis.dev/flags/4x3/nl.svg" width="16" height="12" loading="lazy" alt="Dutch flag" class="inline-block" />
+      Netherlands
+    </span>
+  </p>
+  <amelu-tech-info class="mt-3" />
+</footer>

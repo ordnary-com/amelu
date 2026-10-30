@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { RouterLink } from '@angular/router';
 import { Icon } from '../icon';
 import { Session } from '../session';
-import { ORDNARY_ACCOUNT_URL, legacyUrl } from '../config';
+import { ORDNARY_ACCOUNT_URL } from '../config';
 import { Theme, ThemeChoice } from '../theme';
 
 /**
@@ -29,7 +29,6 @@ export class AccountMenu {
   protected readonly open = signal(false);
   protected readonly avatarFailed = signal(false);
   protected readonly ordnaryAccountUrl = ORDNARY_ACCOUNT_URL;
-  protected readonly legacyUrl = legacyUrl;
   protected readonly copied = signal(false);
   protected readonly theme = inject(Theme);
   protected readonly themes: { value: ThemeChoice; label: string }[] = [

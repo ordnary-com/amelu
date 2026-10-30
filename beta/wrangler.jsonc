@@ -1,4 +1,4 @@
-// The 2.0 dashboard on beta.amelu.org: static files only, no Worker code.
+// The 2.0 dashboard on app.amelu.org (and beta.amelu.org): static files only, no Worker code.
 // Deploy with `pnpm deploy:beta` from the repo root (builds, then uploads).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -9,5 +9,8 @@
     // Client-side routes (/domains, /login, ...) all serve index.html.
     "not_found_handling": "single-page-application"
   },
-  "routes": [{ "pattern": "beta.amelu.org", "custom_domain": true }]
+  "routes": [
+    { "pattern": "app.amelu.org", "custom_domain": true },
+    { "pattern": "beta.amelu.org", "custom_domain": true }
+  ]
 }

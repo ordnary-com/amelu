@@ -1,0 +1,16 @@
+The 2.0 dashboard moves to app.amelu.org
+2026-10-30
+
+app.amelu.org now serves the Angular dashboard (Worker amelu-beta) instead
+of the React one (Pages project amelu-frontend, domain detached, project
+kept). beta.amelu.org keeps working as a second hostname.
+
+The API emails links to the frontend origin, so the beta gained the two
+pages it was missing: /reset-password/:token (the mailbox password link
+from POST /api/mailboxes/{id}/password/invite) and /accept-invite/:token
+(organization invitations), on GET/POST /api/password-reset/{token} and
+GET /api/invitations/{token} plus POST .../accept. The "current
+dashboard" links and LEGACY_ORIGIN in config.ts are gone.
+
+No API change: CORS_ORIGIN already lists app.amelu.org first, and that is
+where the reset, invite and Stripe return links point.

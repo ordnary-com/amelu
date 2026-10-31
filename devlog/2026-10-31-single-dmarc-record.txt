@@ -1,0 +1,12 @@
+amelu.org has one DMARC record again
+2026-10-31
+
+_dmarc.amelu.org had two TXT records, "p=reject; rua=postmaster@" and
+"p=quarantine; ... rua/ruf=dmarc-reports@". With two records receivers
+ignore DMARC for the domain altogether. The reject record is deleted, and
+the remaining one is now:
+
+v=DMARC1; p=quarantine; pct=100; rua=mailto:postmaster@amelu.org
+
+dmarc-reports@amelu.org doesn't exist on marduk (550 5.1.2), so the
+reports go to postmaster@, which does. ruf (forensic reports) is dropped.

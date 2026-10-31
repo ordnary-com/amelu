@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-31  amelu.org has one DMARC record again
+            2026-10-31-single-dmarc-record.txt
+
 2026-10-31  Outbound limit, four domains paused after Gmail rate-limited marduk
             2026-10-31-gmail-rate-limit-and-send-pause.txt
 

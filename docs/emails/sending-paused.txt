@@ -1,0 +1,13 @@
+Subject: Outgoing email from {{DOMAIN}} is paused
+
+Hello,
+
+We've temporarily paused sending for the mailboxes on {{DOMAIN}}. Incoming email keeps working, and you can still sign in and read your mail.
+
+Why: over the past few days these mailboxes sent a large volume of email to recipients at many different companies. A share of it was refused as unsolicited, or sent to addresses that don't exist. This harms delivery for every Amelu customer, and our Acceptable Use Policy (https://amelu.org/acceptable-use) doesn't allow unsolicited bulk email or cold outreach to purchased or scraped lists.
+
+If you believe this is a mistake, or you'd like sending restored, reply to this email with a short description of what you send and to whom. Bulk mail such as newsletters has to go through a dedicated mailing service, to recipients who opted in.
+
+Mail that was already waiting to be sent before the pause may still be delivered.
+
+The Amelu team

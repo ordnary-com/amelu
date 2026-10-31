@@ -1,0 +1,17 @@
+Outbound limit, four domains paused after Gmail rate-limited marduk
+2026-10-31
+
+Since 2026-10-29 03:31 UTC Gmail answers mail from marduk (141.95.52.66)
+with 421 "unusual rate of unsolicited mail originating from your IP
+Netblock", so mail to Gmail stalls for every customer. The volume came from
+cold outreach on four domains: thecasto.site, answer-ai.cv,
+dalychebbi.tech and stasiorfg.com (many recipients at many companies,
+5.1.1 and 5.7.1 refusals).
+
+Stalwart had no outbound limit at all. There is now an
+x:MtaOutboundThrottle rule (jmgqf29wteqa): 200 messages per hour per
+sender domain; more waits in the queue. The 12 mailboxes on the four
+domains have emailSend disabled (x:Account/set, permissions Merge); their
+old permissions are in /root/amelu-send-pause-2026-10-31.json on marduk.
+They were told with docs/emails/sending-paused.html, sent from
+abuse@amelu.org.

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-10-31  Outbound limit, four domains paused after Gmail rate-limited marduk
+            2026-10-31-gmail-rate-limit-and-send-pause.txt
+
 2026-10-30  The 2.0 dashboard moves to app.amelu.org
             2026-10-30-beta-to-app.txt
 

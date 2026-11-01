@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-01  Outbound mail on the noez IPs, split by sender; Hetzner relay removed
+            2026-11-01-ip-pools-live.txt
+
 2026-11-01  Temporary Gmail relay on Hetzner until the noez IPs are live
             2026-11-01-temporary-gmail-relay.txt
 

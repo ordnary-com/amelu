@@ -1,0 +1,18 @@
+Outbound mail on the noez IPs, split by sender; Hetzner relay removed
+2026-11-01
+
+noez opened port 25 on the tunnel earlier than planned (limit: 150 mails
+per hour, can be raised every 7 days; we send about 16 per hour, 38 at
+peak). 5.230.173.85-87 are now also A records of marduk.mx.amelu.org, so
+customer SPF ("mx -all") covers them, with HELO SPF on out1-3.mx.amelu.org.
+
+Stalwart has a connection strategy per IP (out1-3: sourceIps with
+sourceIp + ehloHostname) and ops/marduk/amelu-ip-pools.py (cron :47, log
+/var/log/amelu-ip-pools.log) writes the connection expression: amelu.org
+on out3, domains created in the last 7 days on out2, the rest on out1.
+It falls back to 'default' (141.95.52.66) if the tunnel IPs aren't in the
+MX host's A records. x:MtaOutboundThrottle jmma27oku7qa caps the total at
+140 per hour. marduk's own IP no longer sends.
+
+The temporary Hetzner relay is gone: server deleted, relay.mx.amelu.org
+removed, Stalwart route destroyed, amelu-relay-route removed.

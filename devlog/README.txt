@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-01  Three outbound mail IPs on marduk through a GRE tunnel
+            2026-11-01-outbound-ips-gre.txt
+
 2026-11-01  Sender guard pauses cold outreach on marduk automatically
             2026-11-01-sender-guard.txt
 

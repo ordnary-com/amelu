@@ -1,0 +1,13 @@
+[Unit]
+Description=GRE tunnel to noez.de for outbound mail IPs (out1-3.mx.amelu.org)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/gre-noez up
+ExecStop=/usr/local/sbin/gre-noez down
+
+[Install]
+WantedBy=multi-user.target

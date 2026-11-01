@@ -1,0 +1,30 @@
+#!/bin/sh
+# GRE tunnel to noez.de (service #85494) carrying 5.230.173.85-87, the
+# outbound mail IPs out1-3.mx.amelu.org. Only traffic *from* those IPs is
+# routed through it (table 20); everything else keeps using ens3.
+LOCAL=141.95.52.66
+REMOTE=5.230.205.34
+IPS="5.230.173.85 5.230.173.86 5.230.173.87"
+case "$1" in
+  up)
+    modprobe ip_gre
+    ip tunnel add gre1 mode gre local $LOCAL remote $REMOTE ttl 255 2>/dev/null || true
+    ip link set gre1 mtu 1476
+    ip addr replace 172.20.17.182/30 dev gre1
+    ip link set gre1 up
+    sysctl -qw net.ipv4.conf.gre1.rp_filter=2
+    for ip in $IPS; do
+      ip addr replace $ip/32 dev gre1
+      ip rule del from $ip table 20 2>/dev/null || true
+      ip rule add from $ip table 20 prio 100
+    done
+    ip route replace default via 172.20.17.181 dev gre1 mtu 1476 table 20
+    ;;
+  down)
+    for ip in $IPS; do ip rule del from $ip table 20 2>/dev/null || true; done
+    ip route flush table 20 2>/dev/null || true
+    ip link set gre1 down 2>/dev/null || true
+    ip tunnel del gre1 2>/dev/null || true
+    ;;
+  *) echo "usage: $0 up|down"; exit 1 ;;
+esac

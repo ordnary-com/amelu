@@ -1,0 +1,37 @@
+Subject: 🎉 Your email just got its own fast lane
+
+Hello,
+
+We've got news worth celebrating! From 5 November, everything you send through Amelu leaves from three brand-new IP addresses, reserved just for outgoing mail. A cleaner road from your outbox to their inbox.
+
+out1.mx.amelu.org  5.230.173.85
+out2.mx.amelu.org  5.230.173.86
+out3.mx.amelu.org  5.230.173.87
+
+WHY WE'RE DOING THIS
+
+Gmail, Outlook and other providers decide whether mail lands in the inbox partly by looking at the address it comes from. Until now, all of Amelu's mail, both incoming and outgoing, ran through a single address. That worked, but it meant one address had to carry everything.
+
+- A better reputation. Addresses that only send mail are easier to keep clean, and providers trust them more.
+- More room. Three addresses share the load, so your mail goes out faster on busy days.
+- Better protected. If one address ever runs into trouble, mail keeps flowing through the others instead of everyone waiting.
+
+To keep the new addresses in top shape, we now also check automatically for unsolicited bulk mail and pause it before it can affect anyone else. Your everyday email isn't affected by this.
+
+"We want every email you send to land exactly where it should. Giving Amelu its own sending addresses is a big step towards that, and honestly, we're a little proud of it."
+Feline Vos, Head of Communications
+
+WHAT IT MEANS FOR YOU
+
+Do you need to do anything? Most likely not, so sit back and enjoy. If your domain's SPF record is "v=spf1 mx -all", as set up in the dashboard, the new addresses are already covered. 🙌
+
+Did you change your SPF record yourself, for example to add another mail service? Then give it a quick update: add "mx" to it, or the three addresses above. The same goes for firewalls or spam filters where you allow Amelu by IP address.
+
+Check your DNS records: https://app.amelu.org/domains
+
+A short heads-up: while we make the switch, sending may pause or slow down for a little while. Mail is never lost; anything waiting goes out as soon as we're done. We'll announce the exact time beforehand on our status page: https://ordnary.com/status
+
+Receiving email stays exactly the same: your MX record is still marduk.mx.amelu.org. Here's to more mail landing where it belongs! 🥂
+
+Cheers,
+The Amelu team

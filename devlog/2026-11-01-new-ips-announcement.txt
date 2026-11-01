@@ -1,0 +1,15 @@
+Announced the new sending IPs to customers
+2026-11-01
+
+docs/emails/new-sending-ips.html (and .txt) tells customers that from
+5 November mail leaves from 5.230.173.85-87 (out1-3.mx.amelu.org), why,
+that "v=spf1 mx -all" already covers them, that custom SPF records and IP
+allowlists need updating, and that the switch may briefly pause sending,
+announced on ordnary.com/status. It has a quote from Feline Vos, approved.
+
+Sent through Resend from "Amelu <noreply@ordnary.com>", reply-to
+support@ordnary.com, to the 729 owners of an active or dns_pending domain
+(Neon, read-only query), minus the six owners of paused domains. Resend
+had stopped sending from ordnary.com because send.ordnary.com lost its MX
+(feedback-smtp.eu-west-1.amazonses.com) and SPF TXT; both are back and the
+domain is verified again.

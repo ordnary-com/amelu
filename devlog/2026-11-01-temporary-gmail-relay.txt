@@ -18,3 +18,13 @@ signs before relaying), since customer SPF is "mx -all".
 Undo on 4 November: restore the route expression from
 /root/stalwart-outbound-strategy-before-relay-2026-11-01.json on marduk,
 destroy the route, delete the server (hcloud server delete amelu-relay).
+
+Changed the same day: the user wanted all mail from new accounts on the new
+IP, not just mail to Gmail. ops/marduk/amelu-relay-route.py (cron :47,
+log /var/log/amelu-relay-route.log) rewrites the route expression every
+hour to "sender_domain is one of the domains created in the last 7 days ->
+hetzner-relay" (337 domains, a 12 KB OR chain, validated). It only does so
+while relay.mx.amelu.org resolves to 5.75.135.131; the first two relayed
+mails bounced at Gmail with 5.7.25 because that A record was missing, so
+until it exists everything stays direct. Accepted risk: relayed mail fails
+SPF ("mx -all"), so receivers that reject on SPF before DMARC may refuse it.

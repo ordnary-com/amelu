@@ -1,0 +1,18 @@
+Sender guard pauses cold outreach on marduk automatically
+2026-11-01
+
+Gmail kept rate-limiting marduk after the first four domains were paused,
+because new cold senders kept coming (outreach.eur3duty.com,
+workflowflare.com, both paused by hand today). The 200/hour outbound
+throttle doesn't catch them: they send 10 to 60 mails a day.
+
+ops/marduk/amelu-sender-guard.py now runs hourly on marduk
+(/etc/cron.d/amelu-sender-guard, log /var/log/amelu-sender-guard.log).
+Per sender domain over 24 hours it pauses emailSend when: 40+ recipient
+domains; or 10+ with 3+ "user unknown" refusals; or 10+ with 5+ policy
+refusals; or 8+ with 25+ Gmail "unsolicited" refusals. Backtested on 28
+Oct to 1 Nov: catches all five known senders, a day before the Gmail
+limit for two of them, and no normal customer. The customer gets the
+sending-paused mail, abuse@amelu.org a summary; backups and reasons are in
+/var/lib/amelu-sender-guard/state.json, exceptions in
+/etc/amelu-sender-guard/allow.txt.

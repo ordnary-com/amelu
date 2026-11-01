@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-01  Sender guard pauses cold outreach on marduk automatically
+            2026-11-01-sender-guard.txt
+
 2026-10-31  amelu.org has one DMARC record again
             2026-10-31-single-dmarc-record.txt
 

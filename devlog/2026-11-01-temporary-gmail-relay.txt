@@ -1,0 +1,20 @@
+Temporary Gmail relay on Hetzner until the noez IPs are live
+2026-11-01
+
+Gmail still rate-limits marduk's IP and noez keeps port 25 on the tunnel
+closed until 4 November. As a bridge, a Hetzner cx23 (amelu-relay,
+5.75.135.131, PTR relay.mx.amelu.org, labels purpose=amelu-mail-relay,
+temporary=until-2026-11-04) runs Postfix as a relay that only accepts mail
+from 141.95.52.66 (mynetworks plus UFW) and delivers nothing locally.
+Config: ops/relay/postfix-main.cf.
+
+Stalwart: x:MtaRoute "hetzner-relay" (Relay, 5.75.135.131:25,
+allowInvalidCerts, the relay has a snakeoil cert) and in the
+x:MtaOutboundStrategy singleton route expression a rule sending
+rcpt_domain gmail.com and googlemail.com there. Everything else still goes
+direct, so SPF keeps passing; Gmail mail passes DMARC through DKIM (marduk
+signs before relaying), since customer SPF is "mx -all".
+
+Undo on 4 November: restore the route expression from
+/root/stalwart-outbound-strategy-before-relay-2026-11-01.json on marduk,
+destroy the route, delete the server (hcloud server delete amelu-relay).

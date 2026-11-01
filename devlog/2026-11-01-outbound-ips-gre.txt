@@ -1,0 +1,16 @@
+Three outbound mail IPs on marduk through a GRE tunnel
+2026-11-01
+
+marduk's own IP (141.95.52.66) is rate-limited by Gmail. A GRE tunnel from
+noez.de (service #85494) now brings 5.230.173.85, .86 and .87 onto marduk
+as gre1, with forward and reverse DNS out1, out2 and out3.mx.amelu.org.
+
+ops/marduk/gre-noez and gre-noez.service set it up (systemd, survives a
+reboot): only traffic from those three IPs is routed through the tunnel
+(ip rule ... lookup 20), everything else keeps using ens3. MTU 1476,
+rp_filter loose on gre1, UFW allows GRE only from 5.230.205.34.
+
+Not in use for mail yet: noez still blocks port 25 on the tunnel, and
+Stalwart's MtaOutboundStrategy is empty, so all mail still leaves from
+141.95.52.66. Next: connection strategies with sourceIps and ehloHostname
+per IP once port 25 is open.

@@ -1,0 +1,24 @@
+# Temporary outbound relay for Amelu (marduk) until the noez IPs are live.
+# Accepts mail only from marduk and passes it on; delivers nothing locally.
+myhostname = relay.mx.amelu.org
+myorigin = relay.mx.amelu.org
+mydestination =
+local_recipient_maps =
+local_transport = error:local delivery disabled
+inet_interfaces = all
+inet_protocols = ipv4
+mynetworks = 127.0.0.0/8 141.95.52.66/32
+smtpd_relay_restrictions = permit_mynetworks, reject
+smtpd_recipient_restrictions = permit_mynetworks, reject
+smtpd_banner = $myhostname ESMTP
+smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_tls_security_level = may
+smtp_tls_security_level = may
+smtp_tls_loglevel = 1
+smtp_helo_name = relay.mx.amelu.org
+smtp_bind_address = 5.75.135.131
+message_size_limit = 52428800
+biff = no
+append_dot_mydomain = no
+compatibility_level = 3.6

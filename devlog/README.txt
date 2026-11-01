@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-01  Temporary Gmail relay on Hetzner until the noez IPs are live
+            2026-11-01-temporary-gmail-relay.txt
+
 2026-11-01  Announced the new sending IPs to customers
             2026-11-01-new-ips-announcement.txt
 

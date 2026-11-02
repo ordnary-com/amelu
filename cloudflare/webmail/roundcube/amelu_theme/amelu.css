@@ -1,0 +1,133 @@
+/* Generated from skins/elastic/styles/styles.min.css: the Elastic main colour #37beff replaced by Amelu blue. Regenerate after a Roundcube upgrade, see docs/WEBMAIL.md. */
+p.image-attachment{position:relative;border:1px solid #ddd;border-radius:.3rem;background-color:rgba(0,67,206,.05);float:left;margin:.5rem;min-width:47%;min-height:250px;overflow:hidden;display:flex;justify-content:center}
+html.dark-mode p.image-attachment{position:relative;border:1px solid #ddd;border-radius:.3rem;background-color:rgba(0,81,254,.05);float:left;margin:.5rem;min-width:47%;min-height:250px;overflow:hidden;display:flex;justify-content:center}
+.quota-widget .value{display:block;background-color:#0043ce;height:1rem;opacity:.75}
+html.dark-mode .quota-widget .value{display:block;background-color:#0051fe;height:1rem;opacity:.75}
+.image-tools{position:absolute;top:5rem;left:0;height:58px;overflow:hidden;transform:translateX(-87%);transition:transform .3s ease-in-out;background-color:rgba(0,67,206,.4);border-radius:0 .3rem .3rem 0}
+html.dark-mode .image-tools{position:absolute;top:5rem;left:0;height:58px;overflow:hidden;transform:translateX(-87%);transition:transform .3s ease-in-out;background-color:rgba(0,81,254,.4);border-radius:0 .3rem .3rem 0}
+.image-tools a:focus,.image-tools a:hover{background-color:rgba(0,67,206,.5)!important;outline:0}
+html.dark-mode .image-tools a:focus,html.dark-mode .image-tools a:hover{background-color:rgba(0,81,254,.5)!important;outline:0}
+.floating-action-buttons a.button{display:block;float:left;width:4rem;height:4rem;border-radius:50%;background:#0043ce;color:#fff;opacity:.95;box-shadow:0 0 5px 5px #eaf8ff;margin:0 1rem 1rem 0}
+html.dark-mode .floating-action-buttons a.button{display:block;float:left;width:4rem;height:4rem;border-radius:50%;background:#0051fe;color:#fff;opacity:.95;box-shadow:0 0 5px 5px #eaf8ff;margin:0 1rem 1rem 0}
+.btn:focus{box-shadow:0 0 0 .2rem rgba(0,67,206,.3)}
+html.dark-mode .btn:focus{box-shadow:0 0 0 .2rem rgba(0,81,254,.3)}
+.btn-primary{color:#fff;background:#0043ce;border-color:#0043ce}
+html.dark-mode .btn-primary{color:#fff;background:#0051fe;border-color:#0051fe}
+.btn-primary:focus{background:#1eb6ff;border-color:#13b2ff;box-shadow:0 0 0 .2rem rgba(0,67,206,.5)}
+html.dark-mode .btn-primary:focus{background:#1eb6ff;border-color:#13b2ff;box-shadow:0 0 0 .2rem rgba(0,81,254,.5)}
+.btn-primary.disabled,.btn-primary:disabled{background:#0043ce;border-color:#0043ce}
+html.dark-mode .btn-primary.disabled,html.dark-mode .btn-primary:disabled{background:#0051fe;border-color:#0051fe}
+.btn-primary:not(:disabled):not(.disabled).active:focus,.btn-primary:not(:disabled):not(.disabled):active:focus{box-shadow:0 0 0 .2rem rgba(0,67,206,.53)}
+html.dark-mode .btn-primary:not(:disabled):not(.disabled).active:focus,html.dark-mode .btn-primary:not(:disabled):not(.disabled):active:focus{box-shadow:0 0 0 .2rem rgba(0,81,254,.53)}
+.ui-menu .ui-state-active{border:0!important;background-color:#0043ce!important}
+html.dark-mode .ui-menu .ui-state-active{border:0!important;background-color:#0051fe!important}
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset a.btn-link:focus{background-color:rgba(0,67,206,.5)}
+html.dark-mode .ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset a.btn-link:focus{background-color:rgba(0,81,254,.5)}
+.ui-slider .ui-slider-handle.ui-state-active{background:#0043ce;border-color:#005984}
+html.dark-mode .ui-slider .ui-slider-handle.ui-state-active{background:#0051fe;border-color:#005984}
+.ui-datepicker .ui-datepicker-days-cell-over a,.ui-datepicker .ui-datepicker-days-cell-over a.ui-state-default,.ui-datepicker .ui-state-highlight,.ui-datepicker.ui-widget-content .ui-state-highlight{background:#d0f0ff;color:#0043ce}
+html.dark-mode .ui-datepicker .ui-datepicker-days-cell-over a,html.dark-mode .ui-datepicker .ui-datepicker-days-cell-over a.ui-state-default,html.dark-mode .ui-datepicker .ui-state-highlight,html.dark-mode .ui-datepicker.ui-widget-content .ui-state-highlight{background:#d0f0ff;color:#4d84ff}
+.ui-datepicker a.ui-state-active{background:#0043ce!important;color:#fff!important;font-weight:700}
+html.dark-mode .ui-datepicker a.ui-state-active{background:#0051fe!important;color:#fff!important;font-weight:700}
+.popover .menu li a:not(.disabled):hover{color:#fff;background-color:#0043ce}
+html.dark-mode .popover .menu li a:not(.disabled):hover{color:#fff;background-color:#0051fe}
+.popover .menu .dropbutton a.dropdown:hover{background-color:#0043ce}
+html.dark-mode .popover .menu .dropbutton a.dropdown:hover{background-color:#0051fe}
+#taskmenu .action-buttons a{color:#0043ce;background:0 0}
+html.dark-mode #taskmenu .action-buttons a{color:#4d84ff;background:0 0}
+#taskmenu .action-buttons a:hover{color:#0043ce;background:#45555c}
+html.dark-mode #taskmenu .action-buttons a:hover{color:#4d84ff;background:#45555c}
+.ui.alert{margin:0;margin-bottom:.2rem;opacity:.95;width:100%;padding:.75em;color:#2c363a;border:1px solid transparent;background-color:rgba(0,67,206,.05);display:flex;align-items:center}
+html.dark-mode .ui.alert{margin:0;margin-bottom:.2rem;opacity:.95;width:100%;padding:.75em;color:#2c363a;border:1px solid transparent;background-color:rgba(0,81,254,.05);display:flex;align-items:center}
+.ui.alert a:not(.btn){color:#0043ce;font-weight:400}
+html.dark-mode .ui.alert a:not(.btn){color:#4d84ff;font-weight:400}
+.ui.alert.boxinformation{background-color:rgba(0,67,206,.2)}
+html.dark-mode .ui.alert.boxinformation{background-color:rgba(0,81,254,.2)}
+#messagestack .alert-info.information{background-color:#0043ce}
+html.dark-mode #messagestack .alert-info.information{background-color:#0051fe}
+.popupmenu .listing li>a:not(.disabled):hover{color:#fff;background-color:#0043ce}
+html.dark-mode .popupmenu .listing li>a:not(.disabled):hover{color:#fff;background-color:#0051fe}
+.popupmenu .listing li.selected{color:#fff;background-color:#0043ce}
+html.dark-mode .popupmenu .listing li.selected{color:#fff;background-color:#0051fe}
+.folderlist li.mailbox .unreadcount{position:absolute;top:0;right:0;min-width:2em;line-height:1.4rem;margin:7.7px;padding:0 .3em;border-radius:.4em;background:#0043ce;color:#fff;text-align:center;font-weight:700}
+html.dark-mode .folderlist li.mailbox .unreadcount{position:absolute;top:0;right:0;min-width:2em;line-height:1.4rem;margin:7.7px;padding:0 .3em;border-radius:.4em;background:#0051fe;color:#fff;text-align:center;font-weight:700}
+.folderlist li.mailbox.recent>a>.unreadcount{background:#0043ce;color:#fff}
+html.dark-mode .folderlist li.mailbox.recent>a>.unreadcount{background:#0051fe;color:#fff}
+.formcontent.raweditor .CodeMirror-focused{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .formcontent.raweditor .CodeMirror-focused{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.input-group a:focus{background-color:rgba(0,67,206,.25);outline:0}
+html.dark-mode .input-group a:focus{background-color:rgba(0,81,254,.25);outline:0}
+.multi-input>.content.focused{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .multi-input>.content.focused{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.recipient-input.focus{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .recipient-input.focus{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.tagedit-list[tabindex="-1"]{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .tagedit-list[tabindex="-1"]{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.form-control:focus{color:#2c363a;border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .form-control:focus{color:#2c363a;border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.input-group-text input:focus{z-index:1;border-color:#0043ce!important}
+html.dark-mode .input-group-text input:focus{z-index:1;border-color:#0051fe!important}
+.custom-switch .custom-control-input:focus~.custom-control-label:before{box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .custom-switch .custom-control-input:focus~.custom-control-label:before{box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.custom-switch .custom-control-input:focus:not(:checked)~.custom-control-label::before{border-color:#0043ce}
+html.dark-mode .custom-switch .custom-control-input:focus:not(:checked)~.custom-control-label::before{border-color:#0051fe}
+.custom-switch .custom-control-input:checked~.custom-control-label::before{border-color:#0043ce;background-color:#0043ce}
+html.dark-mode .custom-switch .custom-control-input:checked~.custom-control-label::before{border-color:#0051fe;background-color:#0051fe}
+.custom-file-input:focus~.custom-file-label{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode .custom-file-input:focus~.custom-file-label{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+div.tox.focused{border-color:#0043ce!important;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)!important}
+html.dark-mode div.tox.focused{border-color:#0051fe!important;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)!important}
+div.tox .tox-dialog__footer .tox-button{color:#fff;background:#0043ce;border-color:#0043ce;font-weight:400;padding:.5rem .75rem}
+html.dark-mode div.tox .tox-dialog__footer .tox-button{color:#fff;background:#0051fe;border-color:#0051fe;font-weight:400;padding:.5rem .75rem}
+div.tox .tox-dialog__footer .tox-button:focus{background:#1eb6ff;border-color:#13b2ff;box-shadow:0 0 0 .2rem rgba(0,67,206,.5)}
+html.dark-mode div.tox .tox-dialog__footer .tox-button:focus{background:#1eb6ff;border-color:#13b2ff;box-shadow:0 0 0 .2rem rgba(0,81,254,.5)}
+div.tox .tox-dialog__footer .tox-button.disabled,div.tox .tox-dialog__footer .tox-button:disabled{background:#0043ce;border-color:#0043ce}
+html.dark-mode div.tox .tox-dialog__footer .tox-button.disabled,html.dark-mode div.tox .tox-dialog__footer .tox-button:disabled{background:#0051fe;border-color:#0051fe}
+div.tox .tox-dialog__footer .tox-button:not(:disabled):not(.disabled).active:focus,div.tox .tox-dialog__footer .tox-button:not(:disabled):not(.disabled):active:focus{box-shadow:0 0 0 .2rem rgba(0,67,206,.53)}
+html.dark-mode div.tox .tox-dialog__footer .tox-button:not(:disabled):not(.disabled).active:focus,html.dark-mode div.tox .tox-dialog__footer .tox-button:not(:disabled):not(.disabled):active:focus{box-shadow:0 0 0 .2rem rgba(0,81,254,.53)}
+div.tox .tox-dialog__footer .tox-button:focus:not(:disabled){background:#0043ce;border-color:#0043ce}
+html.dark-mode div.tox .tox-dialog__footer .tox-button:focus:not(:disabled){background:#0051fe;border-color:#0051fe}
+div.tox .tox-color-input>input:focus,div.tox .tox-listboxfield .tox-listbox--select:focus,div.tox .tox-textarea:focus,div.tox .tox-textfield:focus{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+html.dark-mode div.tox .tox-color-input>input:focus,html.dark-mode div.tox .tox-listboxfield .tox-listbox--select:focus,html.dark-mode div.tox .tox-textarea:focus,html.dark-mode div.tox .tox-textfield:focus{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25)}
+.googie_list li.googie_list_onhover{color:#fff;background-color:#0043ce}
+html.dark-mode .googie_list li.googie_list_onhover{color:#fff;background-color:#0051fe}
+html.dark-mode #taskmenu .action-buttons a{color:#4d84ff}
+html.dark-mode .listing li.selected,html.dark-mode .listing li.selected>a,html.dark-mode .listing li.selected>div>a,html.dark-mode .listing tr.selected td{color:#4d84ff;background-color:#374549}
+html.dark-mode .messagelist tr:not(.flagged):not(.deleted).selected td.subject a,html.dark-mode .messagelist tr:not(.flagged):not(.deleted).selected td.subject span.msgicon.status{color:#4d84ff}
+html.dark-mode .custom-file-label:focus:not(.is-invalid),html.dark-mode .form-control:focus:not(.is-invalid){color:#e2e7e9!important;border-color:#0051fe}
+html.dark-mode .multi-input:not(.is-invalid)>.content.focused{border-color:#0051fe}
+html.dark-mode .input-group a:focus{border-color:#0051fe;box-shadow:0 0 0 .2rem rgba(0,81,254,.25);z-index:1}
+html.dark-mode .recipient-input.focus{color:#e2e7e9;background-color:#2c373b;border-color:#0051fe}
+html.dark-mode .formcontent.raweditor .CodeMirror-focused{background-color:#2c373b;border-color:#0051fe}
+html.dark-mode .tox .tox-dialog__body-nav-item--active{color:#4d84ff}
+html.dark-mode .tox .tox-collection__item--enabled{color:#4d84ff;background-color:#374549}
+html.dark-mode .ui-datepicker .ui-state-highlight,html.dark-mode .ui-datepicker.ui-widget-content .ui-state-highlight{color:#4d84ff;background-color:#374549}
+/* hover and focus shades, and dark mode, which Elastic derives from its main colour */
+.btn-primary:hover,.btn-primary:focus,.btn-primary:not(:disabled):not(.disabled):active{background-color:#0032a0!important;border-color:#0032a0!important}
+.btn-primary:focus,.btn-primary.focus{box-shadow:0 0 0 .2rem rgba(0,67,206,.35)!important}
+.form-control:focus{border-color:#0043ce;box-shadow:0 0 0 .2rem rgba(0,67,206,.25)}
+a:hover{color:#0032a0}
+html.dark-mode .btn-primary{background-color:#0051fe;border-color:#0051fe}
+html.dark-mode a{color:#4d84ff}
+
+/* The left task bar: Amelu blue, white icons and text, the active item on the darker blue. */
+#layout-menu,#layout-menu .popover-header,#taskmenu .special-buttons{background-color:#0043ce!important}
+#taskmenu a,#taskmenu a:before,#taskmenu .action-buttons a{color:#fff!important}
+#taskmenu a.selected,#taskmenu a.selected:hover,#taskmenu a:hover,#taskmenu a:focus,#taskmenu .action-buttons a:hover{color:#fff!important;background:#0032a0!important}
+#taskmenu a.logout,#taskmenu a.logout:hover{color:#ffd1d1!important}
+#layout-menu .popover-header img{filter:brightness(0) invert(1)}
+html.dark-mode #layout-menu,html.dark-mode #layout-menu .popover-header,html.dark-mode #taskmenu .special-buttons{background-color:#0043ce!important}
+html.dark-mode #taskmenu a,html.dark-mode #taskmenu .action-buttons a{color:#fff!important}
+html.dark-mode #taskmenu a.selected,html.dark-mode #taskmenu a:hover,html.dark-mode #taskmenu a:focus{background-color:#0032a0!important}
+html.dark-mode #layout-menu .popover-header img{opacity:1}
+html.dark-mode #layout-menu{border-right:0!important}
+/* No About entry in the task bar. */
+#taskmenu a.about{display:none!important}
+html.dark-mode #layout-menu .special-buttons a:not(:focus){background:transparent!important}
+html.dark-mode #layout-menu .special-buttons a:hover{background:#0032a0!important}
+
+/* Selected folder and selected messages: a soft Amelu tint next to the blue bar, not the same blue. */
+ul.treelist li.selected>a,ul.treelist li.selected>div>a,.listing li.selected>a,.listing li.selected>div>a,.listing tr.selected td,.messagelist tr.selected td{color:#0043ce!important;background-color:#dfe6fb!important}
+.messagelist tr.selected td a,.messagelist tr.selected td span,.messagelist tr.selected td .msgicon{color:#0043ce!important}
+html.dark-mode ul.treelist li.selected>a,html.dark-mode ul.treelist li.selected>div>a,html.dark-mode .listing li.selected>a,html.dark-mode .listing li.selected>div>a,html.dark-mode .listing tr.selected td,html.dark-mode .messagelist tr.selected td{color:#fff!important;background-color:#374549!important}
+html.dark-mode .messagelist tr.selected td a,html.dark-mode .messagelist tr.selected td span,html.dark-mode .messagelist tr.selected td .msgicon{color:#fff!important}

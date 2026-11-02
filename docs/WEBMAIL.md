@@ -90,3 +90,38 @@ session as the user, then folders, messages, flags, blobs, drafts, send,
 identity, vacation and password. It was built for an in-house client that
 was dropped in favour of Roundcube; it stays as the base for a mailbox
 portal or mobile app. Nothing in production calls it today.
+
+## White-label webmail
+
+Organizations on Go and Pro (`plan_tiers.webmail_branding`) set up their own
+webmail under My Organization > Webmail on app.amelu.org:
+
+- `<name>.webmail.amelu.org` works right away. DNS: a proxied wildcard
+  `*.webmail.amelu.org` (AAAA `100::`), on the zone's advanced certificate
+  for `*.webmail.amelu.org`; the Worker route `*.webmail.amelu.org/*` is in
+  `cloudflare/webmail/wrangler.jsonc`.
+- Their own hostname (`webmail.example.com`, a subdomain of one of their
+  verified domains) is CNAMEd to `cname.webmail.amelu.org`, the Cloudflare
+  for SaaS fallback origin on amelu.org. The API registers it as a custom
+  hostname (DV certificate over HTTP) and adds a Worker route for it to
+  `amelu-webmail` (`backend/internal/cfsaas`). Needs
+  `CLOUDFLARE_SAAS_API_TOKEN` (Custom Hostnames edit and Workers Routes
+  edit on amelu.org) and `CLOUDFLARE_SAAS_ZONE_ID`; without them the page
+  only offers the subdomain.
+
+Roundcube brands itself by hostname: nginx passes the host the Worker
+served (`map $http_x_forwarded_host`), and `amelu_theme` asks
+`GET https://api.amelu.org/api/webmail-branding?host=` (public, cached a
+minute on disk) for the name, colour, support link and whether there is a
+logo. It sets `product_name`, `skin_logo`, `support_url` and
+`blankpage_url`, hides product info and inlines `amelu.css` with the Amelu
+blue and its shades swapped for the organization's colour. The Worker
+serves the logo at `/__brand/logo` (also the favicon) and the empty-pane
+watermark at `/__brand/watermark`, and answers 404 on hosts that have no
+branding. "Open in webmail" redirects to the organization's own address
+while branding is on: its own hostname once active, else the subdomain.
+
+The plugin, `amelu.css`, `regenerate.sh` and `webmail.conf` live in
+`cloudflare/webmail/roundcube/`; copy them to
+`/opt/amelu-webmail/plugins/amelu_theme/` and `/opt/amelu-webmail/nginx/`
+on marduk. `regenerate.sh` only rewrites `amelu.css` now.

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-02  Outgoing mail limits per plan
+            2026-11-02-outgoing-limits-per-plan.txt
+
 2026-11-02  Free plan: 10 mailboxes per domain
             2026-11-02-free-10-mailboxes.txt
 

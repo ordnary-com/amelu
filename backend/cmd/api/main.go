@@ -115,6 +115,17 @@ func main() {
 	// POST /internal/jobs/expiration-sweep instead (see
 	// docs/cloudflare/WORKFLOWS.md) - config.Load already rejects any other
 	// value, so this is the only place that needs to branch on it.
+	// Outgoing mail per plan (handlers/sending_limits.go): once at startup,
+	// then hourly; plan changes and new domains also ask for a sync.
+	go func() {
+		app.RequestSendingLimitsSync()
+		ticker := time.NewTicker(time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			app.RequestSendingLimitsSync()
+		}
+	}()
+
 	if cfg.ExpirationSweepMode == "ticker" {
 		go func() {
 			ticker := time.NewTicker(15 * time.Minute)

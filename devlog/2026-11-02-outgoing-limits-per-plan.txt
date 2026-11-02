@@ -1,0 +1,15 @@
+Outgoing mail limits per plan
+2026-11-02
+
+Free 150, Go 1,000 and Pro 3,000 messages a day per sender domain
+(plan_tiers.max_outgoing_per_day, migration 0034). The API keeps three
+Stalwart x:MtaOutboundThrottle rules in sync, described "Amelu plan: <tier>,
+<n> a day per sender domain": go and pro list their domains and enabled
+alias domains, free matches every sender except those and amelu.org /
+ordnary.com. Sync runs at startup, hourly, and after the Stripe webhook,
+an admin plan change, a new domain or a new domain alias
+(handlers/sending_limits.go); unchanged rules are not rewritten, changed
+ones are followed by ReloadSettings. Over the limit Stalwart holds mail in
+the queue, nothing bounces. The 200 an hour per domain rule and the 140 an
+hour noez cap stay. Rule shape checked on marduk with a disabled test rule
+(created, read back, destroyed).

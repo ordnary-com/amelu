@@ -50,7 +50,7 @@ func (a *App) OpenMailboxWebmail(w http.ResponseWriter, r *http.Request) {
 	email := mailbox.LocalPart + "@" + domain.Name
 	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
 		"mailbox.webmail_opened", "mailbox", mailbox.ID, email, nil, requestIP(r))
-	target := a.WebmailURL + "/?_task=login&_sso=" + url.QueryEscape(webmailSSOToken(a.WebmailSSOSecret, email, time.Now()))
+	target := a.organizationWebmailURL(r, customer.OrganizationID.String) + "/?_task=login&_sso=" + url.QueryEscape(webmailSSOToken(a.WebmailSSOSecret, email, time.Now()))
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Length", strconv.Itoa(0))
 	http.Redirect(w, r, target, http.StatusFound)

@@ -56,4 +56,7 @@ export interface Env {
   AMELU_ADMIN_SHARED_SECRET?: string;
   INTERNAL_JOBS_SHARED_SECRET?: string;
   WEBMAIL_SSO_SECRET?: string;
+  // White-label webmail: own hostnames as Cloudflare custom hostnames (backend/internal/cfsaas).
+  CLOUDFLARE_SAAS_API_TOKEN?: string;
+  CLOUDFLARE_SAAS_ZONE_ID?: string;
 }

@@ -1,0 +1,20 @@
+White-label webmail for Go and Pro organizations
+2026-11-02
+
+New page My Organization > Webmail on app.amelu.org. An organization gets
+<name>.webmail.amelu.org right away and can connect its own hostname
+(webmail.example.com, CNAME to cname.webmail.amelu.org), with its own
+name, logo (PNG/JPEG/WebP, max 256 KB, no SVG since it is served from the
+webmail origin), colour and support link. Nothing of Amelu shows there.
+
+Backend: migration 0032 (plan_tiers.webmail_branding, true for go and pro;
+table organization_webmail), /api/organization/webmail (+ /logo,
+/custom-hostname), public GET /api/webmail-branding?host= and /logo for
+Roundcube. Own hostnames become Cloudflare custom hostnames on amelu.org
+plus a Worker route to amelu-webmail (internal/cfsaas, needs
+CLOUDFLARE_SAAS_API_TOKEN and CLOUDFLARE_SAAS_ZONE_ID). "Open in webmail"
+now redirects to the organization's own address when it is on.
+
+Roundcube: amelu_theme (now in the repo under cloudflare/webmail/roundcube)
+brands by hostname, nginx passes the real host. Unknown hosts get a 404
+page from the Worker.

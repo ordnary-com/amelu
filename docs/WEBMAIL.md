@@ -23,6 +23,13 @@ SMTP `ssl://marduk.mx.amelu.org:465` with the user's own credentials, Sieve
 `tls://marduk.mx.amelu.org:4190`. The public name is used on purpose: it is
 the name on the certificate, so verification stays on.
 
+Since 2026-11-01 that name also has the outbound IPs 5.230.173.85-87 as A
+records (for customer SPF). Those are on the GRE tunnel and time out when
+reached from this host, so the roundcube service pins the name to marduk with
+`extra_hosts: ["marduk.mx.amelu.org:141.95.52.66"]` in `compose.yml`. Without
+it, three of four IMAP connections hang for 10 seconds and Roundcube reports
+"Connection to storage server failed".
+
 `webmail.amelu.org` is the Worker `amelu-webmail` (`cloudflare/webmail`),
 a thin proxy to `https://marduk.mx.amelu.org:8443`. It forwards the request
 as-is with `X-Forwarded-Host`/`X-Forwarded-Proto`, rewrites a `Location`

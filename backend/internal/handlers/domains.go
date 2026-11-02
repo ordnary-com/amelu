@@ -58,6 +58,8 @@ type createDomainRequest struct {
 // customer's own responsibility — see GetDomainDNS for the records they
 // need to add at their registrar and live verification of what's published.
 func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
+	// A new domain on a paid plan gets that plan's sending limit right away.
+	defer a.RequestSendingLimitsSync()
 	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return

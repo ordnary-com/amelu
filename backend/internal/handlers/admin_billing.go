@@ -136,6 +136,7 @@ type adminUpdateSubscriptionRequest struct {
 // comp/manual upgrade, common for support cases - so an admin isn't forced
 // to send someone through Stripe Checkout just to hand them a plan.
 func (a *App) AdminUpdateSubscription(w http.ResponseWriter, r *http.Request, operator string) {
+	defer a.RequestSendingLimitsSync()
 	customerID := r.PathValue("id")
 	billing, err := a.Store.GetCustomerBilling(r.Context(), customerID)
 	if errors.Is(err, db.ErrNotFound) {

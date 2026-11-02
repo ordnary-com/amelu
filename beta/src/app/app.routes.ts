@@ -65,6 +65,11 @@ export const routes: Routes = [
       { path: 'organization', component: OrganizationPage, title: 'My Organization · Amelu' },
       { path: 'organization/activity', component: ActivityPage, title: 'Activity Log · Amelu' },
       {
+        path: 'organization/webmail',
+        loadComponent: () => import('./organization-webmail/organization-webmail').then((m) => m.OrganizationWebmail),
+        title: 'Webmail · Amelu',
+      },
+      {
         path: 'billing',
         component: BillingLayout,
         children: [

@@ -2,11 +2,21 @@
 // mail host (marduk, /opt/amelu-webmail, nginx on 8443 with the host's own
 // certificate). The Worker gives it the public hostname and Cloudflare's
 // TLS without opening Roundcube to the internet by name. See docs/WEBMAIL.md.
+//
+// White-label webmail: *.webmail.amelu.org (a proxied wildcard record, on the
+// zone's advanced certificate for *.webmail.amelu.org) is every
+// organization's own subdomain; cname.webmail.amelu.org is the fallback
+// origin customers CNAME their own hostname to. Routes for those hostnames
+// are made by the API (backend/internal/cfsaas), not listed here.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "amelu-webmail",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-01",
   "observability": { "enabled": true },
-  "routes": [{ "pattern": "webmail.amelu.org", "custom_domain": true }]
+  "vars": { "API_ORIGIN": "https://api.amelu.org" },
+  "routes": [
+    { "pattern": "webmail.amelu.org", "custom_domain": true },
+    { "pattern": "*.webmail.amelu.org/*", "zone_name": "amelu.org" }
+  ]
 }

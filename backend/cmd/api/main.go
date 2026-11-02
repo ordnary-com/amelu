@@ -1,6 +1,7 @@
 package main
 
 import (
+	"amelu/backend/internal/cfsaas"
 	"context"
 	"log"
 	"net/http"
@@ -56,6 +57,13 @@ func main() {
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
 		WebmailURL:               cfg.WebmailURL,
 		WebmailSSOSecret:         cfg.WebmailSSOSecret,
+		WebmailSubdomainSuffix:   cfg.WebmailSubdomainSuffix,
+		WebmailCNAMETarget:       cfg.WebmailCNAMETarget,
+	}
+	if cfg.CloudflareSaaSToken != "" && cfg.CloudflareSaaSZoneID != "" {
+		app.WebmailSaaS = cfsaas.NewClient(cfg.CloudflareSaaSToken, cfg.CloudflareSaaSZoneID, cfg.WebmailWorkerName)
+	} else {
+		log.Printf("webmail: CLOUDFLARE_SAAS_API_TOKEN/CLOUDFLARE_SAAS_ZONE_ID not set, organizations can use their webmail subdomain but not their own hostname")
 	}
 
 	if cfg.DomainConnectPrivateKey != "" {
@@ -186,6 +194,18 @@ func main() {
 	mux.HandleFunc("POST /api/organization/invitations", auth.Require(app.Store, app.CreateInvitation))
 	mux.HandleFunc("DELETE /api/organization/invitations/{id}", auth.Require(app.Store, app.RevokeInvitation))
 	mux.HandleFunc("GET /api/organization/audit", auth.Require(app.Store, app.ListOrganizationAudit))
+
+	// White-label webmail (docs/WEBMAIL.md). The two webmail-branding routes
+	// are public: Roundcube brands its login page by hostname.
+	mux.HandleFunc("GET /api/organization/webmail", auth.Require(app.Store, app.GetWebmailBranding))
+	mux.HandleFunc("PUT /api/organization/webmail", auth.Require(app.Store, app.UpdateWebmailBranding))
+	mux.HandleFunc("GET /api/organization/webmail/logo", auth.Require(app.Store, app.GetOrganizationWebmailLogo))
+	mux.HandleFunc("PUT /api/organization/webmail/logo", auth.Require(app.Store, app.UploadWebmailLogo))
+	mux.HandleFunc("DELETE /api/organization/webmail/logo", auth.Require(app.Store, app.DeleteWebmailLogo))
+	mux.HandleFunc("PUT /api/organization/webmail/custom-hostname", auth.Require(app.Store, app.SetWebmailCustomHostname))
+	mux.HandleFunc("DELETE /api/organization/webmail/custom-hostname", auth.Require(app.Store, app.DeleteWebmailCustomHostname))
+	mux.HandleFunc("GET /api/webmail-branding", app.WebmailBrandingForHost)
+	mux.HandleFunc("GET /api/webmail-branding/logo", app.WebmailBrandingLogo)
 
 	// Public - the recipient of an invite link isn't logged into Amelu yet.
 	mux.HandleFunc("GET /api/invitations/{token}", app.GetInvitation)

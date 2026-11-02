@@ -94,6 +94,17 @@ type Config struct {
 	// as the other optional integrations.
 	WebmailURL       string
 	WebmailSSOSecret string
+
+	// White-label webmail (docs/WEBMAIL.md): organizations get
+	// <subdomain>.<WebmailSubdomainSuffix>, and their own hostnames become
+	// Cloudflare custom hostnames on the amelu.org zone, CNAMEd to
+	// WebmailCNAMETarget and routed to the webmail Worker. Without the token
+	// and zone only the subdomain is offered.
+	WebmailSubdomainSuffix string
+	WebmailCNAMETarget     string
+	WebmailWorkerName      string
+	CloudflareSaaSToken    string
+	CloudflareSaaSZoneID   string
 }
 
 func Load() (*Config, error) {
@@ -101,11 +112,17 @@ func Load() (*Config, error) {
 		HTTPAddr:         getEnv("HTTP_ADDR", ":8081"),
 		WebmailURL:       getEnv("WEBMAIL_URL", "https://webmail.amelu.org"),
 		WebmailSSOSecret: os.Getenv("WEBMAIL_SSO_SECRET"),
-		DatabaseURL:      os.Getenv("DATABASE_URL"),
-		StalwartBaseURL:  os.Getenv("STALWART_BASE_URL"),
-		StalwartUser:     os.Getenv("STALWART_ADMIN_USER"),
-		StalwartPassword: os.Getenv("STALWART_ADMIN_PASSWORD"),
-		CORSOrigins:      splitList(getEnv("CORS_ORIGIN", "http://localhost:5173")),
+
+		WebmailSubdomainSuffix: getEnv("WEBMAIL_SUBDOMAIN_SUFFIX", "webmail.amelu.org"),
+		WebmailCNAMETarget:     getEnv("WEBMAIL_CNAME_TARGET", "cname.webmail.amelu.org"),
+		WebmailWorkerName:      getEnv("WEBMAIL_WORKER_NAME", "amelu-webmail"),
+		CloudflareSaaSToken:    os.Getenv("CLOUDFLARE_SAAS_API_TOKEN"),
+		CloudflareSaaSZoneID:   os.Getenv("CLOUDFLARE_SAAS_ZONE_ID"),
+		DatabaseURL:            os.Getenv("DATABASE_URL"),
+		StalwartBaseURL:        os.Getenv("STALWART_BASE_URL"),
+		StalwartUser:           os.Getenv("STALWART_ADMIN_USER"),
+		StalwartPassword:       os.Getenv("STALWART_ADMIN_PASSWORD"),
+		CORSOrigins:            splitList(getEnv("CORS_ORIGIN", "http://localhost:5173")),
 
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),

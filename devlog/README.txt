@@ -24,6 +24,12 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-02  White-label webmail for Go and Pro organizations
+            2026-11-02-white-label-webmail.txt
+
+2026-11-02  Webmail slow and "Connection to storage server failed"
+            2026-11-02-webmail-storage-server.txt
+
 2026-11-01  Outbound mail on the noez IPs, split by sender; Hetzner relay removed
             2026-11-01-ip-pools-live.txt
 

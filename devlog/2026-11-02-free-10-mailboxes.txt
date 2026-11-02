@@ -1,0 +1,9 @@
+Free plan: 10 mailboxes per domain
+2026-11-02
+
+Migration 0033_free_mailboxes_10 raises plan_tiers.max_mailboxes_per_domain
+for 'free' from 3 to 10. Domains stay at 1. The limit is enforced in the
+mailbox handlers through Store.GetPlanTier, so it applies to existing Free
+organizations as soon as the API restarts with the migration. The website
+(amelu-landing) says 10 in the FAQ, the pricing table and the FAQ structured
+data.

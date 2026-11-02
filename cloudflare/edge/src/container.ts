@@ -38,6 +38,8 @@ export class AmeluOriginContainer extends Container<Env> {
     AMELU_ADMIN_SHARED_SECRET: workerEnv.AMELU_ADMIN_SHARED_SECRET ?? "",
     INTERNAL_JOBS_SHARED_SECRET: workerEnv.INTERNAL_JOBS_SHARED_SECRET ?? "",
     WEBMAIL_SSO_SECRET: workerEnv.WEBMAIL_SSO_SECRET ?? "",
+    CLOUDFLARE_SAAS_API_TOKEN: workerEnv.CLOUDFLARE_SAAS_API_TOKEN ?? "",
+    CLOUDFLARE_SAAS_ZONE_ID: workerEnv.CLOUDFLARE_SAAS_ZONE_ID ?? "",
   };
 }
 

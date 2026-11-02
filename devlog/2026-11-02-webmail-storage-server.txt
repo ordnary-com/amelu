@@ -1,0 +1,15 @@
+Webmail slow and "Connection to storage server failed"
+2026-11-02
+
+Since the noez IPs became A records of marduk.mx.amelu.org on 1 November
+(5.230.173.85-87, for customer SPF via "mx"), Roundcube on marduk picked
+one of four addresses for every IMAP connection. The three GRE addresses
+time out from the host itself, so three of four logins and refreshes hung
+for 10 seconds and failed with "Could not connect to
+ssl://marduk.mx.amelu.org:993: Connection timed out" in the Roundcube log.
+
+Fix: extra_hosts "marduk.mx.amelu.org:141.95.52.66" on the roundcube
+service in /opt/amelu-webmail/compose.yml, container recreated. Connects by
+name went from 2/10 to 10/10, no IMAP errors since. TLS still verifies
+against the name. Backup: compose.yml.bak-2026-11-02. Anything else on
+marduk that dials that name needs the same pin.

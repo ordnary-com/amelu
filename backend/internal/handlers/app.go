@@ -4,6 +4,7 @@
 package handlers
 
 import (
+	"amelu/backend/internal/cfsaas"
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/domainconnect"
 	"amelu/backend/internal/mailer"
@@ -57,4 +58,10 @@ type App struct {
 	// an empty secret reports unavailable.
 	WebmailURL       string
 	WebmailSSOSecret string
+
+	// White-label webmail (webmail_branding.go). WebmailSaaS is nil without
+	// the Cloudflare token and zone: then only the subdomain is offered.
+	WebmailSubdomainSuffix string
+	WebmailCNAMETarget     string
+	WebmailSaaS            *cfsaas.Client
 }

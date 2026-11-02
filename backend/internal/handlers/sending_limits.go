@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -26,6 +27,13 @@ var sendingLimitExempt = []string{"amelu.org", "ordnary.com"}
 
 var (
 	sendingLimitsMu sync.Mutex
+	// The outcome of the last sync, for /api/healthz: the stage that failed
+	// and the Stalwart method and error kind, never response bodies.
+	sendingLimitsStatus struct {
+		sync.Mutex
+		at  time.Time
+		err string
+	}
 	// What the last successful sync wrote; an unchanged set isn't written
 	// again, so Stalwart isn't reloaded every hour for nothing.
 	lastSendingLimits string
@@ -167,8 +175,31 @@ func (a *App) RequestSendingLimitsSync() {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
-		if err := a.SyncSendingLimits(ctx); err != nil {
+		err := a.SyncSendingLimits(ctx)
+		if err != nil {
 			log.Printf("sending limits: sync failed: %v", err)
 		}
+		sendingLimitsStatus.Lock()
+		sendingLimitsStatus.at, sendingLimitsStatus.err = time.Now().UTC(), describeSyncError(err)
+		sendingLimitsStatus.Unlock()
 	}()
+}
+
+func describeSyncError(err error) string {
+	if err == nil {
+		return ""
+	}
+	stage, _, _ := strings.Cut(err.Error(), ":")
+	var se *stalwart.Error
+	if errors.As(err, &se) {
+		return fmt.Sprintf("%s (%s %s %s %d)", stage, se.Method, se.Kind, se.JMAPType, se.Status)
+	}
+	return stage
+}
+
+// SendingLimitsStatus is the last sync's time and failure, if any.
+func SendingLimitsStatus() (time.Time, string) {
+	sendingLimitsStatus.Lock()
+	defer sendingLimitsStatus.Unlock()
+	return sendingLimitsStatus.at, sendingLimitsStatus.err
 }

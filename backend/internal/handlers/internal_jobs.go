@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 type domainVerifiedJobRequest struct {
@@ -16,7 +17,11 @@ type domainVerifiedJobRequest struct {
 // database or Stalwart call, so it can't itself become a dependency
 // bottleneck during an incident.
 func (a *App) Healthz(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	out := map[string]any{"status": "ok"}
+	if at, failure := SendingLimitsStatus(); !at.IsZero() {
+		out["sendingLimits"] = map[string]any{"syncedAt": at.Format(time.RFC3339), "error": failure}
+	}
+	writeJSON(w, http.StatusOK, out)
 }
 
 // RunExpirationSweepJob is the internal, HMAC-authenticated equivalent of

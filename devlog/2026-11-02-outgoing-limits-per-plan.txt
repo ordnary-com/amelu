@@ -13,3 +13,9 @@ ones are followed by ReloadSettings. Over the limit Stalwart holds mail in
 the queue, nothing bounces. The 200 an hour per domain rule and the 140 an
 hour noez cap stay. Rule shape checked on marduk with a disabled test rule
 (created, read back, destroyed).
+
+Live the same day: go 1,000 (8 domains incl. aliases), pro 3,000 (4), free
+150 (everything except those and our own). GET /api/healthz now reports
+sendingLimits.syncedAt and, on failure, the stage and Stalwart method and
+error kind (no response bodies), because the container's own log output
+isn't visible anywhere we can read.

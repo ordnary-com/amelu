@@ -399,6 +399,8 @@ func (a *App) CreateBillingPortalSession(w http.ResponseWriter, r *http.Request)
 // intentionally unauthenticated (Stripe, not a logged-in customer, calls
 // this) - the webhook signature is the only trust boundary here.
 func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
+	// A plan may have changed: its domains move to that plan's sending limit.
+	defer a.RequestSendingLimitsSync()
 	if !a.StripeEnabled || a.StripeWebhookSecret == "" {
 		writeError(w, http.StatusServiceUnavailable, "billing is not available yet")
 		return

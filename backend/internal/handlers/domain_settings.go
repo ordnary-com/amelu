@@ -45,6 +45,7 @@ type createDomainAliasRequest struct {
 }
 
 func (a *App) CreateDomainAlias(w http.ResponseWriter, r *http.Request) {
+	defer a.RequestSendingLimitsSync()
 	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
 		return

@@ -16,7 +16,7 @@ import { SaveFeedback, Saving } from '../shared/saving';
       recovery address instead.
     </amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         <section>
           <h2 [class]="ui.sectionTitle">Send password reset link</h2>

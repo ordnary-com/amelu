@@ -17,7 +17,7 @@ import { SaveFeedback, Saving } from '../shared/saving';
       mailbox's overview.
     </amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       @if (loaded() === null) {
         <amelu-empty-state [class]="ui.card" title="The notes couldn't be loaded" [error]="true" />
       } @else {

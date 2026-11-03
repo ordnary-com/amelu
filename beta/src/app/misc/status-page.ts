@@ -39,7 +39,7 @@ const SERVICES: ServiceStatus[] = [
   template: `
     <amelu-page-header title="Service Status">Current status of Amelu's services.</amelu-page-header>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         @if (allOperational) {
           <amelu-alert kind="success" title="All systems operational" />

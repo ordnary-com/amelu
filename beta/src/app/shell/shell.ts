@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Domains } from '../domains';
@@ -13,6 +13,8 @@ import {
   lucideBuilding2,
   lucideChevronDown,
   lucideCreditCard,
+  lucideMenu,
+  lucideX,
   lucideGlobe,
   lucideHistory,
   lucideMail,
@@ -37,6 +39,8 @@ const LINK =
       lucideBuilding2,
       lucideChevronDown,
       lucideCreditCard,
+      lucideMenu,
+      lucideX,
       lucideGlobe,
       lucideHistory,
       lucideMail,
@@ -71,6 +75,12 @@ export class Shell {
 
   protected readonly columns = computed(() => menuColumns(this.at()));
 
+  /** The drawer that holds the menus below lg; any navigation closes it. */
+  protected readonly navOpen = signal(false);
+  private readonly closeNavOnNavigate = this.router.events
+    .pipe(filter((event) => event instanceof NavigationEnd), takeUntilDestroyed())
+    .subscribe(() => this.navOpen.set(false));
+
   // The first few domains under Domains, plus the one you're on if it's further down.
   protected readonly sidebarDomains = computed(() => {
     const all = this.domains() ?? [];
@@ -93,7 +103,7 @@ export class Shell {
 
   // Each menu column scrolls on its own, so a long domain menu doesn't drag the main one along.
   protected readonly column =
-    'flex-none overflow-y-auto pb-4 [scrollbar-color:color-mix(in_srgb,var(--chrome-ink)_30%,transparent)_transparent] [scrollbar-width:thin]';
+    'flex-none overflow-y-auto pb-4 max-lg:overflow-visible max-lg:pb-0 [scrollbar-color:color-mix(in_srgb,var(--chrome-ink)_30%,transparent)_transparent] [scrollbar-width:thin]';
 
   // Labels land where the old px-4 put them: 8px margin + 8px link padding.
   protected readonly item = 'group mx-2 truncate [&>a]:py-2';

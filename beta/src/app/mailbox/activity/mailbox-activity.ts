@@ -15,7 +15,7 @@ import { MailboxHeading } from '../shared/heading';
   template: `
     <amelu-mailbox-heading title="Recent activity">The last events recorded for this mailbox.</amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         @if (days(); as groups) {
           @for (group of groups; track group.day) {

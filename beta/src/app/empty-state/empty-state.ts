@@ -48,7 +48,7 @@ function loadSvg(name: Illustration): Promise<string> {
       @if (svg(); as art) {
         <div class="mb-5 h-[120px] w-[180px] [&>svg]:size-full" aria-hidden="true" [innerHTML]="art"></div>
       }
-      <div [class]="compact() ? '' : 'max-w-sm'">
+      <div class="min-w-0 [overflow-wrap:anywhere]" [class.max-w-sm]="!compact()">
         <p class="text-[14px] font-semibold" [class.text-bad]="error()">{{ title() }}</p>
         <div class="mt-0.5 text-[13px] leading-relaxed text-muted">
           <ng-content />

@@ -14,7 +14,7 @@ const CONTACT_URL = 'https://ordnary.com/contact';
       Get help with your Amelu account, domains, DNS, or mail delivery.
     </amelu-page-header>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         <section>
           <h2 [class]="ui.sectionTitle">Contact us</h2>

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-03  Mailbox create errors no longer crash the API
+            2026-11-03-mailbox-create-error-crash.txt
+
 2026-11-02  Outgoing mail limits per plan
             2026-11-02-outgoing-limits-per-plan.txt
 

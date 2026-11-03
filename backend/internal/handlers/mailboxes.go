@@ -59,19 +59,15 @@ func (e *httpError) Error() string {
 // writeHTTPError reports an error from createMailbox and friends.
 func writeHTTPError(w http.ResponseWriter, err error) {
 	var he *httpError
-	if errors.As(err, &he) && he.cause != nil {
+	if !errors.As(err, &he) {
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if he.cause != nil {
 		writeUpstreamError(w, he.message, he.cause)
 		return
 	}
-	writeHTTPError(w, err)
-}
-
-func errStatus(err error) int {
-	var he *httpError
-	if errors.As(err, &he) {
-		return he.status
-	}
-	return http.StatusInternalServerError
+	writeError(w, he.status, he.message)
 }
 
 // createMailbox creates one mailbox end to end (plan limit check, Stalwart,

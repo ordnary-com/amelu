@@ -10,6 +10,8 @@ export interface EnabledServices {
   mayImap: boolean;
   mayPop3: boolean;
   maySieve: boolean;
+  /** Calendar and contacts, over CalDAV and CardDAV. */
+  mayDav: boolean;
 }
 
 export interface MailboxForward {

@@ -28,6 +28,7 @@ func (a *App) GetDomainDefaultServices(w http.ResponseWriter, r *http.Request) {
 		MayIMAP:    domain.DefaultMayIMAP,
 		MayPOP3:    domain.DefaultMayPOP3,
 		MaySieve:   domain.DefaultMaySieve,
+		MayDAV:     domain.DefaultMayDAV,
 	})
 }
 
@@ -45,13 +46,14 @@ func (a *App) UpdateDomainDefaultServices(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var req enabledServicesResponse
-	if err := decodeJSON(r, &req); err != nil {
+	var body enabledServicesRequest
+	if err := decodeJSON(r, &body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	req := body.resolve(domain.DefaultMayDAV)
 
-	if err := a.Store.UpdateDomainDefaultServices(r.Context(), domain.ID, req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve); err != nil {
+	if err := a.Store.UpdateDomainDefaultServices(r.Context(), domain.ID, req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve, req.MayDAV); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not save default services")
 		return
 	}

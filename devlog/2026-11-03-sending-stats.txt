@@ -1,0 +1,13 @@
+Domain page shows sending against the daily limit
+2026-11-03
+
+Stalwart doesn't expose its outbound throttle counters, so
+ops/marduk/amelu-sending-stats.py counts messages per sender domain on the
+remote queue over the last 24 hours from Stalwart's log (as the sender guard
+does; bounces and DMARC reports excluded) and posts them every 15 minutes to
+POST /internal/jobs/sending-stats, HMAC-signed with its own
+SENDING_STATS_SECRET. Each report replaces table sending_stats; the time goes
+in sending_stats_report (migration 0035). GET /api/domains/{id}/sending
+returns sent, the plan's max_outgoing_per_day and updatedAt; the domain page
+shows "Sent in the last 24 hours" with a bar, amber from 80%, red at the
+limit. A dry run on marduk takes 0.2 s.

@@ -31,7 +31,13 @@ it, three of four IMAP connections hang for 10 seconds and Roundcube reports
 "Connection to storage server failed".
 
 `webmail.amelu.org` is the Worker `amelu-webmail` (`cloudflare/webmail`),
-a thin proxy to `https://marduk.mx.amelu.org:8443`. It forwards the request
+a thin proxy to `https://webmail-origin.mx.amelu.org:8443`. That name is a
+DNS-only A record to 141.95.52.66 alone, with its own Let's Encrypt
+certificate (`certbot --cert-name webmail-origin.mx.amelu.org`, standalone;
+the `webmail-nginx.sh` deploy hook reloads nginx, the Stalwart hook ignores
+this lineage). It must not be `marduk.mx.amelu.org`: that name also has the
+outbound GRE IPs as A records (for customers' SPF `mx`), they do not reach
+8443, and the Worker then got a 522 on three of four requests. It forwards the request
 as-is with `X-Forwarded-Host`/`X-Forwarded-Proto`, rewrites a `Location`
 that names the origin, and nothing else. Port 8443 is open in ufw; the
 certificate is what protects it.

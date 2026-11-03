@@ -72,7 +72,7 @@ export class Shell {
 
   // Each menu column scrolls on its own, so a long domain menu doesn't drag the main one along.
   protected readonly column =
-    'flex-none overflow-y-auto pb-4 [scrollbar-color:rgb(255_255_255/0.3)_transparent] [scrollbar-width:thin]';
+    'flex-none overflow-y-auto pb-4 [scrollbar-color:color-mix(in_srgb,var(--chrome-ink)_30%,transparent)_transparent] [scrollbar-width:thin]';
 
   // Labels land where the old px-4 put them: 8px margin + 8px link padding.
   protected readonly item = 'group mx-2 truncate [&>a]:py-2';

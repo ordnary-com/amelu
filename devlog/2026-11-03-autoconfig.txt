@@ -1,0 +1,13 @@
+Mail client setup on autoconfig.amelu.org
+2026-11-03
+
+New Worker amelu-autoconfig (cloudflare/autoconfig, docs/AUTOCONFIG.md) on
+autoconfig.amelu.org and autodiscover.amelu.org: Thunderbird's
+config-v1.1.xml, Outlook's POX autodiscover and an Apple configuration
+profile (/profile.mobileconfig?email=&name=), all IMAP 993 and SMTP 465 on
+marduk with the full address as username. Stalwart's autoconfig and
+autodiscover CNAMEs to marduk never worked (no certificate for customer
+names, nor for amelu.org's own). The mailbox Usage instructions page gets a
+"Set up automatically" section with the profile download and the Outlook SRV
+record _autodiscover._tcp.<domain> SRV 0 0 443 autodiscover.amelu.org, which
+the zone file download now includes; the DNS check doesn't require it.

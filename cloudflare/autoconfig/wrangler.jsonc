@@ -1,0 +1,16 @@
+// autoconfig.amelu.org and autodiscover.amelu.org: mail client setup for
+// every Amelu mailbox, whatever its domain, so customers need no extra DNS.
+// Thunderbird's config-v1.1.xml, Outlook's POX autodiscover and an Apple
+// configuration profile (iPhone, iPad, Mac), all pointing at marduk with the
+// full address as username. See docs/AUTOCONFIG.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-autoconfig",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "observability": { "enabled": true },
+  "routes": [
+    { "pattern": "autoconfig.amelu.org", "custom_domain": true },
+    { "pattern": "autodiscover.amelu.org", "custom_domain": true }
+  ]
+}

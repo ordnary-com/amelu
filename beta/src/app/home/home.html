@@ -1,6 +1,7 @@
-<section class="relative overflow-hidden rounded-lg bg-hero px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
-  <!-- The lighter slanted panel on the right -->
-  <div class="absolute inset-y-0 right-0 w-[30%] bg-hero-light [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
+<section class="relative overflow-hidden rounded-lg bg-hero bg-[linear-gradient(110deg,var(--hero)_35%,color-mix(in_srgb,var(--hero),white_5%))] px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
+  <!-- The lighter slanted panel on the right. Both tones run a little lighter
+       towards one corner, so neither is a flat colour. -->
+  <div class="absolute inset-y-0 right-0 w-[30%] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--hero-light),white_6%),var(--hero-light)_70%)] [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
 
   <!-- Beta notice left, links right, in one row so they never overlap at any width. -->
   <div class="relative z-[1] flex items-start justify-between gap-6 max-mobile:gap-4">

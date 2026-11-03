@@ -159,6 +159,7 @@ func main() {
 	// SECURITY.md. Not a customer session endpoint.
 	mux.HandleFunc("POST /internal/jobs/expiration-sweep", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.RunExpirationSweepJob))
 	mux.HandleFunc("POST /internal/jobs/domain-verified", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.DomainVerifiedJob))
+	mux.HandleFunc("POST /internal/jobs/sending-stats", auth.RequireInternal(cfg.SendingStatsSecret, app.SendingStatsJob))
 
 	// Cross-customer admin surface for Helm (ordnary-identity/apps/helm, via
 	// services/helm-api) - see internal/handlers/admin.go and
@@ -243,6 +244,7 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{id}/dns", auth.Require(app.Store, app.GetDomainDNS))
 	mux.HandleFunc("GET /api/domains/{id}/domain-connect", auth.Require(app.Store, app.GetDomainConnect))
 	mux.HandleFunc("GET /api/domains/{id}/bind", auth.Require(app.Store, app.GetDomainBindFile))
+	mux.HandleFunc("GET /api/domains/{id}/sending", auth.Require(app.Store, app.GetDomainSending))
 
 	mux.HandleFunc("GET /api/domains/{id}/activity", auth.Require(app.Store, app.GetActivity))
 	mux.HandleFunc("PATCH /api/domains/{id}/notes", auth.Require(app.Store, app.UpdateDomainNotes))

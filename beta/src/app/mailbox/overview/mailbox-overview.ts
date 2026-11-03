@@ -50,7 +50,7 @@ export class MailboxOverview {
     const forwards = this.forwards();
     const expiration = this.expiration();
     const status = mailbox ? MAILBOX_STATUS[mailbox.status] : null;
-    const service = (key: 'maySend' | 'mayReceive' | 'mayImap' | 'mayPop3' | 'maySieve'): Loaded<Value> =>
+    const service = (key: 'maySend' | 'mayReceive' | 'mayImap' | 'mayPop3' | 'maySieve' | 'mayDav'): Loaded<Value> =>
       services && yesNo(services[key]);
     return [
       {
@@ -65,6 +65,7 @@ export class MailboxOverview {
       { label: 'May access IMAP', value: service('mayImap'), link: 'services' },
       { label: 'May access POP3', value: service('mayPop3'), link: 'services' },
       { label: 'May access ManageSieve', value: service('maySieve'), link: 'services' },
+      { label: 'Calendar and contacts', value: service('mayDav'), link: 'services' },
       {
         label: 'Forwarding',
         value:

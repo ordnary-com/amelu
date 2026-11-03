@@ -858,9 +858,29 @@ func (s *Store) CountDomains(ctx context.Context, customerID string) (int, error
 	return n, err
 }
 
+// StandardAddresses are the role addresses email standards expect on every
+// domain (RFC 2142). The dashboard offers to create them with a new domain,
+// and they don't count toward the plan's mailbox limit.
+var StandardAddresses = []string{"admin", "postmaster", "abuse"}
+
+// IsStandardAddress reports whether a (lowercased) local part is one of StandardAddresses.
+func IsStandardAddress(localPart string) bool {
+	for _, a := range StandardAddresses {
+		if a == localPart {
+			return true
+		}
+	}
+	return false
+}
+
+// CountMailboxes counts a domain's mailboxes toward its plan limit: every
+// mailbox that isn't deleted, except the StandardAddresses.
 func (s *Store) CountMailboxes(ctx context.Context, domainID string) (int, error) {
 	var n int
-	err := s.conn.QueryRowContext(ctx, `SELECT count(*) FROM mailboxes WHERE domain_id = $1 AND status != 'deleted'`, domainID).Scan(&n)
+	err := s.conn.QueryRowContext(ctx, `
+		SELECT count(*) FROM mailboxes
+		WHERE domain_id = $1 AND status != 'deleted' AND local_part != ALL($2)
+	`, domainID, StandardAddresses).Scan(&n)
 	return n, err
 }
 

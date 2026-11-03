@@ -82,17 +82,23 @@ func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.D
 		return nil, "", &httpError{status: http.StatusBadRequest, message: "localPart is required"}
 	}
 
-	_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, planTierID)
-	if err != nil {
-		return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
+	// The standard addresses (admin@, postmaster@, abuse@) don't count toward
+	// the plan limit, so they can be created even on a full domain.
+	if !db.IsStandardAddress(localPart) {
+		_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, planTierID)
+		if err != nil {
+			return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
+		}
+		mailboxCount, err := a.Store.CountMailboxes(ctx, domain.ID)
+		if err != nil {
+			return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
+		}
+		if mailboxCount >= maxMailboxesPerDomain {
+			return nil, "", &httpError{status: http.StatusForbidden, message: "mailbox limit reached for your plan"}
+		}
 	}
-	mailboxCount, err := a.Store.CountMailboxes(ctx, domain.ID)
-	if err != nil {
-		return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
-	}
-	if mailboxCount >= maxMailboxesPerDomain {
-		return nil, "", &httpError{status: http.StatusForbidden, message: "mailbox limit reached for your plan"}
-	}
+
+	var err error
 
 	if password == "" {
 		password, err = generatePassword()

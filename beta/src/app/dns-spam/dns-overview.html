@@ -1,4 +1,4 @@
-<amelu-page-header title="DNS setup" [crumbs]="crumbs()">
+<amelu-page-header title="DNS configuration" [crumbs]="crumbs()">
   Add these records where your domain's DNS is hosted, usually your registrar. We look them up live, so you can see
   when each one is right.
   <button actions type="button" [class]="ui.outline" [disabled]="dns.checking()" (click)="dns.recheck()">
@@ -8,6 +8,8 @@
     <a actions [href]="url" [class]="ui.primary">Set up automatically</a>
   }
 </amelu-page-header>
+
+<amelu-section-tabs label="DNS" [base]="'/domains/' + dns.id()" [tabs]="tabs" />
 
 <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
   <div class="min-w-0 space-y-6">

@@ -7,11 +7,11 @@
   [attr.aria-expanded]="open()"
   aria-haspopup="menu"
 >
-  <span class="flex max-w-[240px] items-center gap-1.5 rounded-b-md bg-badge px-3 py-1 text-[12px] font-bold text-white">
+  <span class="flex max-w-[240px] items-center gap-1.5 rounded-b-md bg-badge max-mobile:max-w-[160px] px-3 py-1 text-[12px] font-bold text-white">
     <span class="truncate">{{ customer()?.organizationName }}</span>
     <amelu-icon name="chevronDown" [size]="12" class="transition-transform duration-150 group-aria-expanded:rotate-180" />
   </span>
-  <span class="max-w-[240px] truncate pt-1 text-[13px] text-chrome-ink/75 group-hover:text-chrome-ink group-hover:underline">
+  <span class="max-w-[240px] truncate pt-1 text-[13px] max-mobile:max-w-[160px] text-chrome-ink/75 group-hover:text-chrome-ink group-hover:underline">
     {{ customer()?.name }}
   </span>
 </button>

@@ -46,7 +46,7 @@
     The domain is the part after the &#64; in your email addresses. Bring one you already own; you keep it at your current registrar.
   </p>
 
-  <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
     <form class="min-w-0 space-y-6" (submit)="submit($event)">
       @if (atLimit()) {
         <amelu-alert kind="warning" title="Your plan's domains are all in use">

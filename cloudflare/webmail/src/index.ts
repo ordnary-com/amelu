@@ -1,9 +1,12 @@
 // Proxies webmail.amelu.org, organizations' <name>.webmail.amelu.org and
 // their own hostnames (Cloudflare custom hostnames, each with a route here
 // made by the API) to Roundcube on the mail host. The origin is addressed by
-// the name on its certificate; Roundcube is told the public name through
+// its own name, webmail-origin.mx.amelu.org: an A record to marduk only, with
+// its own certificate. Not marduk.mx.amelu.org, whose extra A records (the
+// outbound GRE IPs, needed for customers' SPF "mx") do not reach 8443 and
+// made three of four requests end in a 522. Roundcube is told the public name through
 // X-Forwarded-Host, and its amelu_theme plugin brands itself by that name.
-const ORIGIN = "https://marduk.mx.amelu.org:8443";
+const ORIGIN = "https://webmail-origin.mx.amelu.org:8443";
 const SHARED_HOST = "webmail.amelu.org";
 
 interface Env {

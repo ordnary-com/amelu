@@ -25,7 +25,7 @@ export class QuickActions {
   protected readonly actions = computed<QuickAction[]>(() => {
     const firstDomain = this.domains()?.[0];
     return [
-      { icon: 'domains', title: 'Email Domains', subtitle: 'Manage your domains', link: '/domains' },
+      { icon: 'domains', title: 'Domains', subtitle: 'Manage your domains', link: '/domains' },
       ...(firstDomain
         ? [
             { icon: 'mailboxes', title: 'Mailboxes', subtitle: 'Manage mailboxes', link: `/domains/${firstDomain.id}/mailboxes` },

@@ -10,12 +10,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" />
-    <!-- Before first paint, so a light-mode choice doesn't flash dark. -->
+    <!-- Before first paint, so a light or variant theme doesn't flash dark (theme.ts). -->
     <script>
       try {
-        var theme = localStorage.getItem("amelu-theme");
-        if (theme === "light" || (theme === "system" && !matchMedia("(prefers-color-scheme: dark)").matches))
-          document.documentElement.classList.remove("dark");
+        var theme = localStorage.getItem("amelu-theme") || "dark";
+        var accent = localStorage.getItem("amelu-accent");
+        var classes = document.documentElement.classList;
+        if (theme === "system") {
+          var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+          if (matchMedia("(prefers-contrast: more)").matches) theme = dark ? "contrast-dark" : "contrast";
+          else theme = dark ? "dark" : "light";
+        }
+        if (["dark", "dim", "black", "deep", "contrast-dark"].indexOf(theme) < 0) classes.remove("dark");
+        if (["dim", "black", "deep", "white", "sepia", "contrast", "contrast-dark"].indexOf(theme) >= 0) classes.add("theme-" + theme);
+        if (["purple", "green", "teal", "orange", "pink"].indexOf(accent) >= 0) classes.add("accent-" + accent);
       } catch {}
     </script>
   </head>

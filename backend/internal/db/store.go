@@ -70,6 +70,7 @@ type Domain struct {
 	DefaultMayIMAP        bool
 	DefaultMayPOP3        bool
 	DefaultMaySieve       bool
+	DefaultMayDAV         bool
 	DefaultMaxEmails      int64
 	DefaultMaxDiskQuota   int64
 }
@@ -86,6 +87,7 @@ type Mailbox struct {
 	MayIMAP              bool
 	MayPOP3              bool
 	MaySieve             bool
+	MayDAV               bool
 	InternalAccessOnly   bool
 	Delegation           string
 	ListingTags          string
@@ -347,7 +349,7 @@ func (s *Store) DeleteSession(ctx context.Context, tokenHash string) error {
 
 const domainColumns = `id, customer_id, name, status, dkim_selector, last_error, created_at, verified_at, notes, publicly_listed,
 	spam_sender_denylist, spam_sender_junklist, spam_recipient_denylist, spam_subject_rewrite, spam_junk_if_subject_spam,
-	default_may_send, default_may_receive, default_may_imap, default_may_pop3, default_may_sieve,
+	default_may_send, default_may_receive, default_may_imap, default_may_pop3, default_may_sieve, default_may_dav,
 	default_max_emails, default_max_disk_quota_bytes`
 
 func scanDomain(row interface {
@@ -357,7 +359,7 @@ func scanDomain(row interface {
 	err := row.Scan(
 		&d.ID, &d.CustomerID, &d.Name, &d.Status, &d.DKIMSelector, &d.LastError, &d.CreatedAt, &d.VerifiedAt, &d.Notes, &d.PubliclyListed,
 		&d.SpamSenderDenylist, &d.SpamSenderJunklist, &d.SpamRecipientDenylist, &d.SpamSubjectRewrite, &d.SpamJunkIfSubjectSpam,
-		&d.DefaultMaySend, &d.DefaultMayReceive, &d.DefaultMayIMAP, &d.DefaultMayPOP3, &d.DefaultMaySieve,
+		&d.DefaultMaySend, &d.DefaultMayReceive, &d.DefaultMayIMAP, &d.DefaultMayPOP3, &d.DefaultMaySieve, &d.DefaultMayDAV,
 		&d.DefaultMaxEmails, &d.DefaultMaxDiskQuota,
 	)
 	return d, err
@@ -513,11 +515,11 @@ func (s *Store) DeleteDomain(ctx context.Context, customerID, domainID string) e
 // UpdateDomainDefaultServices sets the enabled-services template applied to
 // mailboxes created in this domain from now on. Has no effect on mailboxes
 // that already exist.
-func (s *Store) UpdateDomainDefaultServices(ctx context.Context, domainID string, maySend, mayReceive, mayIMAP, mayPOP3, maySieve bool) error {
+func (s *Store) UpdateDomainDefaultServices(ctx context.Context, domainID string, maySend, mayReceive, mayIMAP, mayPOP3, maySieve, mayDAV bool) error {
 	res, err := s.conn.ExecContext(ctx, `
-		UPDATE domains SET default_may_send = $1, default_may_receive = $2, default_may_imap = $3, default_may_pop3 = $4, default_may_sieve = $5
+		UPDATE domains SET default_may_send = $1, default_may_receive = $2, default_may_imap = $3, default_may_pop3 = $4, default_may_sieve = $5, default_may_dav = $7
 		WHERE id = $6
-	`, maySend, mayReceive, mayIMAP, mayPOP3, maySieve, domainID)
+	`, maySend, mayReceive, mayIMAP, mayPOP3, maySieve, domainID, mayDAV)
 	if err != nil {
 		return err
 	}
@@ -554,7 +556,7 @@ func (s *Store) UpdateDomainDefaultLimits(ctx context.Context, domainID string, 
 // --- mailboxes ---
 
 const mailboxColumns = `id, domain_id, local_part, display_name, status, created_at,
-	may_send, may_receive, may_imap, may_pop3, may_sieve, internal_access_only, delegation, listing_tags, notes,
+	may_send, may_receive, may_imap, may_pop3, may_sieve, may_dav, internal_access_only, delegation, listing_tags, notes,
 	expires_at, remove_upon_expiration, max_emails, max_disk_quota_bytes`
 
 func scanMailbox(row interface {
@@ -563,7 +565,7 @@ func scanMailbox(row interface {
 	m := &Mailbox{}
 	err := row.Scan(
 		&m.ID, &m.DomainID, &m.LocalPart, &m.DisplayName, &m.Status, &m.CreatedAt,
-		&m.MaySend, &m.MayReceive, &m.MayIMAP, &m.MayPOP3, &m.MaySieve, &m.InternalAccessOnly, &m.Delegation, &m.ListingTags, &m.Notes,
+		&m.MaySend, &m.MayReceive, &m.MayIMAP, &m.MayPOP3, &m.MaySieve, &m.MayDAV, &m.InternalAccessOnly, &m.Delegation, &m.ListingTags, &m.Notes,
 		&m.ExpiresAt, &m.RemoveUponExpiration, &m.MaxEmails, &m.MaxDiskQuotaBytes,
 	)
 	return m, err
@@ -643,10 +645,10 @@ func (s *Store) UpdateMailboxStatus(ctx context.Context, mailboxID, status strin
 	return nil
 }
 
-func (s *Store) UpdateMailboxServices(ctx context.Context, mailboxID string, maySend, mayReceive, mayIMAP, mayPOP3, maySieve bool) error {
+func (s *Store) UpdateMailboxServices(ctx context.Context, mailboxID string, maySend, mayReceive, mayIMAP, mayPOP3, maySieve, mayDAV bool) error {
 	res, err := s.conn.ExecContext(ctx, `
-		UPDATE mailboxes SET may_send = $1, may_receive = $2, may_imap = $3, may_pop3 = $4, may_sieve = $5 WHERE id = $6
-	`, maySend, mayReceive, mayIMAP, mayPOP3, maySieve, mailboxID)
+		UPDATE mailboxes SET may_send = $1, may_receive = $2, may_imap = $3, may_pop3 = $4, may_sieve = $5, may_dav = $7 WHERE id = $6
+	`, maySend, mayReceive, mayIMAP, mayPOP3, maySieve, mailboxID, mayDAV)
 	if err != nil {
 		return err
 	}
@@ -856,9 +858,29 @@ func (s *Store) CountDomains(ctx context.Context, customerID string) (int, error
 	return n, err
 }
 
+// StandardAddresses are the role addresses email standards expect on every
+// domain (RFC 2142). The dashboard offers to create them with a new domain,
+// and they don't count toward the plan's mailbox limit.
+var StandardAddresses = []string{"admin", "postmaster", "abuse"}
+
+// IsStandardAddress reports whether a (lowercased) local part is one of StandardAddresses.
+func IsStandardAddress(localPart string) bool {
+	for _, a := range StandardAddresses {
+		if a == localPart {
+			return true
+		}
+	}
+	return false
+}
+
+// CountMailboxes counts a domain's mailboxes toward its plan limit: every
+// mailbox that isn't deleted, except the StandardAddresses.
 func (s *Store) CountMailboxes(ctx context.Context, domainID string) (int, error) {
 	var n int
-	err := s.conn.QueryRowContext(ctx, `SELECT count(*) FROM mailboxes WHERE domain_id = $1 AND status != 'deleted'`, domainID).Scan(&n)
+	err := s.conn.QueryRowContext(ctx, `
+		SELECT count(*) FROM mailboxes
+		WHERE domain_id = $1 AND status != 'deleted' AND local_part != ALL($2)
+	`, domainID, StandardAddresses).Scan(&n)
 	return n, err
 }
 

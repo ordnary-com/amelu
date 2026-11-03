@@ -1,0 +1,12 @@
+Sending restored for lrpinfo.fr
+2026-11-03
+
+The sender guard paused lrpinfo.fr on 2 November 22:17 UTC (24 messages to
+10 companies, 4 unknown recipients). The customer confirmed they stopped the
+automated sending, so contact@, postmaster@ and admin@ got their Inherit
+permissions back from the backup in /var/lib/amelu-sender-guard/state.json
+and the domain left the state file (backup state.json.bak-2026-11-03). Its
+old mail is still inside the guard's 24-hour window, so lrpinfo.fr is in
+allow.txt until a systemd timer (amelu-guard-allow-lrpinfo) removes it on
+4 November 00:00 UTC. Found on the way: the guard's summary to
+abuse@amelu.org bounces, "5.1.2 Mailbox does not exist".

@@ -1,0 +1,14 @@
+Open in webmail no longer ends in a 522
+2026-11-03
+
+The amelu-webmail Worker reached Roundcube as marduk.mx.amelu.org:8443. That
+name has four A records: 141.95.52.66 and the three noez GRE IPs, which stay
+for customers' SPF "mx". Only marduk's own IP answers on 8443, so about three
+in four requests hung until Cloudflare gave up with Error 522 (GitHub #4).
+
+New DNS-only record webmail-origin.mx.amelu.org -> 141.95.52.66 only, with
+its own Let's Encrypt certificate (certbot standalone, cert-name
+webmail-origin.mx.amelu.org; the webmail-nginx.sh hook reloads nginx, the
+Stalwart hook ignores this lineage). nginx in /opt/amelu-webmail uses it, the
+Worker's ORIGIN points at it. 12 of 12 test requests returned 200 after the
+deploy. docs/WEBMAIL.md says why it must not go back to the marduk name.

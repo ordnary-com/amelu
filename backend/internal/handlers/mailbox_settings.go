@@ -33,6 +33,27 @@ type enabledServicesResponse struct {
 	MayIMAP    bool `json:"mayImap"`
 	MayPOP3    bool `json:"mayPop3"`
 	MaySieve   bool `json:"maySieve"`
+	MayDAV     bool `json:"mayDav"`
+}
+
+// enabledServicesRequest is enabledServicesResponse with mayDav optional:
+// the 1.x dashboard doesn't know the toggle, and saving its form must not
+// switch calendar and contacts off. Missing means "leave it as it is".
+type enabledServicesRequest struct {
+	MaySend    bool  `json:"maySend"`
+	MayReceive bool  `json:"mayReceive"`
+	MayIMAP    bool  `json:"mayImap"`
+	MayPOP3    bool  `json:"mayPop3"`
+	MaySieve   bool  `json:"maySieve"`
+	MayDAV     *bool `json:"mayDav"`
+}
+
+func (req enabledServicesRequest) resolve(currentDAV bool) enabledServicesResponse {
+	dav := currentDAV
+	if req.MayDAV != nil {
+		dav = *req.MayDAV
+	}
+	return enabledServicesResponse{req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve, dav}
 }
 
 func toEnabledServicesResponse(m *db.Mailbox) enabledServicesResponse {
@@ -42,6 +63,7 @@ func toEnabledServicesResponse(m *db.Mailbox) enabledServicesResponse {
 		MayIMAP:    m.MayIMAP,
 		MayPOP3:    m.MayPOP3,
 		MaySieve:   m.MaySieve,
+		MayDAV:     m.MayDAV,
 	}
 }
 
@@ -67,34 +89,19 @@ func (a *App) UpdateMailboxServices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req enabledServicesResponse
-	if err := decodeJSON(r, &req); err != nil {
+	var body enabledServicesRequest
+	if err := decodeJSON(r, &body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	req := body.resolve(mailbox.MayDAV)
 
-	var disabled []string
-	if !req.MaySend {
-		disabled = append(disabled, stalwart.PermissionEmailSend)
-	}
-	if !req.MayReceive {
-		disabled = append(disabled, stalwart.PermissionEmailReceive)
-	}
-	if !req.MayIMAP {
-		disabled = append(disabled, stalwart.PermissionIMAPAuthenticate)
-	}
-	if !req.MayPOP3 {
-		disabled = append(disabled, stalwart.PermissionPOP3Authenticate)
-	}
-	if !req.MaySieve {
-		disabled = append(disabled, stalwart.PermissionSieveAuthenticate)
-	}
-
+	disabled := stalwart.DisabledServicePermissions(req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve, req.MayDAV)
 	if err := a.Stalwart.SetMailboxDisabledPermissions(r.Context(), mailbox.LocalPart, domain.Name, disabled); err != nil {
 		writeUpstreamError(w, "failed to update services in mail cluster", err)
 		return
 	}
-	if err := a.Store.UpdateMailboxServices(r.Context(), mailbox.ID, req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve); err != nil {
+	if err := a.Store.UpdateMailboxServices(r.Context(), mailbox.ID, req.MaySend, req.MayReceive, req.MayIMAP, req.MayPOP3, req.MaySieve, req.MayDAV); err != nil {
 		writeError(w, http.StatusInternalServerError, "services updated in mail cluster but could not update records")
 		return
 	}

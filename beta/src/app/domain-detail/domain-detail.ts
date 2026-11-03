@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
@@ -12,6 +12,7 @@ import { Icon } from '../icon';
 import { DOMAIN_STATUS, MAILBOX_STATUS, badgeClass } from '../status';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { countedMailboxes } from '../standard-addresses';
 
 type Kind = 'all' | 'mailboxes' | 'aliases';
 
@@ -35,7 +36,7 @@ type Loaded<T> = T | null | undefined;
  */
 @Component({
   selector: 'amelu-domain-detail',
-  imports: [EmptyState, DatePipe, RouterLink, ActionIcon, Alert, Icon],
+  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, ActionIcon, Alert, Icon],
   templateUrl: './domain-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -78,6 +79,14 @@ export class DomainDetail {
   protected readonly aliases = this.perDomain((id) => this.api.listAddressAliases(id));
   protected readonly domainAliases = this.perDomain((id) => this.api.listDomainAliases(id));
   protected readonly catchAll = this.perDomain((id) => this.api.getCatchAll(id));
+  protected readonly sending = this.perDomain((id) => this.api.domainSending(id));
+  /** Today's sending against the plan: a bar, and a warning from 80%. */
+  protected readonly sendingUsage = computed(() => {
+    const s = this.sending();
+    if (!s || s.updatedAt === null) return null;
+    const ratio = s.limit > 0 ? s.sent / s.limit : 1;
+    return { ...s, percent: Math.min(100, ratio * 100), state: ratio >= 1 ? 'full' : ratio >= 0.8 ? 'near' : 'ok' };
+  });
   protected readonly activity = this.perDomain((id) => this.api.domainActivity(id).pipe(map((list) => list.slice(0, 5))));
 
   private readonly limit = toSignal(
@@ -94,9 +103,10 @@ export class DomainDetail {
     return [
       {
         label: 'Mailboxes',
-        value: count(mailboxes),
+        // Against the plan limit, so without admin@, postmaster@ and abuse@, which don't count toward it.
+        value: mailboxes ? countedMailboxes(mailboxes) : mailboxes,
         of: mailboxes && limit ? limit : null,
-        full: !!mailboxes && !!limit && mailboxes.length >= limit,
+        full: !!mailboxes && !!limit && countedMailboxes(mailboxes) >= limit,
         link: 'mailboxes',
       },
       { label: 'Address aliases', value: count(this.aliases()), of: null, full: false, link: 'aliases' },

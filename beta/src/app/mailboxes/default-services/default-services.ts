@@ -31,6 +31,7 @@ export class DefaultServices {
     { key: 'mayReceive', label: 'May receive', hint: 'Accept incoming mail for the address.' },
     { key: 'mayImap', label: 'May access over IMAP', hint: 'Read mail in a mail app, kept in sync with the server.' },
     { key: 'mayPop3', label: 'May access over POP3', hint: 'Download mail to a single device.' },
+    { key: 'mayDav', label: 'Calendar and contacts', hint: 'Sync calendars and contacts with apps over CalDAV and CardDAV.' },
   ];
 
   // undefined while loading, null when the request failed

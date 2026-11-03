@@ -61,6 +61,11 @@ type Config struct {
 	// requests (fail closed), not that they run unauthenticated.
 	InternalJobsSharedSecret string
 
+	// SendingStatsSecret authenticates the marduk job that reports how much
+	// each domain sent (POST /internal/jobs/sending-stats). Its own secret, so
+	// the mail host holds nothing that also opens the other internal jobs.
+	SendingStatsSecret string
+
 	// OriginSharedSecret authenticates every request (see
 	// handlers.EdgeAuth) as having passed through the edge Worker, not
 	// hit the Tunnel hostname directly. Empty disables the check (today's
@@ -137,6 +142,7 @@ func Load() (*Config, error) {
 
 		ExpirationSweepMode:      getEnv("EXPIRATION_SWEEP_MODE", "ticker"),
 		InternalJobsSharedSecret: os.Getenv("INTERNAL_JOBS_SHARED_SECRET"),
+		SendingStatsSecret:       os.Getenv("SENDING_STATS_SECRET"),
 		OriginSharedSecret:       os.Getenv("ORIGIN_SHARED_SECRET"),
 
 		OrdnaryIssuer:       os.Getenv("ORDNARY_ISSUER"),

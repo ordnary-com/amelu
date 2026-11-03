@@ -7,9 +7,10 @@ import { Domains } from '../domains';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { UI } from '../ui';
+import { STANDARD_ADDRESSES } from '../standard-addresses';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
-const DEFAULT_ADDRESSES = ['admin', 'postmaster', 'abuse'];
+const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
 
 interface CreatedAddress {
   address: string;

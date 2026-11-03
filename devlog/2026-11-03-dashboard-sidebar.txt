@@ -1,0 +1,14 @@
+Dashboard sidebar reworked
+2026-11-03
+
+"Email Domains" is "Domains" everywhere (sidebar, titles, breadcrumbs). The
+Domains and My Organization categories end in a chevron and fold away;
+clicking the category opens its page and unfolds it, clicking it again on
+that page folds it. Domains starts open, My Organization folded (and opens by
+itself on its sub-pages); remembered in localStorage amelu-sidebar-collapsed.
+The page you're on, and the one under the pointer, is in full-strength text
+instead of a highlight block. Domains show a status dot (ok, warn, bad) in
+place of the globe, and a small count after "Domains" when more exist than
+the three shown. "New ..." items are no longer green (unreadable on the light
+and blue sidebars) but plain text with a plus. The domain column is headed
+with the domain's name and split into groups with thin dividers.

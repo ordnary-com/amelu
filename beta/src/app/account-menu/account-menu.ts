@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 import { Icon } from '../icon';
 import { Session } from '../session';
 import { ORDNARY_ACCOUNT_URL } from '../config';
-import { Theme, ThemeChoice } from '../theme';
+import { Theme } from '../theme';
+import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
 
 /**
  * Top-right account button, modelled on ordnary-console's: organization badge
@@ -31,11 +32,16 @@ export class AccountMenu {
   protected readonly ordnaryAccountUrl = ORDNARY_ACCOUNT_URL;
   protected readonly copied = signal(false);
   protected readonly theme = inject(Theme);
-  protected readonly themes: { value: ThemeChoice; label: string }[] = [
-    { value: 'dark', label: 'Dark' },
-    { value: 'light', label: 'Light' },
-    { value: 'system', label: 'System' },
-  ];
+  protected readonly themes = THEME_OPTIONS;
+  protected readonly accents = ACCENT_OPTIONS;
+
+  /** A theme's swatch: its sidebar and pane colours split diagonally. */
+  protected swatch(option: ThemeOption): string {
+    if (option.value === 'system') return 'linear-gradient(135deg,#14191f 50%,#ffffff 50%)';
+    const accent = ACCENT_OPTIONS.find((a) => a.value === this.theme.accent())!.color;
+    const sidebar = option.sidebar ?? (option.value === 'deep' ? `color-mix(in srgb, ${accent} 32%, #070b14)` : accent);
+    return `linear-gradient(135deg,${sidebar} 50%,${option.pane} 50%)`;
+  }
   protected readonly link = 'text-[12px] font-medium text-link hover:underline';
   protected readonly item = 'flex w-full py-1.5 text-[14px] hover:underline';
 

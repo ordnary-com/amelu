@@ -8,7 +8,7 @@ import { MailboxHeading } from '../shared/heading';
 import { SaveFeedback, Saving } from '../shared/saving';
 import { SwitchRow } from '../shared/switch-row';
 
-const NONE: EnabledServices = { maySend: false, mayReceive: false, mayImap: false, mayPop3: false, maySieve: false };
+const NONE: EnabledServices = { maySend: false, mayReceive: false, mayImap: false, mayPop3: false, maySieve: false, mayDav: false };
 
 /** The current dashboard's MailboxEnabledServicesPage. */
 @Component({
@@ -39,6 +39,9 @@ const NONE: EnabledServices = { maySend: false, mayReceive: false, mayImap: fals
               </amelu-switch-row>
               <amelu-switch-row label="May access over POP3" [disabled]="!loaded()" [checked]="form().mayPop3" (checkedChange)="set({ mayPop3: $event })">
                 Download mail to a single device.
+              </amelu-switch-row>
+              <amelu-switch-row label="Calendar and contacts" [disabled]="!loaded()" [checked]="form().mayDav" (checkedChange)="set({ mayDav: $event })">
+                Sync calendars and contacts with apps over CalDAV and CardDAV.
               </amelu-switch-row>
             </div>
           </section>

@@ -24,7 +24,7 @@ export class DnsRecords {
   protected readonly dns = injectDnsCheck();
 
   protected readonly crumbs = computed(() => [
-    { label: 'Email Domains', link: '/domains' },
+    { label: 'Domains', link: '/domains' },
     { label: this.dns.domain()?.name ?? '', link: '/domains/' + this.dns.id() },
     { label: 'DNS', link: '/domains/' + this.dns.id() + '/dns' },
     { label: 'Records' },

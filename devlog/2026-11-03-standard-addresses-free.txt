@@ -1,0 +1,11 @@
+admin@, postmaster@ and abuse@ don't count toward the mailbox limit
+2026-11-03
+
+The new domain form offers to create the RFC 2142 addresses, and they used
+to count as mailboxes on the plan. Store.CountMailboxes now skips
+db.StandardAddresses (local_part != ALL($2)), and createMailbox doesn't check
+the limit for them at all, so they can be added to a full domain too. The
+dashboard counts the same way (beta/src/app/standard-addresses.ts) on the
+domain page, Mailboxes and New mailbox, and says so under the usage bar.
+Checked against local Postgres: three standard and two normal mailboxes
+count as two.

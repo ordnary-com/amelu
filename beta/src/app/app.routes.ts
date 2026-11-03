@@ -6,13 +6,10 @@ import { DomainDetail } from './domain-detail/domain-detail';
 import { NewDomain } from './new-domain/new-domain';
 import { AccountPage } from './account-page/account-page';
 import { AccountLayout } from './account-layout/account-layout';
-import { AccountAppearance } from './account-appearance/account-appearance';
-import { AccountApiKeys } from './account-api-keys/account-api-keys';
 import { OrganizationPage } from './organization-page/organization-page';
 import { ActivityPage } from './activity-page/activity-page';
 import { BillingLayout } from './billing-layout/billing-layout';
 import { BillingOverview } from './billing-overview/billing-overview';
-import { BillingPlans } from './billing-plans/billing-plans';
 import { BillingInvoices } from './billing-invoices/billing-invoices';
 import { NotFound } from './not-found/not-found';
 
@@ -38,7 +35,7 @@ export const routes: Routes = [
       {
         path: 'domains',
         loadComponent: () => import('./domains-page/domains-page').then((m) => m.DomainsPage),
-        title: 'Email Domains · Amelu',
+        title: 'Domains · Amelu',
       },
       { path: 'domains/new', component: NewDomain, title: 'New domain · Amelu' },
       {
@@ -58,8 +55,11 @@ export const routes: Routes = [
         component: AccountLayout,
         children: [
           { path: '', component: AccountPage, title: 'My Account · Amelu' },
-          { path: 'appearance', component: AccountAppearance, title: 'Appearance · My Account · Amelu' },
-          { path: 'api-keys', component: AccountApiKeys, title: 'API Keys · My Account · Amelu' },
+          {
+            path: 'appearance',
+            loadComponent: () => import('./account-appearance/account-appearance').then((m) => m.AccountAppearance),
+            title: 'Appearance · My Account · Amelu' },
+          { path: 'api-keys', loadComponent: () => import('./account-api-keys/account-api-keys').then((m) => m.AccountApiKeys), title: 'API Keys · My Account · Amelu' },
         ],
       },
       { path: 'organization', component: OrganizationPage, title: 'My Organization · Amelu' },
@@ -75,7 +75,7 @@ export const routes: Routes = [
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'overview' },
           { path: 'overview', component: BillingOverview, title: 'Billing · Amelu' },
-          { path: 'plans', component: BillingPlans, title: 'Plans · Billing · Amelu' },
+          { path: 'plans', loadComponent: () => import('./billing-plans/billing-plans').then((m) => m.BillingPlans), title: 'Plans · Billing · Amelu' },
           { path: 'invoices', component: BillingInvoices, title: 'Invoices · Billing · Amelu' },
         ],
       },

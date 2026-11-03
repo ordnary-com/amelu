@@ -24,6 +24,33 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-03  Calendar and contacts for every mailbox
+            2026-11-03-calendar-contacts.txt
+
+2026-11-03  Sending restored for lrpinfo.fr
+            2026-11-03-lrpinfo-restored.txt
+
+2026-11-03  Mail client setup on autoconfig.amelu.org
+            2026-11-03-autoconfig.txt
+
+2026-11-03  Domain page shows sending against the daily limit
+            2026-11-03-sending-stats.txt
+
+2026-11-03  admin@, postmaster@ and abuse@ don't count toward the mailbox limit
+            2026-11-03-standard-addresses-free.txt
+
+2026-11-03  Dashboard sidebar reworked
+            2026-11-03-dashboard-sidebar.txt
+
+2026-11-03  Dashboard themes and accent colours
+            2026-11-03-dashboard-themes.txt
+
+2026-11-03  Open in webmail no longer ends in a 522
+            2026-11-03-webmail-origin-522.txt
+
+2026-11-03  Download zone file no longer lands on a 404
+            2026-11-03-zone-file-download-404.txt
+
 2026-11-03  Mailbox create errors no longer crash the API
             2026-11-03-mailbox-create-error-crash.txt
 

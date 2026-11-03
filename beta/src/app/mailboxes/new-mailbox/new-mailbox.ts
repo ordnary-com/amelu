@@ -9,6 +9,7 @@ import { Alert } from '../../alert/alert';
 import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
+import { countedMailboxes } from '../../standard-addresses';
 
 type PasswordMethod = 'generate' | 'password';
 
@@ -55,7 +56,7 @@ export class NewMailbox {
       this.api.billingOverview().pipe(catchError(() => of(null))),
     ]).pipe(
       map(([list, overview]) =>
-        list && overview ? { used: list.length, max: overview.plan.maxMailboxesPerDomain, plan: overview.plan.name } : null,
+        list && overview ? { used: countedMailboxes(list), max: overview.plan.maxMailboxesPerDomain, plan: overview.plan.name } : null,
       ),
     ),
     { initialValue: null },

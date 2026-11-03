@@ -19,7 +19,7 @@ export class NotFound {
   protected readonly ui = UI;
 
   protected readonly links = [
-    { path: '/domains', label: 'Email domains', hint: 'Your domains and their mailboxes' },
+    { path: '/domains', label: 'Domains', hint: 'Your domains and their mailboxes' },
     { path: '/account', label: 'My account', hint: 'Profile, appearance and API keys' },
     { path: '/status', label: 'Service status', hint: 'Whether everything is running' },
   ];

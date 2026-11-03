@@ -6,6 +6,10 @@ import { isDevMode } from '@angular/core';
  */
 export const API_ORIGIN = isDevMode() ? '' : 'https://api.amelu.org';
 
+/** Mail client setup for every mailbox (cloudflare/autoconfig): Apple profiles, Outlook autodiscover. */
+export const AUTOCONFIG_ORIGIN = 'https://autoconfig.amelu.org';
+export const AUTODISCOVER_HOST = 'autodiscover.amelu.org';
+
 /** A full URL for an /api/... path, for plain links such as CSV downloads. */
 export function apiUrl(path: string): string {
   return API_ORIGIN + path;

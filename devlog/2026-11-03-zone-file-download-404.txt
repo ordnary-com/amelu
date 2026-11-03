@@ -1,0 +1,10 @@
+Download zone file no longer lands on a 404
+2026-11-03
+
+On the DNS records and DNS overview pages, "Download zone file" was a plain
+<a href> to /api/domains/{id}/bind. The apiOrigin interceptor only prefixes
+HttpClient calls, so in production the link went to app.amelu.org and the
+dashboard showed "There's nothing at /api/domains/.../bind". bindFileUrl in
+beta/src/app/dns-spam/dns-spam-api.ts now builds it with apiUrl(), like the
+CSV exports, so it goes to api.amelu.org (the session cookie is SameSite=Lax
+and same-site, so the top-level link carries it). Reported in GitHub #4.

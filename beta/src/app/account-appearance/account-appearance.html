@@ -1,26 +1,23 @@
 <h2 [class]="ui.sectionTitle">Appearance</h2>
 <div [class]="ui.card + ' p-4'">
-  <p class="text-[13px] text-muted">Choose how Amelu looks. System follows your device setting and switches along with it.</p>
+  <p class="text-[13px] text-muted">
+    Choose how Amelu looks. System switches between dark and light along with your device, and uses high contrast when your device asks for it.
+  </p>
 
-  <div class="mt-4 grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Theme">
+  <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Theme">
     @for (option of options; track option.value) {
       <label
-        class="flex cursor-pointer flex-col gap-2.5 rounded-lg border p-3 hover:bg-bg/60"
+        class="relative flex cursor-pointer flex-col gap-2.5 rounded-lg border p-3 hover:bg-bg/60"
         [class]="theme.choice() === option.value ? 'border-accent ring-2 ring-accent/30' : 'border-line'"
       >
         <input type="radio" name="theme" class="sr-only" [value]="option.value" [checked]="theme.choice() === option.value" (change)="theme.set(option.value)" />
         <!-- Miniature of the shell in that theme -->
-        <span class="flex h-16 overflow-hidden rounded-md border border-line" aria-hidden="true">
-          @switch (option.value) {
-            @case ('dark') {
-              <span class="w-1/4 bg-[#171d25]"></span><span class="flex-1 rounded-tl-md bg-[#14191f]"></span>
-            }
-            @case ('light') {
-              <span class="w-1/4 bg-[#0051fe]"></span><span class="flex-1 rounded-tl-md bg-white"></span>
-            }
-            @default {
-              <span class="w-1/4 bg-[#171d25]"></span><span class="flex-1 rounded-tl-md bg-[linear-gradient(135deg,#14191f_50%,#ffffff_50%)]"></span>
-            }
+        <span class="flex h-16 overflow-hidden rounded-md border border-line" [style.background]="sidebarColor(option)" aria-hidden="true">
+          <span class="w-1/4"></span>
+          @if (option.value === 'system') {
+            <span class="flex-1 rounded-tl-md bg-[linear-gradient(135deg,#14191f_50%,#ffffff_50%)]"></span>
+          } @else {
+            <span class="flex-1 rounded-tl-md border-t border-l border-black/10" [style.background]="option.pane"></span>
           }
         </span>
         <span>
@@ -31,9 +28,24 @@
     }
   </div>
 
+  <h3 class="mt-6 text-[13px] font-semibold">Accent colour</h3>
+  <p class="mt-0.5 text-[12px] text-muted">Buttons, links and the coloured sidebars. Works with every theme.</p>
+  <div class="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Accent colour">
+    @for (accent of accents; track accent.value) {
+      <label
+        class="relative flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] hover:bg-bg/60"
+        [class]="theme.accent() === accent.value ? 'border-accent ring-2 ring-accent/30' : 'border-line'"
+      >
+        <input type="radio" name="accent" class="sr-only" [value]="accent.value" [checked]="theme.accent() === accent.value" (change)="theme.setAccent(accent.value)" />
+        <span class="size-5 rounded-full" [style.background]="accent.color" aria-hidden="true"></span>
+        {{ accent.label }}
+      </label>
+    }
+  </div>
+
   <p class="mt-4 text-[12px] text-muted">
     @if (theme.choice() === 'system') {
-      Your device is currently set to {{ theme.resolved() }}.
+      Your device is currently set to {{ theme.palette().startsWith('contrast') ? 'high contrast ' + theme.resolved() : theme.resolved() }}.
     } @else {
       Applies right away, and only on this device.
     }

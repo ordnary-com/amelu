@@ -1,27 +1,52 @@
 import { Injectable, computed, signal } from '@angular/core';
 
-export type ThemeChoice = 'dark' | 'light' | 'system';
+/**
+ * The dashboard themes (styles.css). "system" follows the device: dark or
+ * light, or the matching high contrast theme when the device asks for more contrast.
+ */
+export type ThemeChoice = 'dark' | 'dim' | 'black' | 'deep' | 'light' | 'white' | 'sepia' | 'contrast' | 'contrast-dark' | 'system';
+export type ThemePalette = Exclude<ThemeChoice, 'system'>;
+/** Accent colours, on top of any theme. */
+export type AccentChoice = 'blue' | 'purple' | 'green' | 'teal' | 'orange' | 'pink';
 
-const STORAGE_KEY = 'amelu-theme';
+const THEME_KEY = 'amelu-theme';
+const ACCENT_KEY = 'amelu-accent';
+export const THEMES: ThemeChoice[] = ['dark', 'dim', 'black', 'deep', 'light', 'white', 'sepia', 'contrast', 'contrast-dark', 'system'];
+export const ACCENTS: AccentChoice[] = ['blue', 'purple', 'green', 'teal', 'orange', 'pink'];
+const DARK_PALETTES: ThemePalette[] = ['dark', 'dim', 'black', 'deep', 'contrast-dark'];
 
 /**
- * Dark by default. "system" follows the device and switches along with it.
- * index.html applies the stored choice before Angular boots, so there's no flash.
+ * Dark and blue accent by default. On <html>, `dark` marks every dark theme
+ * (Tailwind's dark: variant), `theme-<name>` each theme other than dark and
+ * light, and `accent-<name>` each accent other than blue. index.html applies
+ * the stored choices before Angular boots, so there's no flash.
  */
 @Injectable({ providedIn: 'root' })
 export class Theme {
-  private readonly media = window.matchMedia('(prefers-color-scheme: dark)');
-  private readonly systemDark = signal(this.media.matches);
+  private readonly darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+  private readonly contrastMedia = window.matchMedia('(prefers-contrast: more)');
+  private readonly systemDark = signal(this.darkMedia.matches);
+  private readonly systemContrast = signal(this.contrastMedia.matches);
 
-  readonly choice = signal<ThemeChoice>(readStored());
-  readonly resolved = computed(() => {
+  readonly choice = signal<ThemeChoice>(readStored(THEME_KEY, THEMES, 'dark'));
+  readonly accent = signal<AccentChoice>(readStored(ACCENT_KEY, ACCENTS, 'blue'));
+  /** The theme in use, with "system" resolved. */
+  readonly palette = computed<ThemePalette>(() => {
     const choice = this.choice();
-    return choice === 'system' ? (this.systemDark() ? 'dark' : 'light') : choice;
+    if (choice !== 'system') return choice;
+    if (this.systemContrast()) return this.systemDark() ? 'contrast-dark' : 'contrast';
+    return this.systemDark() ? 'dark' : 'light';
   });
+  /** Whether the theme in use is a dark one. */
+  readonly resolved = computed(() => (DARK_PALETTES.includes(this.palette()) ? 'dark' : 'light'));
 
   constructor() {
-    this.media.addEventListener('change', (event) => {
+    this.darkMedia.addEventListener('change', (event) => {
       this.systemDark.set(event.matches);
+      this.apply();
+    });
+    this.contrastMedia.addEventListener('change', (event) => {
+      this.systemContrast.set(event.matches);
       this.apply();
     });
   }
@@ -29,24 +54,39 @@ export class Theme {
   set(choice: ThemeChoice): void {
     this.choice.set(choice);
     this.apply();
-    try {
-      localStorage.setItem(STORAGE_KEY, choice);
-    } catch {
-      // Private mode or blocked storage: the choice just won't survive a reload.
-    }
+    store(THEME_KEY, choice);
+  }
+
+  setAccent(accent: AccentChoice): void {
+    this.accent.set(accent);
+    this.apply();
+    store(ACCENT_KEY, accent);
   }
 
   private apply(): void {
-    document.documentElement.classList.toggle('dark', this.resolved() === 'dark');
+    const classes = document.documentElement.classList;
+    for (const name of [...classes]) if (name.startsWith('theme-') || name.startsWith('accent-')) classes.remove(name);
+    classes.toggle('dark', this.resolved() === 'dark');
+    const palette = this.palette();
+    if (palette !== 'dark' && palette !== 'light') classes.add('theme-' + palette);
+    if (this.accent() !== 'blue') classes.add('accent-' + this.accent());
   }
 }
 
-function readStored(): ThemeChoice {
+function readStored<T extends string>(key: string, allowed: T[], fallback: T): T {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'system') return stored;
+    const stored = localStorage.getItem(key) as T | null;
+    if (stored && allowed.includes(stored)) return stored;
   } catch {
     // Fall through to the default.
   }
-  return 'dark';
+  return fallback;
+}
+
+function store(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Private mode or blocked storage: the choice just won't survive a reload.
+  }
 }

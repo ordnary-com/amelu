@@ -14,6 +14,7 @@ import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
 import { RepairResult } from '../../mailbox/mailbox-api';
 import { apiUrl } from '../../config';
+import { countedMailboxes } from '../../standard-addresses';
 
 /** The current dashboard's "All Mailboxes" page: every mailbox on one domain. */
 @Component({
@@ -59,12 +60,14 @@ export class MailboxesPage {
     const limit = this.limit();
     const list = this.mailboxes();
     if (!limit || !list) return null;
+    // admin@, postmaster@ and abuse@ don't count toward the limit.
+    const used = countedMailboxes(list);
     return {
-      used: list.length,
+      used,
       max: limit.max,
       plan: limit.plan,
-      full: list.length >= limit.max,
-      percent: Math.min(100, (list.length / Math.max(1, limit.max)) * 100),
+      full: used >= limit.max,
+      percent: Math.min(100, (used / Math.max(1, limit.max)) * 100),
     };
   });
 

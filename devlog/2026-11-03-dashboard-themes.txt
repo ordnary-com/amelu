@@ -1,0 +1,16 @@
+Dashboard themes and accent colours
+2026-11-03
+
+Appearance (and the account menu, as swatches) now offers Dark, Dim, Black,
+Deep, Light, White, Sepia, High contrast and High contrast dark, plus System,
+which follows the device between dark and light and picks the matching high
+contrast theme under prefers-contrast: more. Six accent colours (blue,
+purple, green, teal, orange, pink) work with every theme; links, the badge
+and the coloured sidebars derive from --accent with color-mix. On <html>:
+"dark" for every dark theme, theme-<name> and accent-<name>, set by
+theme.ts and again before first paint in index.html. Sidebar text on the
+chrome is a --chrome-ink token instead of hardcoded white, so White and Sepia
+can have a light sidebar. The hidden radio inputs on Appearance made the
+whole page taller than the screen (sr-only escaping the scroll pane); the
+labels are relative now. Appearance, API Keys and Plans load lazily to stay
+under the 500 kB initial budget. Also today: Google Sans without bold.

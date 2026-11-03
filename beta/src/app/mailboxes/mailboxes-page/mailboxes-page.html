@@ -1,6 +1,6 @@
 <amelu-page-header
   title="Mailboxes"
-  [crumbs]="[{ label: 'Email Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: base() }, { label: 'Mailboxes' }]"
+  [crumbs]="[{ label: 'Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: base() }, { label: 'Mailboxes' }]"
 >
   Every mailbox on {{ ctx.domain()?.name ?? 'this domain' }}. Open one to change its password, services, forwarding and more.
   <button actions type="button" [class]="ui.outline" (click)="repairAll()" [disabled]="repairing()" title="Recreate mailboxes the mail servers lost">
@@ -157,6 +157,7 @@
             The limit counts per domain, so each domain has its own {{ u.max }}.
           }
         </p>
+        <p class="mt-1 text-[12px] text-muted">admin&#64;, postmaster&#64; and abuse&#64; don't count toward it.</p>
       </section>
     }
 

@@ -2,11 +2,11 @@
   <div class="mx-auto max-w-md py-16 text-center">
     <h1 class="text-[22px] font-bold tracking-[-0.4px]">Domain not found</h1>
     <p class="mt-2 text-[13px] text-muted">It may have been deleted, or it belongs to another organization.</p>
-    <a routerLink="/domains" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Email Domains</a>
+    <a routerLink="/domains" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Domains</a>
   </div>
 } @else {
   <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
-    <a routerLink="/domains" class="hover:text-ink hover:underline">Email Domains</a>
+    <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
     <amelu-icon name="chevronRight" [size]="12" />
     <span class="truncate text-ink">{{ domain()?.name }}</span>
   </nav>
@@ -209,6 +209,41 @@
           }
         </ul>
       </section>
+
+      @if (sendingUsage(); as s) {
+        <section>
+          <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-[14px] font-bold">Sending</h2>
+            <a routerLink="/billing/plans" class="text-[13px] font-medium text-link hover:underline">Plans</a>
+          </div>
+          <div [class]="ui.card + ' p-4'">
+            <div class="flex items-baseline justify-between gap-3 text-[13px]">
+              <span class="text-muted">Sent in the last 24 hours</span>
+              <span>
+                <span class="font-bold" [class.text-bad]="s.state === 'full'" [class.text-warn]="s.state === 'near'">{{ s.sent | number }}</span>
+                of {{ s.limit | number }}
+              </span>
+            </div>
+            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+              <div
+                class="h-full rounded-full"
+                [class]="s.state === 'full' ? 'bg-bad' : s.state === 'near' ? 'bg-warn' : 'bg-accent'"
+                [style.width.%]="s.percent"
+              ></div>
+            </div>
+            <p class="mt-2 text-[12px] text-muted">
+              @if (s.state === 'full') {
+                The daily limit is reached. New mail waits in the queue and goes out as the count drops, nothing bounces.
+              } @else if (s.state === 'near') {
+                Close to the daily limit. Over it, mail waits in the queue instead of bouncing.
+              } @else {
+                The limit counts per domain over a rolling 24 hours. Over it, mail waits in the queue.
+              }
+            </p>
+            <p class="mt-1 text-[11px] text-muted">Updated {{ s.updatedAt | date: 'HH:mm' }}</p>
+          </div>
+        </section>
+      }
 
       <section>
         <div class="mb-3 flex items-center justify-between">

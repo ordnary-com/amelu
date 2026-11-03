@@ -1,5 +1,5 @@
 <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
-  <a routerLink="/domains" class="hover:text-ink hover:underline">Email Domains</a>
+  <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
   <amelu-icon name="chevronRight" [size]="12" />
   <span class="text-ink">New domain</span>
 </nav>
@@ -130,7 +130,7 @@
           <span class="min-w-0">
             <span class="block text-[14px] font-semibold">Create the standard addresses</span>
             <span class="mt-0.5 block text-[13px] text-muted">
-              Email standards expect these to exist on every domain. They count as mailboxes on your plan.
+              Email standards expect these to exist on every domain. They don't count toward your plan's mailbox limit.
             </span>
             <span class="mt-2.5 flex flex-wrap gap-1.5">
               @for (localPart of defaults; track localPart) {

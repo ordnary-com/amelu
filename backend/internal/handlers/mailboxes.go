@@ -82,17 +82,23 @@ func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.D
 		return nil, "", &httpError{status: http.StatusBadRequest, message: "localPart is required"}
 	}
 
-	_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, planTierID)
-	if err != nil {
-		return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
+	// The standard addresses (admin@, postmaster@, abuse@) don't count toward
+	// the plan limit, so they can be created even on a full domain.
+	if !db.IsStandardAddress(localPart) {
+		_, maxMailboxesPerDomain, err := a.Store.GetPlanTier(ctx, planTierID)
+		if err != nil {
+			return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
+		}
+		mailboxCount, err := a.Store.CountMailboxes(ctx, domain.ID)
+		if err != nil {
+			return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
+		}
+		if mailboxCount >= maxMailboxesPerDomain {
+			return nil, "", &httpError{status: http.StatusForbidden, message: "mailbox limit reached for your plan"}
+		}
 	}
-	mailboxCount, err := a.Store.CountMailboxes(ctx, domain.ID)
-	if err != nil {
-		return nil, "", &httpError{status: http.StatusInternalServerError, message: "could not check plan limits"}
-	}
-	if mailboxCount >= maxMailboxesPerDomain {
-		return nil, "", &httpError{status: http.StatusForbidden, message: "mailbox limit reached for your plan"}
-	}
+
+	var err error
 
 	if password == "" {
 		password, err = generatePassword()
@@ -125,27 +131,12 @@ func (a *App) createMailbox(ctx context.Context, planTierID string, domain *db.D
 // created from this point on are affected - existing mailboxes are
 // untouched, matching what both settings pages tell the customer.
 func (a *App) applyDomainDefaultsToMailbox(ctx context.Context, domain *db.Domain, mailbox *db.Mailbox) error {
-	var disabled []string
-	if !domain.DefaultMaySend {
-		disabled = append(disabled, stalwart.PermissionEmailSend)
-	}
-	if !domain.DefaultMayReceive {
-		disabled = append(disabled, stalwart.PermissionEmailReceive)
-	}
-	if !domain.DefaultMayIMAP {
-		disabled = append(disabled, stalwart.PermissionIMAPAuthenticate)
-	}
-	if !domain.DefaultMayPOP3 {
-		disabled = append(disabled, stalwart.PermissionPOP3Authenticate)
-	}
-	if !domain.DefaultMaySieve {
-		disabled = append(disabled, stalwart.PermissionSieveAuthenticate)
-	}
+	disabled := stalwart.DisabledServicePermissions(domain.DefaultMaySend, domain.DefaultMayReceive, domain.DefaultMayIMAP, domain.DefaultMayPOP3, domain.DefaultMaySieve, domain.DefaultMayDAV)
 	if len(disabled) > 0 {
 		if err := a.Stalwart.SetMailboxDisabledPermissions(ctx, mailbox.LocalPart, domain.Name, disabled); err != nil {
 			return fmt.Errorf("apply default services: %w", err)
 		}
-		if err := a.Store.UpdateMailboxServices(ctx, mailbox.ID, domain.DefaultMaySend, domain.DefaultMayReceive, domain.DefaultMayIMAP, domain.DefaultMayPOP3, domain.DefaultMaySieve); err != nil {
+		if err := a.Store.UpdateMailboxServices(ctx, mailbox.ID, domain.DefaultMaySend, domain.DefaultMayReceive, domain.DefaultMayIMAP, domain.DefaultMayPOP3, domain.DefaultMaySieve, domain.DefaultMayDAV); err != nil {
 			return fmt.Errorf("record default services: %w", err)
 		}
 	}

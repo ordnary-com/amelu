@@ -3,8 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: "Google Sans Text", "Google Sans", Arial, Helvetica, sans-serif;
-  --font-display: "Google Sans Display", "Google Sans", "Google Sans Text", Arial, sans-serif;
+  --font-sans: "Google Sans", Arial, Helvetica, sans-serif;
+  --font-display: "Google Sans", Arial, Helvetica, sans-serif;
+  /* No bold anywhere, as on amelu.org: font-bold and font-semibold set medium. */
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -153,12 +156,24 @@
   }
 }
 
-/* Headings in Google Sans Display, like Web Services and ordnary.com. Base
-   layer, so a page's own font class still wins. */
+/* Headings in the display font (Google Sans, like the rest). Base layer, so a
+   page's own font class still wins. Bold elements and headings, which browsers
+   set in bold by default, stay medium. */
 @layer base {
   h1,
   h2,
   h3 {
     font-family: var(--font-display);
+  }
+  b,
+  strong,
+  th,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 500;
   }
 }

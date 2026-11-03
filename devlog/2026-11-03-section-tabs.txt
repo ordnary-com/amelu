@@ -1,0 +1,12 @@
+DNS and Spam filtering use tabs instead of a third sidebar column
+2026-11-03
+
+Opening DNS Configuration or Spam Filtering added a third menu column next
+to the main sidebar and the domain menu, which left the page content too
+narrow. Both sections now show their pages as tabs under the page header
+(beta/src/app/section-tabs.ts, the same look as My Account's tabs): DNS
+configuration has Overview and Records, Spam filtering has Overview,
+Aggressiveness, Sender lists and Recipient denylist. Every page in a section
+has the section's title, keeps its own description, and the breadcrumb ends
+at the section. menuColumns in shell.ts no longer adds the dns and spam
+columns.

@@ -70,7 +70,7 @@
     </div>
   </div>
 } @else {
-  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+  <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
     <form class="min-w-0 space-y-4" (submit)="submit($event)">
       @if (error(); as message) {
         <amelu-alert kind="error" title="The import failed" [dismissible]="true" (dismissed)="error.set(null)">

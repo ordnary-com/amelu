@@ -31,6 +31,10 @@
   /* Top bar and sidebar */
   --color-chrome: var(--chrome);
   --color-chrome-active: var(--chrome-active);
+  /* The content pane behind the cards; the surface colour except on white */
+  --color-page: var(--page, var(--surface));
+  /* Text and lines on the chrome: white, except on the white theme's white chrome */
+  --color-chrome-ink: var(--chrome-ink);
   /* The top strip and the account badge hanging out of it */
   --color-badge: var(--badge);
   --color-create: #24a148;
@@ -46,14 +50,18 @@
   --ink: #14171f;
   --ink-soft: #3c4250;
   --muted: #5c6370;
+  /* Ordnary blue unless an accent class below picks another; the rest follows it. */
   --accent: #0051fe;
-  --accent-soft: #dfe7ff;
-  --link: #0047e0;
+  --accent-soft: color-mix(in srgb, var(--accent) 13%, white);
+  --link: color-mix(in srgb, var(--accent), black 12%);
 
-  /* Blue chrome in Web Services' Ordnary blue */
-  --chrome: #0051fe;
-  --chrome-active: #0041cc;
-  --badge: #0041cc;
+  /* Chrome in the accent, as Web Services does in Ordnary blue */
+  --chrome: var(--accent);
+  --chrome-active: color-mix(in srgb, var(--accent), black 20%);
+  --chrome-ink: #ffffff;
+  /* 1 turns the flat blue logo on the chrome white, 0 black (.chrome-logo) */
+  --chrome-logo-invert: 1;
+  --badge: color-mix(in srgb, var(--accent), black 20%);
 
   --hero: #dfe3f3;
   --hero-light: #e9ecf7;
@@ -85,14 +93,13 @@
   --ink: #dedee3;
   --ink-soft: #c4c5cc;
   --muted: #a4a4ac;
-  --accent: #0051fe;
-  --accent-soft: rgb(0 81 254 / 0.2);
-  /* #0051fe is too dark for small text on these backgrounds */
-  --link: #4d84ff;
+  --accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
+  /* The accent itself is too dark for small text on these backgrounds */
+  --link: color-mix(in srgb, var(--accent), white 30%);
 
   --chrome: #171d25;
   --chrome-active: #262d38;
-  --badge: #0051fe;
+  --badge: var(--accent);
 
   --hero: #1d242e;
   --hero-light: #262d38;
@@ -108,6 +115,183 @@
   --ill-dark: #a4a4ac;
 
   color-scheme: dark;
+}
+
+/* White: the light theme without the tints, a white sidebar with dark text. */
+:root.theme-white {
+  --bg: #eceef1;
+  --surface: #ffffff;
+  /* The content pane a light grey, so the white cards stand out on it */
+  --page: #f6f7f9;
+  --popover: #ffffff;
+  --line: #e5e7eb;
+
+  --chrome: #ffffff;
+  --chrome-active: #f1f2f4;
+  --chrome-ink: #14171f;
+  --chrome-logo-invert: 0;
+  --badge: var(--accent);
+
+  --hero: #e9ebef;
+  --hero-light: #f1f2f5;
+  --hero-ink: #3c4250;
+
+  --ill-light: #f1f2f4;
+}
+
+/* Black: the dark theme taken to near black, for OLED screens and dark rooms. */
+:root.dark.theme-black {
+  --bg: #0b0b0d;
+  --surface: #000000;
+  --popover: #121215;
+  --line: #2a2a30;
+  --ink: #e8e8ec;
+  --ink-soft: #c8c8ce;
+  --muted: #8f8f98;
+
+  --chrome: #0b0b0d;
+  --chrome-active: #1a1a1f;
+
+  --hero: #101013;
+  --hero-light: #17171b;
+  --hero-ink: #c3c3cc;
+
+  --ill-white: #000000;
+  --ill-light: #17171b;
+  --ill-mid: #2a2a30;
+}
+
+/* Dim: between dark and light, greyer panels and softer contrast. */
+:root.dark.theme-dim {
+  --bg: #2a2f37;
+  --surface: #23272e;
+  --popover: #30353e;
+  --line: #4b515b;
+  --ink: #e4e5e9;
+  --ink-soft: #cdd0d6;
+  --muted: #a8abb3;
+
+  --chrome: #2a2f37;
+  --chrome-active: #373d47;
+
+  --hero: #30353e;
+  --hero-light: #383e48;
+  --hero-ink: #c9ccd6;
+
+  --ill-white: #23272e;
+  --ill-light: #373d47;
+  --ill-mid: #4b515b;
+}
+
+/* Deep: dark panels with a deep sidebar in the accent colour. */
+:root.dark.theme-deep {
+  --chrome: color-mix(in srgb, var(--accent) 32%, #070b14);
+  --chrome-active: color-mix(in srgb, var(--accent) 48%, #070b14);
+  --badge: var(--accent);
+
+  --hero: color-mix(in srgb, var(--accent) 14%, #14191f);
+  --hero-light: color-mix(in srgb, var(--accent) 22%, #14191f);
+}
+
+/* Sepia: a warm off-white for long reading, with a matching sidebar. */
+:root.theme-sepia {
+  --bg: #efe8dc;
+  --surface: #fbf7f0;
+  --popover: #fffaf3;
+  --line: #e2d8c6;
+  --ink: #2b2620;
+  --ink-soft: #4a4238;
+  --muted: #6e6455;
+
+  --chrome: #f2ebdf;
+  --chrome-active: #e5dac8;
+  --chrome-ink: #2b2620;
+  --chrome-logo-invert: 0;
+  --badge: var(--accent);
+
+  --hero: #ebe1cf;
+  --hero-light: #f3ebdd;
+  --hero-ink: #4a4238;
+
+  --ill-white: #fbf7f0;
+  --ill-light: #efe8dc;
+  --ill-mid: #d8ccb8;
+  --ill-dark: #4a4238;
+}
+
+/* High contrast: black on white, darker lines and text, a black sidebar and a
+   thick focus ring. System picks it when the device asks for more contrast. */
+:root.theme-contrast {
+  --bg: #eeeeee;
+  --surface: #ffffff;
+  --popover: #ffffff;
+  --line: #6b6b6b;
+  --ink: #000000;
+  --ink-soft: #111111;
+  --muted: #333333;
+  --link: color-mix(in srgb, var(--accent), black 35%);
+
+  --chrome: #000000;
+  --chrome-active: #333333;
+  --badge: color-mix(in srgb, var(--accent), black 35%);
+
+  --hero: #eeeeee;
+  --hero-light: #ffffff;
+  --hero-ink: #000000;
+
+  --ill-mid: #6b6b6b;
+  --ill-dark: #000000;
+}
+
+:root.theme-contrast :focus-visible,
+:root.theme-contrast-dark :focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: 2px;
+}
+
+/* High contrast dark: white on full black, light lines, brighter status colours. */
+:root.dark.theme-contrast-dark {
+  --bg: #0d0d0d;
+  --surface: #000000;
+  --popover: #0d0d0d;
+  --line: #9a9a9a;
+  --ink: #ffffff;
+  --ink-soft: #f2f2f2;
+  --muted: #d0d0d0;
+  --link: color-mix(in srgb, var(--accent), white 45%);
+
+  --chrome: #000000;
+  --chrome-active: #2b2b2b;
+
+  --hero: #0d0d0d;
+  --hero-light: #1a1a1a;
+  --hero-ink: #ffffff;
+
+  --ok: #5fe0a8;
+  --warn: #ffc14d;
+  --bad: #ff8a8c;
+
+  --ill-white: #000000;
+  --ill-light: #1a1a1a;
+  --ill-mid: #9a9a9a;
+  --ill-dark: #ffffff;
+}
+
+/* Accent colours (theme.ts), on top of any theme. Blue is the default above. */
+:root.accent-purple {
+  --accent: #7c3aed;
+}
+:root.accent-green {
+  --accent: #15924a;
+}
+:root.accent-teal {
+  --accent: #0e8a80;
+}
+:root.accent-orange {
+  --accent: #e0570f;
+}
+:root.accent-pink {
+  --accent: #d61f69;
 }
 
 @layer base {
@@ -159,6 +343,10 @@
 /* Headings in the display font (Google Sans, like the rest). Base layer, so a
    page's own font class still wins. Bold elements and headings, which browsers
    set in bold by default, stay medium. */
+.chrome-logo {
+  filter: brightness(0) invert(var(--chrome-logo-invert));
+}
+
 @layer base {
   h1,
   h2,

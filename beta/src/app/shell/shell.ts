@@ -1,15 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Domains } from '../domains';
+import { Domain } from '../api';
+import { DOMAIN_STATUS, Tone } from '../status';
 import { AccountMenu } from '../account-menu/account-menu';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { apiUrl } from '../config';
 import { TechInfo } from '../login/tech-info';
 import {
   lucideBuilding2,
-  lucideChevronRight,
+  lucideChevronDown,
   lucideCreditCard,
   lucideGlobe,
   lucideHistory,
@@ -21,10 +23,10 @@ import {
 
 // Mirrors the current dashboard's .sidemenu rules in frontend/public/app.css;
 // routerLinkActive puts "active" on the <li>, which the links read via group-[.active].
-// The highlight sits on the link, inset from the submenu guide line.
+// The page you're on, and the one under the pointer, in full-strength text; the others dimmed.
 const LINK =
-  'flex items-center gap-2 rounded-md px-2 hover:bg-white/[0.06] [&>ng-icon]:flex-none [&>ng-icon]:opacity-80 ' +
-  'group-[.active]:bg-white/[0.14] group-[.active]:font-semibold group-[.active]:text-white group-[.active]:[&>ng-icon]:opacity-100';
+  'flex items-center gap-2 rounded-md px-2 hover:text-chrome-ink [&>ng-icon]:flex-none [&>ng-icon]:opacity-80 ' +
+  'group-[.active]:text-chrome-ink group-[.active]:[&>ng-icon]:opacity-100';
 
 @Component({
   selector: 'amelu-shell',
@@ -33,7 +35,7 @@ const LINK =
   viewProviders: [
     provideIcons({
       lucideBuilding2,
-      lucideChevronRight,
+      lucideChevronDown,
       lucideCreditCard,
       lucideGlobe,
       lucideHistory,
@@ -59,34 +61,100 @@ export class Shell {
     { initialValue: parseLocation(this.router.url) },
   );
 
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+
   protected readonly columns = computed(() => menuColumns(this.at()));
 
-  // The first few domains under Email Domains, plus the one you're on if it's further down.
+  // The first few domains under Domains, plus the one you're on if it's further down.
   protected readonly sidebarDomains = computed(() => {
     const all = this.domains() ?? [];
     const shown = all.slice(0, SIDEBAR_DOMAINS);
     const current = all.find((d) => d.id === this.at().domainId);
     return current && !shown.includes(current) ? [...shown, current] : shown;
   });
+  /** A domain's status as a dot in the sidebar, in the tone of its badge elsewhere. */
+  protected dot(domain: Domain): string {
+    return DOT[DOMAIN_STATUS[domain.status].tone];
+  }
+
+  /** A column's heading: the domain's name for the domain menu, else the menu's own label. */
+  protected columnTitle(menu: { key: string; label: string }): string {
+    if (menu.key !== 'domain') return menu.label;
+    return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
+  }
+
   protected readonly hiddenDomains = computed(() => (this.domains()?.length ?? 0) - SIDEBAR_DOMAINS);
 
   // Each menu column scrolls on its own, so a long domain menu doesn't drag the main one along.
   protected readonly column =
-    'flex-none overflow-y-auto pb-4 [scrollbar-color:rgb(255_255_255/0.3)_transparent] [scrollbar-width:thin]';
+    'flex-none overflow-y-auto pb-4 [scrollbar-color:color-mix(in_srgb,var(--chrome-ink)_30%,transparent)_transparent] [scrollbar-width:thin]';
 
   // Labels land where the old px-4 put them: 8px margin + 8px link padding.
   protected readonly item = 'group mx-2 truncate [&>a]:py-2';
   // A thin guide line under the parent's icon instead of the old 5px bar; the
   // active child lights up its own stretch of it.
   protected readonly subitem =
-    'group mr-2 ml-[22px] truncate border-l-2 border-white/20 py-0.5 pl-1.5 [&>a]:py-1.5 [&.active]:border-white/80';
-  protected readonly link = `text-white/75 ${LINK}`;
-  protected readonly dangerLink = `text-[#ff8a8c] ${LINK}`;
-  protected readonly secondaryLink = `text-white/50 ${LINK}`;
-  protected readonly createLink = `text-create ${LINK}`;
+    'group mr-2 ml-[22px] truncate border-l-2 border-chrome-ink/20 py-0.5 pl-1.5 [&>a]:py-1.5 [&.active]:border-chrome-ink/80';
+  protected readonly link = `text-chrome-ink/65 ${LINK}`;
+  protected readonly dangerLink = `text-bad ${LINK}`;
+  protected readonly secondaryLink = `text-chrome-ink/50 ${LINK}`;
+  // New Domain, New Mailbox and the like: ordinary links, told apart by their plus.
+  protected readonly createLink = `text-chrome-ink/65 ${LINK}`;
+
+  // A category with pages under it: its link ends in a chevron, and clicking it unfolds them.
+  protected readonly category = 'group mx-2 truncate [&>a]:py-2';
+
+  /** Folded categories, remembered in this browser. Domains starts open, the rest folded. */
+  protected readonly collapsed = signal<Record<SidebarCategory, boolean>>(readCollapsed());
+
+  /** A category's pages show when it's unfolded, or when you're on one of them. */
+  protected open(key: SidebarCategory): boolean {
+    if (!this.collapsed()[key]) return true;
+    return key === 'organization' && this.url().startsWith('/organization/');
+  }
+
+  /** Clicking a category opens its page and unfolds it; clicking it again on that page folds it. */
+  protected categoryClick(key: SidebarCategory): void {
+    const page = key === 'domains' ? '/domains' : '/organization';
+    this.setCollapsed(key, this.url() === page && this.open(key));
+  }
+
+  private setCollapsed(key: SidebarCategory, collapsed: boolean): void {
+    this.collapsed.update((state) => ({ ...state, [key]: collapsed }));
+    try {
+      localStorage.setItem(COLLAPSED_KEY, JSON.stringify(this.collapsed()));
+    } catch {
+      // Blocked storage: it just won't be remembered.
+    }
+  }
+}
+
+type SidebarCategory = 'domains' | 'organization';
+const COLLAPSED_KEY = 'amelu-sidebar-collapsed';
+
+function readCollapsed(): Record<SidebarCategory, boolean> {
+  try {
+    const stored = JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? '{}');
+    return { domains: stored.domains === true, organization: stored.organization !== false };
+  } catch {
+    return { domains: false, organization: true };
+  }
 }
 
 const SIDEBAR_DOMAINS = 3;
+
+const DOT: Record<Tone, string> = {
+  ok: 'bg-ok',
+  warn: 'bg-warn',
+  bad: 'bg-bad',
+  neutral: 'bg-chrome-ink/40',
+};
 
 interface MenuEntry {
   label: string;
@@ -98,6 +166,8 @@ interface MenuEntry {
   kind?: 'create' | 'danger' | 'download';
   /** Muted, for the rarely used settings at the end. */
   secondary?: boolean;
+  /** Starts a new group: a thin line above it. */
+  divider?: boolean;
 }
 
 interface MenuColumn {
@@ -150,19 +220,19 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
     domain.push({ label: 'New Rewrite', link: `${d}/rewrites/new`, sub: true, kind: 'create' });
   }
   domain.push(
-    { label: 'Catchall Recipients', link: `${d}/catchall` },
+    { label: 'Catchall Recipients', link: `${d}/catchall`, divider: true },
     { label: 'Bcc. Captures', link: `${d}/bccs`, area: true },
   );
   if (section === 'bccs') {
     domain.push({ label: 'New Capture', link: `${d}/bccs/new`, sub: true, kind: 'create' });
   }
   domain.push(
-    { label: 'DNS Configuration', link: `${d}/dns`, area: true },
+    { label: 'DNS Configuration', link: `${d}/dns`, area: true, divider: true },
     { label: 'Spam Filtering', link: `${d}/spam`, area: true },
-    { label: 'Transfer Ownership...', link: `${d}/transfer` },
+    { label: 'Transfer Ownership...', link: `${d}/transfer`, divider: true },
     { label: 'Deactivate Domain...', link: `${d}/deactivate` },
     { label: 'Delete Domain...', link: `${d}/delete`, kind: 'danger' },
-    { label: 'Listing Settings', link: `${d}/listing-settings`, secondary: true },
+    { label: 'Listing Settings', link: `${d}/listing-settings`, secondary: true, divider: true },
     { label: 'Attached Notes', link: `${d}/notes`, secondary: true },
   );
   columns.push({ key: 'domain', label: 'Domain', items: domain });
@@ -201,14 +271,14 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
         { label: 'Usage Instructions', link: `${m}/usage` },
         { label: 'Enabled Services', link: `${m}/services` },
         { label: 'Limits', link: `${m}/limits` },
-        { label: 'Password', link: `${m}/password` },
+        { label: 'Password', link: `${m}/password`, divider: true },
         { label: 'Internal Access', link: `${m}/internal-access` },
-        { label: 'Identities', link: `${m}/identities` },
+        { label: 'Identities', link: `${m}/identities`, divider: true },
         { label: 'Forwarding', link: `${m}/forwarding` },
         { label: 'Delegation', link: `${m}/delegation` },
         { label: 'Expiration', link: `${m}/expiration` },
-        { label: 'Delete Mailbox...', link: `${m}/delete`, kind: 'danger' },
-        { label: 'Listing Settings', link: `${m}/listing-settings`, secondary: true },
+        { label: 'Delete Mailbox...', link: `${m}/delete`, kind: 'danger', divider: true },
+        { label: 'Listing Settings', link: `${m}/listing-settings`, secondary: true, divider: true },
         { label: 'Attached Notes', link: `${m}/notes`, secondary: true },
       ],
     });

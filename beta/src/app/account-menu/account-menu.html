@@ -11,7 +11,7 @@
     <span class="truncate">{{ customer()?.organizationName }}</span>
     <amelu-icon name="chevronDown" [size]="12" class="transition-transform duration-150 group-aria-expanded:rotate-180" />
   </span>
-  <span class="max-w-[240px] truncate pt-1 text-[13px] text-white/75 group-hover:text-white group-hover:underline">
+  <span class="max-w-[240px] truncate pt-1 text-[13px] text-chrome-ink/75 group-hover:text-chrome-ink group-hover:underline">
     {{ customer()?.name }}
   </span>
 </button>
@@ -83,17 +83,33 @@
       </div>
       <div>
         <div class="text-[13px] font-bold">Theme</div>
-        <div class="mt-1 inline-flex rounded-md border border-line p-0.5" role="group" aria-label="Theme">
+        <div class="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Theme">
           @for (option of themes; track option.value) {
             <button
               type="button"
-              class="cursor-pointer rounded px-3 py-1 text-[12px] font-medium"
-              [class]="theme.choice() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+              class="size-6 cursor-pointer rounded-full border border-line"
+              [class]="theme.choice() === option.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-popover' : 'hover:scale-110'"
+              [style.background]="swatch(option)"
               [attr.aria-pressed]="theme.choice() === option.value"
+              [attr.aria-label]="option.label"
+              [title]="option.label"
               (click)="theme.set(option.value)"
-            >
-              {{ option.label }}
-            </button>
+            ></button>
+          }
+        </div>
+        <div class="mt-2.5 text-[13px] font-bold">Accent</div>
+        <div class="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Accent colour">
+          @for (accent of accents; track accent.value) {
+            <button
+              type="button"
+              class="size-5 cursor-pointer rounded-full"
+              [class]="theme.accent() === accent.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-popover' : 'hover:scale-110'"
+              [style.background]="accent.color"
+              [attr.aria-pressed]="theme.accent() === accent.value"
+              [attr.aria-label]="accent.label"
+              [title]="accent.label"
+              (click)="theme.setAccent(accent.value)"
+            ></button>
           }
         </div>
       </div>

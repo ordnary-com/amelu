@@ -116,7 +116,7 @@ export class MailboxLayout {
   protected readonly mailboxesLink = computed(() => `/domains/${this.domainCtx.id()}/mailboxes`);
 
   protected readonly crumbs = computed(() => [
-    { label: 'Email Domains', link: '/domains' },
+    { label: 'Domains', link: '/domains' },
     { label: this.domainCtx.domain()?.name ?? '', link: '/domains/' + this.domainCtx.id() },
     { label: 'Mailboxes', link: this.mailboxesLink() },
     { label: this.mailbox()?.address ?? '' },

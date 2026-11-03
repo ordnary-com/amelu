@@ -107,6 +107,13 @@ export interface DomainAlias {
   name: string;
 }
 
+export interface DomainSending {
+  sent: number;
+  limit: number;
+  /** When the count was taken; null while there's no count yet. */
+  updatedAt: string | null;
+}
+
 export interface CatchAll {
   address?: string;
 }
@@ -257,6 +264,11 @@ export class Api {
 
   getCatchAll(domainId: string) {
     return this.http.get<CatchAll>(`/api/domains/${domainId}/catchall`);
+  }
+
+  /** Messages sent from the domain over the last 24 hours, against the plan's daily limit. */
+  domainSending(domainId: string) {
+    return this.http.get<DomainSending>(`/api/domains/${domainId}/sending`);
   }
 
   domainActivity(domainId: string) {

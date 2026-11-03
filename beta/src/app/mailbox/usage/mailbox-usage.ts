@@ -5,6 +5,7 @@ import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { MailboxContext } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
+import { AUTOCONFIG_ORIGIN, AUTODISCOVER_HOST } from '../../config';
 
 export const MAIL_SERVER = 'marduk.mx.amelu.org';
 
@@ -26,6 +27,47 @@ interface Setting {
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
+        <section>
+          <h2 [class]="ui.sectionTitle">Set up automatically</h2>
+          <div [class]="ui.card + ' overflow-hidden'">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-b border-line px-4 py-3.5">
+              <div class="min-w-0 flex-1">
+                <p class="text-[14px] font-semibold">iPhone, iPad and Mac</p>
+                <p class="mt-0.5 text-[13px] text-muted">
+                  Download the profile on the device, then install it in Settings. It sets up mail, calendar and contacts, and asks for the mailbox password.
+                </p>
+              </div>
+              @if (profileUrl(); as url) {
+                <a [href]="url" [class]="ui.outline" download>
+                  <amelu-icon name="download" [size]="15" />
+                  Download profile
+                </a>
+              }
+            </div>
+            <div class="px-4 py-3.5">
+              <p class="text-[14px] font-semibold">Outlook</p>
+              <p class="mt-0.5 text-[13px] text-muted">
+                Outlook finds these settings by itself once the domain has this DNS record. Add it once per domain.
+              </p>
+              @if (autodiscover(); as record) {
+                <div class="mt-2.5 flex items-center gap-2 rounded-md bg-bg px-3 py-2">
+                  <code class="min-w-0 flex-1 truncate text-[12px]">{{ record }}</code>
+                  <button
+                    type="button"
+                    class="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted hover:bg-surface hover:text-ink"
+                    aria-label="Copy the DNS record"
+                    (click)="copy(record)"
+                  >
+                    <amelu-icon [name]="copied() === record ? 'check' : 'copy'" [size]="13" />
+                    {{ copied() === record ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+              }
+              <p class="mt-2 text-[12px] text-muted">Other apps: enter the settings below by hand.</p>
+            </div>
+          </div>
+        </section>
+
         @for (section of sections(); track section.title) {
           <section>
             <h2 [class]="ui.sectionTitle">{{ section.title }}</h2>
@@ -75,6 +117,30 @@ interface Setting {
           </a>
         </section>
         <section [class]="ui.card + ' p-4'">
+          <h2 class="text-[14px] font-bold">Calendar and contacts apps</h2>
+          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              iPhone, iPad and Mac: the profile above sets them up.
+            </li>
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              Android: add the account in DAVx⁵ with the calendar address.
+            </li>
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              Thunderbird: add a network calendar and a CardDAV address book with the addresses on the left.
+            </li>
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              Outlook doesn't support CalDAV or CardDAV by itself.
+            </li>
+          </ul>
+          <a [routerLink]="ctx.base() + '/services'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
+            Turn it on or off for this mailbox
+          </a>
+        </section>
+        <section [class]="ui.card + ' p-4'">
           <h2 class="text-[14px] font-bold">Can't connect?</h2>
           <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
             <li class="flex gap-2.5">
@@ -101,6 +167,21 @@ export class MailboxUsage {
   protected readonly ui = UI;
   protected readonly copied = signal<string | null>(null);
 
+  /** An Apple configuration profile for this address, made by the autoconfig Worker. */
+  protected readonly profileUrl = computed(() => {
+    const mailbox = this.ctx.mailbox();
+    if (!mailbox) return null;
+    const params = new URLSearchParams({ email: mailbox.address, name: mailbox.displayName ?? '' });
+    return `${AUTOCONFIG_ORIGIN}/profile.mobileconfig?${params}`;
+  });
+
+  /** The SRV record that points Outlook at the autodiscover Worker. */
+  protected readonly autodiscover = computed(() => {
+    const address = this.ctx.mailbox()?.address;
+    if (!address) return null;
+    return `_autodiscover._tcp.${address.split('@')[1]}. SRV 0 0 443 ${AUTODISCOVER_HOST}.`;
+  });
+
   protected readonly sections = computed(() => {
     const address = this.ctx.mailbox()?.address ?? '';
     const login: Setting[] = [
@@ -116,6 +197,14 @@ export class MailboxUsage {
     return [
       { title: 'Incoming mail', rows: [...server('IMAP', '993', 'TLS'), ...login] },
       { title: 'Outgoing mail', rows: [...server('SMTP', '465', 'TLS'), ...login] },
+      {
+        title: 'Calendar and contacts',
+        rows: [
+          { label: 'Calendar', value: `https://${MAIL_SERVER}/dav/cal/`, copy: true },
+          { label: 'Contacts', value: `https://${MAIL_SERVER}/dav/card/`, copy: true },
+          ...login,
+        ],
+      },
       { title: 'ManageSieve', rows: server('ManageSieve', '4190', 'StartTLS') },
     ];
   });

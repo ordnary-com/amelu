@@ -6,7 +6,6 @@ import { DomainDetail } from './domain-detail/domain-detail';
 import { NewDomain } from './new-domain/new-domain';
 import { AccountPage } from './account-page/account-page';
 import { AccountLayout } from './account-layout/account-layout';
-import { OrganizationPage } from './organization-page/organization-page';
 import { ActivityPage } from './activity-page/activity-page';
 import { BillingLayout } from './billing-layout/billing-layout';
 import { BillingOverview } from './billing-overview/billing-overview';
@@ -62,7 +61,7 @@ export const routes: Routes = [
           { path: 'api-keys', loadComponent: () => import('./account-api-keys/account-api-keys').then((m) => m.AccountApiKeys), title: 'API Keys · My Account · Amelu' },
         ],
       },
-      { path: 'organization', component: OrganizationPage, title: 'My Organization · Amelu' },
+      { path: 'organization', loadComponent: () => import('./organization-page/organization-page').then((m) => m.OrganizationPage), title: 'My Organization · Amelu' },
       { path: 'organization/activity', component: ActivityPage, title: 'Activity Log · Amelu' },
       {
         path: 'organization/webmail',

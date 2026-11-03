@@ -14,7 +14,7 @@ import { MailboxHeading } from '../shared/heading';
   template: `
     <amelu-mailbox-heading title="Recent traffic logs">The 20 most recent messages this mailbox sent and received.</amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         @if (logs() === null) {
           <amelu-empty-state [class]="ui.card" title="The traffic logs couldn't be loaded" [error]="true" />

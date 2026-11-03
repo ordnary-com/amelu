@@ -117,6 +117,30 @@ interface Setting {
           </a>
         </section>
         <section [class]="ui.card + ' p-4'">
+          <h2 class="text-[14px] font-bold">Calendar and contacts apps</h2>
+          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              iPhone, iPad and Mac: the profile above sets them up.
+            </li>
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              Android: add the account in DAVx⁵ with the calendar address.
+            </li>
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              Thunderbird: add a network calendar and a CardDAV address book with the addresses on the left.
+            </li>
+            <li class="flex gap-2.5">
+              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+              Outlook doesn't support CalDAV or CardDAV by itself.
+            </li>
+          </ul>
+          <a [routerLink]="ctx.base() + '/services'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
+            Turn it on or off for this mailbox
+          </a>
+        </section>
+        <section [class]="ui.card + ' p-4'">
           <h2 class="text-[14px] font-bold">Can't connect?</h2>
           <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
             <li class="flex gap-2.5">
@@ -173,6 +197,14 @@ export class MailboxUsage {
     return [
       { title: 'Incoming mail', rows: [...server('IMAP', '993', 'TLS'), ...login] },
       { title: 'Outgoing mail', rows: [...server('SMTP', '465', 'TLS'), ...login] },
+      {
+        title: 'Calendar and contacts',
+        rows: [
+          { label: 'Calendar', value: `https://${MAIL_SERVER}/dav/cal/`, copy: true },
+          { label: 'Contacts', value: `https://${MAIL_SERVER}/dav/card/`, copy: true },
+          ...login,
+        ],
+      },
       { title: 'ManageSieve', rows: server('ManageSieve', '4190', 'StartTLS') },
     ];
   });

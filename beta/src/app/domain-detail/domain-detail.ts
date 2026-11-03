@@ -12,6 +12,7 @@ import { Icon } from '../icon';
 import { DOMAIN_STATUS, MAILBOX_STATUS, badgeClass } from '../status';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { countedMailboxes } from '../standard-addresses';
 
 type Kind = 'all' | 'mailboxes' | 'aliases';
 
@@ -102,9 +103,10 @@ export class DomainDetail {
     return [
       {
         label: 'Mailboxes',
-        value: count(mailboxes),
+        // Against the plan limit, so without admin@, postmaster@ and abuse@, which don't count toward it.
+        value: mailboxes ? countedMailboxes(mailboxes) : mailboxes,
         of: mailboxes && limit ? limit : null,
-        full: !!mailboxes && !!limit && mailboxes.length >= limit,
+        full: !!mailboxes && !!limit && countedMailboxes(mailboxes) >= limit,
         link: 'mailboxes',
       },
       { label: 'Address aliases', value: count(this.aliases()), of: null, full: false, link: 'aliases' },

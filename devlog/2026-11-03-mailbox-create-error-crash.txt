@@ -1,0 +1,15 @@
+Mailbox create errors no longer crash the API
+2026-11-03
+
+writeHTTPError in backend/internal/handlers/mailboxes.go called itself
+whenever an error had no upstream cause, so it recursed until Go hit
+"fatal error: stack overflow". That is not a recoverable panic: it took
+down the whole API process, not just the request. Any helpdesk-or-above
+user could trigger it with POST /api/domains/{domainId}/mailboxes and an
+empty localPart, and it also fired on "mailbox limit reached for your
+plan" and "already exists". Reported through responsible disclosure.
+
+It now writes the status and message the httpError carries (400, 403,
+409, ...), keeps the 502 path for upstream errors, and answers 500 for
+anything else. The unused errStatus helper is gone. Covered by
+write_http_error_test.go. Introduced in b8016109 (2026-10-13).

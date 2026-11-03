@@ -19,7 +19,7 @@ import { MailboxHeading } from '../shared/heading';
       address on this same domain, use aliases or delegation instead.
     </amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         <amelu-alert kind="warning" title="Important">
           If an incoming message is considered spam by our filter, it will not be forwarded further. A copy is placed in

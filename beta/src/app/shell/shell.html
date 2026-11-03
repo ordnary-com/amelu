@@ -3,8 +3,19 @@
 <div class="h-1 flex-none bg-badge"></div>
 
 <!-- Top bar: the logo's 14px left padding lines it up with the menu text below. -->
-<header class="flex h-16 flex-none items-stretch justify-between pr-5 pl-3.5 text-chrome-ink">
-  <a routerLink="/" class="flex items-center">
+<header class="flex h-16 flex-none items-stretch justify-between gap-3 pr-5 pl-3.5 text-chrome-ink max-lg:pr-3">
+  <!-- Below lg the menus become a full-screen drawer behind this button. -->
+  <button
+    type="button"
+    class="-ml-1.5 flex w-10 flex-none cursor-pointer items-center justify-center lg:hidden"
+    [attr.aria-expanded]="navOpen()"
+    aria-controls="main-nav"
+    [attr.aria-label]="navOpen() ? 'Close menu' : 'Open menu'"
+    (click)="navOpen.set(!navOpen())"
+  >
+    <ng-icon [name]="navOpen() ? 'lucideX' : 'lucideMenu'" size="22px" strokeWidth="2.25" />
+  </button>
+  <a routerLink="/" class="flex items-center max-lg:mr-auto">
     <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
     <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
   </a>
@@ -15,10 +26,12 @@
   <!-- Same menus as the current dashboard (frontend/src/components/Layout.tsx): the main
        one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
   <nav
-    class="flex min-h-0 flex-none pr-4 text-[14px]"
+    id="main-nav"
+    class="flex min-h-0 flex-none pr-4 text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-[68px] max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
+    [class.max-lg:hidden]="!navOpen()"
     aria-label="Main"
   >
-    <ul [class]="column + ' w-[210px]'">
+    <ul [class]="column + ' w-[210px] max-lg:w-full'">
       <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Dashboard</span></a>
       </li>
@@ -59,7 +72,7 @@
     </ul>
 
     @for (menu of columns(); track menu.key) {
-      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 pl-1'" [attr.aria-label]="menu.label">
+      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 pl-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:pl-0'" [attr.aria-label]="menu.label">
         <li class="mx-2 truncate px-2 pt-2 pb-1.5 text-[11px] tracking-wide text-chrome-ink/45 uppercase" aria-hidden="true">{{ columnTitle(menu) }}</li>
         @for (entry of menu.items; track entry.link) {
           @if (entry.divider) {
@@ -90,7 +103,7 @@
   </nav>
 
   <!-- The rounded corner sits against the blue where top bar and sidebar meet. -->
-  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-page in-[.theme-white]:border-t in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-t in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
+  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-page max-lg:rounded-t-[20px] max-mobile:px-4! in-[.theme-white]:border-t in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-t in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
     <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->
     <div class="flex min-h-full flex-col">
       <div class="flex-1">

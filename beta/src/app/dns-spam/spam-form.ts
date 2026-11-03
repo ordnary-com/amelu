@@ -9,7 +9,7 @@ export function spamCrumbs(ctx: ReturnType<typeof injectDomain>, page?: string) 
   return computed<Crumb[]>(() => {
     const base = '/domains/' + ctx.id();
     const crumbs: Crumb[] = [
-      { label: 'Email Domains', link: '/domains' },
+      { label: 'Domains', link: '/domains' },
       { label: ctx.domain()?.name ?? '', link: base },
       { label: 'Spam filtering', link: page ? base + '/spam' : undefined },
     ];

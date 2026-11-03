@@ -35,7 +35,7 @@ export const routes: Routes = [
       {
         path: 'domains',
         loadComponent: () => import('./domains-page/domains-page').then((m) => m.DomainsPage),
-        title: 'Email Domains · Amelu',
+        title: 'Domains · Amelu',
       },
       { path: 'domains/new', component: NewDomain, title: 'New domain · Amelu' },
       {

@@ -2,11 +2,11 @@
   <div class="mx-auto max-w-md py-16 text-center">
     <h1 class="text-[22px] font-bold tracking-[-0.4px]">Domain not found</h1>
     <p class="mt-2 text-[13px] text-muted">It may have been deleted, or it belongs to another organization.</p>
-    <a routerLink="/domains" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Email Domains</a>
+    <a routerLink="/domains" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Domains</a>
   </div>
 } @else {
   <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
-    <a routerLink="/domains" class="hover:text-ink hover:underline">Email Domains</a>
+    <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
     <amelu-icon name="chevronRight" [size]="12" />
     <span class="truncate text-ink">{{ domain()?.name }}</span>
   </nav>

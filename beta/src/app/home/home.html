@@ -1,10 +1,10 @@
 <section class="relative overflow-hidden rounded-lg bg-hero bg-[linear-gradient(110deg,var(--hero)_35%,color-mix(in_srgb,var(--hero),white_5%))] px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
   <!-- The lighter slanted panel on the right. Both tones run a little lighter
        towards one corner, so neither is a flat colour. -->
-  <div class="absolute inset-y-0 right-0 w-[30%] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--hero-light),white_6%),var(--hero-light)_70%)] [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
+  <div class="absolute inset-y-0 right-0 w-[30%] max-mobile:hidden bg-[linear-gradient(160deg,color-mix(in_srgb,var(--hero-light),white_6%),var(--hero-light)_70%)] [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
 
-  <!-- Beta notice left, links right, in one row so they never overlap at any width. -->
-  <div class="relative z-[1] flex items-start justify-between gap-6 max-mobile:gap-4">
+  <!-- Beta notice left, links right; on phones the links go above it so the notice keeps the full width. -->
+  <div class="relative z-[1] flex items-start justify-between gap-6 max-mobile:flex-col-reverse max-mobile:gap-3">
     <div class="min-w-0 max-w-[620px] text-[13px] text-hero-ink" role="note">
       <p class="flex items-start gap-2 font-semibold">
         <span class="mt-px inline-flex h-[18px] flex-none items-center rounded-[3px] bg-accent px-1.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase">Beta</span>
@@ -42,7 +42,7 @@
 
 <amelu-quick-actions />
 
-<div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
   <section>
     <div [class]="sectionHeader">
       <h2 [class]="cardTitle">

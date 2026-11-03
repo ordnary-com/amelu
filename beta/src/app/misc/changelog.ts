@@ -25,7 +25,7 @@ import { BUILD_INFO } from '../build-info';
       </amelu-alert>
     }
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <section>
         <h2 [class]="ui.sectionTitle">Changes</h2>
         @if (entries(); as entries) {

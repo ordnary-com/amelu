@@ -20,7 +20,7 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
 
     <amelu-section-tabs label="Spam filtering" [base]="'/domains/' + form.id()" [tabs]="tabs" />
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <form class="min-w-0 space-y-4" (submit)="form.submit($event)">
         @if (form.error(); as message) {
           <amelu-alert kind="error" title="The lists weren't saved" [dismissible]="true" (dismissed)="form.error.set(null)">

@@ -14,7 +14,7 @@
   <amelu-empty-state [class]="ui.card" title="Webmail settings couldn't be loaded" [error]="true" />
 } @else {
   @let b = branding()!;
-  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
     <div class="min-w-0 space-y-6">
       @if (!b.allowed) {
         <amelu-alert kind="warning" title="Part of the Go and Pro plans">

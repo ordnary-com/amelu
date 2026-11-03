@@ -16,7 +16,7 @@ const BYTES_PER_GB = 1024 * 1024 * 1024;
   template: `
     <amelu-mailbox-heading title="Mailbox limits">Set absolute resource caps on this mailbox.</amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       @if (loaded() === null) {
         <amelu-empty-state [class]="ui.card" title="The limits couldn't be loaded" [error]="true" />
       } @else {

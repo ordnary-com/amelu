@@ -25,7 +25,7 @@ interface Setting {
       To correctly configure your email client, you will need the correct server parameters. Please find them below.
     </amelu-mailbox-heading>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         <section>
           <h2 [class]="ui.sectionTitle">Set up automatically</h2>

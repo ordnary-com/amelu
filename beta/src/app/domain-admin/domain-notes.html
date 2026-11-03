@@ -5,7 +5,7 @@
   Free-form notes about this domain, visible only to your organization.
 </amelu-page-header>
 
-<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
   <form class="min-w-0 space-y-6" (submit)="save($event)">
     @if (error(); as message) {
       <amelu-alert kind="error" title="The notes weren't saved" [dismissible]="true" (dismissed)="error.set(null)">

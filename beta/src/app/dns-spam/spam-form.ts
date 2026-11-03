@@ -4,18 +4,13 @@ import { errorMessage } from '../api';
 import { Crumb } from '../page-header/page-header';
 import { injectDomain } from '../domain-context';
 
-/** Breadcrumb for a page under Spam filtering; the overview itself passes no page. */
-export function spamCrumbs(ctx: ReturnType<typeof injectDomain>, page?: string) {
-  return computed<Crumb[]>(() => {
-    const base = '/domains/' + ctx.id();
-    const crumbs: Crumb[] = [
-      { label: 'Domains', link: '/domains' },
-      { label: ctx.domain()?.name ?? '', link: base },
-      { label: 'Spam filtering', link: page ? base + '/spam' : undefined },
-    ];
-    if (page) crumbs.push({ label: page });
-    return crumbs;
-  });
+/** Breadcrumb for every Spam filtering page: its pages are tabs, so it ends at the section. */
+export function spamCrumbs(ctx: ReturnType<typeof injectDomain>) {
+  return computed<Crumb[]>(() => [
+    { label: 'Domains', link: '/domains' },
+    { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() },
+    { label: 'Spam filtering' },
+  ]);
 }
 
 /**

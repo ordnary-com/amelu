@@ -10,6 +10,7 @@ import { badgeClass } from '../status';
 import { UI } from '../ui';
 import { DnsSpamApi, SpamOverview as Overview } from './dns-spam-api';
 import { spamCrumbs } from './spam-form';
+import { SPAM_TABS, SectionTabs } from '../section-tabs';
 
 interface Row {
   label: string;
@@ -22,12 +23,14 @@ interface Row {
 /** Replaces frontend/src/pages/SpamOverviewPage.tsx. */
 @Component({
   selector: 'amelu-spam-overview',
-  imports: [EmptyState, Icon, PageHeader, RouterLink],
+  imports: [SectionTabs, EmptyState, Icon, PageHeader, RouterLink],
   template: `
     <amelu-page-header title="Spam filtering" [crumbs]="crumbs()">
       How incoming mail for {{ ctx.domain()?.name ?? 'this domain' }} is filtered, on top of the spam scoring every
       message gets.
     </amelu-page-header>
+
+    <amelu-section-tabs label="Spam filtering" [base]="'/domains/' + ctx.id()" [tabs]="tabs" />
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <section class="min-w-0">
@@ -92,6 +95,7 @@ export class SpamOverview {
   protected readonly ui = UI;
   protected readonly ctx = injectDomain();
   protected readonly crumbs = spamCrumbs(this.ctx);
+  protected readonly tabs = SPAM_TABS;
 
   // undefined while loading, null when the request failed
   protected readonly overview = toSignal(

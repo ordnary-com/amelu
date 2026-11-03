@@ -8,13 +8,14 @@ import { badgeClass } from '../status';
 import { UI } from '../ui';
 import { RECORD_STATUS, injectDnsCheck } from './dns-check';
 import { DnsRecord } from './dns-record';
+import { DNS_TABS, SectionTabs } from '../section-tabs';
 
 type Filter = 'all' | 'todo' | 'matched';
 
 /** Every record the domain needs, with its live status. Replaces frontend/src/pages/DnsRecordsPage.tsx. */
 @Component({
   selector: 'amelu-dns-records',
-  imports: [Alert, DatePipe, DnsRecord, EmptyState, PageHeader, RouterLink],
+  imports: [Alert, DatePipe, DnsRecord, EmptyState, SectionTabs, PageHeader, RouterLink],
   templateUrl: './dns-records.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -22,12 +23,12 @@ type Filter = 'all' | 'todo' | 'matched';
 export class DnsRecords {
   protected readonly ui = UI;
   protected readonly dns = injectDnsCheck();
+  protected readonly tabs = DNS_TABS;
 
   protected readonly crumbs = computed(() => [
     { label: 'Domains', link: '/domains' },
     { label: this.dns.domain()?.name ?? '', link: '/domains/' + this.dns.id() },
-    { label: 'DNS', link: '/domains/' + this.dns.id() + '/dns' },
-    { label: 'Records' },
+    { label: 'DNS' },
   ]);
 
   protected readonly filters: { value: Filter; label: string }[] = [

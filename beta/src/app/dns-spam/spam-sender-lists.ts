@@ -6,16 +6,19 @@ import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { DnsSpamApi, SpamSenderLists as Lists, listEntries } from './dns-spam-api';
 import { injectSpamForm, spamCrumbs } from './spam-form';
+import { SPAM_TABS, SectionTabs } from '../section-tabs';
 
 /** Replaces frontend/src/pages/SpamSenderListsPage.tsx. */
 @Component({
   selector: 'amelu-spam-sender-lists',
-  imports: [Alert, EmptyState, PageHeader, RouterLink],
+  imports: [SectionTabs, Alert, EmptyState, PageHeader, RouterLink],
   template: `
-    <amelu-page-header title="Sender lists" [crumbs]="crumbs()">
+    <amelu-page-header title="Spam filtering" [crumbs]="crumbs()">
       Any sender address that matches an entry in the denylist is silently dropped. Messages matching listed senders
       will not land in the Junk folder of the recipients.
     </amelu-page-header>
+
+    <amelu-section-tabs label="Spam filtering" [base]="'/domains/' + form.id()" [tabs]="tabs" />
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <form class="min-w-0 space-y-4" (submit)="form.submit($event)">
@@ -103,7 +106,8 @@ export class SpamSenderLists {
     save: (id, value) => this.api.updateSpamSenderLists(id, value),
     saveError: 'Could not save sender lists',
   });
-  protected readonly crumbs = spamCrumbs(this.form, 'Sender lists');
+  protected readonly crumbs = spamCrumbs(this.form);
+  protected readonly tabs = SPAM_TABS;
 
   protected readonly fields: { key: keyof Lists; title: string; label: string }[] = [
     { key: 'denylist', title: 'Denylist', label: 'Drop mail from these senders' },

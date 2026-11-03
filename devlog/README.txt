@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-03  DNS and Spam filtering use tabs instead of a third sidebar column
+            2026-11-03-section-tabs.txt
+
 2026-11-03  Calendar and contacts for every mailbox
             2026-11-03-calendar-contacts.txt
 

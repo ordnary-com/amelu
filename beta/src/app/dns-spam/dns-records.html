@@ -1,5 +1,6 @@
-<amelu-page-header title="DNS records" [crumbs]="crumbs()">
-  Add these records at your domain's DNS provider. Status reflects a live lookup.
+<amelu-page-header title="DNS configuration" [crumbs]="crumbs()">
+  Add these records where your domain's DNS is hosted, usually your registrar. We look them up live, so you can see
+  when each one is right.
   <button actions type="button" [class]="ui.outline" [disabled]="dns.checking()" (click)="dns.recheck()">
     {{ dns.checking() ? 'Checking...' : 'Check again' }}
   </button>
@@ -8,6 +9,8 @@
     <a actions [href]="url" [class]="ui.primary">Set up automatically</a>
   }
 </amelu-page-header>
+
+<amelu-section-tabs label="DNS" [base]="'/domains/' + dns.id()" [tabs]="tabs" />
 
 <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
   <section class="min-w-0 space-y-4">

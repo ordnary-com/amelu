@@ -237,28 +237,7 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
   );
   columns.push({ key: 'domain', label: 'Domain', items: domain });
 
-  if (section === 'spam') {
-    columns.push({
-      key: 'spam',
-      label: 'Spam filtering',
-      items: [
-        { label: 'Overview', link: `${d}/spam` },
-        { label: 'Aggressiveness', link: `${d}/spam/subject` },
-        { label: 'Sender Denylist', link: `${d}/spam/sender-lists` },
-        { label: 'Recipient Denylist', link: `${d}/spam/recipient-denylist` },
-      ],
-    });
-  }
-  if (section === 'dns') {
-    columns.push({
-      key: 'dns',
-      label: 'DNS',
-      items: [
-        { label: 'Overview', link: `${d}/dns` },
-        { label: 'DNS Config', link: `${d}/dns/records` },
-      ],
-    });
-  }
+  // DNS and Spam filtering have no column of their own: their pages are tabs on the page (section-tabs.ts).
   if (mailboxId) {
     const m = `${d}/mailboxes/${mailboxId}`;
     columns.push({

@@ -7,6 +7,7 @@ import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { injectDnsCheck } from './dns-check';
 import { DnsRecord } from './dns-record';
+import { DNS_TABS, SectionTabs } from '../section-tabs';
 
 /**
  * Where a new domain lands: what still has to be set at the DNS provider,
@@ -14,7 +15,7 @@ import { DnsRecord } from './dns-record';
  */
 @Component({
   selector: 'amelu-dns-overview',
-  imports: [Alert, DatePipe, DnsRecord, EmptyState, PageHeader, RouterLink],
+  imports: [Alert, DatePipe, DnsRecord, EmptyState, SectionTabs, PageHeader, RouterLink],
   templateUrl: './dns-overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -22,6 +23,7 @@ import { DnsRecord } from './dns-record';
 export class DnsOverview {
   protected readonly ui = UI;
   protected readonly dns = injectDnsCheck();
+  protected readonly tabs = DNS_TABS;
 
   protected readonly crumbs = computed(() => [
     { label: 'Domains', link: '/domains' },

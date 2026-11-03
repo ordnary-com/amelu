@@ -6,16 +6,19 @@ import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { DnsSpamApi, SpamSubjectSettings } from './dns-spam-api';
 import { injectSpamForm, spamCrumbs } from './spam-form';
+import { SPAM_TABS, SectionTabs } from '../section-tabs';
 
 /** Replaces frontend/src/pages/SpamAggressivenessPage.tsx. */
 @Component({
   selector: 'amelu-spam-subject',
-  imports: [Alert, EmptyState, PageHeader, RouterLink],
+  imports: [SectionTabs, Alert, EmptyState, PageHeader, RouterLink],
   template: `
-    <amelu-page-header title="Aggressiveness" [crumbs]="crumbs()">
+    <amelu-page-header title="Spam filtering" [crumbs]="crumbs()">
       Upon receiving, each message gets scored across many different tests and parameters. Once a final score is
       concluded, an action is taken based on it.
     </amelu-page-header>
+
+    <amelu-section-tabs label="Spam filtering" [base]="'/domains/' + form.id()" [tabs]="tabs" />
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <form class="min-w-0 space-y-4" (submit)="form.submit($event)">
@@ -104,7 +107,8 @@ export class SpamSubject {
     save: (id, value) => this.api.updateSpamSubjectSettings(id, value),
     saveError: 'Could not save settings',
   });
-  protected readonly crumbs = spamCrumbs(this.form, 'Aggressiveness');
+  protected readonly crumbs = spamCrumbs(this.form);
+  protected readonly tabs = SPAM_TABS;
 
   protected readonly options: { key: keyof SpamSubjectSettings; label: string; hint: string }[] = [
     {

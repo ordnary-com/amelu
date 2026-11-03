@@ -6,16 +6,19 @@ import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { DnsSpamApi, SpamRecipientDenylist as Denylist, listEntries } from './dns-spam-api';
 import { injectSpamForm, spamCrumbs } from './spam-form';
+import { SPAM_TABS, SectionTabs } from '../section-tabs';
 
 /** Replaces frontend/src/pages/SpamRecipientDenylistPage.tsx. */
 @Component({
   selector: 'amelu-spam-recipient-denylist',
-  imports: [Alert, EmptyState, PageHeader, RouterLink],
+  imports: [SectionTabs, Alert, EmptyState, PageHeader, RouterLink],
   template: `
-    <amelu-page-header title="Recipient denylist" [crumbs]="crumbs()">
+    <amelu-page-header title="Spam filtering" [crumbs]="crumbs()">
       Any message with a recipient address that matches an entry in this denylist is silently dropped. Use it to block
       messages sent to specific addresses on your domain.
     </amelu-page-header>
+
+    <amelu-section-tabs label="Spam filtering" [base]="'/domains/' + form.id()" [tabs]="tabs" />
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <form class="min-w-0 space-y-4" (submit)="form.submit($event)">
@@ -100,7 +103,8 @@ export class SpamRecipientDenylist {
     save: (id, value) => this.api.updateSpamRecipientDenylist(id, value),
     saveError: 'Could not save recipient denylist',
   });
-  protected readonly crumbs = spamCrumbs(this.form, 'Recipient denylist');
+  protected readonly crumbs = spamCrumbs(this.form);
+  protected readonly tabs = SPAM_TABS;
 
   private readonly entries = computed(() => listEntries(this.form.draft()?.denylist ?? ''));
   protected readonly count = computed(() => this.entries().length);

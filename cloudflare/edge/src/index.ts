@@ -3,7 +3,7 @@ import { getContainer } from "@cloudflare/containers";
 // A platform rollout restarts a running container with the env of its last
 // start, so new secrets and sometimes a new image never reach it. Bump this
 // name to start the origin fresh; the old instance sleeps once idle.
-const ORIGIN_INSTANCE = "origin-4";
+const ORIGIN_INSTANCE = "origin-5";
 import type { Env } from "./types";
 import { isPreflight, preflightResponse } from "./cors";
 import { buildClientResponse, buildOriginRequest, requestId, stableErrorResponse } from "./proxy";

@@ -3,10 +3,10 @@
 <div class="h-1 flex-none bg-badge"></div>
 
 <!-- Top bar: the logo's 14px left padding lines it up with the menu text below. -->
-<header class="flex h-16 flex-none items-stretch justify-between pr-5 pl-3.5 text-white">
+<header class="flex h-16 flex-none items-stretch justify-between pr-5 pl-3.5 text-chrome-ink">
   <a routerLink="/" class="flex items-center">
-    <!-- amelu-logo.png is flat blue on transparent: brightness-0 invert turns it white. -->
-    <img src="/amelu-logo.png" alt="Amelu" class="h-[22px] brightness-0 invert" />
+    <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
+    <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
   </a>
   <amelu-account-menu />
 </header>
@@ -22,42 +22,49 @@
       <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Dashboard</span></a>
       </li>
-      <li [class]="item" routerLinkActive="active">
-        <a routerLink="/domains" [class]="link"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Email Domains</span></a>
+      <li [class]="category" routerLinkActive="active">
+        <a routerLink="/domains" [class]="link" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span>@if (hiddenDomains() > 0) {<!-- Only the first few show below: the total says there are more. --><span class="rounded bg-chrome-ink/10 px-1 text-[10px] leading-[14px] text-chrome-ink/70" [attr.aria-label]="domains()!.length + ' domains'">{{ domains()!.length }}</span>}<ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></a>
       </li>
+      @if (open('domains')) {
       @for (domain of sidebarDomains(); track domain.id) {
         <li [class]="subitem" routerLinkActive="active">
-          <a [routerLink]="'/domains/' + domain.id" [class]="link"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">{{ domain.name }}</span></a>
-        </li>
-      }
-      @if (hiddenDomains() > 0) {
-        <li [class]="subitem">
-          <a routerLink="/domains" [class]="secondaryLink"><ng-icon name="lucideChevronRight" size="15px" strokeWidth="2.5" /><span class="truncate">View all</span></a>
+          <a [routerLink]="'/domains/' + domain.id" [class]="link" [title]="domain.name">
+            <!-- Status dot, centred where the other items have their icon -->
+            <span class="flex w-[15px] flex-none justify-center" aria-hidden="true"><span class="size-[7px] rounded-full" [class]="dot(domain)"></span></span>
+            <span class="truncate">{{ domain.name }}</span>
+          </a>
         </li>
       }
       <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="15px" strokeWidth="2.5" /><span class="truncate">New Domain</span></a>
       </li>
+      }
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/account" [class]="link"><ng-icon name="lucideUser" size="15px" strokeWidth="2.5" /><span class="truncate">My Account</span></a>
       </li>
-      <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/organization" [class]="link"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span></a>
+      <li [class]="category" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/organization" [class]="link" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></a>
       </li>
+      @if (open('organization')) {
       <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
       </li>
       <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/organization/webmail" [class]="link"><ng-icon name="lucideMail" size="15px" strokeWidth="2.5" /><span class="truncate">Webmail</span></a>
       </li>
+      }
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
       </li>
     </ul>
 
     @for (menu of columns(); track menu.key) {
-      <ul [class]="column + ' w-48 border-l border-white/10 pl-1'" [attr.aria-label]="menu.label">
+      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 pl-1'" [attr.aria-label]="menu.label">
+        <li class="mx-2 truncate px-2 pt-2 pb-1.5 text-[11px] tracking-wide text-chrome-ink/45 uppercase" aria-hidden="true">{{ columnTitle(menu) }}</li>
         @for (entry of menu.items; track entry.link) {
+          @if (entry.divider) {
+            <li class="mx-4 my-1.5 h-px bg-chrome-ink/10" aria-hidden="true"></li>
+          }
           <li
             [class]="entry.sub ? subitem : item"
             routerLinkActive="active"
@@ -70,6 +77,9 @@
                 [routerLink]="entry.link"
                 [class]="entry.kind === 'create' ? createLink : entry.kind === 'danger' ? dangerLink : entry.secondary ? secondaryLink : link"
               >
+                @if (entry.kind === 'create') {
+                  <ng-icon name="lucidePlus" size="14px" strokeWidth="2.5" />
+                }
                 <span class="truncate">{{ entry.label }}</span>
               </a>
             }
@@ -80,7 +90,7 @@
   </nav>
 
   <!-- The rounded corner sits against the blue where top bar and sidebar meet. -->
-  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-surface px-5 py-6 lg:px-8 lg:py-8">
+  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-page in-[.theme-white]:border-t in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-t in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
     <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->
     <div class="flex min-h-full flex-col">
       <div class="flex-1">

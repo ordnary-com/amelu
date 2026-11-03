@@ -97,5 +97,16 @@ func (a *App) GetDomainBindFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/dns")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.zone"`, domain.Name))
 	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
-	w.Write([]byte(header + zoneFile))
+	if !strings.HasSuffix(zoneFile, "\n") {
+		zoneFile += "\n"
+	}
+	w.Write([]byte(header + zoneFile + autodiscoverRecord(domain.Name)))
+}
+
+// autodiscoverRecord lets Outlook find a mailbox's settings by itself: it
+// points at the autoconfig Worker (cloudflare/autoconfig), which has its own
+// certificate, unlike an autodiscover CNAME to marduk. Optional, so it's in
+// the zone file but not among the records the DNS check requires.
+func autodiscoverRecord(domain string) string {
+	return fmt.Sprintf("; Optional: lets Outlook find the mail settings by itself.\n_autodiscover._tcp.%s. IN SRV 0 0 443 autodiscover.amelu.org.\n", domain)
 }

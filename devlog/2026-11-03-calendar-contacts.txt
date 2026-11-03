@@ -1,0 +1,16 @@
+Calendar and contacts for every mailbox
+2026-11-03
+
+Stalwart's User role already allows CalDAV and CardDAV (davCal* and davCard*
+permissions), so every mailbox had a calendar and an address book nobody knew
+about. Checked with a throwaway amelu.org mailbox (deleted afterwards):
+/.well-known/caldav and carddav redirect to /dav/cal and /dav/card, the
+principal is /dav/pal/<address>/, and PUT of an event and a vCard returned
+201 and read back. Now: "Calendar and contacts" in Enabled services and the
+domain's default services (mailboxes.may_dav, domains.default_may_dav,
+migration 0036), which disables the 25 DAV permissions in
+stalwart.DAVPermissions. mayDav is optional in the request so the 1.x
+dashboard's services form can't switch it off. The Usage instructions page
+lists the CalDAV and CardDAV addresses and per-app notes; the Apple profile
+and the Thunderbird config from amelu-autoconfig include both. Webmail
+(Roundcube) has no calendar.

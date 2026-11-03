@@ -72,6 +72,41 @@ const (
 	PermissionSieveAuthenticate = "sieveAuthenticate"
 )
 
+// DAVPermissions are the CalDAV and CardDAV permissions behind the "Calendar
+// and contacts" toggle: Stalwart has no single switch for them, so turning it
+// off disables each (names as in Stalwart's User role).
+var DAVPermissions = []string{
+	"davCalAcl", "davCalCopy", "davCalDelete", "davCalFreeBusyQuery", "davCalGet", "davCalLock", "davCalMkCol",
+	"davCalMove", "davCalMultiGet", "davCalPropFind", "davCalPropPatch", "davCalPut", "davCalQuery",
+	"davCardAcl", "davCardCopy", "davCardDelete", "davCardGet", "davCardLock", "davCardMkCol",
+	"davCardMove", "davCardMultiGet", "davCardPropFind", "davCardPropPatch", "davCardPut", "davCardQuery",
+}
+
+// DisabledServicePermissions lists the permissions to disable for a set of
+// Enabled Services toggles.
+func DisabledServicePermissions(maySend, mayReceive, mayIMAP, mayPOP3, maySieve, mayDAV bool) []string {
+	var disabled []string
+	if !maySend {
+		disabled = append(disabled, PermissionEmailSend)
+	}
+	if !mayReceive {
+		disabled = append(disabled, PermissionEmailReceive)
+	}
+	if !mayIMAP {
+		disabled = append(disabled, PermissionIMAPAuthenticate)
+	}
+	if !mayPOP3 {
+		disabled = append(disabled, PermissionPOP3Authenticate)
+	}
+	if !maySieve {
+		disabled = append(disabled, PermissionSieveAuthenticate)
+	}
+	if !mayDAV {
+		disabled = append(disabled, DAVPermissions...)
+	}
+	return disabled
+}
+
 // SetMailboxDisabledPermissions sets which of the mailboxPermission
 // constants are disabled for localPart@domainName - everything not listed
 // is left at its inherited (enabled) default. Confirmed live: the

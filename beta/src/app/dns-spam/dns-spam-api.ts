@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { apiUrl } from '../config';
 
 export interface DomainConnectStatus {
   supported: boolean;
@@ -38,7 +39,7 @@ export class DnsSpamApi {
   }
 
   bindFileUrl(domainId: string): string {
-    return `/api/domains/${domainId}/bind`;
+    return apiUrl(`/api/domains/${domainId}/bind`);
   }
 
   spamOverview(domainId: string) {

@@ -3,8 +3,15 @@ package stalwart
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 )
+
+// ErrAddressInUse is returned (wrapped) when the alias address already
+// belongs to an account on the domain: Stalwart's primaryKeyViolation, or
+// the same alias already on the destination mailbox, which Stalwart would
+// otherwise store a second time.
+var ErrAddressInUse = errors.New("address already in use")
 
 // AccountAlias is one entry from an Account's aliases field. Confirmed
 // live: this is an objectList keyed by string index (like credentials),
@@ -74,6 +81,11 @@ func (c *Client) AddAccountAlias(ctx context.Context, destinationLocalPart, doma
 	if err != nil {
 		return err
 	}
+	for _, a := range aliases {
+		if a.Name == aliasLocalPart && a.DomainID == domainID {
+			return fmt.Errorf("alias %s on %s@%s: %w", aliasLocalPart, destinationLocalPart, domainName, ErrAddressInUse)
+		}
+	}
 	nextIndex := len(aliases)
 
 	raw, err := c.call(ctx, "x:Account/set", map[string]any{
@@ -98,6 +110,12 @@ func (c *Client) AddAccountAlias(ctx context.Context, destinationLocalPart, doma
 		return fmt.Errorf("decode add alias response: %w", err)
 	}
 	if reason, ok := result.NotUpdated[accountID]; ok {
+		var violation struct {
+			Type string `json:"type"`
+		}
+		if json.Unmarshal(reason, &violation) == nil && violation.Type == "primaryKeyViolation" {
+			return fmt.Errorf("alias %s@%s: %w", aliasLocalPart, domainName, ErrAddressInUse)
+		}
 		return fmt.Errorf("stalwart refused to add alias %s to %s@%s: %s", aliasLocalPart, destinationLocalPart, domainName, reason)
 	}
 	return nil

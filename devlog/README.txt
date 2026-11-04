@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-05  A taken alias address gets a readable error, and CSV import no longer adds duplicates
+            2026-11-05-alias-in-use.txt
+
 2026-11-04  Source IPs with a reputation block leave the OVH lane by themselves
             2026-11-04-ip-reputation-watch.txt
 

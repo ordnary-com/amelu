@@ -35,9 +35,11 @@ type throttleWire struct {
 }
 
 // notLocal is every rule's first condition: Stalwart runs outbound throttles
-// on the local queue too, so without it a full limit also held mail coming in
-// for our own mailboxes until the next hour (devlog 2026-11-04).
-var notLocal = map[string]any{"if": "queue_name == 'local'", "then": "false"}
+// on local delivery too, so without it a full limit also held mail coming in
+// for our own mailboxes until the next hour (devlog 2026-11-04). It tests the
+// recipient's domain: queue_name, tried first, is accepted but never 'local'
+// when throttles are evaluated, so it exempted nothing.
+var notLocal = map[string]any{"if": "is_local_domain(rcpt_domain)", "then": "false"}
 
 func (t OutboundThrottle) match() map[string]any {
 	then, otherwise := "true", "false"

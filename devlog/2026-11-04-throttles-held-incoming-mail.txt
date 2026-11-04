@@ -12,3 +12,10 @@ bucket of 150 a day. Reported by mihal.pl: no mail for an hour, then all at
 once. All five rules now start with "queue_name == 'local'" -> false, set by
 hand on marduk at 10:40 UTC (backup /root/throttles-backup-2026-11-04.json)
 and in OutboundThrottle.match() so the API's sync writes the same.
+
+Correction, 18:01 UTC: "queue_name == 'local'" is accepted but never true
+when throttles are evaluated, so it exempted nothing and incoming mail was
+held again in the evening (mihal.pl, PayPal and pCloud mail, 17:47-18:00).
+The rules now start with is_local_domain(rcpt_domain) instead, checked
+while the noez cap was full: local deliveries went straight through. The
+eight held local messages were rescheduled with x:QueuedMessage/set.

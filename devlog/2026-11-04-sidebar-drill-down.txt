@@ -1,0 +1,10 @@
+Mailbox menu replaces the domain menu instead of a third column
+2026-11-04
+
+Inside a mailbox the sidebar showed three columns (main menu, domain menu,
+mailbox menu), which left the page narrow. Only one menu column now shows
+next to the main one: the domain's, or inside a mailbox the mailbox's, with
+a button at the top back up to the domain's ("< fietsenwinkel.example").
+From there a "Mailbox menu >" button goes back down. Navigating to any page
+resets to the menu of that page. shell.ts keeps the columns from
+menuColumns() and only picks which one to show (level, shownIndex).

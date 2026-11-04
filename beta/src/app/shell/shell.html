@@ -73,9 +73,25 @@
       </li>
     </ul>
 
-    @for (menu of columns(); track menu.key) {
+    <!-- One menu column next to the main one: the domain's, or, inside a mailbox,
+         the mailbox's with a way back up to the domain's (drill-down, see shell.ts). -->
+    @if (shown(); as menu) {
       <ul [class]="column + ' w-48 border-l border-chrome-ink/10 pl-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:pl-0'" [attr.aria-label]="menu.label">
+        @if (parentMenu(); as parent) {
+          <li class="mx-2">
+            <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() - 1)">
+              <ng-icon name="lucideChevronLeft" size="15px" strokeWidth="2.5" /><span class="truncate">{{ columnTitle(parent) }}</span>
+            </button>
+          </li>
+        }
         <li class="mx-2 truncate px-2 pt-2 pb-1.5 text-[11px] tracking-wide text-chrome-ink/45 uppercase" aria-hidden="true">{{ columnTitle(menu) }}</li>
+        @if (childMenu(); as child) {
+          <li class="mx-2 mb-1">
+            <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() + 1)">
+              <span class="truncate">{{ columnTitle(child) }} menu</span><ng-icon name="lucideChevronRight" size="15px" strokeWidth="2.5" class="ml-auto" />
+            </button>
+          </li>
+        }
         @for (entry of menu.items; track entry.link) {
           @if (entry.divider) {
             <li class="mx-4 my-1.5 h-px bg-chrome-ink/10" aria-hidden="true"></li>

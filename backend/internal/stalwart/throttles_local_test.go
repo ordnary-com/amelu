@@ -12,7 +12,7 @@ func TestThrottleRulesSkipLocalQueue(t *testing.T) {
 	} {
 		conds := rule.match()["match"].(map[string]any)
 		first, ok := conds["0"].(map[string]any)
-		if !ok || first["if"] != "queue_name == 'local'" || first["then"] != "false" {
+		if !ok || first["if"] != "is_local_domain(rcpt_domain)" || first["then"] != "false" {
 			t.Errorf("%s: first condition is %v, want the local queue excluded", rule.Description, conds["0"])
 		}
 	}

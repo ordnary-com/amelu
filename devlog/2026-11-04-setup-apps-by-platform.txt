@@ -1,0 +1,12 @@
+Usage instructions list the apps for your device
+2026-11-04
+
+The mailbox Usage instructions page had "Set up automatically" with only
+the Apple profile and the Outlook SRV record. A customer pointed out that
+Thunderbird, Fantastical, BusyCal and eM Client work with our CalDAV and
+CardDAV too. The section is now "Set up your apps": a list of nine apps
+(Apple profile, Fantastical, BusyCal, eM Client, Thunderbird, DAVx5, the
+Android mail app, Outlook, Evolution), each with what it sets up (mail,
+calendar, contacts) and one line on how. The browser's platform (Mac/iOS,
+Windows, Android, Linux, from the user agent) decides which come first;
+"Show all apps" adds the rest. The separate calendar apps card is gone.

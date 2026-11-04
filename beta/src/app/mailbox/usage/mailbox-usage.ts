@@ -9,6 +9,100 @@ import { AUTOCONFIG_ORIGIN, AUTODISCOVER_HOST } from '../../config';
 
 export const MAIL_SERVER = 'marduk.mx.amelu.org';
 
+type Platform = 'apple' | 'windows' | 'android' | 'linux';
+
+const PLATFORM_LABELS: Record<Platform, string> = {
+  apple: 'Mac, iPhone and iPad',
+  windows: 'Windows',
+  android: 'Android',
+  linux: 'Linux',
+};
+
+/** Mail, calendar and contacts apps that work with Amelu, in the order they're shown on a matching platform. */
+interface SetupApp {
+  id: string;
+  name: string;
+  platforms: Platform[];
+  covers: ('Mail' | 'Calendar' | 'Contacts')[];
+  how: string;
+}
+
+const APPS: SetupApp[] = [
+  {
+    id: 'apple',
+    name: 'Apple Mail, Calendar and Contacts',
+    platforms: ['apple'],
+    covers: ['Mail', 'Calendar', 'Contacts'],
+    how: 'Download the profile on the device, then install it in Settings. It sets up all three and asks for the mailbox password once.',
+  },
+  {
+    id: 'fantastical',
+    name: 'Fantastical',
+    platforms: ['apple'],
+    covers: ['Calendar'],
+    how: `Add a CalDAV account with server ${MAIL_SERVER}, the full address as username and the mailbox password.`,
+  },
+  {
+    id: 'busycal',
+    name: 'BusyCal',
+    platforms: ['apple'],
+    covers: ['Calendar'],
+    how: `Add a CalDAV account with server ${MAIL_SERVER}, the full address as username and the mailbox password.`,
+  },
+  {
+    id: 'emclient',
+    name: 'eM Client',
+    platforms: ['windows', 'apple'],
+    covers: ['Mail', 'Calendar', 'Contacts'],
+    how: 'Add the account with the full address. If it asks, choose manual setup and use the mail, calendar and contacts settings below.',
+  },
+  {
+    id: 'thunderbird',
+    name: 'Thunderbird',
+    platforms: ['windows', 'apple', 'linux'],
+    covers: ['Mail', 'Calendar', 'Contacts'],
+    how: 'Add the account with the mail settings below, then a network calendar and a CardDAV address book with the calendar and contacts addresses.',
+  },
+  {
+    id: 'davx5',
+    name: 'DAVx⁵',
+    platforms: ['android'],
+    covers: ['Calendar', 'Contacts'],
+    how: `Add an account with "Login with URL and user name": https://${MAIL_SERVER}, the full address and the mailbox password. Calendar and contacts then show up in the phone's own apps.`,
+  },
+  {
+    id: 'android-mail',
+    name: 'Gmail app or any Android mail app',
+    platforms: ['android'],
+    covers: ['Mail'],
+    how: 'Add another account, choose Other (IMAP) and use the mail settings below.',
+  },
+  {
+    id: 'outlook',
+    name: 'Outlook',
+    platforms: ['windows', 'apple', 'android'],
+    covers: ['Mail'],
+    how: 'Finds the mail settings by itself once the domain has this DNS record (add it once per domain). Outlook has no calendar or contacts sync of its own.',
+  },
+  {
+    id: 'evolution',
+    name: 'Evolution',
+    platforms: ['linux'],
+    covers: ['Mail', 'Calendar', 'Contacts'],
+    how: 'Add the account with the mail settings below, then a CalDAV calendar and a CardDAV address book with the calendar and contacts addresses.',
+  },
+];
+
+/** Best guess from the browser; iPadOS reports itself as a Mac, which is the right answer here too. */
+function detectPlatform(): Platform | null {
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return 'android';
+  if (/iPhone|iPad|iPod|Macintosh|Mac OS X/i.test(ua)) return 'apple';
+  if (/Windows/i.test(ua)) return 'windows';
+  if (/Linux|X11|CrOS/i.test(ua)) return 'linux';
+  return null;
+}
+
 interface Setting {
   label: string;
   value: string;
@@ -28,44 +122,59 @@ interface Setting {
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <div class="space-y-6">
         <section>
-          <h2 [class]="ui.sectionTitle">Set up automatically</h2>
-          <div [class]="ui.card + ' overflow-hidden'">
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2.5 border-b border-line px-4 py-3.5">
-              <div class="min-w-0 flex-1">
-                <p class="text-[14px] font-semibold">iPhone, iPad and Mac</p>
-                <p class="mt-0.5 text-[13px] text-muted">
-                  Download the profile on the device, then install it in Settings. It sets up mail, calendar and contacts, and asks for the mailbox password.
-                </p>
-              </div>
-              @if (profileUrl(); as url) {
-                <a [href]="url" [class]="ui.outline" download>
-                  <amelu-icon name="download" [size]="15" />
-                  Download profile
-                </a>
-              }
-            </div>
-            <div class="px-4 py-3.5">
-              <p class="text-[14px] font-semibold">Outlook</p>
-              <p class="mt-0.5 text-[13px] text-muted">
-                Outlook finds these settings by itself once the domain has this DNS record. Add it once per domain.
-              </p>
-              @if (autodiscover(); as record) {
-                <div class="mt-2.5 flex items-center gap-2 rounded-md bg-bg px-3 py-2">
-                  <code class="min-w-0 flex-1 truncate text-[12px]">{{ record }}</code>
-                  <button
-                    type="button"
-                    class="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted hover:bg-surface hover:text-ink"
-                    aria-label="Copy the DNS record"
-                    (click)="copy(record)"
-                  >
-                    <amelu-icon [name]="copied() === record ? 'check' : 'copy'" [size]="13" />
-                    {{ copied() === record ? 'Copied' : 'Copy' }}
-                  </button>
-                </div>
-              }
-              <p class="mt-2 text-[12px] text-muted">Other apps: enter the settings below by hand.</p>
-            </div>
+          <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 class="text-[14px] font-bold">Set up your apps</h2>
+            @if (platformLabel(); as label) {
+              <span class="text-[12px] text-muted">Showing apps for {{ label }}</span>
+            }
           </div>
+          <div [class]="ui.card + ' overflow-hidden'">
+            @for (app of shownApps(); track app.id) {
+              <div class="border-b border-line px-4 py-3.5 last:border-b-0">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+                  <div class="min-w-0 flex-1">
+                    <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold">
+                      {{ app.name }}
+                      @for (part of app.covers; track part) {
+                        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ part }}</span>
+                      }
+                    </p>
+                    <p class="mt-0.5 text-[13px] text-muted">{{ app.how }}</p>
+                  </div>
+                  @if (app.id === 'apple' && profileUrl(); as url) {
+                    <a [href]="url" [class]="ui.outline" download>
+                      <amelu-icon name="download" [size]="15" />
+                      Download profile
+                    </a>
+                  }
+                </div>
+                @if (app.id === 'outlook' && autodiscover(); as record) {
+                  <div class="mt-2.5 flex items-center gap-2 rounded-md bg-bg px-3 py-2">
+                    <code class="min-w-0 flex-1 truncate text-[12px]">{{ record }}</code>
+                    <button
+                      type="button"
+                      class="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted hover:bg-surface hover:text-ink"
+                      aria-label="Copy the DNS record"
+                      (click)="copy(record)"
+                    >
+                      <amelu-icon [name]="copied() === record ? 'check' : 'copy'" [size]="13" />
+                      {{ copied() === record ? 'Copied' : 'Copy' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+            @if (hiddenApps() > 0) {
+              <button
+                type="button"
+                class="w-full cursor-pointer px-4 py-3 text-left text-[13px] font-medium text-link hover:bg-bg/60"
+                (click)="showAll.set(true)"
+              >
+                Show all apps ({{ hiddenApps() }} more)
+              </button>
+            }
+          </div>
+          <p class="mt-2 text-[12px] text-muted">Any other app: use the settings below.</p>
         </section>
 
         @for (section of sections(); track section.title) {
@@ -117,30 +226,6 @@ interface Setting {
           </a>
         </section>
         <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Calendar and contacts apps</h2>
-          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              iPhone, iPad and Mac: the profile above sets them up.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Android: add the account in DAVx⁵ with the calendar address.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Thunderbird: add a network calendar and a CardDAV address book with the addresses on the left.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Outlook doesn't support CalDAV or CardDAV by itself.
-            </li>
-          </ul>
-          <a [routerLink]="ctx.base() + '/services'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
-            Turn it on or off for this mailbox
-          </a>
-        </section>
-        <section [class]="ui.card + ' p-4'">
           <h2 class="text-[14px] font-bold">Can't connect?</h2>
           <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
             <li class="flex gap-2.5">
@@ -166,6 +251,14 @@ export class MailboxUsage {
   protected readonly ctx = inject(MailboxContext);
   protected readonly ui = UI;
   protected readonly copied = signal<string | null>(null);
+
+  /** The visitor's platform, to put the apps that work on it first. */
+  protected readonly platform = detectPlatform();
+  protected readonly platformLabel = computed(() => (this.platform ? PLATFORM_LABELS[this.platform] : null));
+  protected readonly showAll = signal(false);
+  private readonly appsForPlatform = APPS.filter((app) => !this.platform || app.platforms.includes(this.platform));
+  protected readonly shownApps = computed(() => (this.showAll() ? [...this.appsForPlatform, ...APPS.filter((a) => !this.appsForPlatform.includes(a))] : this.appsForPlatform));
+  protected readonly hiddenApps = computed(() => (this.showAll() ? 0 : APPS.length - this.appsForPlatform.length));
 
   /** An Apple configuration profile for this address, made by the autoconfig Worker. */
   protected readonly profileUrl = computed(() => {

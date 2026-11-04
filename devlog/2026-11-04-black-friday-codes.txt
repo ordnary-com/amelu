@@ -1,0 +1,14 @@
+Black Friday promotion codes, and codes that switch on by themselves
+2026-11-04
+
+amelu-landing runs a November campaign (banner and /black-friday) with a
+different deal per phase. Eight Stripe coupons and promotion codes exist in
+live mode, metadata campaign=black-friday-2026, limited to the Amelu Go and
+Pro products and to first-time transactions, each expiring at the end of its
+phase: BLACKWEEK30/WEEK15 (to 27 Nov), BLACKFRIDAY50/FRIDAY30 (27 Nov),
+WEEKEND40/WEEKEND20 (28-29 Nov), CYBER35/CYBER3FREE (30 Nov). CYBER3FREE is
+EUR 14 off a month for 3 months, not 100%, since coupons can't be limited to
+monthly prices and 100% would have made a yearly first invoice free.
+Checkout sessions now set allow_promotion_codes. Stripe codes have no start
+date, so later ones are inactive with metadata activate_at; the API checks
+every 5 minutes (ActivateDuePromotionCodes) and switches them on.

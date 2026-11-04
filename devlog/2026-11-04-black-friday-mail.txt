@@ -1,0 +1,13 @@
+Black Friday mail to Amelu customers
+2026-11-04
+
+docs/emails/black-friday.html and .txt announce the November deals (codes
+per phase, link to amelu.org/black-friday). Sent through Resend from
+"Amelu <noreply@ordnary.com>", reply-to support@ordnary.com, to 754 people:
+customers with an Ordnary account (customers.ordnary_subject), minus 13
+who turned off MARKETING in identity's notification_preferences, 10
+inactive or deleted identity users and the owners of the six domains the
+sender guard paused. The 590 older accounts without an Ordnary login were
+left out, as they have no unsubscribe preference. Every message carries an
+identity unsubscribe token (sha256 in unsubscribe_tokens, 90 days, as
+campaignService does) in the footer and in List-Unsubscribe with one-click.

@@ -85,7 +85,7 @@
 
 <script>
 // Sample values for the placeholders in the templates.
-const SAMPLE = { DOMAIN: 'example.com' };
+const SAMPLE = { DOMAIN: 'example.com', UNSUBSCRIBE_URL: 'https://accounts.ordnary.com/unsubscribe/sample' };
 
 const inline = (paragraphs) => '<!doctype html><meta charset="utf-8"><body style="font:15px/1.5 Arial,sans-serif;margin:24px;color:#14171f">' + paragraphs + '</body>';
 
@@ -102,6 +102,7 @@ const EMAILS = [
     text: "You've been invited to set up the password for the mailbox jan@example.com.\n\nSet your password here: https://app.amelu.org/reset-password/sample\n\nThis link expires in 24 hours and can only be used once.\n\nIf you weren't expecting this, you can safely ignore this email." },
   { group: 'Incidents', name: 'Service incident', file: 'service-incident', source: 'Sent by hand to all customers during an outage' },
   { group: 'Incidents', name: 'Incident resolved', file: 'service-incident-resolved', source: 'Sent by hand once the outage is over' },
+  { group: 'Campaigns', name: 'Black Friday 2026', file: 'black-friday', source: 'Marketing: only to Amelu customers subscribed to news and offers, with an unsubscribe link' },
   { group: 'Campaigns', name: 'New sending IPs', file: 'new-sending-ips', source: 'Sent once through Resend on 1 November 2026 to 729 domain owners' },
 ];
 

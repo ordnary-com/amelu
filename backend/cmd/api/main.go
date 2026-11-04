@@ -126,6 +126,16 @@ func main() {
 		}
 	}()
 
+	// Campaign promotion codes created inactive with a start time
+	// (handlers/promotions.go): checked every five minutes.
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			app.ActivateDuePromotionCodes()
+		}
+	}()
+
 	if cfg.ExpirationSweepMode == "ticker" {
 		go func() {
 			ticker := time.NewTicker(15 * time.Minute)

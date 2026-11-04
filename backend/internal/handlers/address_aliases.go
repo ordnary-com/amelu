@@ -3,12 +3,14 @@ package handlers
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
+	"amelu/backend/internal/stalwart"
 )
 
 // addressAliasResponse is one alias->mailbox pairing. Stalwart enforces
@@ -110,6 +112,12 @@ func (a *App) CreateAddressAlias(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	owners, err := a.aliasOwners(r.Context(), domain)
+	if err != nil {
+		writeUpstreamError(w, "could not load the domain's aliases from mail cluster", err)
+		return
+	}
+
 	results := make([]createAddressAliasResult, 0, len(req.Destinations))
 	for _, dest := range req.Destinations {
 		destLocalPart := strings.ToLower(strings.TrimSpace(dest))
@@ -124,15 +132,53 @@ func (a *App) CreateAddressAlias(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if err := a.Stalwart.AddAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, localPart); err != nil {
-			results = append(results, createAddressAliasResult{Destination: destLocalPart, Error: upstreamReason(err)})
+		if owner, taken := owners[localPart]; taken {
+			results = append(results, createAddressAliasResult{Destination: destLocalPart, Error: aliasInUse(localPart, owner, domain.Name)})
 			continue
 		}
+		if err := a.Stalwart.AddAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, localPart); err != nil {
+			results = append(results, createAddressAliasResult{Destination: destLocalPart, Error: aliasError(err, localPart, domain.Name)})
+			continue
+		}
+		owners[localPart] = mailbox.LocalPart
 		results = append(results, createAddressAliasResult{Destination: destLocalPart})
 	}
 
 	a.Store.LogActivity(r.Context(), domain.ID, "alias.created", "Created alias "+localPart+"@"+domain.Name)
 	writeJSON(w, http.StatusCreated, map[string]any{"results": results})
+}
+
+// aliasOwners maps every alias local part on the domain to the local part of
+// the mailbox it delivers to. Checking it first gives a readable error
+// instead of Stalwart's primaryKeyViolation, and stops the same alias being
+// stored twice on one mailbox, which Stalwart allows.
+func (a *App) aliasOwners(ctx context.Context, domain *db.Domain) (map[string]string, error) {
+	mailboxes, err := a.Store.ListMailboxes(ctx, domain.ID)
+	if err != nil {
+		return nil, err
+	}
+	owners := map[string]string{}
+	for _, m := range mailboxes {
+		aliases, err := a.Stalwart.ListAccountAliases(ctx, m.LocalPart, domain.Name)
+		if err != nil {
+			return nil, err
+		}
+		for _, alias := range aliases {
+			owners[alias.Name] = m.LocalPart
+		}
+	}
+	return owners, nil
+}
+
+func aliasInUse(localPart, owner, domainName string) string {
+	return fmt.Sprintf("%s@%s is already an alias of %s@%s", localPart, domainName, owner, domainName)
+}
+
+func aliasError(err error, localPart, domainName string) string {
+	if errors.Is(err, stalwart.ErrAddressInUse) {
+		return localPart + "@" + domainName + " is already in use on this domain"
+	}
+	return upstreamReason(err)
 }
 
 func (a *App) findMailboxByLocalPart(ctx context.Context, domainID, localPart string) (*db.Mailbox, error) {
@@ -220,8 +266,8 @@ type importAliasResult struct {
 
 // ImportAddressAliasesCSV bulk-creates aliases from CSV with exactly 2
 // columns and no header row: Alias, Destination. Each row is applied
-// independently - one failure (no such mailbox, alias already claimed)
-// doesn't abort the rest.
+// independently - one failure (no such mailbox, alias already claimed,
+// the same alias earlier in the file) doesn't abort the rest.
 func (a *App) ImportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
 	customer, role, ok := a.requireOrgActor(w, r)
 	if !ok {
@@ -259,6 +305,12 @@ func (a *App) ImportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
 		return strings.TrimSpace(row[i])
 	}
 
+	owners, err := a.aliasOwners(r.Context(), domain)
+	if err != nil {
+		writeUpstreamError(w, "could not load the domain's aliases from mail cluster", err)
+		return
+	}
+
 	var results []importAliasResult
 	for _, row := range rows {
 		aliasLocalPart := strings.ToLower(col(row, 0))
@@ -275,10 +327,16 @@ func (a *App) ImportAddressAliasesCSV(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if err := a.Stalwart.AddAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, aliasLocalPart); err != nil {
-			results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart, Error: upstreamReason(err)})
+		// Also catches the same alias twice in one file, since owners grows as rows succeed.
+		if owner, taken := owners[aliasLocalPart]; taken {
+			results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart, Error: aliasInUse(aliasLocalPart, owner, domain.Name)})
 			continue
 		}
+		if err := a.Stalwart.AddAccountAlias(r.Context(), mailbox.LocalPart, domain.Name, aliasLocalPart); err != nil {
+			results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart, Error: aliasError(err, aliasLocalPart, domain.Name)})
+			continue
+		}
+		owners[aliasLocalPart] = mailbox.LocalPart
 		results = append(results, importAliasResult{Alias: aliasLocalPart, Destination: destLocalPart})
 	}
 

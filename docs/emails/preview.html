@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amelu email previews</title>
+<!--
+  Every email Amelu sends, one at a time, as HTML or plain text, at desktop or
+  phone width. Reads the templates next to it, so serve this folder:
+    python3 -m http.server 8788 --directory docs/emails
+  then open http://localhost:8788/preview.html. The two mails built in Go
+  (invitation, mailbox password) are copied in below with sample values; keep
+  them in sync with organization_invitations.go and password_reset.go.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef0f4; --surface: #ffffff; --line: #e2e5ea; --ink: #14171f; --muted: #5c6370;
+    --accent: #0051fe; --accent-soft: #dfe7ff; --stage: #e4e7ed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14191f; --surface: #1d242e; --line: #343b46; --ink: #dedee3; --muted: #a4a4ac;
+      --accent: #4d84ff; --accent-soft: rgb(0 81 254 / 0.22); --stage: #0f1318;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 "Google Sans", Arial, sans-serif; }
+  .app { display: grid; grid-template-columns: 300px minmax(0, 1fr); height: 100vh; }
+  aside { border-right: 1px solid var(--line); background: var(--surface); overflow-y: auto; padding: 20px 12px; }
+  h1 { font-size: 16px; font-weight: 500; margin: 0 8px 4px; }
+  .lead { color: var(--muted); font-size: 12px; margin: 0 8px 16px; }
+  .group { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 18px 8px 6px; }
+  .item { display: block; width: 100%; text-align: left; border: 0; background: none; color: inherit; font: inherit;
+          padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+  .item:hover { background: var(--bg); }
+  .item[aria-current="true"] { background: var(--accent-soft); }
+  .item .name { font-weight: 500; }
+  .item .subject { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  main { display: flex; flex-direction: column; min-width: 0; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .meta { min-width: 0; flex: 1; }
+  .meta .subject { font-weight: 500; overflow-wrap: anywhere; }
+  .meta .source { color: var(--muted); font-size: 12px; margin-top: 2px; overflow-wrap: anywhere; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+  .seg button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--bg); color: var(--ink); }
+  .stage { flex: 1; overflow: auto; background: var(--stage); display: flex; justify-content: center; padding: 24px; }
+  iframe { border: 0; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / .12); border-radius: 6px; width: 100%; max-width: 760px; height: 100%; min-height: 600px; }
+  iframe.phone { max-width: 390px; }
+  .error { color: #d92d20; padding: 24px; }
+  @media (max-width: 720px) {
+    .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); height: auto; min-height: 100vh; }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); max-height: 40vh; }
+    .stage { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Amelu emails</h1>
+    <p class="lead">Every email we send, one at a time. Sample values fill the placeholders.</p>
+    <nav id="list" aria-label="Emails"></nav>
+  </aside>
+  <main>
+    <div class="bar">
+      <div class="meta">
+        <div class="subject" id="subject"></div>
+        <div class="source" id="source"></div>
+      </div>
+      <div class="seg" role="group" aria-label="Format">
+        <button type="button" data-format="html" aria-pressed="true">HTML</button>
+        <button type="button" data-format="text" aria-pressed="false">Plain text</button>
+      </div>
+      <div class="seg" role="group" aria-label="Width">
+        <button type="button" data-width="desktop" aria-pressed="true">Desktop</button>
+        <button type="button" data-width="phone" aria-pressed="false">Phone</button>
+      </div>
+    </div>
+    <div class="stage"><iframe id="frame" title="Email preview"></iframe></div>
+  </main>
+</div>
+
+<script>
+// Sample values for the placeholders in the templates.
+const SAMPLE = { DOMAIN: 'example.com' };
+
+const inline = (paragraphs) => '<!doctype html><meta charset="utf-8"><body style="font:15px/1.5 Arial,sans-serif;margin:24px;color:#14171f">' + paragraphs + '</body>';
+
+const EMAILS = [
+  { group: 'Automated', name: 'Sending paused', file: 'sending-paused',
+    source: 'Sent by the sender guard on marduk (/etc/amelu-sender-guard), to the paused domain\'s mailboxes' },
+  { group: 'Automated', name: 'Organization invitation', source: 'backend/internal/handlers/organization_invitations.go (inline)',
+    subject: "You've been invited to join Acme on Amelu",
+    html: inline('<p>You\'ve been invited to join an organization on Amelu as <strong>admin</strong>.</p><p><a href="https://app.amelu.org/accept-invite/sample">Click here to accept the invitation</a></p><p>This link expires in 7 days and can only be used once.</p><p>If you weren\'t expecting this, you can safely ignore this email.</p>'),
+    text: "You've been invited to join an organization on Amelu as admin.\n\nAccept your invitation here: https://app.amelu.org/accept-invite/sample\n\nThis link expires in 7 days and can only be used once.\n\nIf you weren't expecting this, you can safely ignore this email." },
+  { group: 'Automated', name: 'Mailbox password setup', source: 'backend/internal/handlers/password_reset.go (inline)',
+    subject: 'Set up your password for jan@example.com',
+    html: inline('<p>You\'ve been invited to set up the password for the mailbox <strong>jan@example.com</strong>.</p><p><a href="https://app.amelu.org/reset-password/sample">Click here to set your password</a></p><p>This link expires in 24 hours and can only be used once.</p><p>If you weren\'t expecting this, you can safely ignore this email.</p>'),
+    text: "You've been invited to set up the password for the mailbox jan@example.com.\n\nSet your password here: https://app.amelu.org/reset-password/sample\n\nThis link expires in 24 hours and can only be used once.\n\nIf you weren't expecting this, you can safely ignore this email." },
+  { group: 'Incidents', name: 'Service incident', file: 'service-incident', source: 'Sent by hand to all customers during an outage' },
+  { group: 'Incidents', name: 'Incident resolved', file: 'service-incident-resolved', source: 'Sent by hand once the outage is over' },
+  { group: 'Campaigns', name: 'New sending IPs', file: 'new-sending-ips', source: 'Sent once through Resend on 1 November 2026 to 729 domain owners' },
+];
+
+const fill = (s) => s.replace(/\{\{(\w+)\}\}/g, (m, k) => SAMPLE[k] ?? m);
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+const state = { index: 0, format: 'html', width: 'desktop' };
+try { Object.assign(state, JSON.parse(localStorage.getItem('amelu-email-preview') || '{}')); } catch {}
+
+const list = document.getElementById('list');
+let group = null;
+EMAILS.forEach((email, i) => {
+  if (email.group !== group) {
+    group = email.group;
+    const g = document.createElement('div');
+    g.className = 'group';
+    g.textContent = group;
+    list.append(g);
+  }
+  const b = document.createElement('button');
+  b.className = 'item';
+  b.type = 'button';
+  b.innerHTML = '<span class="name"></span><span class="subject"></span>';
+  b.querySelector('.name').textContent = email.name;
+  b.addEventListener('click', () => { state.index = i; render(); });
+  email.button = b;
+  list.append(b);
+});
+
+async function load(email) {
+  if (email.html !== undefined) return { subject: email.subject, html: email.html, text: email.text };
+  const [html, txt] = await Promise.all(['.html', '.txt'].map((ext) =>
+    fetch(email.file + ext, { cache: 'no-store' }).then((r) => { if (!r.ok) throw new Error(email.file + ext + ': ' + r.status); return r.text(); })));
+  // The .txt files start with "Subject: ..." and a blank line.
+  const m = /^Subject:\s*(.*)\r?\n\r?\n?/.exec(txt);
+  return { subject: m ? m[1] : '', html, text: m ? txt.slice(m[0].length) : txt };
+}
+
+async function render() {
+  const email = EMAILS[state.index] ?? EMAILS[0];
+  try { localStorage.setItem('amelu-email-preview', JSON.stringify({ index: state.index, format: state.format, width: state.width })); } catch {}
+  EMAILS.forEach((e) => e.button.setAttribute('aria-current', String(e === email)));
+  document.querySelectorAll('[data-format]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.format === state.format)));
+  document.querySelectorAll('[data-width]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.width === state.width)));
+  const frame = document.getElementById('frame');
+  frame.classList.toggle('phone', state.width === 'phone');
+  document.getElementById('source').textContent = email.file ? 'docs/emails/' + email.file + '.html / .txt · ' + email.source : email.source;
+  try {
+    const mail = await load(email);
+    document.getElementById('subject').textContent = fill(mail.subject);
+    email.button.querySelector('.subject').textContent = fill(mail.subject);
+    frame.srcdoc = state.format === 'html'
+      ? fill(mail.html)
+      : '<!doctype html><meta charset="utf-8"><pre style="white-space:pre-wrap;font:14px/1.55 ui-monospace,Menlo,monospace;margin:24px;color:#14171f">' + esc(fill(mail.text)) + '</pre>';
+  } catch (err) {
+    document.getElementById('subject').textContent = email.name;
+    frame.srcdoc = '<p style="font:14px Arial;color:#d92d20;margin:24px">Could not load ' + esc(String(err.message || err)) + '. Serve this folder over HTTP (see the comment at the top of preview.html).</p>';
+  }
+}
+
+document.querySelectorAll('[data-format]').forEach((b) => b.addEventListener('click', () => { state.format = b.dataset.format; render(); }));
+document.querySelectorAll('[data-width]').forEach((b) => b.addEventListener('click', () => { state.width = b.dataset.width; render(); }));
+
+// Fill every subject in the list up front, then show the current email.
+EMAILS.forEach((e) => load(e).then((m) => { e.button.querySelector('.subject').textContent = fill(m.subject); }).catch(() => {}));
+render();
+</script>
+</body>
+</html>

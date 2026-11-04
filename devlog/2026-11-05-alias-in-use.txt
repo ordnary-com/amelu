@@ -1,0 +1,19 @@
+A taken alias address gets a readable error, and CSV import no longer adds duplicates
+2026-11-05
+
+Creating switchbot@mihal.pl as an alias of newsletter@ showed Stalwart's raw
+refusal: 'stalwart refused to add alias ... {"type":"primaryKeyViolation",
+"properties":["email"],"objectId":{"object":"Account","id":"dgl"}}
+[UPSTREAM_ERROR]', because it was already an alias of contact@. Stalwart
+keeps alias addresses unique across accounts, but happily stores the same
+alias twice on one account, so a CSV import with an existing alias or the
+same row twice added duplicates (one found on the server: support@ twice).
+
+CreateAddressAlias and ImportAddressAliasesCSV now build the domain's alias
+-> mailbox map first (aliasOwners) and answer "<address> is already an alias
+of <mailbox>" per row; the map grows as rows succeed, which catches repeats
+within one file. stalwart.AddAccountAlias returns ErrAddressInUse for an
+alias already on the destination and for primaryKeyViolation (tests in
+aliases_test.go). New address alias in the dashboard checks the address
+against the alias list while you type, links to the mailbox that has it and
+keeps Create alias disabled.

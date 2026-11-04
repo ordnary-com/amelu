@@ -46,12 +46,20 @@ export class NewAlias {
       : list;
   });
 
+  private readonly existing = domainResource(this.ctx.id, (id) => this.api.listAddressAliases(id))
+    .value;
+
   protected readonly alias = signal('');
   protected readonly destination = signal('');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** The alias already using the typed address, if any: an address delivers to one mailbox only. */
+  protected readonly taken = computed(() => {
+    const address = `${localPart(this.alias())}@${this.ctx.domain()?.name ?? ''}`;
+    return this.existing()?.find((a) => a.address.toLowerCase() === address) ?? null;
+  });
   protected readonly valid = computed(
-    () => !!localPart(this.alias()) && !!localPart(this.destination()),
+    () => !!localPart(this.alias()) && !!localPart(this.destination()) && !this.taken(),
   );
   protected readonly preview = computed(() => {
     const domain = this.ctx.domain()?.name ?? '';

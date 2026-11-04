@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Signal, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal, effect, input, model, output, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, Subject, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
@@ -100,8 +100,9 @@ export class ConfirmDelete {
 export class ListSkeleton {}
 
 /**
- * Picks a destination mailbox on this domain by local part. Falls back to a
- * plain text field when the mailbox list couldn't be loaded.
+ * Picks a destination mailbox on this domain by local part, preselected when
+ * the domain has only one. Falls back to a plain text field when the mailbox
+ * list couldn't be loaded.
  */
 @Component({
   selector: 'amelu-mailbox-field',
@@ -175,4 +176,13 @@ export class MailboxField {
   readonly domainId = input.required<string>();
   readonly domainName = input('');
   readonly value = model('');
+
+  constructor() {
+    // With only one mailbox on the domain there's nothing to choose: take it,
+    // unless the form already picked one (e.g. ?mailbox= from a mailbox page).
+    effect(() => {
+      const list = this.mailboxes();
+      if (list?.length === 1 && !untracked(this.value)) this.value.set(list[0].localPart);
+    });
+  }
 }

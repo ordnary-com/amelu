@@ -1,0 +1,17 @@
+Three OVH IPs on marduk as a second outbound lane, next to the noez tunnel
+2026-11-04
+
+The noez cap (140 an hour for all customers together) was full more often
+than not. 51.89.39.34, 51.89.2.193 and 51.89.1.228 are OVH failover IPs
+directly on marduk's ens3 (/etc/netplan/60-amelu-sending-ips.yaml), clean
+on Spamhaus, SpamCop, Barracuda and UCEPROTECT. DNS: out4-6.mx.amelu.org
+(A + "v=spf1 a -all") and all three as A records of marduk.mx.amelu.org,
+so customer SPF ("mx -all") covers them.
+
+ops/marduk/amelu-ip-pools.py now also writes the Stalwart strategy 'ovh'
+(sourceIps with ehloHostname out4-6) and sends established customers' mail
+over it, except to gmail.com/googlemail.com, which stays on out1. An IP only
+joins once its PTR is its outN name and that name points back. The noez cap
+(jmma27oku7qa) then counts only out1-3; the new throttle "OVH lane warm-up
+cap" grows 60, 120, 250, 500, 800, 1200 an hour from the first day it sends
+(/var/lib/amelu-ip-pools/ovh-since). Until the PTRs are set nothing changes.

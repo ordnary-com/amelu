@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-04  Three OVH IPs on marduk as a second outbound lane
+            2026-11-04-ovh-sending-ips.txt
+
 2026-11-04  Mailbox menu replaces the domain menu instead of a third column
             2026-11-04-sidebar-drill-down.txt
 

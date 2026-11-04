@@ -31,6 +31,7 @@
           <label for="alias-address" [class]="ui.label">Original addressee</label>
           <div
             class="mt-1.5 flex h-9 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
+            [class.border-bad]="taken()"
           >
             <input
               id="alias-address"
@@ -42,6 +43,8 @@
               autofocus
               required
               [value]="alias()"
+              [attr.aria-invalid]="taken() ? true : null"
+              [attr.aria-describedby]="taken() ? 'alias-taken' : null"
               (input)="alias.set($any($event.target).value)"
             />
             <span
@@ -49,6 +52,16 @@
               >&#64;{{ ctx.domain()?.name }}</span
             >
           </div>
+          @if (taken(); as existing) {
+            <p id="alias-taken" class="mt-1 text-[12px] text-bad" role="alert">
+              {{ existing.address }} is already an alias of
+              <a
+                class="font-medium underline"
+                [routerLink]="'/domains/' + ctx.id() + '/mailboxes/' + existing.destinationMailboxId"
+                >{{ existing.destinationMailbox }}</a
+              >. Pick another address, or remove that alias first.
+            </p>
+          }
           <p [class]="ui.hint">
             Only the local part is needed. Everything after the &#64; sign is removed, as aliasing
             to other domains isn't possible.

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-04  Source IPs with a reputation block leave the OVH lane by themselves
+            2026-11-04-ip-reputation-watch.txt
+
 2026-11-04  Three OVH IPs on marduk as a second outbound lane
             2026-11-04-ovh-sending-ips.txt
 

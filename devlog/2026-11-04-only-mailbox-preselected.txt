@@ -1,0 +1,8 @@
+The only mailbox is preselected as an alias destination
+2026-11-04
+
+On New address alias and New pattern rewrite, "Deliver to" started at
+"Choose a mailbox" even when the domain had a single mailbox, so it had to be
+picked every time (suggested by mihal.pl). The shared amelu-mailbox-field in
+beta/src/app/routing/shared.ts now takes the only mailbox when there is just
+one, unless the form already chose one (?mailbox= from a mailbox page).

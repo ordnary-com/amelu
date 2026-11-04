@@ -3,10 +3,8 @@ import { authGuard } from './auth.guard';
 import { Shell } from './shell/shell';
 import { Home } from './home/home';
 import { DomainDetail } from './domain-detail/domain-detail';
-import { NewDomain } from './new-domain/new-domain';
 import { AccountPage } from './account-page/account-page';
 import { AccountLayout } from './account-layout/account-layout';
-import { ActivityPage } from './activity-page/activity-page';
 import { BillingLayout } from './billing-layout/billing-layout';
 import { BillingOverview } from './billing-overview/billing-overview';
 import { BillingInvoices } from './billing-invoices/billing-invoices';
@@ -36,7 +34,7 @@ export const routes: Routes = [
         loadComponent: () => import('./domains-page/domains-page').then((m) => m.DomainsPage),
         title: 'Domains · Amelu',
       },
-      { path: 'domains/new', component: NewDomain, title: 'New domain · Amelu' },
+      { path: 'domains/new', loadComponent: () => import('./new-domain/new-domain').then((m) => m.NewDomain), title: 'New domain · Amelu' },
       {
         path: 'domains/:domainId',
         // Each group loads on first use. mailboxes before mailbox: mailboxes/new must win over mailboxes/:mailboxId.
@@ -62,7 +60,7 @@ export const routes: Routes = [
         ],
       },
       { path: 'organization', loadComponent: () => import('./organization-page/organization-page').then((m) => m.OrganizationPage), title: 'My Organization · Amelu' },
-      { path: 'organization/activity', component: ActivityPage, title: 'Activity Log · Amelu' },
+      { path: 'organization/activity', loadComponent: () => import('./activity-page/activity-page').then((m) => m.ActivityPage), title: 'Activity Log · Amelu' },
       {
         path: 'organization/webmail',
         loadComponent: () => import('./organization-webmail/organization-webmail').then((m) => m.OrganizationWebmail),

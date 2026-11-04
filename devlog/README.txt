@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-04  Search for any page, domain or mailbox in the dashboard
+            2026-11-04-dashboard-search.txt
+
 2026-11-04  Black Friday mail to Amelu customers
             2026-11-04-black-friday-mail.txt
 

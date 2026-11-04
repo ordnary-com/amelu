@@ -1,0 +1,13 @@
+Search for any page, domain or mailbox in the dashboard
+2026-11-04
+
+A field in the top bar (beta/src/app/search), opened with a click,
+Cmd/Ctrl+K or "/", finds account pages, every domain and its pages, and
+every mailbox and its pages. Each page has keywords for what people type
+instead of its name, so "imap" finds every mailbox's IMAP and SMTP settings
+(the Usage instructions page), "dkim" the DNS pages and "invoice" the
+invoices. A label that starts with the query ranks first, and things in the
+domain you're on come before the rest. Mailboxes are fetched once, the
+first time the search opens, for at most 25 domains. Suggested by mihal.pl,
+who couldn't find the IMAP settings. New domain and the activity log now
+load lazily to keep the initial bundle under 500 kB.

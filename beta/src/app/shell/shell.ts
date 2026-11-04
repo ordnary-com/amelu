@@ -6,6 +6,7 @@ import { Domains } from '../domains';
 import { Domain } from '../api';
 import { DOMAIN_STATUS, Tone } from '../status';
 import { AccountMenu } from '../account-menu/account-menu';
+import { Search } from '../search/search';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { apiUrl } from '../config';
 import { TechInfo } from '../login/tech-info';
@@ -32,7 +33,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, NgIcon, TechInfo],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({

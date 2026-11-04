@@ -14,7 +14,7 @@ messages an hour through the tunnel, so the cap of 140 only counts the
 tunnel pools; the OVH lane has its own cap that grows while its IPs warm up.
 marduk's own IP (141.95.52.66) no longer sends while this is on.
 
-Runs hourly from cron and rewrites the connection expression in the
+Runs every 10 minutes from cron and rewrites the connection expression in the
 x:MtaOutboundStrategy singleton, the 'ovh' strategy's source IPs and the
 two caps; the route goes straight to MX. It only uses the tunnel IPs while
 all three are A records of marduk.mx.amelu.org, because customer SPF is
@@ -22,10 +22,18 @@ all three are A records of marduk.mx.amelu.org, because customer SPF is
 only once it is an A record of marduk.mx.amelu.org too and its PTR and its
 outN name point at each other; without any, that mail stays on out1.
 
+Like Migadu's strela it also watches each source IP's reputation: it reads
+Stalwart's log from where it left off, finds remote rejections that blame
+the sending IP (blacklists, Yahoo's TSS codes, Outlook's "banned sending
+IP", or "blocked" with IP wording three times in an hour) and takes that
+OVH IP out of the lane for DEGRADE_HOURS, longer each time it happens
+again. If every OVH IP is out, the lane keeps them all rather than stop.
+A tunnel IP can't be swapped, so for those it only logs.
+
   amelu-ip-pools.py --dry-run   print the decision, change nothing
   amelu-ip-pools.py --off       send everything from marduk's own IP again
 """
-import base64, datetime, json, os, socket, sys, urllib.request
+import base64, datetime, json, os, re, socket, sys, urllib.request
 
 JMAP = "http://127.0.0.1:8080/jmap"
 MX_HOST = "marduk.mx.amelu.org"
@@ -42,6 +50,19 @@ OVH_CAP = "OVH lane warm-up cap"
 # Messages an hour over the whole OVH lane, by days since it first sent.
 WARMUP = [60, 120, 250, 500, 800, 1200]
 SINCE_FILE = "/var/lib/amelu-ip-pools/ovh-since"
+LOG_DIR = "/var/log/stalwart"
+REPUTATION_FILE = "/var/lib/amelu-ip-pools/reputation.json"
+DEGRADE_HOURS, MAX_DEGRADE_HOURS = 48, 168
+WEAK_STRIKES, WEAK_WINDOW = 3, datetime.timedelta(hours=1)
+# Strela's strong signals plus the providers' own codes for an IP block.
+STRONG = ["blacklist", "blocklist", "block list", "poor reputation", "rbl", "dnsbl", "spamhaus", "proofpoint", "cloudmark",
+          "barracuda", "banned sending ip", "[tss", "s3140", "s3150"]
+# These also show up for a single message, so they need IP wording with them.
+WEAK = ["blocked", "rejected for policy reasons", "deferred"]
+IP_WORDS = ["your ip", "ip address", "sending ip", "the ip", "listed", "reputation", "ptr", "rdns", "reverse dns"]
+# A listing of the sender's domain (Spamhaus DBL, Outlook S8002) says nothing about our IP.
+DOMAIN_WORDS = ["domain is listed", "domain listed", "dbl", "(s8002)"]
+REJECTION = re.compile(r"\((delivery\.[a-z-]*(?:rejected|failed))\)")
 
 
 def jmap(calls):
@@ -101,6 +122,82 @@ def warmup_rate(dry):
     return WARMUP[min((today - since).days, len(WARMUP) - 1)]
 
 
+def classify(line, ip):
+    """'strong', 'weak' or None for a rejection line sent from ip."""
+    # From/to come before hostname and could contain any word.
+    text = line.split("hostname = ", 1)[-1].lower()
+    if any(k in text for k in DOMAIN_WORDS) and ip not in text:
+        return None
+    if any(k in text for k in STRONG):
+        return "strong"
+    # Gmail puts "[ip  12]" in front of every reply and quotes the IP in SPF
+    # results; neither says the IP is the problem.
+    quoted = re.sub(r"\[[0-9.]+\s+\d+\]|with ip: \[[0-9.]+\]", "", text)
+    code = re.search(r"(?:code = |code: )(\d{3})", text)
+    if code and code.group(1).startswith("5") and "authenticat" not in text and any(k in text for k in WEAK) \
+            and (ip in quoted or any(k in quoted for k in IP_WORDS)):
+        return "weak"
+    return None
+
+
+def watch_reputation(dry):
+    """Reads the new Stalwart log lines; returns the IPs that are out, and what happened."""
+    try:
+        st = json.load(open(REPUTATION_FILE))
+    except (OSError, ValueError):
+        st = {}
+    conn, strikes, degraded = st.get("conn", {}), st.get("strikes", {}), st.get("degraded", {})
+    files = sorted(f for f in os.listdir(LOG_DIR) if f.startswith("stalwart."))
+    start = st.get("file") if st.get("file") in files else files[-1]
+    offset = st.get("offset", 0) if start == st.get("file") else 0
+    news, sources = [], set(POOL_IPS) | set(OVH_IPS.values())
+    for name in files[files.index(start):]:
+        with open(os.path.join(LOG_DIR, name), "rb") as f:
+            f.seek(offset)
+            for raw in f:
+                line = raw.decode("utf-8", "replace")
+                qid = re.search(r"queueId = (\d+)", line)
+                local = re.search(r"localIp = ([0-9.]+)", line)
+                if "(delivery.connect)" in line and qid and local:
+                    conn[qid.group(1)] = local.group(1)
+                    continue
+                if not REJECTION.search(line):
+                    continue
+                ip = local.group(1) if local else conn.get(qid.group(1)) if qid else None
+                kind = ip in sources and classify(line, ip)
+                if not kind:
+                    continue
+                at = line[:20]
+                hits = [t for t in strikes.get(ip, []) if datetime.datetime.fromisoformat(at.rstrip("Z")) - datetime.datetime.fromisoformat(t.rstrip("Z")) < WEAK_WINDOW] + [at]
+                strikes[ip] = hits
+                if kind == "weak" and len(hits) < WEAK_STRIKES:
+                    continue
+                strikes.pop(ip, None)
+                old = degraded.get(ip)
+                if old and old["until"] > at:
+                    continue
+                count = (old or {}).get("count", 0) + 1
+                until = datetime.datetime.fromisoformat(at.rstrip("Z")) + datetime.timedelta(hours=min(DEGRADE_HOURS * count, MAX_DEGRADE_HOURS))
+                reason = re.sub(r"\s+", " ", line.split("hostname = ", 1)[-1])[:300].strip()
+                degraded[ip] = {"at": at, "until": until.isoformat() + "Z", "count": count, "reason": reason}
+                news.append(f"{ip} {'out of the OVH lane' if ip in OVH_IPS.values() else '(tunnel IP, stays)'} until {until:%Y-%m-%d %H:%M} UTC: {reason}")
+            offset = f.tell()
+        last = name
+        if name != files[-1]:
+            offset = 0
+    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Kept a week past the end, so a repeat block lasts longer.
+    forget = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    degraded = {ip: d for ip, d in degraded.items() if d["until"] > forget}
+    if not dry:
+        # Stalwart retries a queue id from another connect, so only the recent ones matter.
+        st = {"file": last, "offset": offset, "conn": dict(list(conn.items())[-5000:]), "strikes": strikes, "degraded": degraded}
+        os.makedirs(os.path.dirname(REPUTATION_FILE), exist_ok=True)
+        json.dump(st, open(REPUTATION_FILE + ".tmp", "w"))
+        os.replace(REPUTATION_FILE + ".tmp", REPUTATION_FILE)
+    return {ip for ip, d in degraded.items() if d["until"] > now}, news
+
+
 def either(field, values):
     return " || ".join(f"{field} == '{v}'" for v in values)
 
@@ -108,10 +205,14 @@ def either(field, values):
 def main():
     dry, off = "--dry-run" in sys.argv, "--off" in sys.argv
     mx = mx_ips()
+    out, news = watch_reputation(dry)
+    for n in news:
+        print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)
     ovh, rate = {}, None
     if not off and POOL_IPS <= mx:
         doms = new_domains()
-        ovh = ovh_ready(mx)
+        ready = ovh_ready(mx)
+        ovh = {n: ip for n, ip in ready.items() if ip not in out} or ready
         # The same first matches decide the IP and which cap counts the message.
         tunnel = {"0": {"if": either("sender_domain", OWN_DOMAINS), "then": "'out3'"}}
         if doms:
@@ -121,6 +222,10 @@ def main():
             connection = {"match": tunnel, "else": "'ovh'"}
             rate = warmup_rate(dry)
             lane = f"Gmail on out1, the rest on the OVH lane ({', '.join(n.split('.')[0] for n in sorted(ovh))}, {rate}/h)"
+            if len(ovh) < len(ready):
+                lane += f", {len(ready) - len(ovh)} out for reputation"
+            elif out & set(ready.values()):
+                lane += ", every OVH IP has a reputation block but the lane keeps them"
         else:
             connection = {"match": tunnel, "else": "'out1'"}
             lane = "the rest on out1 (no OVH IP ready)"

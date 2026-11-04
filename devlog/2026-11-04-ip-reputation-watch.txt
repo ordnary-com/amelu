@@ -1,0 +1,16 @@
+Source IPs with a reputation block leave the OVH lane by themselves
+2026-11-04
+
+Modeled on Migadu's strela (internal/delivery/ip_reputation.go): ops/marduk/
+amelu-ip-pools.py now reads Stalwart's log from where it stopped
+(/var/lib/amelu-ip-pools/reputation.json), maps queueId to localIp from
+delivery.connect, and classifies delivery.*-rejected / *-failed replies.
+Strong: blacklist, spamhaus, proofpoint, barracuda, Yahoo "[TSS", Outlook
+S3140/S3150, "banned sending IP". Weak, 5xx only and three times in an hour:
+blocked/deferred with IP wording. Not counted: Gmail's "[ip  12]" prefix,
+SPF/DKIM failures, sender-domain listings (Spamhaus DBL, Outlook S8002).
+
+A blocked OVH IP leaves the 'ovh' sourceIps for 48 hours, doubling on a
+repeat (max 7 days); if all three are out the lane keeps them. Tunnel IPs
+are only logged. Cron is now every 10 minutes. First run found Proofpoint
+blocks on out3 (5.230.173.87) and out2, and Yahoo TSS09 on out2.

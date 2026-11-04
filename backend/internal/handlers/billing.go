@@ -294,6 +294,9 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		},
 		SuccessURL: stripe.String(a.FrontendOrigin + "/billing/overview?checkout=success"),
 		CancelURL:  stripe.String(a.FrontendOrigin + "/billing/plans?checkout=cancelled"),
+		// A "Add promotion code" field on the Checkout page, for campaign codes
+		// such as Black Friday's (Stripe promotion codes, amelu-landing).
+		AllowPromotionCodes: stripe.Bool(true),
 	}
 	params.AddMetadata("customerId", cust.ID)
 	params.AddMetadata("planTierId", plan.ID)

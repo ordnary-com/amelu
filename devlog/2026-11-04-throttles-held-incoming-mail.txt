@@ -1,0 +1,14 @@
+Outbound limits no longer hold incoming mail
+2026-11-04
+
+Stalwart applies x:MtaOutboundThrottle rules to the local queue as well, so
+mail arriving for our own mailboxes counted against the outbound limits. When
+the noez cap (140 an hour in total) filled up, as it did at 00:00 and 01:00
+UTC from the nightly DMARC reports, every incoming message waited for the
+next full hour: "delivery.rate-limit-exceeded ... queueName = "local" ...
+nextRetry = 01:00:00Z". The per-sender-domain plan limits did the same, so
+for example allegro.pl notifications to all customers shared one free-plan
+bucket of 150 a day. Reported by mihal.pl: no mail for an hour, then all at
+once. All five rules now start with "queue_name == 'local'" -> false, set by
+hand on marduk at 10:40 UTC (backup /root/throttles-backup-2026-11-04.json)
+and in OutboundThrottle.match() so the API's sync writes the same.

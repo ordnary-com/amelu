@@ -13,6 +13,8 @@ import { TechInfo } from '../login/tech-info';
 import {
   lucideBuilding2,
   lucideChevronDown,
+  lucideChevronLeft,
+  lucideChevronRight,
   lucideCreditCard,
   lucideMenu,
   lucideX,
@@ -39,6 +41,8 @@ const LINK =
     provideIcons({
       lucideBuilding2,
       lucideChevronDown,
+      lucideChevronLeft,
+      lucideChevronRight,
       lucideCreditCard,
       lucideMenu,
       lucideX,
@@ -76,11 +80,27 @@ export class Shell {
 
   protected readonly columns = computed(() => menuColumns(this.at()));
 
+  // Only one menu column shows next to the main one. Inside a mailbox that is
+  // the mailbox's, with a button back up to the domain's; level is the column
+  // picked with those buttons, null for the deepest. Navigating resets it.
+  protected readonly level = signal<number | null>(null);
+  protected readonly shownIndex = computed(() => {
+    const last = this.columns().length - 1;
+    const level = this.level();
+    return level === null ? last : Math.min(level, last);
+  });
+  protected readonly shown = computed(() => this.columns()[this.shownIndex()] ?? null);
+  protected readonly parentMenu = computed(() => (this.shownIndex() > 0 ? this.columns()[this.shownIndex() - 1] : null));
+  protected readonly childMenu = computed(() => this.columns()[this.shownIndex() + 1] ?? null);
+
   /** The drawer that holds the menus below lg; any navigation closes it. */
   protected readonly navOpen = signal(false);
   private readonly closeNavOnNavigate = this.router.events
     .pipe(filter((event) => event instanceof NavigationEnd), takeUntilDestroyed())
-    .subscribe(() => this.navOpen.set(false));
+    .subscribe(() => {
+      this.navOpen.set(false);
+      this.level.set(null);
+    });
 
   // The first few domains under Domains, plus the one you're on if it's further down.
   protected readonly sidebarDomains = computed(() => {

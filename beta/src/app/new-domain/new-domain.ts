@@ -8,6 +8,7 @@ import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { UI } from '../ui';
 import { STANDARD_ADDRESSES } from '../standard-addresses';
+import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
 const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
@@ -29,6 +30,7 @@ interface CreatedAddress {
 export class NewDomain {
   private readonly api = inject(Api);
   private readonly domains = inject(Domains);
+  private readonly dnsApi = inject(DnsSpamApi);
   protected readonly ui = UI;
   protected readonly defaults = DEFAULT_ADDRESSES;
 
@@ -38,6 +40,8 @@ export class NewDomain {
   protected readonly error = signal<string | null>(null);
   protected readonly result = signal<{ domain: Domain; addresses: CreatedAddress[] } | null>(null);
   protected readonly copied = signal<string | null>(null);
+  // Looked up once the domain exists; null until then or when it fails.
+  protected readonly connect = signal<DomainConnectStatus | null>(null);
 
   /** What people paste is often a URL or an address; keep only the domain part. */
   protected readonly name = computed(() =>
@@ -90,6 +94,11 @@ export class NewDomain {
     this.error.set(null);
     try {
       const domain = await firstValueFrom(this.api.createDomain(this.name()));
+      this.connect.set(null);
+      this.dnsApi
+        .domainConnect(domain.id)
+        .pipe(catchError(() => of(null)))
+        .subscribe((status) => this.connect.set(status));
       const addresses: CreatedAddress[] = [];
       if (this.createDefaults()) {
         // One by one, and a failure doesn't stop the rest: the domain exists either way.

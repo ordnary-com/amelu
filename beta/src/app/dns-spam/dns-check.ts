@@ -1,6 +1,6 @@
 import { DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { Subscription, catchError, map, of, startWith, switchMap } from 'rxjs';
+import { Subscription, catchError, of, startWith, switchMap } from 'rxjs';
 import { Api, DnsRecordCheck, errorMessage } from '../api';
 import { injectDomain } from '../domain-context';
 import { Domains } from '../domains';
@@ -65,12 +65,11 @@ export function injectDnsCheck() {
     });
   });
 
-  // null when unsupported or the lookup failed: the manual route always works.
-  const applyUrl = toSignal(
+  // null while loading or when the lookup failed: the manual route always works.
+  const connect = toSignal(
     toObservable(ctx.id).pipe(
       switchMap((id) =>
         dnsApi.domainConnect(id).pipe(
-          map((status) => (status.supported && status.applyUrl ? status.applyUrl : null)),
           catchError(() => of(null)),
           startWith(null),
         ),
@@ -78,6 +77,11 @@ export function injectDnsCheck() {
     ),
     { initialValue: null },
   );
+  const applyUrl = computed(() => {
+    const status = connect();
+    return status?.supported && status.applyUrl ? status.applyUrl : null;
+  });
+  const provider = computed(() => connect()?.provider ?? null);
 
   const summary = computed(() => {
     const list = records();
@@ -102,6 +106,7 @@ export function injectDnsCheck() {
     error,
     checkedAt: checkedAt.asReadonly(),
     applyUrl,
+    provider,
     summary,
     bindUrl: computed(() => dnsApi.bindFileUrl(ctx.id())),
     recheck: () => run(ctx.id()),

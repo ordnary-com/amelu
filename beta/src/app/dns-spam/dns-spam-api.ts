@@ -2,9 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { apiUrl } from '../config';
 
+export interface DnsProvider {
+  name: string;
+  dnsUrl?: string;
+}
+
 export interface DomainConnectStatus {
   supported: boolean;
   applyUrl?: string;
+  /** Where the domain's DNS is hosted, when its nameservers are recognised. */
+  provider?: DnsProvider;
 }
 
 export interface SpamOverview {

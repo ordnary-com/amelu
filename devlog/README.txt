@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-06  Dashboard names the DNS host and offers automatic setup right after adding a domain
+            2026-11-06-dns-host-in-dashboard.txt
+
 2026-11-06  Domain Connect template ready for Cloudflare, and DNS host detection
             2026-11-06-domain-connect-onboarding.txt
 

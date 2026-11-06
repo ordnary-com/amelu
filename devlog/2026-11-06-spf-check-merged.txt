@@ -1,0 +1,10 @@
+DNS check accepts a merged SPF record
+2026-11-06
+
+The DNS check compared the SPF TXT record byte for byte with Stalwart's
+"v=spf1 mx -all". Domain Connect's SPFM record type (and anyone who also
+sends through Google or similar) produces a merged record such as
+"v=spf1 include:_spf.google.com mx ~all", which showed as a mismatch.
+checkTXT in internal/dnscheck now counts an SPF record as matched when it
+contains every mechanism from the expected record; the all qualifier is
+ignored.

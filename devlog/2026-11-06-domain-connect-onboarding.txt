@@ -1,0 +1,21 @@
+Domain Connect template ready for Cloudflare, and DNS host detection
+2026-11-06
+
+The "Set up automatically" flow (GET /api/domains/{id}/domain-connect) was
+built but never live. The template in internal/domainconnect/template.json
+is rewritten to the Domain-Connect/templates rules and passes
+dc-template-linter -merge-or-fail: SPFM instead of a TXT SPF record, DKIM
+hosts as %ed25519selector%._domainkey with a fixed "v=DKIM1; k=...; p="
+prefix, DMARC and TLS-RPT fixed with postmaster@%fqdn%, SRV records in their
+own group. Variables are lowercase now and only carry the DKIM selectors and
+keys; the endpoint returns unsupported if Stalwart's records differ from the
+template's fixed parts.
+Signing followed the spec wrongly: key is now "_dcpubkeyv1" (a label under
+syncPubKeyDomain, not a full name) and key and sig go last, sig very last,
+as Cloudflare requires. redirect_uri is <dashboard>/domains/<id>/dns, so
+DOMAIN_CONNECT_REDIRECT_URI is gone. domainconnect-keygen splits the key
+over p=1/p=2 TXT records.
+The endpoint also returns provider {name, dnsUrl}, matched from the domain's
+NS records (Cloudflare, GoDaddy, TransIP, IONOS, Route 53 and others).
+The private key is not set in production yet: Cloudflare must onboard the
+template first, or every Cloudflare domain would get a button that fails.

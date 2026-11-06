@@ -53,3 +53,21 @@ func TestCheckSRVDetectsMismatch(t *testing.T) {
 		t.Fatalf("expected SRV record to mismatch, got %s (actual: %v)", checks[0].Status, checks[0].Actual)
 	}
 }
+
+func TestSPFCovers(t *testing.T) {
+	cases := []struct {
+		actual string
+		want   bool
+	}{
+		{"v=spf1 mx -all", true},
+		{"v=spf1 mx ~all", true},
+		{"v=spf1 include:_spf.google.com mx ~all", true},
+		{"v=spf1 include:_spf.google.com ~all", false},
+		{"google-site-verification=abc", false},
+	}
+	for _, c := range cases {
+		if got := spfCovers(c.actual, "v=spf1 mx -all"); got != c.want {
+			t.Errorf("spfCovers(%q) = %v, want %v", c.actual, got, c.want)
+		}
+	}
+}

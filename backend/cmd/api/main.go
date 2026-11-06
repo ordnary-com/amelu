@@ -70,7 +70,6 @@ func main() {
 		dcClient, err := domainconnect.NewClient(domainconnect.Config{
 			PrivateKeyPEM: cfg.DomainConnectPrivateKey,
 			PubKeyDomain:  cfg.DomainConnectPubKeyDomain,
-			RedirectURI:   cfg.DomainConnectRedirectURI,
 		})
 		if err != nil {
 			log.Fatalf("domain connect: %v", err)

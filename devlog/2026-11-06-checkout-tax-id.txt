@@ -1,0 +1,10 @@
+Checkout asks for an optional tax ID
+2026-11-06
+
+The Stripe Checkout session from POST /api/billing/checkout now sets
+tax_id_collection[enabled]=true with required=never, so businesses get an
+optional VAT/tax ID field next to the payment details. Consumers can skip it.
+Stripe only allows tax ID collection on an existing Customer when Checkout may
+write back onto it, so the session also sets customer_update[name]=auto and
+customer_update[address]=auto. The entered tax ID, business name and address
+end up on the Stripe Customer and on its invoices.

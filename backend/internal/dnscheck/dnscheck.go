@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -136,13 +137,35 @@ func checkTXT(ctx context.Context, name string, rec stalwart.ZoneRecord) RecordC
 
 	check.Actual = txts
 	for _, txt := range txts {
-		if txt == rec.Content {
+		if txt == rec.Content || spfCovers(txt, rec.Content) {
 			check.Status = StatusMatched
 			return check
 		}
 	}
 	check.Status = StatusMismatch
 	return check
+}
+
+// spfCovers reports whether SPF record actual authorizes at least what
+// expected does. Domain Connect's SPFM merges our "mx" into an existing SPF
+// record and ends it with ~all, so an exact comparison would flag every
+// domain set up automatically, or one that also sends through another
+// provider.
+func spfCovers(actual, expected string) bool {
+	actualTerms := strings.Fields(strings.ToLower(actual))
+	expectedTerms := strings.Fields(strings.ToLower(expected))
+	if len(actualTerms) == 0 || len(expectedTerms) == 0 || actualTerms[0] != "v=spf1" || expectedTerms[0] != "v=spf1" {
+		return false
+	}
+	for _, want := range expectedTerms[1:] {
+		if strings.HasSuffix(want, "all") {
+			continue
+		}
+		if !slices.Contains(actualTerms[1:], want) && !slices.Contains(actualTerms[1:], "+"+want) {
+			return false
+		}
+	}
+	return true
 }
 
 func checkCNAME(ctx context.Context, name string, rec stalwart.ZoneRecord) RecordCheck {

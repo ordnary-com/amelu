@@ -1,0 +1,15 @@
+Outbound mail over the noez IPs stalled for 34 hours: ip rules lost
+2026-11-06
+
+From 2026-11-05 06:02 UTC every delivery from out1-3 (5.230.173.85-87) timed
+out after about 134 s ("Connection timed out (os error 110)"): new domains,
+amelu.org itself and all mail to Gmail. 354 messages from 38 sender domains
+sat in the queue. The GRE tunnel itself was fine; systemd-networkd had
+restarted (systemd upgrade) and, with ManageForeignRoutingPolicyRules on by
+default, deleted the "from 5.230.173.x lookup 20" rules gre-noez adds, so
+those IPs left over ens3 and OVH dropped them.
+The rules are back (deliveries from all three IPs connect again) and
+/etc/systemd/networkd.conf.d/10-keep-gre-noez.conf (copy in ops/marduk)
+turns off networkd's cleanup of foreign rules and routes.
+Found through a free-plan customer whose mail "showed as sent" but never
+arrived. The queue retries on its own; nothing expired.

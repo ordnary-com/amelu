@@ -1,0 +1,13 @@
+Outbound mail is IPv4 only, after marduk's IPv6 address got a Spamhaus CSS listing
+2026-11-06
+
+The Stalwart route "mx" had ipLookupStrategy v4ThenV6. While the noez tunnel
+was broken (see 2026-11-06-noez-ip-rules-lost.txt) every IPv4 attempt from
+out1-3 failed, so Stalwart fell back to marduk's own IPv6 address
+2001:41d0:701:1100::74d4: 250 connections on 5 November and about 50 on
+6 November, mostly to qq.com and gmail.com, outside the IP pools and their
+caps. Spamhaus listed that address in CSS, and rzone.de (Strato) and
+mailbox.org rejected mail from it ("IP listed on RBL ... Listed by CSS").
+The route is now v4Only (x:MtaRoute i7dci0r2adab), so outbound mail never
+leaves over IPv6; the sending IPs are all IPv4. The CSS listing still has to
+be removed at check.spamhaus.org.

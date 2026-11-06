@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-06  Outbound mail is IPv4 only, after marduk's IPv6 address got a Spamhaus CSS listing
+            2026-11-06-ipv4-only-outbound.txt
+
 2026-11-06  Outbound mail over the noez IPs stalled for 34 hours: ip rules lost
             2026-11-06-noez-ip-rules-lost.txt
 

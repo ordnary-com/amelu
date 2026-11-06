@@ -1,0 +1,9 @@
+Dashboard names the DNS host and offers automatic setup right after adding a domain
+2026-11-06
+
+The 2.0 dashboard's DNS overview shows "Your DNS is at <provider>" with a
+link to the provider's DNS settings when automatic setup isn't available,
+and names the provider on the "Set up automatically" card when it is. The
+success screen after adding a domain (/domains/new) looks this up straight
+away and shows the "Set up automatically" button there too, so a Cloudflare
+customer can approve all records without opening the DNS page.

@@ -85,7 +85,6 @@ jobs:
           echo "${{ secrets.STRIPE_WEBHOOK_SECRET }}" | npx wrangler secret put STRIPE_WEBHOOK_SECRET --env production
           echo "${{ secrets.DOMAIN_CONNECT_PRIVATE_KEY }}" | npx wrangler secret put DOMAIN_CONNECT_PRIVATE_KEY --env production
           echo "${{ secrets.DOMAIN_CONNECT_PUBKEY_DOMAIN }}" | npx wrangler secret put DOMAIN_CONNECT_PUBKEY_DOMAIN --env production
-          echo "${{ secrets.DOMAIN_CONNECT_REDIRECT_URI }}" | npx wrangler secret put DOMAIN_CONNECT_REDIRECT_URI --env production
           echo "${{ secrets.ORDNARY_ISSUER }}" | npx wrangler secret put ORDNARY_ISSUER --env production
           echo "${{ secrets.ORDNARY_CLIENT_ID }}" | npx wrangler secret put ORDNARY_CLIENT_ID --env production
           echo "${{ secrets.ORDNARY_CLIENT_SECRET }}" | npx wrangler secret put ORDNARY_CLIENT_SECRET --env production

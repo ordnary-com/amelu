@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"amelu/backend/internal/db"
@@ -10,8 +12,9 @@ import (
 )
 
 type domainConnectResponse struct {
-	Supported bool   `json:"supported"`
-	ApplyURL  string `json:"applyUrl,omitempty"`
+	Supported bool                    `json:"supported"`
+	ApplyURL  string                  `json:"applyUrl,omitempty"`
+	Provider  *domainconnect.Provider `json:"provider,omitempty"`
 }
 
 // GetDomainConnect checks whether the domain's DNS provider supports Domain
@@ -36,14 +39,16 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	provider := domainconnect.DetectProvider(r.Context(), domain.Name)
+	unsupported := domainConnectResponse{Supported: false, Provider: provider}
 	if a.DomainConnect == nil {
-		writeJSON(w, http.StatusOK, domainConnectResponse{Supported: false})
+		writeJSON(w, http.StatusOK, unsupported)
 		return
 	}
 
 	settings, ok := domainconnect.Supported(r.Context(), domain.Name)
 	if !ok {
-		writeJSON(w, http.StatusOK, domainConnectResponse{Supported: false})
+		writeJSON(w, http.StatusOK, unsupported)
 		return
 	}
 
@@ -53,41 +58,72 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
-	records := stalwart.ParseZoneFile(zoneFile)
-	vars := recordVarsFromZoneFile(records, domain.Name)
+	vars, ok := recordVarsFromZoneFile(stalwart.ParseZoneFile(zoneFile), domain.Name)
+	if !ok {
+		// The template's fixed parts no longer match what Stalwart wants;
+		// applying it would write records the DNS check then flags.
+		writeJSON(w, http.StatusOK, unsupported)
+		return
+	}
 
-	applyURL, err := a.DomainConnect.BuildApplyURL(settings.URLSyncUX, domain.Name, vars)
+	redirectURI := a.FrontendOrigin + "/domains/" + url.PathEscape(domain.ID) + "/dns"
+	applyURL, err := a.DomainConnect.BuildApplyURL(settings.URLSyncUX, domain.Name, redirectURI, vars)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not build domain connect url: "+err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, domainConnectResponse{Supported: true, ApplyURL: applyURL})
+	writeJSON(w, http.StatusOK, domainConnectResponse{Supported: true, ApplyURL: applyURL, Provider: provider})
 }
 
-// recordVarsFromZoneFile maps Stalwart's computed records onto the
-// domain-specific template variables referenced in template.json.
-func recordVarsFromZoneFile(records []stalwart.ZoneRecord, domainName string) domainconnect.RecordVars {
+// templateTXT are the TXT records template.json fixes; the zone file must
+// contain them unchanged for the template to stand in for it.
+var templateTXT = map[string]string{
+	"@":          "v=spf1 mx -all",
+	"_dmarc":     "v=DMARC1; p=reject; rua=mailto:postmaster@%s",
+	"_smtp._tls": "v=TLSRPTv1; rua=mailto:postmaster@%s",
+}
+
+const (
+	dkimEd25519Prefix = "v=DKIM1; k=ed25519; h=sha256; p="
+	dkimRSAPrefix     = "v=DKIM1; k=rsa; h=sha256; p="
+)
+
+// recordVarsFromZoneFile maps Stalwart's computed records onto the template
+// variables, reporting false when a record differs from what template.json
+// would write.
+func recordVarsFromZoneFile(records []stalwart.ZoneRecord, domainName string) (domainconnect.RecordVars, bool) {
 	var vars domainconnect.RecordVars
 	for _, rec := range records {
-		if rec.Type != "TXT" {
-			continue
-		}
 		host := relativeHost(rec.Name, domainName)
-		switch {
-		case strings.Contains(rec.Name, "_domainkey") && strings.Contains(rec.Content, "k=ed25519"):
-			vars.Ed25519Selector = host
-			vars.Ed25519Value = rec.Content
-		case strings.Contains(rec.Name, "_domainkey") && strings.Contains(rec.Content, "k=rsa"):
-			vars.RSASelector = host
-			vars.RSAValue = rec.Content
-		case strings.HasPrefix(rec.Name, "_dmarc."):
-			vars.DMARCValue = rec.Content
-		case strings.HasPrefix(rec.Name, "_smtp._tls."):
-			vars.TLSRPTValue = rec.Content
+		switch rec.Type {
+		case "MX":
+			if strings.TrimSuffix(rec.Content, ".") != "marduk.mx.amelu.org" || rec.Priority == nil || *rec.Priority != 10 {
+				return vars, false
+			}
+		case "TXT":
+			if selector, ok := strings.CutSuffix(host, "._domainkey"); ok {
+				switch {
+				case strings.HasPrefix(rec.Content, dkimEd25519Prefix):
+					vars.Ed25519Selector, vars.Ed25519Key = selector, strings.TrimPrefix(rec.Content, dkimEd25519Prefix)
+				case strings.HasPrefix(rec.Content, dkimRSAPrefix):
+					vars.RSASelector, vars.RSAKey = selector, strings.TrimPrefix(rec.Content, dkimRSAPrefix)
+				default:
+					return vars, false
+				}
+				continue
+			}
+			if want, ok := templateTXT[host]; ok {
+				if strings.Contains(want, "%s") {
+					want = fmt.Sprintf(want, strings.TrimSuffix(domainName, "."))
+				}
+				if rec.Content != want {
+					return vars, false
+				}
+			}
 		}
 	}
-	return vars
+	return vars, vars.Ed25519Key != "" && vars.RSAKey != ""
 }
 
 // relativeHost strips the trailing ".<domainName>." from a fully qualified

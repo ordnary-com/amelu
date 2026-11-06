@@ -28,22 +28,19 @@ func TestBuildApplyURL(t *testing.T) {
 	client, err := NewClient(Config{
 		PrivateKeyPEM: string(privPEM),
 		PubKeyDomain:  "amelu.org",
-		RedirectURI:   "https://app.amelu.org/domains/123/dns",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	vars := RecordVars{
-		Ed25519Selector: "v1-ed25519-20260711._domainkey",
-		Ed25519Value:    "v=DKIM1; k=ed25519; h=sha256; p=abc123",
-		RSASelector:     "v1-rsa-20260711._domainkey",
-		RSAValue:        "v=DKIM1; k=rsa; h=sha256; p=verylongbase64key",
-		DMARCValue:      "v=DMARC1; p=reject; rua=mailto:postmaster@example.com",
-		TLSRPTValue:     "v=TLSRPTv1; rua=mailto:postmaster@example.com",
+		Ed25519Selector: "v1-ed25519-20260711",
+		Ed25519Key:      "abc123",
+		RSASelector:     "v1-rsa-20260711",
+		RSAKey:          "verylong+base64/key==",
 	}
 
-	applyURL, err := client.BuildApplyURL("https://dash.cloudflare.com/domainconnect", "example.com", vars)
+	applyURL, err := client.BuildApplyURL("https://dash.cloudflare.com/domainconnect", "example.com", "https://app.amelu.org/domains/123/dns", vars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,14 +58,14 @@ func TestBuildApplyURL(t *testing.T) {
 	if q.Get("domain") != "example.com" {
 		t.Errorf("domain = %q, want example.com", q.Get("domain"))
 	}
-	if q.Get("key") != "_dcpubkeyv1.amelu.org" {
-		t.Errorf("key = %q, want _dcpubkeyv1.amelu.org", q.Get("key"))
+	if q.Get("key") != "_dcpubkeyv1" {
+		t.Errorf("key = %q, want _dcpubkeyv1", q.Get("key"))
 	}
-	if q.Get("DCE_RSA_VALUE") != vars.RSAValue {
-		t.Errorf("DCE_RSA_VALUE not round-tripped correctly")
+	if q.Get("rsakey") != vars.RSAKey {
+		t.Errorf("rsakey not round-tripped correctly")
 	}
-	if q.Has("DCE_MTA_STS_VALUE") || q.Has("DCE_UA_AUTOCONF_VALUE") {
-		t.Errorf("TLS-incompatible record variables must not be included")
+	if !strings.Contains(parsed.RawQuery, "&key=_dcpubkeyv1&sig=") || strings.Contains(parsed.RawQuery[strings.Index(parsed.RawQuery, "&sig=")+1:], "&") {
+		t.Errorf("key and sig must be the last parameters, sig last: %s", parsed.RawQuery)
 	}
 
 	sigB64 := q.Get("sig")
@@ -80,17 +77,8 @@ func TestBuildApplyURL(t *testing.T) {
 		t.Fatalf("sig is not valid base64: %v", err)
 	}
 
-	// Recompute what should have been signed (everything except sig and
-	// key) and verify against the public key, proving sign+verify agree on
-	// the same canonical string.
-	withoutSigOrKey := url.Values{}
-	for k, v := range q {
-		if k == "sig" || k == "key" {
-			continue
-		}
-		withoutSigOrKey[k] = v
-	}
-	signable := withoutSigOrKey.Encode()
+	// The signed bytes are the raw query string up to "&key=".
+	signable := parsed.RawQuery[:strings.Index(parsed.RawQuery, "&key=")]
 	hashed := sha256.Sum256([]byte(signable))
 
 	if err := rsa.VerifyPKCS1v15(&key.PublicKey, crypto.SHA256, hashed[:], sig); err != nil {

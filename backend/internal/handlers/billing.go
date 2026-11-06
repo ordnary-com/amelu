@@ -297,6 +297,17 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		// A "Add promotion code" field on the Checkout page, for campaign codes
 		// such as Black Friday's (Stripe promotion codes, amelu-landing).
 		AllowPromotionCodes: stripe.Bool(true),
+		// An optional "I'm purchasing as a business" tax ID field. Stripe
+		// refuses tax ID collection on an existing Customer unless Checkout may
+		// write the business name and address back onto it.
+		TaxIDCollection: &stripe.CheckoutSessionTaxIDCollectionParams{
+			Enabled:  stripe.Bool(true),
+			Required: stripe.String("never"),
+		},
+		CustomerUpdate: &stripe.CheckoutSessionCustomerUpdateParams{
+			Name:    stripe.String("auto"),
+			Address: stripe.String("auto"),
+		},
 	}
 	params.AddMetadata("customerId", cust.ID)
 	params.AddMetadata("planTierId", plan.ID)

@@ -10,6 +10,23 @@
       Set its DNS records next, so mail for it reaches Amelu.
     </amelu-alert>
 
+    @if (connect(); as status) {
+      @if (status.supported && status.applyUrl) {
+        <section [class]="ui.card + ' p-4'">
+          <h2 class="text-[14px] font-bold">Set up DNS automatically</h2>
+          <p class="mt-1 text-[13px] leading-relaxed text-muted">
+            {{ done.domain.name }} uses {{ status.provider?.name ?? 'a DNS provider' }}, which can add every record for
+            you. Sign in there and approve the change.
+          </p>
+          <a [href]="status.applyUrl" [class]="ui.primary + ' mt-3'">Set up automatically</a>
+        </section>
+      } @else if (status.provider; as provider) {
+        <p class="text-[13px] text-muted">
+          {{ done.domain.name }} uses {{ provider.name }} for DNS, so that's where the records go.
+        </p>
+      }
+    }
+
     @if (done.addresses.length > 0) {
       <section>
         <h2 [class]="ui.sectionTitle">Default addresses</h2>

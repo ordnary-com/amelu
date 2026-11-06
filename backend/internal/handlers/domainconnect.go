@@ -10,8 +10,9 @@ import (
 )
 
 type domainConnectResponse struct {
-	Supported bool   `json:"supported"`
-	ApplyURL  string `json:"applyUrl,omitempty"`
+	Supported bool                    `json:"supported"`
+	ApplyURL  string                  `json:"applyUrl,omitempty"`
+	Provider  *domainconnect.Provider `json:"provider,omitempty"`
 }
 
 // GetDomainConnect checks whether the domain's DNS provider supports Domain
@@ -36,14 +37,16 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	provider := domainconnect.DetectProvider(r.Context(), domain.Name)
+	unsupported := domainConnectResponse{Supported: false, Provider: provider}
 	if a.DomainConnect == nil {
-		writeJSON(w, http.StatusOK, domainConnectResponse{Supported: false})
+		writeJSON(w, http.StatusOK, unsupported)
 		return
 	}
 
 	settings, ok := domainconnect.Supported(r.Context(), domain.Name)
 	if !ok {
-		writeJSON(w, http.StatusOK, domainConnectResponse{Supported: false})
+		writeJSON(w, http.StatusOK, unsupported)
 		return
 	}
 

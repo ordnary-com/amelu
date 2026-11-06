@@ -29,7 +29,6 @@ type Config struct {
 	// startup.
 	DomainConnectPrivateKey   string
 	DomainConnectPubKeyDomain string
-	DomainConnectRedirectURI  string
 
 	// Password reset invite emails are optional too: absent, the "send
 	// reset link" action just reports the feature unavailable rather than
@@ -131,7 +130,6 @@ func Load() (*Config, error) {
 
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),
-		DomainConnectRedirectURI:  os.Getenv("DOMAIN_CONNECT_REDIRECT_URI"),
 
 		MailRelayURL:  os.Getenv("MAIL_RELAY_URL"),
 		MailFromEmail: getEnv("MAIL_FROM_EMAIL", "onboarding@ordnary.com"),

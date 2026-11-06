@@ -47,7 +47,6 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   DOMAIN_CONNECT_PRIVATE_KEY?: string;
   DOMAIN_CONNECT_PUBKEY_DOMAIN?: string;
-  DOMAIN_CONNECT_REDIRECT_URI?: string;
   ORDNARY_ISSUER?: string;
   ORDNARY_CLIENT_ID?: string;
   ORDNARY_CLIENT_SECRET?: string;

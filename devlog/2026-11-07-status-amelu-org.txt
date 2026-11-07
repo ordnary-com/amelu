@@ -1,0 +1,12 @@
+status.amelu.org: Amelu's own status page
+2026-11-07
+
+New Worker amelu-status (cloudflare/status) on status.amelu.org renders the
+Airplane status snapshot for the Amelu page (GET /api/v1/status?page=amelu,
+ordnary-identity): an overall banner, open incidents, each service with its
+90-day uptime bar, and past incidents. Same data as JSON at /api/status for
+the dashboard (CORS for app.amelu.org). Edge-cached for 30 seconds.
+In Airplane, groups and incidents now belong to the Ordnary or the Amelu
+page. The Amelu group has Mail delivery, Mailbox access (set by hand),
+Webmail, Dashboard and API (checked every minute). Amelu incidents no longer
+show on ordnary.com/status; this week's outage moved to status.amelu.org.

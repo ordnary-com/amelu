@@ -55,6 +55,10 @@ OVH_CAP = "OVH lane warm-up cap"
 # Messages an hour over all sending IPs, by days since the OVH IPs first sent.
 WARMUP = [60, 120, 250, 500, 800, 1200]
 SINCE_FILE = "/var/lib/amelu-ip-pools/ovh-since"
+SEEN_FILE = "/var/lib/amelu-ip-pools/seen-in-mx.json"
+# Receivers cache marduk.mx (TTL 3600) for their SPF check, so a new IP waits
+# until every cache has it; sending from it earlier fails customer SPF.
+MX_GRACE = datetime.timedelta(hours=2)
 LOG_DIR = "/var/log/stalwart"
 REPUTATION_FILE = "/var/lib/amelu-ip-pools/reputation.json"
 DEGRADE_HOURS, MAX_DEGRADE_HOURS = 48, 168
@@ -110,16 +114,20 @@ def bound(ip):
         return False
 
 
-def usable(ips, mx):
-    """The IPs receivers will accept: bound here, in customer SPF, with forward-confirmed reverse DNS."""
+def usable(ips, mx, seen):
+    """The IPs receivers will accept: bound here, in customer SPF long enough, with forward-confirmed reverse DNS."""
+    now = datetime.datetime.now(datetime.timezone.utc)
     ready = {}
     for name, ip in ips.items():
+        if ip not in mx:
+            continue
+        first = datetime.datetime.fromisoformat(seen.setdefault(ip, now.isoformat()))
         try:
             ptr = socket.gethostbyaddr(ip)[0].rstrip(".").lower()
             forward = set(socket.gethostbyname_ex(name)[2])
         except OSError:
             continue
-        if ip in mx and ptr == name and forward == {ip} and bound(ip):
+        if now - first >= MX_GRACE and ptr == name and forward == {ip} and bound(ip):
             ready[name] = ip
     return ready
 
@@ -223,16 +231,25 @@ def main():
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)
 
+    try:
+        seen = json.load(open(SEEN_FILE))
+    except (OSError, ValueError):
+        # First run (2026-11-07): only these were in marduk.mx before today.
+        seen = {ip: "2026-11-04T00:00:00+00:00" for ip in ("141.95.52.66", "51.89.39.34", "51.89.2.193", "51.89.1.228") if ip in mx}
+    seen = {ip: t for ip, t in seen.items() if ip in mx}
     pools, notes = {}, []
     if not off:
         for group, ips in GROUPS.items():
-            ready = usable(ips, mx)
+            ready = usable(ips, mx, seen)
             ok = {n: ip for n, ip in ready.items() if ip not in out}
             if ready and not ok:
                 notes.append(f"every {group} IP has a reputation block but the group keeps them")
             if ready:
                 pools[group] = ok or ready
     rate = warmup_rate(dry) if pools else None
+    if not dry:
+        os.makedirs(os.path.dirname(SEEN_FILE), exist_ok=True)
+        json.dump(seen, open(SEEN_FILE, "w"), indent=1)
 
     if "trusted" in pools:
         doms = new_domains()

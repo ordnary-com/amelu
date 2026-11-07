@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-07  Free plan has no daily sending limit anymore
+            2026-11-07-free-no-daily-limit.txt
+
 2026-11-07  DMARC/TLS reports no longer count against amelu.org's plan limit
             2026-11-07-reports-out-of-plan-limits.txt
 

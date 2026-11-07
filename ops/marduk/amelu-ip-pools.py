@@ -39,8 +39,10 @@ GROUPS = {
     "newdomains": {"out3.mx.amelu.org": "51.89.76.2", "out6.mx.amelu.org": "51.89.1.228",
                    "out7.mx.amelu.org": "51.89.102.29", "out8.mx.amelu.org": "51.89.76.15"},
 }
-# Spares, not in any group yet: out9 51.89.85.197, out10 51.89.85.192, out11 51.89.76.0
-# (a .0 address some receivers refuse, so the last one to use).
+# Spares, not in any group yet ("a .0 address some receivers refuse" makes out11 the last to use).
+SPARES = {"out9.mx.amelu.org": "51.89.85.197", "out10.mx.amelu.org": "51.89.85.192", "out11.mx.amelu.org": "51.89.76.0"}
+# Read by amelu-sending-stats.py for the dashboard's "Sending network" page.
+STATUS_FILE = "/var/lib/amelu-ip-pools/status.json"
 DESCRIPTIONS = {
     "system": "amelu.org's own mail (amelu-ip-pools)",
     "trusted": "Established and paying senders (amelu-ip-pools)",
@@ -233,6 +235,31 @@ def either(field, values):
     return " || ".join(f"{field} == '{v}'" for v in values)
 
 
+def write_status(pools, out):
+    """Per IP: its group and whether it sends, for the dashboard."""
+    try:
+        degraded = json.load(open(REPUTATION_FILE)).get("degraded", {})
+    except (OSError, ValueError):
+        degraded = {}
+    ips = []
+    for group, members in list(GROUPS.items()) + [("spare", SPARES)]:
+        for name, ip in sorted(members.items(), key=lambda kv: int(kv[0].split(".")[0][3:])):
+            if group != "spare" and name in pools.get(group, {}):
+                state, reason = "active", ""
+            elif ip in out:
+                state, reason = "paused", degraded.get(ip, {}).get("reason", "")[:200]
+            elif group == "spare":
+                state, reason = "spare", ""
+            else:
+                state, reason = "pending", "Waiting for DNS (marduk.mx, PTR) before it sends"
+            ips.append({"name": name, "ip": ip, "group": group, "state": state, "reason": reason,
+                        "pausedUntil": degraded.get(ip, {}).get("until") if state == "paused" else None})
+    os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)
+    json.dump({"updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "ips": ips},
+              open(STATUS_FILE + ".tmp", "w"))
+    os.replace(STATUS_FILE + ".tmp", STATUS_FILE)
+
+
 def main():
     dry, off = "--dry-run" in sys.argv, "--off" in sys.argv
     mx = mx_ips()
@@ -256,6 +283,8 @@ def main():
             if ready:
                 pools[group] = ok or ready
     rate = warmup_rate(dry) if pools else None
+    if not dry:
+        write_status(pools, out)
     if not dry:
         os.makedirs(os.path.dirname(SEEN_FILE), exist_ok=True)
         json.dump(seen, open(SEEN_FILE, "w"), indent=1)

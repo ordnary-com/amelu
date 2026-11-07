@@ -1,0 +1,11 @@
+A local API overwrote production's plan rules; SENDING_LIMITS_SYNC=off
+2026-11-07
+
+backend/.env points STALWART_BASE_URL at the production Stalwart. Starting
+the API locally ran SyncSendingLimits against it with the local database,
+which has no paid domains: "Amelu plan: go" and "pro" ended up with an empty
+domain list, so every paying customer fell under the free 150 a day.
+SyncSendingLimits now returns without writing when SENDING_LIMITS_SYNC=off,
+set in backend/.env and .env.example. Production doesn't set it. Fixing
+production needs the production API to sync again (a restart), since its
+last fingerprint still matches what it wrote before.

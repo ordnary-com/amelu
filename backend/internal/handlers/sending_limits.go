@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -115,6 +116,11 @@ func sendingLimitRules(plans map[string][]string, aliases map[string][]string, l
 // SyncSendingLimits writes the plan rules to Stalwart. Rules are found by
 // their description prefix and tier, so a changed limit replaces the rule.
 func (a *App) SyncSendingLimits(ctx context.Context) error {
+	// A local API pointed at the production Stalwart would overwrite the real
+	// plan rules with its own database (it did, devlog 2026-11-07).
+	if os.Getenv("SENDING_LIMITS_SYNC") == "off" {
+		return nil
+	}
 	sendingLimitsMu.Lock()
 	defer sendingLimitsMu.Unlock()
 

@@ -1,0 +1,14 @@
+// status.amelu.org: Amelu's public status page. Components, incidents and
+// uptime are managed in Airplane (Status Page, the "Amelu" page) and served by
+// the Airplane API's public snapshot, GET /api/v1/status?page=amelu. This
+// Worker renders that as HTML, and passes it on as JSON at /api/status for the
+// dashboard (app.amelu.org/status).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "amelu-status",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+  "observability": { "enabled": true },
+  "vars": { "STATUS_API": "https://api.airplane.ordnary.com/api/v1/status?page=amelu" },
+  "routes": [{ "pattern": "status.amelu.org", "custom_domain": true }]
+}

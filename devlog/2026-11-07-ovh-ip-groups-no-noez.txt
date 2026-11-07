@@ -17,3 +17,11 @@ a Cloudflare API token limited to DNS edit on amelu.org (keychain "amelu
 cloudflare dns").
 Still to do: PTRs at OVH, binding the new IPs on marduk permanently, then
 stopping gre-noez.
+Later the same day: all 11 IPs are in /etc/netplan/60-amelu-sending-ips.yaml
+(copy in ops/marduk; out4-6 were already in it, so they survive a reboot)
+and were added live with ip addr replace, no netplan apply. PTRs set in the
+OVH panel; out1, out2, out3, out7 and out8 added to marduk.mx. amelu-ip-pools
+only uses an IP 2 hours after it first appears in marduk.mx, because
+receivers cache that record (TTL 3600) for their SPF check. The old out1-3
+and ovh connection strategies are deleted; gre-noez is stopped and its UFW
+rule removed at 15:40 UTC by a one-off systemd timer (/root/noez-shutdown.sh).

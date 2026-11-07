@@ -83,6 +83,7 @@ export const routes: Routes = [
           { path: 'invoices', component: BillingInvoices, title: 'Invoices · Billing · Amelu' },
         ],
       },
+      { path: 'network', loadComponent: () => import('./network-page/network-page').then((m) => m.NetworkPage), title: 'Sending IPs · Amelu' },
       { path: '', loadChildren: () => import('./misc/routes').then((m) => m.ROUTES) },
       { path: '**', component: NotFound, title: 'Page not found · Amelu' },
     ],

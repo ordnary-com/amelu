@@ -221,18 +221,24 @@
               <span class="text-muted">Sent in the last 24 hours</span>
               <span>
                 <span class="font-bold" [class.text-bad]="s.state === 'full'" [class.text-warn]="s.state === 'near'">{{ s.sent | number }}</span>
-                of {{ s.limit | number }}
+                @if (s.state !== 'unlimited') {
+                  of {{ s.limit | number }}
+                }
               </span>
             </div>
-            <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
-              <div
-                class="h-full rounded-full"
-                [class]="s.state === 'full' ? 'bg-bad' : s.state === 'near' ? 'bg-warn' : 'bg-accent'"
-                [style.width.%]="s.percent"
-              ></div>
-            </div>
+            @if (s.state !== 'unlimited') {
+              <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                <div
+                  class="h-full rounded-full"
+                  [class]="s.state === 'full' ? 'bg-bad' : s.state === 'near' ? 'bg-warn' : 'bg-accent'"
+                  [style.width.%]="s.percent"
+                ></div>
+              </div>
+            }
             <p class="mt-2 text-[12px] text-muted">
-              @if (s.state === 'full') {
+              @if (s.state === 'unlimited') {
+                No daily limit on your plan. Sending in bulk or to people who didn't ask for it still isn't allowed.
+              } @else if (s.state === 'full') {
                 The daily limit is reached. New mail waits in the queue and goes out as the count drops, nothing bounces.
               } @else if (s.state === 'near') {
                 Close to the daily limit. Over it, mail waits in the queue instead of bouncing.

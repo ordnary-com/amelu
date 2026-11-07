@@ -4,6 +4,10 @@
   </amelu-alert>
 }
 
+@if (onFree()) {
+  <amelu-promo-banner class="mb-5" [showLink]="false" />
+}
+
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
   <p class="text-[13px] text-muted">Compare plans and upgrade at any time. Changes are prorated automatically.</p>
   @if (plans() && hasPaidPlans(plans()!)) {

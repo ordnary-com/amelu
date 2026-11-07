@@ -48,7 +48,7 @@ const PERKS_BY_PLAN: Record<string, string[]> = {
 /** The current dashboard's /billing/plans: compare, switch or cancel. */
 @Component({
   selector: 'amelu-billing-plans',
-  imports: [EmptyState, Alert],
+  imports: [EmptyState, Alert, PromoBanner],
   templateUrl: './billing-plans.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

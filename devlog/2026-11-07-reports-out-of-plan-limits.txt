@@ -1,0 +1,18 @@
+DMARC/TLS reports no longer count against amelu.org's plan limit
+2026-11-07
+
+Since 3 November the free plan rule ("Amelu plan: free, 150 a day per sender
+domain") held back amelu.org's DMARC and TLS reports, 1605 today, although
+amelu.org is in the exempt paid list. The reports and bounces Stalwart makes
+itself don't carry the customer's sender_domain when throttles run, so they
+fell through to the free rule; customer mail was not affected (trdlo.online,
+Go, sent 183 on 4 November untouched).
+Every plan rule (internal/stalwart/throttles.go) and the manual "Outbound per
+sender domain: 200 per hour" rule now first skip source == 'report' or 'dsn'.
+Reports get their own "DMARC and TLS reports cap", 120 an hour in total, so
+they can't eat the sending IPs' warm-up rate; amelu-ip-pools manages both.
+Found out on the way, per the Stalwart docs and a test with throwaway
+throttles: throttles keyed on the sender domain run once per message before
+routing, so rcpt_domain is empty there and the is_local_domain(rcpt_domain)
+"skip local delivery" condition never matches. Left in place; local
+delivery from a free domain over its limit is still held.

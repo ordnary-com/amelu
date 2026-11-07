@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-07  DMARC/TLS reports no longer count against amelu.org's plan limit
+            2026-11-07-reports-out-of-plan-limits.txt
+
 2026-11-07  Outbound IPs in three groups on OVH only; noez tunnel dropped
             2026-11-07-ovh-ip-groups-no-noez.txt
 

@@ -52,6 +52,13 @@ ROUTE = {"match": {"0": {"if": "is_local_domain(rcpt_domain)", "then": "'local'"
 NOT_LOCAL = {"if": "is_local_domain(rcpt_domain)", "then": "false"}
 TUNNEL_CAP = "noez tunnel cap"
 OVH_CAP = "OVH lane warm-up cap"
+PER_DOMAIN_CAP = "Outbound per sender domain"
+REPORT_CAP = "DMARC and TLS reports cap"
+REPORTS_PER_HOUR = 120
+# Stalwart's own reports and bounces don't carry the customer's sender_domain,
+# so they stay out of the per-domain cap and get one shared cap of their own;
+# thousands of DMARC reports a day would otherwise eat the IPs' warm-up rate.
+NOT_SERVER_MADE = {"if": "source == 'report' || source == 'dsn'", "then": "false"}
 # Messages an hour over all sending IPs, by days since the OVH IPs first sent.
 WARMUP = [60, 120, 250, 500, 800, 1200]
 SINCE_FILE = "/var/lib/amelu-ip-pools/ovh-since"
@@ -289,6 +296,18 @@ def main():
             calls.append(["x:MtaConnectionStrategy/set", {"create": {group: {"name": group, **fields}}}, "o" + group])
         elif existing[group]["sourceIps"] != source or existing[group]["ehloHostname"] != fields["ehloHostname"]:
             calls.append(["x:MtaConnectionStrategy/set", {"update": {existing[group]["id"]: fields}}, "o" + group])
+    pcap = next((t for t in throttles if t["description"].startswith(PER_DOMAIN_CAP)), None)
+    per_domain = {"match": {"0": NOT_LOCAL, "1": NOT_SERVER_MADE}, "else": "true"}
+    if pcap and pcap["match"] != per_domain:
+        calls.append(["x:MtaOutboundThrottle/set", {"update": {pcap["id"]: {"match": per_domain}}}, "p"])
+    rcap = next((t for t in throttles if t["description"].startswith(REPORT_CAP)), None)
+    report = {"enable": True, "description": f"{REPORT_CAP}: {REPORTS_PER_HOUR} per hour in total (amelu-ip-pools)", "key": {},
+              "match": {"match": {"0": {"if": "source == 'report'", "then": "true"}}, "else": "false"},
+              "rate": {"count": REPORTS_PER_HOUR, "period": 3600000}}
+    if rcap is None:
+        calls.append(["x:MtaOutboundThrottle/set", {"create": {"r": report}}, "r"])
+    elif any(rcap[k] != report[k] for k in ("enable", "description", "match", "rate")):
+        calls.append(["x:MtaOutboundThrottle/set", {"update": {rcap["id"]: report}}, "r"])
     if rate:
         cap = {"enable": True, "description": f"{OVH_CAP}: {rate} messages per hour over all sending IPs, grows daily (amelu-ip-pools)",
                "key": {}, "match": send_cap, "rate": {"count": rate, "period": 3600000}}

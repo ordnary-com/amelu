@@ -1,0 +1,19 @@
+Sender guard counts every recipient, reports volume instead of pausing on it
+2026-11-07
+
+ops/marduk/amelu-sender-guard.py (live on marduk, old copy at
+/usr/local/bin/amelu-sender-guard.bak-20261107):
+- It counted only the first address of to = ["a", "b", ...], so a message to
+  20 people counted as one recipient. Every address is counted now.
+- postmaster@ was skipped entirely, because the server's own bounces and
+  reports leave from it. It is now skipped only for those; mail a person
+  submitted (queue.authenticated-message-queued) counts.
+- The Gmail "unsolicited" rule needs 10 recipient domains, like the others
+  (was 8), so the fuller count doesn't newly catch grupocomunicarte.com.ar.
+- New: 100+ distinct recipients in 24h is only reported to abuse@amelu.org,
+  once per 7 days per domain. Volume never pauses anyone on its own.
+- A failed notice mail no longer crashes the run (it did twice, because
+  abuse@amelu.org doesn't exist).
+- --backtest N replays the rules over the last N log days. Over 30 days it
+  pauses the same known abusers as before and reports catxiaolan.top,
+  tollsett.com and nrmasa.com for review.

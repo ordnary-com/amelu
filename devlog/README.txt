@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-07  Sender guard counts every recipient, reports volume instead of pausing on it
+            2026-11-07-sender-guard-review.txt
+
 2026-11-06  Outbound mail is IPv4 only, after marduk's IPv6 address got a Spamhaus CSS listing
             2026-11-06-ipv4-only-outbound.txt
 

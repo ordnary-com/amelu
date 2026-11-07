@@ -15,5 +15,9 @@ func TestThrottleRulesSkipLocalQueue(t *testing.T) {
 		if !ok || first["if"] != "is_local_domain(rcpt_domain)" || first["then"] != "false" {
 			t.Errorf("%s: first condition is %v, want the local queue excluded", rule.Description, conds["0"])
 		}
+		second, ok := conds["1"].(map[string]any)
+		if !ok || second["if"] != "source == 'report' || source == 'dsn'" || second["then"] != "false" {
+			t.Errorf("%s: second condition is %v, want reports and bounces excluded", rule.Description, conds["1"])
+		}
 	}
 }

@@ -41,15 +41,22 @@ type throttleWire struct {
 // when throttles are evaluated, so it exempted nothing.
 var notLocal = map[string]any{"if": "is_local_domain(rcpt_domain)", "then": "false"}
 
+// notServerMade keeps the DMARC/TLS reports and bounces Stalwart sends itself
+// out of every plan limit: their sender_domain is not the customer's, so the
+// free rule caught all of amelu.org's reports (devlog 2026-11-07). They have
+// their own cap in ops/marduk/amelu-ip-pools.py.
+var notServerMade = map[string]any{"if": "source == 'report' || source == 'dsn'", "then": "false"}
+
 func (t OutboundThrottle) match() map[string]any {
 	then, otherwise := "true", "false"
 	if t.Negate {
 		then, otherwise = "false", "true"
 	}
-	if t.If == "" {
-		return map[string]any{"match": map[string]any{"0": notLocal}, "else": otherwise}
+	conds := map[string]any{"0": notLocal, "1": notServerMade}
+	if t.If != "" {
+		conds["2"] = map[string]any{"if": t.If, "then": then}
 	}
-	return map[string]any{"match": map[string]any{"0": notLocal, "1": map[string]any{"if": t.If, "then": then}}, "else": otherwise}
+	return map[string]any{"match": conds, "else": otherwise}
 }
 
 func (t OutboundThrottle) wire() map[string]any {

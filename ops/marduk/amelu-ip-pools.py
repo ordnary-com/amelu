@@ -1,34 +1,29 @@
 #!/usr/bin/env python3
 """
-Picks the outbound IP per sender on marduk (see devlog 2026-11-01 and
-2026-11-04).
+Picks the outbound IP per sender on marduk (see devlogs 2026-11-01,
+2026-11-04 and 2026-11-07).
 
-The three noez tunnel IPs each have a Stalwart connection strategy:
-  out3 (5.230.173.87)  amelu.org's own mail
-  out2 (5.230.173.86)  domains created in the last NEW_DAYS days
-  out1 (5.230.173.85)  everyone else's mail to Gmail
-so a new account that sends spam can't hurt established customers.
-Everyone else's other mail goes out over the OVH lane: the strategy 'ovh'
-with the OVH failover IPs out4-6 that sit directly on marduk. noez allows 150
-messages an hour through the tunnel, so the cap of 140 only counts the
-tunnel pools; the OVH lane has its own cap that grows while its IPs warm up.
-marduk's own IP (141.95.52.66) no longer sends while this is on.
+Three groups of OVH additional IPs, by how much we trust the sender:
+  system      amelu.org's own mail (password resets, invitations)
+  newdomains  domains created in the last NEW_DAYS days
+  trusted     everyone else
+so a new account that sends spam can only hurt the newdomains IPs. Each
+group is a Stalwart connection strategy; the x:MtaOutboundStrategy
+connection expression picks one by sender domain.
 
-Runs every 10 minutes from cron and rewrites the connection expression in the
-x:MtaOutboundStrategy singleton, the 'ovh' strategy's source IPs and the
-two caps; the route goes straight to MX. It only uses the tunnel IPs while
-all three are A records of marduk.mx.amelu.org, because customer SPF is
-"mx -all"; otherwise it falls back to 'default'. An OVH IP joins the lane
-only once it is an A record of marduk.mx.amelu.org too and its PTR and its
-outN name point at each other; without any, that mail stays on out1.
+An IP only joins its group once it is bound on marduk, is an A record of
+marduk.mx.amelu.org (customer SPF is "mx -all") and its PTR and outN name
+point at each other. A group with no usable IP falls back to trusted; with
+no trusted IP everything goes out from marduk's own IP ('default').
 
-Like Migadu's strela it also watches each source IP's reputation: it reads
-Stalwart's log from where it left off, finds remote rejections that blame
-the sending IP (blacklists, Yahoo's TSS codes, Outlook's "banned sending
-IP", or "blocked" with IP wording three times in an hour) and takes that
-OVH IP out of the lane for DEGRADE_HOURS, longer each time it happens
-again. If every OVH IP is out, the lane keeps them all rather than stop.
-A tunnel IP can't be swapped, so for those it only logs.
+It also watches each source IP's reputation: it reads Stalwart's log from
+where it left off, finds remote rejections that blame the sending IP
+(blacklists, Yahoo's TSS codes, Outlook's "banned sending IP", or "blocked"
+with IP wording three times in an hour) and takes that IP out of its group
+for DEGRADE_HOURS, longer each time it happens again, unless that would
+empty the group.
+
+Runs every 10 minutes from cron.
 
   amelu-ip-pools.py --dry-run   print the decision, change nothing
   amelu-ip-pools.py --off       send everything from marduk's own IP again
@@ -37,17 +32,27 @@ import base64, datetime, json, os, re, socket, sys, urllib.request
 
 JMAP = "http://127.0.0.1:8080/jmap"
 MX_HOST = "marduk.mx.amelu.org"
-POOL_IPS = {"5.230.173.85", "5.230.173.86", "5.230.173.87"}
-OVH_IPS = {"out4.mx.amelu.org": "51.89.39.34", "out5.mx.amelu.org": "51.89.2.193", "out6.mx.amelu.org": "51.89.1.228"}
+GROUPS = {
+    "system": {"out4.mx.amelu.org": "51.89.39.34"},
+    "trusted": {"out1.mx.amelu.org": "51.89.60.60", "out2.mx.amelu.org": "51.89.60.49", "out5.mx.amelu.org": "51.89.2.193"},
+    # out6 holds new domains until out3, out7 and out8 are live; then it moves to trusted.
+    "newdomains": {"out3.mx.amelu.org": "51.89.76.2", "out6.mx.amelu.org": "51.89.1.228",
+                   "out7.mx.amelu.org": "51.89.102.29", "out8.mx.amelu.org": "51.89.76.15"},
+}
+# Spares, not in any group yet: out9 51.89.85.197, out10 51.89.85.192, out11 51.89.76.0
+# (a .0 address some receivers refuse, so the last one to use).
+DESCRIPTIONS = {
+    "system": "amelu.org's own mail (amelu-ip-pools)",
+    "trusted": "Established and paying senders (amelu-ip-pools)",
+    "newdomains": "Domains created in the last days (amelu-ip-pools)",
+}
 NEW_DAYS = 7
 OWN_DOMAINS = ["amelu.org"]
-# Gmail is strictest with new IPs, so it keeps the warm tunnel IP.
-TUNNEL_RCPT_DOMAINS = ["gmail.com", "googlemail.com"]
 ROUTE = {"match": {"0": {"if": "is_local_domain(rcpt_domain)", "then": "'local'"}}, "else": "'mx'"}
 NOT_LOCAL = {"if": "is_local_domain(rcpt_domain)", "then": "false"}
 TUNNEL_CAP = "noez tunnel cap"
 OVH_CAP = "OVH lane warm-up cap"
-# Messages an hour over the whole OVH lane, by days since it first sent.
+# Messages an hour over all sending IPs, by days since the OVH IPs first sent.
 WARMUP = [60, 120, 250, 500, 800, 1200]
 SINCE_FILE = "/var/lib/amelu-ip-pools/ovh-since"
 LOG_DIR = "/var/log/stalwart"
@@ -96,16 +101,25 @@ def mx_ips():
         return set()
 
 
-def ovh_ready(mx):
-    """The OVH IPs receivers will accept: in customer SPF, with forward-confirmed reverse DNS."""
+def bound(ip):
+    try:
+        with socket.socket() as sock:
+            sock.bind((ip, 0))
+        return True
+    except OSError:
+        return False
+
+
+def usable(ips, mx):
+    """The IPs receivers will accept: bound here, in customer SPF, with forward-confirmed reverse DNS."""
     ready = {}
-    for name, ip in OVH_IPS.items():
+    for name, ip in ips.items():
         try:
             ptr = socket.gethostbyaddr(ip)[0].rstrip(".").lower()
             forward = set(socket.gethostbyname_ex(name)[2])
         except OSError:
             continue
-        if ip in mx and ptr == name and forward == {ip}:
+        if ip in mx and ptr == name and forward == {ip} and bound(ip):
             ready[name] = ip
     return ready
 
@@ -150,7 +164,7 @@ def watch_reputation(dry):
     files = sorted(f for f in os.listdir(LOG_DIR) if f.startswith("stalwart."))
     start = st.get("file") if st.get("file") in files else files[-1]
     offset = st.get("offset", 0) if start == st.get("file") else 0
-    news, sources = [], set(POOL_IPS) | set(OVH_IPS.values())
+    news, sources = [], {ip for g in GROUPS.values() for ip in g.values()}
     for name in files[files.index(start):]:
         with open(os.path.join(LOG_DIR, name), "rb") as f:
             f.seek(offset)
@@ -180,7 +194,7 @@ def watch_reputation(dry):
                 until = datetime.datetime.fromisoformat(at.rstrip("Z")) + datetime.timedelta(hours=min(DEGRADE_HOURS * count, MAX_DEGRADE_HOURS))
                 reason = re.sub(r"\s+", " ", line.split("hostname = ", 1)[-1])[:300].strip()
                 degraded[ip] = {"at": at, "until": until.isoformat() + "Z", "count": count, "reason": reason}
-                news.append(f"{ip} {'out of the OVH lane' if ip in OVH_IPS.values() else '(tunnel IP, stays)'} until {until:%Y-%m-%d %H:%M} UTC: {reason}")
+                news.append(f"{ip} out of its group until {until:%Y-%m-%d %H:%M} UTC: {reason}")
             offset = f.tell()
         last = name
         if name != files[-1]:
@@ -208,60 +222,59 @@ def main():
     out, news = watch_reputation(dry)
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)
-    ovh, rate = {}, None
-    if not off and POOL_IPS <= mx:
+
+    pools, notes = {}, []
+    if not off:
+        for group, ips in GROUPS.items():
+            ready = usable(ips, mx)
+            ok = {n: ip for n, ip in ready.items() if ip not in out}
+            if ready and not ok:
+                notes.append(f"every {group} IP has a reputation block but the group keeps them")
+            if ready:
+                pools[group] = ok or ready
+    rate = warmup_rate(dry) if pools else None
+
+    if "trusted" in pools:
         doms = new_domains()
-        ready = ovh_ready(mx)
-        ovh = {n: ip for n, ip in ready.items() if ip not in out} or ready
-        # The same first matches decide the IP and which cap counts the message.
-        tunnel = {"0": {"if": either("sender_domain", OWN_DOMAINS), "then": "'out3'"}}
-        if doms:
-            tunnel["1"] = {"if": either("sender_domain", doms), "then": "'out2'"}
-        if ovh:
-            tunnel[str(len(tunnel))] = {"if": either("rcpt_domain", TUNNEL_RCPT_DOMAINS), "then": "'out1'"}
-            connection = {"match": tunnel, "else": "'ovh'"}
-            rate = warmup_rate(dry)
-            lane = f"Gmail on out1, the rest on the OVH lane ({', '.join(n.split('.')[0] for n in sorted(ovh))}, {rate}/h)"
-            if len(ovh) < len(ready):
-                lane += f", {len(ready) - len(ovh)} out for reputation"
-            elif out & set(ready.values()):
-                lane += ", every OVH IP has a reputation block but the lane keeps them"
-        else:
-            connection = {"match": tunnel, "else": "'out1'"}
-            lane = "the rest on out1 (no OVH IP ready)"
-        state = f"tunnel IPs: amelu.org on out3, {len(doms)} new domains on out2, {lane}"
-        shift = lambda then: {str(int(k) + 1): {"if": v["if"], "then": then} for k, v in tunnel.items()}
-        tunnel_cap = {"match": {"0": NOT_LOCAL, **shift("true")}, "else": "false"} if ovh else {"match": {"0": NOT_LOCAL}, "else": "true"}
-        ovh_cap = {"match": {"0": NOT_LOCAL, **shift("false")}, "else": "true"}
+        match = {"0": {"if": either("sender_domain", OWN_DOMAINS), "then": "'system'" if "system" in pools else "'trusted'"}}
+        if doms and "newdomains" in pools:
+            match["1"] = {"if": either("sender_domain", doms), "then": "'newdomains'"}
+        connection = {"match": match, "else": "'trusted'"}
+        state = "; ".join(f"{g}: {', '.join(n.split('.')[0] for n in sorted(pools[g]))}" for g in GROUPS if g in pools)
+        state += f"; {len(doms)} new domains" + ("" if "newdomains" in pools else " (on trusted, no newdomains IP)")
+        state += f"; {rate}/h" + "".join(f"; {n}" for n in notes)
     else:
         connection = {"match": {}, "else": "'default'"}
-        state = "marduk's own IP" + ("" if off else f" (not all tunnel IPs are A records of {MX_HOST})")
-        tunnel_cap = {"match": {"0": NOT_LOCAL}, "else": "true"}
+        state = "marduk's own IP" + ("" if off else " (no usable trusted IP)")
+        pools = {}
+    # The tunnel is gone; its cap stays disabled so nothing counts against it.
+    tunnel_cap = {"match": {}, "else": "false"}
+    send_cap = {"match": {"0": NOT_LOCAL}, "else": "true"}
 
     cur = jmap([["x:MtaOutboundStrategy/get", {"ids": ["singleton"]}, "0"],
                 ["x:MtaConnectionStrategy/get", {}, "1"],
                 ["x:MtaOutboundThrottle/get", {}, "2"]])
     strategy = cur[0][1]["list"][0]
-    ovh_strategy = next((s for s in cur[1][1]["list"] if s["name"] == "ovh"), None)
+    existing = {s["name"]: s for s in cur[1][1]["list"]}
     throttles = cur[2][1]["list"]
-    tcap = next(t for t in throttles if t["description"].startswith(TUNNEL_CAP))
+    tcap = next((t for t in throttles if t["description"].startswith(TUNNEL_CAP)), None)
     ocap = next((t for t in throttles if t["description"].startswith(OVH_CAP)), None)
 
     calls = []
     if strategy["connection"] != connection or strategy["route"] != ROUTE:
         calls.append(["x:MtaOutboundStrategy/set", {"update": {"singleton": {"connection": connection, "route": ROUTE}}}, "s"])
-    if tcap["match"] != tunnel_cap:
-        calls.append(["x:MtaOutboundThrottle/set", {"update": {tcap["id"]: {"match": tunnel_cap}}}, "t"])
-    if ovh:
-        source = {str(i): {"ehloHostname": n, "sourceIp": ip} for i, (n, ip) in enumerate(sorted(ovh.items()))}
-        fields = {"description": "Send from the OVH failover IPs directly on marduk (out4-6.mx.amelu.org)",
-                  "ehloHostname": sorted(ovh)[0], "sourceIps": source}
-        if ovh_strategy is None:
-            calls.append(["x:MtaConnectionStrategy/set", {"create": {"o": {"name": "ovh", **fields}}}, "o"])
-        elif ovh_strategy["sourceIps"] != source:
-            calls.append(["x:MtaConnectionStrategy/set", {"update": {ovh_strategy["id"]: fields}}, "o"])
-        cap = {"enable": True, "description": f"{OVH_CAP}: {rate} messages per hour over out4-6, grows daily (amelu-ip-pools)",
-               "key": {}, "match": ovh_cap, "rate": {"count": rate, "period": 3600000}}
+    if tcap and (tcap["match"] != tunnel_cap or tcap["enable"]):
+        calls.append(["x:MtaOutboundThrottle/set", {"update": {tcap["id"]: {"match": tunnel_cap, "enable": False}}}, "t"])
+    for group, ips in pools.items():
+        source = {str(i): {"ehloHostname": n, "sourceIp": ip} for i, (n, ip) in enumerate(sorted(ips.items()))}
+        fields = {"description": DESCRIPTIONS[group], "ehloHostname": sorted(ips)[0], "sourceIps": source}
+        if group not in existing:
+            calls.append(["x:MtaConnectionStrategy/set", {"create": {group: {"name": group, **fields}}}, "o" + group])
+        elif existing[group]["sourceIps"] != source or existing[group]["ehloHostname"] != fields["ehloHostname"]:
+            calls.append(["x:MtaConnectionStrategy/set", {"update": {existing[group]["id"]: fields}}, "o" + group])
+    if rate:
+        cap = {"enable": True, "description": f"{OVH_CAP}: {rate} messages per hour over all sending IPs, grows daily (amelu-ip-pools)",
+               "key": {}, "match": send_cap, "rate": {"count": rate, "period": 3600000}}
         if ocap is None:
             calls.append(["x:MtaOutboundThrottle/set", {"create": {"c": cap}}, "c"])
         elif any(ocap[k] != cap[k] for k in ("enable", "description", "match", "rate")):
@@ -274,7 +287,7 @@ def main():
         print(f"WOULD SET: {state}")
         print(json.dumps(calls, indent=1)[:3000])
         return
-    # Strategy and caps first, so the connection expression never names an 'ovh' that isn't there.
+    # Strategies and caps first, so the connection expression never names a strategy that isn't there.
     calls.sort(key=lambda c: c[2] == "s")
     for r in jmap(calls):
         res = r[1]

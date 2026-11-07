@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-07  Outbound IPs in three groups on OVH only; noez tunnel dropped
+            2026-11-07-ovh-ip-groups-no-noez.txt
+
 2026-11-07  Sender guard counts every recipient, reports volume instead of pausing on it
             2026-11-07-sender-guard-review.txt
 

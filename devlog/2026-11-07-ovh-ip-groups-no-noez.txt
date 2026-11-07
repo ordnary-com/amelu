@@ -1,0 +1,19 @@
+Outbound IPs in three groups on OVH only; noez tunnel dropped
+2026-11-07
+
+amelu-ip-pools no longer uses the noez GRE IPs. Three Stalwart connection
+strategies, picked by sender domain: system (amelu.org, out4), newdomains
+(domains younger than 7 days, out6 for now) and trusted (everyone else,
+out5). The Gmail-to-out1 rule and the 140/h tunnel cap are gone (the cap's
+throttle is disabled); one warm-up cap covers all sending IPs.
+Eight more OVH additional IPs were ordered. The names out1-out3 now point
+at new IPs; out1/out2 join trusted, out3/out7/out8 join newdomains, and
+out9-out11 are spares (out11 is 51.89.76.0, last to use). An IP only joins
+its group once it is bound on marduk, is an A record of marduk.mx.amelu.org
+and has matching PTR and A records, so new IPs switch on by themselves.
+DNS: the three 5.230.173.x records are gone from marduk.mx, out1-out3 were
+repointed, out7-out11 created, each outN with "v=spf1 a -all". Done through
+a Cloudflare API token limited to DNS edit on amelu.org (keychain "amelu
+cloudflare dns").
+Still to do: PTRs at OVH, binding the new IPs on marduk permanently, then
+stopping gre-noez.

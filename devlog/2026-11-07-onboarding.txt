@@ -1,0 +1,15 @@
+First-login onboarding: a few questions and the first domain
+2026-11-07
+
+The owner of a new organization goes to /welcome (onboardingGuard) on first
+sign-in: organization name, what Amelu is for (personal, business, clients,
+nonprofit, other), how many people, and how they found us (search, social
+media, Reddit or a forum, a friend, a review, a comparison site, an AI
+assistant, Ordnary, somewhere else, with a free text field for some). Step 3
+sends them to /domains/new?name=... so the regular page creates the domain
+with its standard addresses and DNS help. "Skip for now" and "I'll do this
+later" also mark the account done.
+POST /api/onboarding stores the answers in onboarding_answers (fixed values,
+so they can be counted) and sets customers.onboarded_at; /api/me reports
+"onboarded". Migration 0039 sets onboarded_at for every existing account, so
+only new accounts see the flow. Invited team members don't (owner only).

@@ -201,6 +201,7 @@ func main() {
 	mux.HandleFunc("POST /api/login", app.Login)
 	mux.HandleFunc("POST /api/logout", app.Logout)
 	mux.HandleFunc("GET /api/me", auth.Require(app.Store, app.Me))
+	mux.HandleFunc("POST /api/onboarding", auth.RequireSession(app.Store, app.CompleteOnboarding))
 
 	// "Login with Ordnary account" - see internal/ordnaryauth. Full-page
 	// GET navigations (not fetch/XHR), same as the password login above but

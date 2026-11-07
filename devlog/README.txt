@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-07  A local API overwrote production's plan rules; SENDING_LIMITS_SYNC=off
+            2026-11-07-local-api-overwrote-plan-rules.txt
+
 2026-11-07  Free plan keeps its daily limit; plan exemptions are one boolean expression
             2026-11-07-free-daily-limit-back.txt
 

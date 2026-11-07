@@ -39,6 +39,8 @@ type profileResponse struct {
 	Role             string  `json:"role"`
 	LastSignInAt     *string `json:"lastSignInAt,omitempty"`
 	AvatarURL        string  `json:"avatarUrl,omitempty"`
+	// False until the first-login onboarding is done (or skipped).
+	Onboarded bool `json:"onboarded"`
 }
 
 func toProfileResponse(p *db.CustomerProfile) profileResponse {
@@ -55,6 +57,7 @@ func toProfileResponse(p *db.CustomerProfile) profileResponse {
 		OrganizationName: p.OrganizationName,
 		Role:             p.Role,
 		AvatarURL:        p.AvatarURL.String,
+		Onboarded:        p.OnboardedAt.Valid,
 	}
 	if p.LastSignInAt.Valid {
 		formatted := p.LastSignInAt.Time.Format(http.TimeFormat)

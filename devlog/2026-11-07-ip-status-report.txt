@@ -1,0 +1,10 @@
+marduk reports per sending IP state and delivery results
+2026-11-07
+
+amelu-ip-pools writes /var/lib/amelu-ip-pools/status.json each run: every
+outN IP with its group (system, trusted, newdomains, spare) and state
+(active, paused for a reputation block, pending DNS, spare).
+amelu-sending-stats adds per-IP delivered, deferred (4xx), rejected (5xx)
+and connection errors over 24 hours and 7 days (the 7 days cached hourly) to
+its report as "network". The API ignores it for now; it's there for a later
+per-IP performance view.

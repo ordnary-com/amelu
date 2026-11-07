@@ -24,6 +24,18 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-07  marduk reports per sending IP state and delivery results
+            2026-11-07-ip-status-report.txt
+
+2026-11-07  status.amelu.org: Amelu's own status page
+            2026-11-07-status-amelu-org.txt
+
+2026-11-07  Dashboard: upgrade prompts in euros, a Sending IPs page, real service status
+            2026-11-07-dashboard-upgrade-ips-status.txt
+
+2026-11-07  First-login onboarding: a few questions and the first domain
+            2026-11-07-onboarding.txt
+
 2026-11-07  A local API overwrote production's plan rules; SENDING_LIMITS_SYNC=off
             2026-11-07-local-api-overwrote-plan-rules.txt
 

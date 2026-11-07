@@ -16,7 +16,7 @@ import (
 // Outgoing mail per plan: a daily cap per sender domain (plan_tiers.
 // max_outgoing_per_day), enforced by Stalwart outbound throttles that this
 // file keeps in sync. Paid plans get a rule listing their domains; the free
-// rule covers every other sender. Over the cap Stalwart holds mail in the
+// rule covers every other sender, and is disabled while its limit is 0. Over the cap Stalwart holds mail in the
 // queue until the window allows it, nothing bounces. The existing rules
 // (200 an hour per sender domain, the noez cap in total) stay as they are.
 
@@ -95,12 +95,18 @@ func sendingLimitRules(plans map[string][]string, aliases map[string][]string, l
 			PeriodMs:    day,
 		})
 	}
+	// 0 means no daily cap; the rule stays, disabled, so turning a cap back on
+	// is only a plan_tiers change.
+	free := fmt.Sprintf("%sfree, %d a day per sender domain", sendingLimitPrefix, limits["free"])
+	if limits["free"] <= 0 {
+		free = sendingLimitPrefix + "free, no daily limit (disabled)"
+	}
 	rules = append(rules, stalwart.OutboundThrottle{
-		Description: fmt.Sprintf("%sfree, %d a day per sender domain", sendingLimitPrefix, limits["free"]),
-		Enable:      true,
+		Description: free,
+		Enable:      limits["free"] > 0,
 		If:          senderDomainIn(excluded),
 		Negate:      true,
-		Count:       limits["free"],
+		Count:       max(limits["free"], 1),
 		PeriodMs:    day,
 	})
 	return rules

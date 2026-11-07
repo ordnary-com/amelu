@@ -1,0 +1,11 @@
+Free plan keeps its daily limit; plan exemptions are one boolean expression
+2026-11-07
+
+Migration 0038 sets free back to 150 a day; 0037 removing it was a
+misunderstanding (the problem was amelu.org falling under the free rule, not
+the free limit itself). The code that treats 0 as "no daily limit" stays.
+Throttle rules (internal/stalwart/throttles.go, and the per-domain rule in
+amelu-ip-pools) now decide in one "else" expression, e.g. for free:
+"!(source == 'report' || source == 'dsn') && !(sender_domain == 'amelu.org'
+|| ...)". The earlier {"if": <exempt list>, "then": "false"} step did not
+reliably exempt amelu.org.

@@ -13,6 +13,7 @@ import { PromoBanner } from '../promo-banner/promo-banner';
 // Copied from frontend/src/pages/BillingPlansPage.tsx.
 const PERKS_BY_PLAN: Record<string, string[]> = {
   free: [
+    '150 outgoing messages/day',
     'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
@@ -22,22 +23,24 @@ const PERKS_BY_PLAN: Record<string, string[]> = {
   ],
   go: [
     '10,000 incoming messages/day',
-    '2,000 outgoing messages/day',
+    '1,000 outgoing messages/day per domain',
     'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',
     'DNS configuration & live health checks',
+    'Branded webmail for your organization',
     'Email support',
   ],
   pro: [
     '50,000 incoming messages/day',
-    '10,000 outgoing messages/day',
+    '3,000 outgoing messages/day per domain',
     'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',
     'DNS configuration & live health checks',
+    'Branded webmail for your organization',
     'Priority email support',
   ],
 };

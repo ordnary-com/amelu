@@ -24,6 +24,9 @@
       <a routerLink="/support" [class]="heroLink" aria-label="Support">
         <amelu-icon name="lifebuoy" [size]="16" /><span class="max-mobile:hidden">Support</span>
       </a>
+      <a routerLink="/network" [class]="heroLink" aria-label="Sending IPs">
+        <amelu-icon name="pulse" [size]="16" /><span class="max-mobile:hidden">Sending IPs</span>
+      </a>
       @if (discordUrl) {
         <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink" aria-label="Discord">
           <amelu-icon name="discord" [size]="16" /><span class="max-mobile:hidden">Discord</span>
@@ -83,6 +86,9 @@
   </section>
 
   <div class="space-y-6">
+    @if (upgrade()) {
+      <amelu-promo-banner />
+    }
     <section>
       <div [class]="sectionHeader">
         <h2 [class]="cardTitle">Your plan</h2>
@@ -129,6 +135,22 @@
               <span>Up to <span class="font-bold">{{ billing()!.plan.maxMailboxesPerDomain }}</span></span>
             </div>
           </div>
+
+          @if (upgrade(); as up) {
+            <div class="mt-4 border-t border-line pt-4">
+              <p class="text-[13px] font-semibold">With Go, from {{ up.perMonth }}/mo billed yearly</p>
+              <ul class="mt-2 space-y-1.5">
+                @for (line of up.lines; track line) {
+                  <li class="flex gap-2 text-[13px] text-muted">
+                    <amelu-icon name="check" [size]="14" class="mt-0.5 flex-none text-ok" />{{ line }}
+                  </li>
+                }
+              </ul>
+              <a routerLink="/billing/plans" class="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-[13px] font-medium text-white hover:bg-accent/80">
+                Upgrade to Go <amelu-icon name="arrowRight" [size]="14" />
+              </a>
+            </div>
+          }
         }
       </div>
     </section>

@@ -13,10 +13,12 @@ import { DomainCard } from '../domain-card/domain-card';
 import { INVOICE_STATUS, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
+import { formatPrice, isFree } from '../billing';
+import { PromoBanner } from '../promo-banner/promo-banner';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard, PromoBanner],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-4' },
@@ -41,6 +43,22 @@ export class Home {
   protected readonly health = inject(DomainHealthChecks).byId;
   protected readonly billing = toSignal(this.api.billingOverview().pipe(catchError(() => of(null))));
   protected readonly invoices = toSignal(this.api.listInvoices().pipe(catchError(() => of(null))));
+  private readonly plans = toSignal(this.api.listPlans().pipe(catchError(() => of(null))));
+  /** On the free plan: what Go adds, from the live plan limits. */
+  protected readonly upgrade = computed(() => {
+    const current = this.billing()?.plan;
+    const go = this.plans()?.find((p) => p.id === 'go');
+    if (!current || !isFree(current) || !go?.priceCentsAnnual) return null;
+    return {
+      perMonth: formatPrice(go.priceCentsAnnual / 12),
+      lines: [
+        `${go.maxDomains} domains instead of ${current.maxDomains}`,
+        `${go.maxMailboxesPerDomain} mailboxes per domain instead of ${current.maxMailboxesPerDomain}`,
+        '1,000 outgoing messages a day instead of 150',
+        'Branded webmail and email support',
+      ],
+    };
+  });
 
   protected readonly firstName = computed(() => {
     const customer = this.session.customer();

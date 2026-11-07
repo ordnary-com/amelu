@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth.guard';
+import { onboardingGuard } from './onboarding.guard';
 import { Shell } from './shell/shell';
 import { Home } from './home/home';
 import { DomainDetail } from './domain-detail/domain-detail';
@@ -24,9 +25,15 @@ export const routes: Routes = [
     title: 'Accept invitation · Amelu',
   },
   {
+    path: 'welcome',
+    canActivate: [authGuard],
+    loadComponent: () => import('./onboarding/onboarding').then((m) => m.Onboarding),
+    title: 'Welcome · Amelu',
+  },
+  {
     path: '',
     component: Shell,
-    canActivate: [authGuard],
+    canActivate: [authGuard, onboardingGuard],
     children: [
       { path: '', component: Home, title: 'Amelu' },
       {
@@ -76,6 +83,7 @@ export const routes: Routes = [
           { path: 'invoices', component: BillingInvoices, title: 'Invoices · Billing · Amelu' },
         ],
       },
+      { path: 'network', loadComponent: () => import('./network-page/network-page').then((m) => m.NetworkPage), title: 'Sending IPs · Amelu' },
       { path: '', loadChildren: () => import('./misc/routes').then((m) => m.ROUTES) },
       { path: '**', component: NotFound, title: 'Page not found · Amelu' },
     ],

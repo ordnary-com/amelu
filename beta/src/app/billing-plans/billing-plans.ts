@@ -3,15 +3,17 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { Api, BillingInterval, Plan, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
-import { formatDollars, isFree } from '../billing';
+import { formatPrice, isFree } from '../billing';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { PromoBanner } from '../promo-banner/promo-banner';
 
 // Descriptive, not backend-enforced: every plan gets the same feature set
 // today, only the support tier and the two API-driven limits differ.
 // Copied from frontend/src/pages/BillingPlansPage.tsx.
 const PERKS_BY_PLAN: Record<string, string[]> = {
   free: [
+    '150 outgoing messages/day',
     'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
@@ -21,22 +23,24 @@ const PERKS_BY_PLAN: Record<string, string[]> = {
   ],
   go: [
     '10,000 incoming messages/day',
-    '2,000 outgoing messages/day',
+    '1,000 outgoing messages/day per domain',
     'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',
     'DNS configuration & live health checks',
+    'Branded webmail for your organization',
     'Email support',
   ],
   pro: [
     '50,000 incoming messages/day',
-    '10,000 outgoing messages/day',
+    '3,000 outgoing messages/day per domain',
     'Unlimited storage per mailbox',
     'Forwarding & catch-all addresses',
     'Unlimited address & domain aliases',
     'Spam filtering & pattern rewrites',
     'DNS configuration & live health checks',
+    'Branded webmail for your organization',
     'Priority email support',
   ],
 };
@@ -44,7 +48,7 @@ const PERKS_BY_PLAN: Record<string, string[]> = {
 /** The current dashboard's /billing/plans: compare, switch or cancel. */
 @Component({
   selector: 'amelu-billing-plans',
-  imports: [EmptyState, Alert],
+  imports: [EmptyState, Alert, PromoBanner],
   templateUrl: './billing-plans.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -53,11 +57,14 @@ export class BillingPlans {
   private readonly api = inject(Api);
   protected readonly ui = UI;
   protected readonly isFree = isFree;
-  protected readonly dollars = formatDollars;
+  protected readonly money = formatPrice;
 
   // undefined while loading, null when the request failed
   protected readonly plans = toSignal(this.api.listPlans().pipe(catchError(() => of(null))));
-  protected readonly interval = signal<BillingInterval>('monthly');
+  // Yearly first: cheaper per month, and what checkout defaults to.
+  protected readonly interval = signal<BillingInterval>('annual');
+  /** The campaign codes only work on a first paid subscription. */
+  protected readonly onFree = () => !!this.plans()?.some((p) => p.current && isFree(p));
   protected readonly busyKey = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 

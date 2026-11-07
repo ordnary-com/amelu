@@ -242,6 +242,9 @@
                 The daily limit is reached. New mail waits in the queue and goes out as the count drops, nothing bounces.
               } @else if (s.state === 'near') {
                 Close to the daily limit. Over it, mail waits in the queue instead of bouncing.
+              }
+              @if (onFree() && (s.state === 'full' || s.state === 'near')) {
+                <a routerLink="/billing/plans" class="font-medium text-link hover:underline">Upgrade to Go for 1,000 a day.</a>
               } @else {
                 The limit counts per domain over a rolling 24 hours. Over it, mail waits in the queue.
               }

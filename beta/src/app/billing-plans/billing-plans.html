@@ -4,6 +4,10 @@
   </amelu-alert>
 }
 
+@if (onFree()) {
+  <amelu-promo-banner class="mb-5" [showLink]="false" />
+}
+
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
   <p class="text-[13px] text-muted">Compare plans and upgrade at any time. Changes are prorated automatically.</p>
   @if (plans() && hasPaidPlans(plans()!)) {
@@ -53,11 +57,11 @@
             <div class="text-[28px] leading-none font-bold">Free</div>
           } @else {
             <div>
-              <span class="text-[28px] leading-none font-bold">{{ dollars(price(plan)) }}</span>
+              <span class="text-[28px] leading-none font-bold">{{ money(price(plan)) }}</span>
               <span class="text-[13px] text-muted">/{{ interval() === 'monthly' ? 'month' : 'year' }}</span>
             </div>
             @if (interval() === 'annual') {
-              <div class="mt-1 text-[12px] font-medium text-ok">Save {{ dollars(savings(plan)) }} a year</div>
+              <div class="mt-1 text-[12px] font-medium text-ok">Save {{ money(savings(plan)) }} a year</div>
             }
           }
         </div>

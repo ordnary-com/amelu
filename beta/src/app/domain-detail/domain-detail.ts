@@ -84,8 +84,10 @@ export class DomainDetail {
   protected readonly sendingUsage = computed(() => {
     const s = this.sending();
     if (!s || s.updatedAt === null) return null;
-    const ratio = s.limit > 0 ? s.sent / s.limit : 1;
-    return { ...s, percent: Math.min(100, ratio * 100), state: ratio >= 1 ? 'full' : ratio >= 0.8 ? 'near' : 'ok' };
+    // A limit of 0 means the plan has no daily cap.
+    if (s.limit <= 0) return { ...s, percent: 0, state: 'unlimited' as const };
+    const ratio = s.sent / s.limit;
+    return { ...s, percent: Math.min(100, ratio * 100), state: ratio >= 1 ? ('full' as const) : ratio >= 0.8 ? ('near' as const) : ('ok' as const) };
   });
   protected readonly activity = this.perDomain((id) => this.api.domainActivity(id).pipe(map((list) => list.slice(0, 5))));
 

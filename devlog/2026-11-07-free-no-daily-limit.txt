@@ -1,0 +1,15 @@
+Free plan has no daily sending limit anymore
+2026-11-07
+
+Migration 0037 sets plan_tiers.max_outgoing_per_day to 0 for free, and
+0 now means no daily cap: SyncSendingLimits keeps the "Amelu plan: free"
+throttle but disables it ("free, no daily limit (disabled)"), so turning a
+cap back on is only a plan_tiers change. Abuse stays covered by the hourly
+per-domain throttle (200 an hour) and the sender guard.
+Reason: the free rule's exemption list didn't reliably exempt amelu.org's own
+mail (devlog 2026-11-07-reports-out-of-plan-limits.txt), and the support
+reply of 23 October already told free customers there is no fixed daily
+limit.
+The 2.0 dashboard's domain page shows "No daily limit on your plan" without
+a bar when the limit is 0, instead of a full red bar.
+The landing site still lists "150 a day" for Free.

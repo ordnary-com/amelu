@@ -45,3 +45,11 @@ func TestSendingLimitRulesSkipOddNames(t *testing.T) {
 		t.Errorf("a name with a quote must never reach the expression: %s", rules[0].If)
 	}
 }
+
+func TestSendingLimitRulesFreeWithoutLimit(t *testing.T) {
+	rules := sendingLimitRules(map[string][]string{"go": {"acme.nl"}}, nil, map[string]int{"free": 0, "go": 1000})
+	free := rules[len(rules)-1]
+	if free.Enable || ruleTier(free) != "free" || free.Count < 1 {
+		t.Errorf("free rule with limit 0 = %+v, want a disabled free rule with a valid count", free)
+	}
+}

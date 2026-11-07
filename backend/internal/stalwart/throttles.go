@@ -41,22 +41,27 @@ type throttleWire struct {
 // when throttles are evaluated, so it exempted nothing.
 var notLocal = map[string]any{"if": "is_local_domain(rcpt_domain)", "then": "false"}
 
-// notServerMade keeps the DMARC/TLS reports and bounces Stalwart sends itself
-// out of every plan limit: their sender_domain is not the customer's, so the
-// free rule caught all of amelu.org's reports (devlog 2026-11-07). They have
-// their own cap in ops/marduk/amelu-ip-pools.py.
-var notServerMade = map[string]any{"if": "source == 'report' || source == 'dsn'", "then": "false"}
+// serverMade marks the DMARC/TLS reports and bounces Stalwart sends itself:
+// they never count against a plan limit and have their own cap in
+// ops/marduk/amelu-ip-pools.py.
+const serverMade = "source == 'report' || source == 'dsn'"
 
+// match puts the whole decision in one boolean expression. An exemption
+// written as {"if": ..., "then": "false"} did not reliably exempt: amelu.org
+// stayed under the free rule although it was on that list (devlog
+// 2026-11-07). notLocal is kept first; it is harmless, but rcpt_domain is
+// empty when sender-domain throttles run, so it rarely applies.
 func (t OutboundThrottle) match() map[string]any {
-	then, otherwise := "true", "false"
-	if t.Negate {
-		then, otherwise = "false", "true"
+	expr := "!(" + serverMade + ")"
+	switch {
+	case t.If != "" && t.Negate:
+		expr += " && !(" + t.If + ")"
+	case t.If != "":
+		expr += " && (" + t.If + ")"
+	case !t.Negate:
+		expr = "false"
 	}
-	conds := map[string]any{"0": notLocal, "1": notServerMade}
-	if t.If != "" {
-		conds["2"] = map[string]any{"if": t.If, "then": then}
-	}
-	return map[string]any{"match": conds, "else": otherwise}
+	return map[string]any{"match": map[string]any{"0": notLocal}, "else": expr}
 }
 
 func (t OutboundThrottle) wire() map[string]any {

@@ -58,7 +58,9 @@ REPORTS_PER_HOUR = 120
 # Stalwart's own reports and bounces don't carry the customer's sender_domain,
 # so they stay out of the per-domain cap and get one shared cap of their own;
 # thousands of DMARC reports a day would otherwise eat the IPs' warm-up rate.
-NOT_SERVER_MADE = {"if": "source == 'report' || source == 'dsn'", "then": "false"}
+# One boolean expression: an {"if": ..., "then": "false"} exemption didn't
+# reliably exempt (devlog 2026-11-07).
+NOT_SERVER_MADE = "!(source == 'report' || source == 'dsn')"
 # Messages an hour over all sending IPs, by days since the OVH IPs first sent.
 WARMUP = [60, 120, 250, 500, 800, 1200]
 SINCE_FILE = "/var/lib/amelu-ip-pools/ovh-since"
@@ -297,7 +299,7 @@ def main():
         elif existing[group]["sourceIps"] != source or existing[group]["ehloHostname"] != fields["ehloHostname"]:
             calls.append(["x:MtaConnectionStrategy/set", {"update": {existing[group]["id"]: fields}}, "o" + group])
     pcap = next((t for t in throttles if t["description"].startswith(PER_DOMAIN_CAP)), None)
-    per_domain = {"match": {"0": NOT_LOCAL, "1": NOT_SERVER_MADE}, "else": "true"}
+    per_domain = {"match": {"0": NOT_LOCAL}, "else": NOT_SERVER_MADE}
     if pcap and pcap["match"] != per_domain:
         calls.append(["x:MtaOutboundThrottle/set", {"update": {pcap["id"]: {"match": per_domain}}}, "p"])
     rcap = next((t for t in throttles if t["description"].startswith(REPORT_CAP)), None)

@@ -1,0 +1,15 @@
+Dashboard: upgrade prompts in euros, a Sending IPs page, real service status
+2026-11-07
+
+Prices show in euros (Stripe charges EUR; the dashboard said $). The plans
+page opens on yearly, lists the real outgoing limits (150, 1,000 and 3,000 a
+day; it said 2,000 and 10,000) and branded webmail for Go and Pro.
+On the free plan, Home shows what Go adds from the live plan limits (25
+domains instead of 1, 200 mailboxes instead of 10, 1,000 a day instead of
+150), and Home and the plans page show the November campaign's code of the
+day (promo.ts, gone after 30 November). The domain page offers the upgrade
+when the daily limit is near or reached.
+/network lists the eleven sending IPs with their hostnames and copy buttons,
+linked from Home next to Changelog, Support and Discord.
+/status no longer reports every service operational by hand: it reads
+status.amelu.org/api/status (cloudflare/status) and shows open incidents.

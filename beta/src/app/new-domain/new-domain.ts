@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
 import { Api, Domain, errorMessage } from '../api';
@@ -34,7 +34,8 @@ export class NewDomain {
   protected readonly ui = UI;
   protected readonly defaults = DEFAULT_ADDRESSES;
 
-  protected readonly input = signal('');
+  // Prefilled when the welcome flow sends someone here with ?name=.
+  protected readonly input = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('name') ?? '');
   protected readonly createDefaults = signal(true);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);

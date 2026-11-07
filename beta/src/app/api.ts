@@ -16,6 +16,16 @@ export interface Customer {
   lastSignInAt?: string;
   /** Ordnary profile picture; set from the next Ordnary login on. */
   avatarUrl?: string;
+  /** False until the first-login onboarding is done or skipped. */
+  onboarded: boolean;
+}
+
+export interface OnboardingAnswers {
+  organizationName?: string;
+  useCase?: string;
+  teamSize?: string;
+  source?: string;
+  sourceDetail?: string;
 }
 
 export type OrganizationRole = 'owner' | 'admin' | 'helpdesk' | 'billing' | 'read_only';
@@ -224,6 +234,10 @@ export class Api {
 
   me() {
     return this.http.get<Customer>('/api/me');
+  }
+
+  completeOnboarding(answers: OnboardingAnswers) {
+    return this.http.post<Customer>('/api/onboarding', answers);
   }
 
   listDomains() {

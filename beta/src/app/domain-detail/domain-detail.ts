@@ -11,6 +11,7 @@ import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { DOMAIN_STATUS, MAILBOX_STATUS, badgeClass } from '../status';
 import { UI } from '../ui';
+import { isFree } from '../billing';
 import { EmptyState } from '../empty-state/empty-state';
 import { countedMailboxes } from '../standard-addresses';
 
@@ -91,12 +92,13 @@ export class DomainDetail {
   });
   protected readonly activity = this.perDomain((id) => this.api.domainActivity(id).pipe(map((list) => list.slice(0, 5))));
 
-  private readonly limit = toSignal(
-    this.api.billingOverview().pipe(
-      map((overview) => overview.plan.maxMailboxesPerDomain),
-      catchError(() => of(null)),
-    ),
-  );
+  private readonly overview = toSignal(this.api.billingOverview().pipe(catchError(() => of(null))));
+  private readonly limit = computed(() => this.overview()?.plan.maxMailboxesPerDomain ?? null);
+  /** Near the daily sending limit on Free, the card offers the upgrade. */
+  protected readonly onFree = computed(() => {
+    const plan = this.overview()?.plan;
+    return !!plan && isFree(plan);
+  });
 
   protected readonly stats = computed(() => {
     const mailboxes = this.mailboxes();

@@ -1,0 +1,11 @@
+Domains page: cleaner filter field and sort select
+2026-11-08
+
+The sort select on /domains in the beta drew the browser's own arrow. It is
+now appearance-none inside a bordered label with a muted "Sort" prefix
+("Sort  Your order") and the chevronDown icon from icon.ts on the right. It
+is still a native select, so the keyboard and screen readers work as before,
+and its options get bg-surface so the list isn't white in dark mode. The
+filter field hides the native search cancel button and shows its own ×
+once something is typed. Escape clears the filter. Both controls get
+hover:border-ink/20 and the same accent focus ring.

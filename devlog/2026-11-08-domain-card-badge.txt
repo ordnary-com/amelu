@@ -1,0 +1,11 @@
+Domain cards: status and DNS health in one badge
+2026-11-08
+
+The domain card (Overview and Domains page) had a square status badge, a
+separate 0-100 ring and square DNS badges with a dot. Now one round badge
+holds a small progress ring, the status and the percentage ("DNS pending ·
+60%"), in the status's colour, except that an active domain with a record
+that doesn't check out turns amber. While the DNS check runs only the empty
+ring and the status show. The MX, SPF, DKIM and DMARC badges are round too,
+with a check, a cross or dots for not checked instead of a coloured dot, and
+wrap on narrow cards.

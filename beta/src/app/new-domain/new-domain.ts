@@ -5,7 +5,7 @@ import { catchError, firstValueFrom, map, of } from 'rxjs';
 import { Api, Domain, errorMessage } from '../api';
 import { Domains } from '../domains';
 import { Alert } from '../alert/alert';
-import { Icon } from '../icon';
+import { Icon, IconName } from '../icon';
 import { UI } from '../ui';
 import { STANDARD_ADDRESSES } from '../standard-addresses';
 import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
@@ -14,6 +14,13 @@ import { DitherShader } from '../login/dither-shader';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
 const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
+
+// What each standard address is for, shown next to it on the form.
+const ADDRESS_ROWS: { localPart: string; icon: IconName; purpose: string }[] = [
+  { localPart: 'admin', icon: 'user', purpose: 'For whoever runs the domain, like certificate checks' },
+  { localPart: 'postmaster', icon: 'mail', purpose: 'Where other mail servers report delivery problems' },
+  { localPart: 'abuse', icon: 'shield', purpose: 'Where people report spam or misuse' },
+];
 
 interface CreatedAddress {
   address: string;
@@ -35,6 +42,7 @@ export class NewDomain {
   private readonly dnsApi = inject(DnsSpamApi);
   protected readonly ui = UI;
   protected readonly defaults = DEFAULT_ADDRESSES;
+  protected readonly defaultRows = ADDRESS_ROWS.filter((row) => DEFAULT_ADDRESSES.includes(row.localPart));
 
   // Prefilled when the welcome flow sends someone here with ?name=.
   protected readonly input = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('name') ?? '');

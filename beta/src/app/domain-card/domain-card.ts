@@ -6,7 +6,7 @@ import { ActionIcon } from '../action-icon';
 import { Icon } from '../icon';
 import { DomainHealth, healthScore } from '../domain-health';
 import { Domains } from '../domains';
-import { DOMAIN_STATUS, badgeClass } from '../status';
+import { DOMAIN_STATUS, TONES } from '../status';
 
 /**
  * One domain as a card: name, status, which DNS records check out, and a star.
@@ -28,7 +28,12 @@ export class DomainCard {
   protected readonly favoriteFailed = signal(false);
 
   protected readonly status = computed(() => DOMAIN_STATUS[this.domain().status]);
-  protected readonly badge = computed(() => badgeClass(this.status().tone));
+  /** The status's colour, but amber when an active domain has a DNS record that doesn't check out. */
+  protected readonly tone = computed(() => {
+    const score = this.score();
+    const tone = this.domain().status === 'active' && score !== null && score < 100 ? 'warn' : this.status().tone;
+    return TONES[tone];
+  });
   protected readonly checks = computed(() => {
     const health = this.health();
     if (!health) return null;
@@ -41,12 +46,8 @@ export class DomainCard {
   });
 
   protected readonly score = computed(() => healthScore(this.health()));
-  // The ring is drawn as a dash of a circle with r=14 (circumference ~88).
-  protected readonly dash = computed(() => `${((this.score() ?? 0) / 100) * 87.96} 87.96`);
-  protected readonly scoreTone = computed(() => {
-    const score = this.score();
-    return score === null ? 'text-muted' : score === 100 ? 'text-ok' : score >= 60 ? 'text-warn' : 'text-bad';
-  });
+  // The ring is a dash of a circle with r=7.5 (circumference ~47.1).
+  protected readonly dash = computed(() => `${((this.score() ?? 0) / 100) * 47.12} 47.12`);
 
   // Handled here rather than by the page, so the star works wherever the
   // card is shown (the Domains page and the home page).

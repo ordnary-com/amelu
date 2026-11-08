@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Mailbox setup: a QR code for iPhone and iPad
+            2026-11-08-qr-device-setup.txt
+
 2026-11-08  Domain cards: DNS health score and DMARC
             2026-11-08-domain-health-score.txt
 

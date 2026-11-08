@@ -10,3 +10,5 @@ category (globe, mail, shield, tinted like the dot), the message, and the
 time with the full date and seconds on hover. Changes by support show a
 "By Amelu support" pill. "Looking for who did it?" gets the accent dither
 and an icon like the DNS help card, plus an "Open the activity log" button.
+The Recent activity card on the domain overview uses the same timeline in
+small: an accent dot per event on a thin line.

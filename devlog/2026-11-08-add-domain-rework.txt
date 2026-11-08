@@ -10,7 +10,10 @@ or address works too. The nameserver choice ("How do you want to handle
 DNS?") is two cards with a round check indicator instead of bare radios.
 The radios stay as sr-only inputs. The badges are sentence case pills
 (Easiest, Soon), no longer uppercase. "Create the standard addresses" is a
-switch, with the address chips under a full-width line. The submit button
+switch. Under it, admin, postmaster and abuse are rows instead of chips:
+an icon, the address with the domain in muted text, and what it's for
+("Where other mail servers report delivery problems"). Each row has a green
+check while the switch is on and dims when it's off. The submit button
 names the domain ("Add acme.com"). What happens next is a timeline with a
 connecting line. The plan usage card gets a See plans link at the limit.
 The success view is unchanged.

@@ -11,7 +11,7 @@
         <!-- System first, as its own wide option: it picks one of the others for you. -->
         @let system = systemOption;
         <label
-          class="flex cursor-pointer items-center gap-4 rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
+          class="relative flex cursor-pointer items-center gap-4 rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
           [class]="theme.choice() === 'system' ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
         >
           <input type="radio" name="theme" class="sr-only" value="system" [checked]="theme.choice() === 'system'" (change)="theme.set('system')" />
@@ -74,7 +74,7 @@
         <div class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6" role="radiogroup" aria-label="Accent colour">
           @for (accent of accents; track accent.value) {
             <label
-              class="flex cursor-pointer flex-col items-center gap-2 rounded-lg border px-2 py-3 text-[12px] font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
+              class="relative flex cursor-pointer flex-col items-center gap-2 rounded-lg border px-2 py-3 text-[12px] font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
               [class]="theme.accent() === accent.value ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
             >
               <input type="radio" name="accent" class="sr-only" [value]="accent.value" [checked]="theme.accent() === accent.value" (change)="theme.setAccent(accent.value)" />

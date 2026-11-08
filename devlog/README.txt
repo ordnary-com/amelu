@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Mailboxes: mail filters as sentences
+            2026-11-08-mailbox-filters.txt
+
 2026-11-08  Top bar: a notification bell
             2026-11-08-notification-bell.txt
 

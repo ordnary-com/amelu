@@ -5,32 +5,45 @@
   </button>
 </amelu-page-header>
 
-<div class="mb-4 flex flex-wrap items-center gap-2 text-[12px]">
-  <span class="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 font-medium ring-1 ring-line">
-    <span class="size-1.5 rounded-full bg-accent"></span>{{ ips.length }} addresses
-  </span>
-  <span class="inline-flex items-center rounded-full bg-surface px-2.5 py-1 font-medium ring-1 ring-line">IPv4</span>
-  <span class="inline-flex items-center rounded-full bg-surface px-2.5 py-1 font-medium ring-1 ring-line">Dedicated to Amelu</span>
+<div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+  <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
+    <span class="block text-[12px] text-muted">Addresses</span>
+    <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">{{ ips.length }}</span>
+  </div>
+  <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
+    <span class="block text-[12px] text-muted">Protocol</span>
+    <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">IPv4</span>
+  </div>
+  <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
+    <span class="block text-[12px] text-muted">Dedicated to</span>
+    <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">Amelu</span>
+  </div>
 </div>
 
-<ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-  @for (row of ips; track row.ip) {
-    <li [class]="ui.card + ' group flex items-center gap-3 p-4'">
-      <span class="flex size-9 flex-none items-center justify-center rounded-md bg-accent/10 text-accent">
-        <amelu-icon name="globe" [size]="16" />
-      </span>
-      <span class="min-w-0 flex-1">
-        <span class="block font-mono text-[15px] font-semibold tracking-tight">{{ row.ip }}</span>
-        <span class="block truncate text-[12px] text-muted">{{ row.name }}</span>
-      </span>
-      <button
-        type="button"
-        class="flex size-8 flex-none cursor-pointer items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink"
-        [attr.aria-label]="'Copy ' + row.ip"
-        (click)="copy(row.ip)"
-      >
-        <amelu-icon [name]="copied() === row.ip ? 'check' : 'copy'" [size]="14" />
-      </button>
-    </li>
-  }
-</ul>
+<section>
+  <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
+    Addresses
+    <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ ips.length }}</span>
+  </h2>
+  <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
+    @for (row of ips; track row.ip) {
+      <li class="flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
+        <span class="flex size-8 flex-none items-center justify-center rounded-full bg-accent/10 text-accent" aria-hidden="true">
+          <amelu-icon name="globe" [size]="15" />
+        </span>
+        <span class="min-w-0 flex-1 truncate text-[14px] font-medium">{{ row.name }}</span>
+        <span class="inline-flex flex-none items-center gap-0.5 rounded-md border border-line bg-bg py-0.5 pr-0.5 pl-2 font-mono text-[12px]">
+          {{ row.ip }}
+          <button
+            type="button"
+            class="flex size-6 cursor-pointer items-center justify-center rounded text-muted hover:bg-surface hover:text-ink"
+            [attr.aria-label]="'Copy ' + row.ip"
+            (click)="copy(row.ip)"
+          >
+            <amelu-icon [name]="copied() === row.ip ? 'check' : 'copy'" [size]="13" />
+          </button>
+        </span>
+      </li>
+    }
+  </ul>
+</section>

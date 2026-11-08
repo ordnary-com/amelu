@@ -6,7 +6,6 @@ import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
-import { Icon } from '../icon';
 import { UI } from '../ui';
 import { PatternRewrite, RoutingApi } from './routing-api';
 import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
@@ -14,7 +13,7 @@ import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
 /** The current dashboard's /domains/:id/rewrites. */
 @Component({
   selector: 'amelu-pattern-rewrites',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, ConfirmDelete, ListSkeleton],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, ConfirmDelete, ListSkeleton],
   templateUrl: './pattern-rewrites.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

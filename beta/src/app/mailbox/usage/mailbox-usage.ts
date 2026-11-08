@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { MailboxContext } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
@@ -114,7 +113,7 @@ interface Setting {
 /** The current dashboard's MailboxUsageInstructionsPage: what to type into a mail app. */
 @Component({
   selector: 'amelu-mailbox-usage',
-  imports: [RouterLink, Icon, MailboxHeading, PhoneQr],
+  imports: [RouterLink, MailboxHeading, PhoneQr],
   template: `
     <amelu-mailbox-heading title="Usage instructions">
       To correctly configure your email client, you will need the correct server parameters. Please find them below.
@@ -144,7 +143,6 @@ interface Setting {
                   </div>
                   @if (app.id === 'apple' && profileUrl(); as url) {
                     <a [href]="url" [class]="ui.outline" download>
-                      <amelu-icon name="download" [size]="15" />
                       Download profile
                     </a>
                   }
@@ -158,7 +156,6 @@ interface Setting {
                       aria-label="Copy the DNS record"
                       (click)="copy(record)"
                     >
-                      <amelu-icon [name]="copied() === record ? 'check' : 'copy'" [size]="13" />
                       {{ copied() === record ? 'Copied' : 'Copy' }}
                     </button>
                   </div>
@@ -199,7 +196,6 @@ interface Setting {
                       [attr.aria-label]="'Copy ' + row.label.toLowerCase()"
                       (click)="copy(row.value)"
                     >
-                      <amelu-icon [name]="copied() === row.value ? 'check' : 'copy'" [size]="13" />
                       {{ copied() === row.value ? 'Copied' : 'Copy' }}
                     </button>
                   }

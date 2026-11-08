@@ -8,7 +8,6 @@
   </button>
   <a actions [routerLink]="base() + '/mailboxes/import'" [class]="ui.outline">Import CSV</a>
   <a actions [routerLink]="base() + '/mailboxes/new'" [class]="ui.primary">
-    <amelu-icon name="plus" [size]="14" />
     New mailbox
   </a>
 </amelu-page-header>
@@ -170,7 +169,6 @@
                   <amelu-empty-state title="No mailboxes yet" illustration="empty-mailbox">
                     You haven't added any mailboxes on {{ ctx.domain()?.name ?? 'this domain' }} yet.
                     <a actions [routerLink]="base() + '/mailboxes/new'" [class]="ui.primary">
-                      <amelu-icon name="plus" [size]="14" />
                       Add your first mailbox
                     </a>
                     <a actions [routerLink]="base() + '/mailboxes/import'" [class]="ui.outline">Import CSV</a>

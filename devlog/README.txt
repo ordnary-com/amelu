@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Delivery charts: 14 days per domain, a sparkline per mailbox
+            2026-11-08-delivery-charts.txt
+
 2026-11-08  Mailboxes: mail filters as sentences
             2026-11-08-mailbox-filters.txt
 

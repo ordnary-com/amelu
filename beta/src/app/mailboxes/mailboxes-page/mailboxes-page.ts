@@ -15,11 +15,12 @@ import { MailboxesApi } from '../mailboxes-api';
 import { MailboxApi, RepairResult } from '../../mailbox/mailbox-api';
 import { apiUrl } from '../../config';
 import { countedMailboxes } from '../../standard-addresses';
+import { Sparkline } from '../../delivery/sparkline';
 
 /** The current dashboard's "All Mailboxes" page: every mailbox on one domain. */
 @Component({
   selector: 'amelu-mailboxes-page',
-  imports: [DatePipe, RouterLink, PageHeader, Alert, EmptyState, Icon],
+  imports: [DatePipe, RouterLink, PageHeader, Alert, EmptyState, Icon, Sparkline],
   templateUrl: './mailboxes-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -71,6 +72,19 @@ export class MailboxesPage {
       percent: Math.min(100, (used / Math.max(1, limit.max)) * 100),
     };
   });
+
+  // Messages sent per day by each address; empty while unknown, so rows just show no line.
+  protected readonly sent = toSignal(
+    toObservable(this.ctx.id).pipe(
+      switchMap((id) =>
+        this.api.domainSendingHistory(id).pipe(
+          map((h) => h.senders),
+          catchError(() => of({} as Record<string, number[]>)),
+        ),
+      ),
+    ),
+    { initialValue: {} as Record<string, number[]> },
+  );
 
   protected readonly search = signal('');
   protected readonly filtered = computed(() => {

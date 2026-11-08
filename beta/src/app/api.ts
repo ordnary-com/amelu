@@ -117,6 +117,23 @@ export interface DomainAlias {
   name: string;
 }
 
+/** One UTC day of a domain's sending; delivered, deferred and rejected count recipients. */
+export interface SendingDay {
+  day: string;
+  sent: number;
+  delivered: number;
+  deferred: number;
+  rejected: number;
+}
+
+export interface SendingHistory {
+  days: SendingDay[];
+  /** Rejection reasons of the last 7 days, as the receiving servers worded them. */
+  reasons: { text: string; count: number }[];
+  /** Messages sent per day by each mailbox address, in the order of days. */
+  senders: Record<string, number[]>;
+}
+
 export interface DomainSending {
   sent: number;
   limit: number;
@@ -281,6 +298,10 @@ export class Api {
   }
 
   /** Messages sent from the domain over the last 24 hours, against the plan's daily limit. */
+  domainSendingHistory(domainId: string) {
+    return this.http.get<SendingHistory>(`/api/domains/${domainId}/sending/history`);
+  }
+
   domainSending(domainId: string) {
     return this.http.get<DomainSending>(`/api/domains/${domainId}/sending`);
   }

@@ -1,0 +1,16 @@
+Organization activity log and webmail in the new style
+2026-11-08
+
+/organization/activity in the beta matches the domain Recent activity
+page. It uses amelu-page-header with a breadcrumb and filter chips with a
+colour dot and count instead of the Summary card. Day headings are
+sentence case with a count. Each day is a timeline with one tinted icon
+tile per event: Team users, Domains globe, Mailboxes mail, Billing card,
+Account key. Under each message is the member who did it (avatar and
+email). admin.* actions show a "By Amelu support" pill. "Who sees what" is
+the dithered help card, with the roles as pills and a Manage roles button.
+/organization/webmail uses the standard switch, badgeClass() pills for the
+hostname status (Connected, Failed, Waiting for DNS), UI.dangerOutline to
+remove the hostname and full-width separators. Placeholders say "For
+example:". The "Fully yours" card gets the dither and, when webmail is on,
+an "Open your webmail" button.

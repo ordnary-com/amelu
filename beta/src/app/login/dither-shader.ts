@@ -42,13 +42,18 @@ export class DitherShader implements OnDestroy {
     afterNextRender(() =>
       this.zone.runOutsideAngular(() => {
         const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // A colour may be a theme variable like var(--accent); the shader needs the actual value.
+        const resolve = (color: string) => {
+          const name = /^var\((--[\w-]+)\)$/.exec(color.trim())?.[1];
+          return name ? getComputedStyle(this.host).getPropertyValue(name).trim() || '#000000' : color;
+        };
         try {
           this.mount = new ShaderMount(
             this.host,
             ditheringFragmentShader,
             {
-              u_colorBack: getShaderColorFromString(this.colorBack()),
-              u_colorFront: getShaderColorFromString(this.colorFront()),
+              u_colorBack: getShaderColorFromString(resolve(this.colorBack())),
+              u_colorFront: getShaderColorFromString(resolve(this.colorFront())),
               u_shape: DitheringShapes[this.shape()],
               u_type: DitheringTypes[this.type()],
               u_pxSize: this.size(),

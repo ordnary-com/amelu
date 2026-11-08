@@ -1,0 +1,16 @@
+Overview: a new banner with a dither and the setup checklist inside
+2026-11-08
+
+The banner on Overview (beta/src/app/home) had a slanted lighter panel, a
+two-line beta notice at the top and the setup checklist as a separate card
+next to it. Now: the date and the links (What's new, Support, Sending IPs,
+Discord) on top, a greeting by time of day ("Good afternoon, Stijn") in
+regular weight, "Here's how your mail is doing" with View all activity,
+and "Get Amelu ready" as one line at the bottom: a progress bar, "2 of 4
+done", the next step as a link and Hide. The beta notice is gone. Behind it
+all, the login page's Paper Shaders dither (shape warp, 4x4, 3 px) in the
+theme's accent colour, a smooth mask from dark on the right to almost
+nothing on the left. DitherShader resolves var(--accent) itself, since the
+shader needs a real colour; a theme change shows after a reload. Tried and
+reverted on the way: a card grid with drag and drop, a 28px radius and
+round link chips. The initial bundle is 554 kB now (budget 500 kB).

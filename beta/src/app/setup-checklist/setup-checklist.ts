@@ -20,8 +20,8 @@ interface Step {
 }
 
 /**
- * The first things to do with a new account, on the home page until they're
- * done or hidden. Each step links to where it's done.
+ * The first things to do with a new account, as one line in the Overview
+ * banner until they're done or hidden: progress and a link to the next step.
  */
 @Component({
   selector: 'amelu-setup-checklist',
@@ -31,40 +31,21 @@ interface Step {
   host: { class: 'block', '[class.hidden]': '!visible()' },
   template: `
     @if (visible() && steps(); as list) {
-      <section class="h-full rounded-lg border border-line bg-surface p-4" aria-labelledby="setup-title">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 id="setup-title" class="text-[14px] font-bold">Get Amelu ready</h2>
-            <p class="mt-0.5 text-[12px] text-muted">{{ doneCount() }} of {{ list.length }} done</p>
-          </div>
-          <button type="button" class="cursor-pointer text-[12px] text-muted hover:text-ink hover:underline" (click)="hide()">Hide</button>
-        </div>
-        <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-bg">
-          <div class="h-full rounded-full bg-accent transition-[width]" [style.width.%]="(doneCount() / list.length) * 100"></div>
-        </div>
-        <ol class="mt-4 space-y-1">
-          @for (step of list; track step.title; let i = $index) {
-            <li class="flex items-start gap-3 rounded-md px-2 py-2" [class.bg-bg]="step === next()">
-              @if (step.done) {
-                <span class="mt-0.5 inline-flex size-5 flex-none items-center justify-center rounded-full bg-ok text-white">
-                  <amelu-icon name="check" [size]="12" />
-                </span>
-              } @else {
-                <span class="mt-0.5 inline-flex size-5 flex-none items-center justify-center rounded-full border border-line text-[11px] font-bold text-muted">{{ i + 1 }}</span>
-              }
-              <span class="min-w-0 flex-1">
-                <span class="block text-[13px] font-semibold" [class.text-muted]="step.done" [class.line-through]="step.done">{{ step.title }}</span>
-                @if (!step.done) {
-                  <span class="block text-[12px] text-muted">{{ step.text }}</span>
-                }
-              </span>
-              @if (!step.done) {
-                <a [routerLink]="step.link" [fragment]="step.fragment" class="flex-none text-[12px] font-semibold text-link hover:underline">{{ step.action }}</a>
-              }
-            </li>
-          }
-        </ol>
-      </section>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-surface/60 px-4 py-2.5" aria-label="Get Amelu ready">
+        <span class="text-[13px] font-semibold text-ink">Get Amelu ready</span>
+        <span class="flex items-center gap-2">
+          <span class="h-1.5 w-24 overflow-hidden rounded-full bg-hero-ink/15">
+            <span class="block h-full rounded-full bg-accent transition-[width]" [style.width.%]="(doneCount() / list.length) * 100"></span>
+          </span>
+          <span class="text-[12px] tabular-nums text-hero-ink/75">{{ doneCount() }} of {{ list.length }} done</span>
+        </span>
+        @if (next(); as step) {
+          <a [routerLink]="step.link" [fragment]="step.fragment" class="inline-flex items-center gap-1 text-[13px] font-medium text-link hover:underline">
+            Next: {{ step.title }} <amelu-icon name="arrowRight" [size]="13" />
+          </a>
+        }
+        <button type="button" class="cursor-pointer text-[12px] text-hero-ink/60 hover:text-ink hover:underline" (click)="hide()">Hide</button>
+      </div>
     }
   `,
 })

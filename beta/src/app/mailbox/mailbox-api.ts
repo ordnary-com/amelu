@@ -14,6 +14,19 @@ export interface EnabledServices {
   mayDav: boolean;
 }
 
+/** One "if ... then ..." mail filter; target is the folder or address for move and forward. */
+export interface MailboxFilter {
+  id: string;
+  field: 'from' | 'to' | 'subject';
+  match: 'contains' | 'is' | 'starts';
+  value: string;
+  action: 'move' | 'forward' | 'read' | 'flag' | 'delete';
+  target: string;
+  stop: boolean;
+}
+
+export type MailboxFilterInput = Omit<MailboxFilter, 'id'>;
+
 export interface MailboxForward {
   id: string;
   destination: string;
@@ -132,6 +145,26 @@ export class MailboxApi {
 
   updateDelegation(id: string, delegation: string) {
     return this.http.put<{ delegation: string }>(`/api/mailboxes/${id}/delegation`, { delegation });
+  }
+
+  filters(id: string) {
+    return this.http.get<MailboxFilter[]>(`/api/mailboxes/${id}/filters`);
+  }
+
+  createFilter(id: string, filter: MailboxFilterInput) {
+    return this.http.post<MailboxFilter>(`/api/mailboxes/${id}/filters`, filter);
+  }
+
+  updateFilter(id: string, filterId: string, filter: MailboxFilterInput) {
+    return this.http.put<MailboxFilter>(`/api/mailboxes/${id}/filters/${filterId}`, filter);
+  }
+
+  deleteFilter(id: string, filterId: string) {
+    return this.http.delete<{ ok: boolean }>(`/api/mailboxes/${id}/filters/${filterId}`);
+  }
+
+  reorderFilters(id: string, ids: string[]) {
+    return this.http.put<{ ok: boolean }>(`/api/mailboxes/${id}/filters/order`, { ids });
   }
 
   forwards(id: string) {

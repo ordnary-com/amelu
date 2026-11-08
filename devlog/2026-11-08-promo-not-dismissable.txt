@@ -1,0 +1,10 @@
+The deal card can't be dismissed anymore
+2026-11-08
+
+The Black Friday card at the bottom of the sidebar and the one-line deal on
+the plans page both lose their × button. PromoBanner no longer has
+dismiss(), the dismissed signal or the localStorage key
+amelu.promo.dismissed.<yearly code>, so a card someone closed earlier shows
+again. The card still disappears by itself after the campaign's last day
+(activePromo() returns nothing), and the sidebar one only shows on the free
+plan.

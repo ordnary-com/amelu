@@ -1,0 +1,16 @@
+Mailbox overview, activity, logs and usage in the new style
+2026-11-08
+
+MailboxLayout in the beta replaces its page header with a banner like the
+domain overview's. It has bg-hero with the dither, a breadcrumb up to the
+mailbox, and Open in webmail top right. The address is at 34px in normal
+weight, with the status pill, display name and created date under it. The
+mailbox overview gets four linked stat tiles (services on with a bar,
+forwards, internal access only, expires). Details rows are clickable as a
+whole with a chevron. Suspend uses UI.dangerOutline, and the mail app card
+gets the dither. The separate Created card is gone, since the banner shows
+the date. Mailbox activity is a timeline with filter chips (All, Mailbox,
+Sign-in and access, Delivery, grouped from the mailbox.* event types) and
+support pills. The log tables get a tinted head, divide-y rows and mono
+addresses. Usage uses divide-y lists, pills for what each app covers, a
+bordered mono box for the Outlook record and a dithered "Signing in" card.

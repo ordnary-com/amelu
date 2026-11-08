@@ -7,11 +7,13 @@ import { catchError, of } from 'rxjs';
 import { Api } from '../api';
 import { INVOICE_STATUS, badgeClass } from '../status';
 import { UI } from '../ui';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 /** The current dashboard's /billing/invoices, synced from Stripe. */
 @Component({
   selector: 'amelu-billing-invoices',
-  imports: [EmptyState, RouterLink, CurrencyPipe, DatePipe],
+  imports: [EmptyState, RouterLink, CurrencyPipe, DatePipe, Icon, DitherShader],
   templateUrl: './billing-invoices.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

@@ -1,0 +1,17 @@
+Billing in the new style
+2026-11-08
+
+The /billing pages in the beta open with a plan banner in BillingLayout:
+bg-hero with the accent warp dither, "<Plan> plan" at 32px in normal
+weight, the price line and the subscription status pill, and Change plan
+top right. Overview swaps the Subscription card for three stat tiles:
+domains used with a usage bar (red when over, with a warning alert),
+mailboxes per domain and payment method. Status and price move to a small
+Subscription list in the sidebar, and Manage subscription gets the dither.
+Recent invoices are divide-y rows with a receipt tile and a nudging
+chevron, without the hover underline. On Plans, the period switch marks
+the active option in accent, the current plan is a "Current plan" pill
+instead of an uppercase tag, prices are 32px normal weight, the yearly
+saving is a green pill, features get check icons, and Cancel plan uses
+UI.dangerOutline. Invoices get a tinted table head, divide-y rows, small
+outlined View and PDF buttons and a dithered About card.

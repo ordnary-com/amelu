@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Billing in the new style
+            2026-11-08-billing-rework.txt
+
 2026-11-08  Activity log Load more: "before must be an RFC3339 timestamp"
             2026-11-08-audit-before-cursor.txt
 

@@ -5,6 +5,7 @@ import { Api, errorMessage } from '../api';
 import { Session } from '../session';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 
 interface Choice {
@@ -44,10 +45,10 @@ const SOURCES: Choice[] = [
 /** First sign-in of a new organization's owner: a few questions, then the first domain. */
 @Component({
   selector: 'amelu-onboarding',
-  imports: [Alert, Icon],
+  imports: [Alert, Icon, DitherShader],
   templateUrl: './onboarding.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex min-h-dvh flex-col bg-bg text-ink' },
+  host: { class: 'relative isolate flex min-h-dvh flex-col overflow-hidden bg-bg text-ink' },
 })
 export class Onboarding {
   private readonly api = inject(Api);

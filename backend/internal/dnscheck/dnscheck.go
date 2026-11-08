@@ -161,12 +161,20 @@ func spfCovers(actual, expected string) bool {
 		if strings.HasSuffix(want, "all") {
 			continue
 		}
-		if !slices.Contains(actualTerms[1:], want) && !slices.Contains(actualTerms[1:], "+"+want) {
-			return false
+		if slices.Contains(actualTerms[1:], want) || slices.Contains(actualTerms[1:], "+"+want) {
+			continue
 		}
+		// Customers set up before _spf.amelu.org have "mx", which covers the
+		// same IPs because they are all A records of the MX host.
+		if want == ameluSPFInclude && (slices.Contains(actualTerms[1:], "mx") || slices.Contains(actualTerms[1:], "+mx")) {
+			continue
+		}
+		return false
 	}
 	return true
 }
+
+const ameluSPFInclude = "include:_spf.amelu.org"
 
 func checkCNAME(ctx context.Context, name string, rec stalwart.ZoneRecord) RecordCheck {
 	check := RecordCheck{Type: "CNAME", Name: name, Expected: rec.Content, Status: StatusMissing}

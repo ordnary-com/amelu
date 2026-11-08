@@ -1,0 +1,7 @@
+Overview: dither in the Go upgrade box
+2026-11-08
+
+The "Go, from €4/mo billed yearly" box in the Your plan card gets the same
+dither pattern as the banner and the sidebar deal card: the warp shader in
+the accent colour at 20% opacity, masked so it fades out from the top right
+corner toward the bottom left, behind the text and the Upgrade button.

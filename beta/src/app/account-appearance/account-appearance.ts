@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Theme } from '../theme';
 import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
 import { UI } from '../ui';
+import { Icon } from '../icon';
 
 /** /account/appearance: the theme and the accent colour. */
 @Component({
   selector: 'amelu-account-appearance',
+  imports: [Icon],
   templateUrl: './account-appearance.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block max-w-2xl' },

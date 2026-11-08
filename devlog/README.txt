@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  My Account in the new style
+            2026-11-08-account-rework.txt
+
 2026-11-08  Sidebar column no longer starts 24px low on DNS pages
             2026-11-08-nameservers-card-gap.txt
 

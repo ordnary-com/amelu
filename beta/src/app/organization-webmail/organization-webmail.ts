@@ -7,9 +7,18 @@ import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
 import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
+import { Tone, badgeClass } from '../status';
 import { WebmailApi, WebmailBranding } from './webmail-api';
 
 const DEFAULT_ACCENT = '#0043ce';
+
+const HOSTNAME_STATUS: Record<'active' | 'failed' | 'waiting', { label: string; tone: Tone }> = {
+  active: { label: 'Connected', tone: 'ok' },
+  failed: { label: 'Failed', tone: 'bad' },
+  waiting: { label: 'Waiting for DNS', tone: 'warn' },
+};
 
 /**
  * White-label webmail: the organization's own webmail address, on
@@ -18,7 +27,7 @@ const DEFAULT_ACCENT = '#0043ce';
  */
 @Component({
   selector: 'amelu-organization-webmail',
-  imports: [PageHeader, Alert, EmptyState, RouterLink],
+  imports: [PageHeader, Alert, EmptyState, RouterLink, Icon, DitherShader],
   templateUrl: './organization-webmail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -26,6 +35,7 @@ const DEFAULT_ACCENT = '#0043ce';
 export class OrganizationWebmail {
   private readonly api = inject(WebmailApi);
   protected readonly ui = UI;
+  protected readonly badge = badgeClass;
 
   // undefined while loading, null when the request failed
   private readonly loaded = toSignal(this.api.get().pipe(catchError(() => of(null))), { initialValue: undefined });
@@ -67,6 +77,10 @@ export class OrganizationWebmail {
   protected readonly busy = signal<'save' | 'logo' | 'hostname' | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
+
+  protected hostnameStatus(status: WebmailBranding['customHostnameStatus']) {
+    return HOSTNAME_STATUS[status === 'active' || status === 'failed' ? status : 'waiting'];
+  }
 
   private apply(result: WebmailBranding, notice: string): void {
     this.branding.set(result);

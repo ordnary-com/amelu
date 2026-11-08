@@ -4,11 +4,13 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { UI } from '../ui';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 /** Any path this app doesn't have (yet), shown inside the normal shell. */
 @Component({
   selector: 'amelu-not-found',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon, DitherShader],
   templateUrl: './not-found.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex justify-center px-2 pt-10 mobile:pt-20' },

@@ -5,8 +5,8 @@ import { StatusPage } from './status-page';
 import { TerminateAccount } from './terminate-account';
 
 export const ROUTES: Routes = [
-  { path: 'support', component: Support, title: 'Support · Amelu' },
+  { path: 'support', component: Support, title: 'Contact support · Amelu' },
   { path: 'changelog', component: Changelog, title: "What's new · Amelu" },
-  { path: 'status', component: StatusPage, title: 'Service Status · Amelu' },
+  { path: 'status', component: StatusPage, title: 'Service status · Amelu' },
   { path: 'account/terminate', component: TerminateAccount, title: 'Terminate account · My Account · Amelu' },
 ];

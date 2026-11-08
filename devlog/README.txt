@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Appearance page with a live preview
+            2026-11-08-appearance-rework.txt
+
 2026-11-08  My Account in the new style
             2026-11-08-account-rework.txt
 

@@ -1,70 +1,139 @@
-<h2 [class]="ui.sectionTitle">Theme</h2>
-<div [class]="ui.card + ' p-4'">
-  <p class="text-[13px] text-muted">
-    Choose how Amelu looks. System switches between dark and light along with your device, and uses high contrast when your device asks for it.
-  </p>
-
-  <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Theme">
-    @for (option of options; track option.value) {
-      <label
-        class="relative flex cursor-pointer flex-col gap-2.5 rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
-        [class]="theme.choice() === option.value ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
-      >
-        <input type="radio" name="theme" class="sr-only" [value]="option.value" [checked]="theme.choice() === option.value" (change)="theme.set(option.value)" />
-        <!-- Miniature of the shell in that theme -->
-        <span class="flex h-16 overflow-hidden rounded-md border border-line" [style.background]="sidebarColor(option)" aria-hidden="true">
-          <span class="w-1/4"></span>
-          @if (option.value === 'system') {
-            <span class="flex-1 rounded-tl-md bg-[linear-gradient(135deg,#14191f_50%,#ffffff_50%)]"></span>
-          } @else {
-            <span class="flex-1 rounded-tl-md border-t border-l border-black/10" [style.background]="option.pane"></span>
-          }
-        </span>
-        <span class="flex items-start gap-2">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+  <div class="min-w-0 space-y-6">
+    <section>
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 class="text-[14px] font-bold">Theme</h2>
+        @if (!isDefault()) {
+          <button type="button" class="cursor-pointer text-[12px] font-medium text-muted hover:text-ink" (click)="reset()">Reset to default</button>
+        }
+      </div>
+      <div [class]="ui.card + ' p-4'">
+        <!-- System first, as its own wide option: it picks one of the others for you. -->
+        @let system = systemOption;
+        <label
+          class="flex cursor-pointer items-center gap-4 rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
+          [class]="theme.choice() === 'system' ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
+        >
+          <input type="radio" name="theme" class="sr-only" value="system" [checked]="theme.choice() === 'system'" (change)="theme.set('system')" />
+          <span class="flex h-12 w-20 flex-none overflow-hidden rounded-md border border-line" aria-hidden="true">
+            <span class="flex-1 bg-[#14191f]"></span>
+            <span class="flex-1 bg-white"></span>
+          </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-[13px] font-semibold">{{ option.label }}</span>
-            <span class="block text-[12px] text-muted">{{ option.hint }}</span>
+            <span class="block text-[13px] font-semibold">{{ system.label }}</span>
+            <span class="block text-[12px] text-muted">
+              {{ system.hint }}.
+              @if (theme.choice() === 'system') {
+                Right now that's {{ theme.palette().startsWith('contrast') ? 'high contrast ' + theme.resolved() : theme.resolved() }}.
+              }
+            </span>
           </span>
-          <span
-            class="mt-0.5 inline-flex size-[18px] flex-none items-center justify-center rounded-full border-2"
-            [class]="theme.choice() === option.value ? 'border-accent bg-accent text-white' : 'border-line'"
-            aria-hidden="true"
-          >
-            @if (theme.choice() === option.value) {
-              <amelu-icon name="check" [size]="11" />
+          <ng-container *ngTemplateOutlet="check; context: { $implicit: theme.choice() === 'system' }" />
+        </label>
+
+        @for (group of groups; track group.label) {
+          <h3 class="mt-5 mb-2 text-[12px] font-medium text-muted">{{ group.label }}</h3>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" role="radiogroup" [attr.aria-label]="group.label + ' themes'">
+            @for (option of group.options; track option.value) {
+              <label
+                class="relative flex cursor-pointer flex-col gap-2.5 rounded-lg border p-2.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
+                [class]="theme.choice() === option.value ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
+              >
+                <input type="radio" name="theme" class="sr-only" [value]="option.value" [checked]="theme.choice() === option.value" (change)="theme.set(option.value)" />
+                <!-- A miniature of the shell in that theme: sidebar with menu lines, a pane with a card and a button. -->
+                <span class="flex h-[72px] overflow-hidden rounded-md border border-line" [style.background]="sidebarColor(option)" aria-hidden="true">
+                  <span class="flex w-1/4 flex-col gap-1 px-1.5 pt-2">
+                    @for (w of [80, 60, 70]; track $index) {
+                      <span class="h-1 rounded-full" [style.width.%]="w" [style.background]="lineColor(option)"></span>
+                    }
+                  </span>
+                  <span class="mt-1.5 flex flex-1 flex-col gap-1.5 rounded-tl-md p-2" [style.background]="option.pane">
+                    <span class="h-1.5 w-1/2 rounded-full" [style.background]="inkColor(option, 0.5)"></span>
+                    <span class="flex-1 rounded-sm border" [style.border-color]="inkColor(option, 0.15)"></span>
+                    <span class="h-2 w-6 self-end rounded-sm" [style.background]="accentColor()"></span>
+                  </span>
+                </span>
+                <span class="flex items-start gap-2 px-0.5">
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[13px] font-semibold">{{ option.label }}</span>
+                    <span class="block text-[12px] leading-snug text-muted">{{ option.hint }}</span>
+                  </span>
+                  <ng-container *ngTemplateOutlet="check; context: { $implicit: theme.choice() === option.value }" />
+                </span>
+              </label>
             }
-          </span>
-        </span>
-      </label>
-    }
-  </div>
+          </div>
+        }
+      </div>
+    </section>
 
-  <p class="mt-4 text-[12px] text-muted">
-    @if (theme.choice() === 'system') {
-      Your device is currently set to {{ theme.palette().startsWith('contrast') ? 'high contrast ' + theme.resolved() : theme.resolved() }}.
-    } @else {
-      Applies right away, and only on this device.
-    }
-  </p>
-</div>
-
-<h2 [class]="ui.sectionTitle + ' mt-6'">Accent colour</h2>
-<div [class]="ui.card + ' p-4'">
-  <p class="text-[13px] text-muted">Buttons, links and the coloured sidebars. Works with every theme.</p>
-  <div class="mt-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Accent colour">
-    @for (accent of accents; track accent.value) {
-      <label
-        class="relative flex cursor-pointer items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-[13px] font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
-        [class]="theme.accent() === accent.value ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
-      >
-        <input type="radio" name="accent" class="sr-only" [value]="accent.value" [checked]="theme.accent() === accent.value" (change)="theme.setAccent(accent.value)" />
-        <span class="inline-flex size-5 items-center justify-center rounded-full text-white" [style.background]="accent.color" aria-hidden="true">
-          @if (theme.accent() === accent.value) {
-            <amelu-icon name="check" [size]="11" />
+    <section>
+      <h2 class="mb-3 text-[14px] font-bold">Accent colour</h2>
+      <div [class]="ui.card + ' p-4'">
+        <p class="text-[13px] text-muted">Buttons, links and the coloured sidebars. Works with every theme.</p>
+        <div class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6" role="radiogroup" aria-label="Accent colour">
+          @for (accent of accents; track accent.value) {
+            <label
+              class="flex cursor-pointer flex-col items-center gap-2 rounded-lg border px-2 py-3 text-[12px] font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40"
+              [class]="theme.accent() === accent.value ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20 hover:bg-bg/40'"
+            >
+              <input type="radio" name="accent" class="sr-only" [value]="accent.value" [checked]="theme.accent() === accent.value" (change)="theme.setAccent(accent.value)" />
+              <span class="inline-flex size-9 items-center justify-center rounded-full text-white shadow-sm" [style.background]="accent.color" aria-hidden="true">
+                @if (theme.accent() === accent.value) {
+                  <amelu-icon name="check" [size]="16" />
+                }
+              </span>
+              {{ accent.label }}
+            </label>
           }
-        </span>
-        {{ accent.label }}
-      </label>
-    }
+        </div>
+      </div>
+    </section>
   </div>
+
+  <!-- The live preview: drawn with the page's own colours, so it is whatever is picked right now. -->
+  <aside class="xl:sticky xl:top-0">
+    <h2 class="mb-3 text-[14px] font-bold">Preview</h2>
+    <div class="overflow-hidden rounded-lg border border-line bg-chrome" aria-hidden="true">
+      <div class="flex h-9 items-center gap-2 px-3">
+        <img src="/amelu-logo.png" alt="" class="chrome-logo h-3.5" />
+        <span class="ml-auto h-4 w-24 rounded bg-chrome-ink/10"></span>
+      </div>
+      <div class="flex">
+        <div class="w-[30%] space-y-1 px-2 pb-3">
+          @for (item of ['Overview', 'Domains', 'My Account', 'Billing']; track item; let i = $index) {
+            <span class="block truncate rounded px-1.5 py-1 text-[10px] text-chrome-ink/70" [class]="i === 2 ? 'bg-chrome-active text-chrome-ink' : ''">{{ item }}</span>
+          }
+        </div>
+        <div class="flex-1 rounded-tl-xl bg-page p-3 text-ink">
+          <p class="text-[13px] font-semibold">Good afternoon</p>
+          <p class="mt-0.5 text-[10px] text-muted">Here's how your mail is doing.</p>
+          <div class="mt-3 rounded-md border border-line bg-surface p-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-medium">acme.com</span>
+              <span class="rounded-full bg-ok/15 px-1.5 py-px text-[9px] font-medium text-ok">Active</span>
+            </div>
+            <div class="mt-2 h-1 overflow-hidden rounded-full bg-bg"><div class="h-full w-2/3 rounded-full bg-accent"></div></div>
+          </div>
+          <div class="mt-3 flex items-center gap-2">
+            <span class="rounded bg-accent px-2 py-1 text-[10px] font-medium text-white">New mailbox</span>
+            <span class="text-[10px] font-medium text-link">View all</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="mt-2.5 text-[12px] text-muted">Applies right away, and only on this device.</p>
+  </aside>
 </div>
+
+<ng-template #check let-on>
+  <span
+    class="mt-0.5 inline-flex size-[18px] flex-none items-center justify-center rounded-full border-2"
+    [class]="on ? 'border-accent bg-accent text-white' : 'border-line'"
+    aria-hidden="true"
+  >
+    @if (on) {
+      <amelu-icon name="check" [size]="11" />
+    }
+  </span>
+</ng-template>

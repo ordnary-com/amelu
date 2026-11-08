@@ -1,0 +1,15 @@
+Appearance page with a live preview
+2026-11-08
+
+/account/appearance in the beta is a two-column page now. The options are
+on the left. A live preview of the dashboard sits on the right (sticky on
+xl): top bar, menu with the active item, a greeting, a domain card with an
+Active pill and an accent bar, a primary button and a link. It is drawn
+with the page's own colour tokens (bg-chrome, bg-page, bg-surface,
+bg-accent), so it shows whatever theme and accent are picked, System
+included. System is its own wide option at the top and says what it
+resolves to right now. The other themes are grouped under Dark, Light and
+High contrast. Their miniatures show menu lines, a heading, a card and a
+button in the chosen accent. Accent colours are larger swatches with a
+check, in a six-column grid. "Reset to default" (Dark, Blue) shows only
+when something else is picked.

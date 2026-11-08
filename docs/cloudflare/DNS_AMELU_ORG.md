@@ -11,23 +11,37 @@ managed by Cloudflare and can't carry comments. Last reviewed 2026-11-01.
 |---|---|---|
 | `amelu.org` MX 10 | marduk.mx.amelu.org | The only MX. |
 | `marduk.mx.amelu.org` A | 141.95.52.66 | marduk itself (OVH). Receives; no longer sends. |
-| `marduk.mx.amelu.org` A | 5.230.173.85 / .86 / .87 | noez GRE IPs on marduk. Here so customer SPF (`mx`) authorizes them; they also receive. |
-| `marduk.mx.amelu.org` AAAA | 2001:41d0:701:1100::74d4 | marduk, IPv6. |
+| `marduk.mx.amelu.org` A | out1-out10 (51.89.x, see below) | OVH additional IPs on marduk. Here so customer SPF `mx` authorizes them; they also receive. |
+| `marduk.mx.amelu.org` AAAA | 2001:41d0:701:1100::74d4 | marduk, IPv6. Outbound is v4 only. |
+| `_spf.amelu.org` TXT | `v=spf1 ip4:... -all` | Every IP that may send: marduk and out1-out11. |
 
-Customer domains point their MX at `marduk.mx.amelu.org` and use
-`v=spf1 mx -all`, so every A/AAAA of that name is an allowed sender for
-every customer. Adding or removing an IP there changes SPF for all of them.
+Customer domains point their MX at `marduk.mx.amelu.org`. Their SPF is
+`v=spf1 include:_spf.amelu.org -all` since 2026-11-08 (the dashboard asks for
+it, Amelu-hosted zones get it); older domains have `v=spf1 mx -all`, which
+the DNS check still accepts. Both must keep working, so a sending IP is
+always in `_spf.amelu.org` AND an A record of `marduk.mx.amelu.org`
+(amelu-ip-pools only uses an IP 2 hours after it appears in marduk.mx, and
+warns when `_spf.amelu.org` misses one).
 
 ## Mail: sending
 
-| Record | Value | Used for |
+| Record | Value | Group (`ops/marduk/amelu-ip-pools.py`) |
 |---|---|---|
-| `out1.mx.amelu.org` | 5.230.173.85 | established customers |
-| `out2.mx.amelu.org` | 5.230.173.86 | domains created in the last 7 days |
-| `out3.mx.amelu.org` | 5.230.173.87 | amelu.org's own mail |
+| `out4.mx.amelu.org` | 51.89.39.34 | system (amelu.org's own mail) |
+| `out2.mx.amelu.org` | 51.89.60.49 | system |
+| `out1.mx.amelu.org` | 51.89.60.60 | trusted |
+| `out5.mx.amelu.org` | 51.89.2.193 | trusted |
+| `out8.mx.amelu.org` | 51.89.76.15 | trusted |
+| `out9.mx.amelu.org` | 51.89.85.197 | trusted (warming up since 2026-11-08) |
+| `out3.mx.amelu.org` | 51.89.76.2 | newdomains (domains created in the last 7 days) |
+| `out6.mx.amelu.org` | 51.89.1.228 | newdomains |
+| `out7.mx.amelu.org` | 51.89.102.29 | newdomains |
+| `out10.mx.amelu.org` | 51.89.85.192 | newdomains (warming up since 2026-11-08) |
+| `out11.mx.amelu.org` | 51.89.76.0 | spare, not in marduk.mx (a .0 address some receivers refuse) |
 
-Each has `v=spf1 a -all` for its HELO name, and noez sets the PTR to the
-same name. The choice per sender is made by `ops/marduk/amelu-ip-pools.py`.
+No group has two IPs in the same /24, so a range block (Outlook S3140)
+takes one IP out of a group, not a group. Each has `v=spf1 a -all` for its
+HELO name, and the PTR is set to the same name in the OVH panel.
 marduk's PTR is `marduk.mx.amelu.org`.
 
 ## Mail: authentication and transport security

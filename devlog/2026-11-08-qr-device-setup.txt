@@ -1,0 +1,13 @@
+Mailbox setup: a QR code for iPhone and iPad
+2026-11-08
+
+The usage page (/domains/:id/mailboxes/:id/usage) had a "Download profile"
+button for Apple, which only helps on the device you're browsing on. The
+sidebar now has "Set up your iPhone or iPad" with a QR code of the same
+profile link (autoconfig.amelu.org/profile.mobileconfig?email=...&name=...),
+so you scan it from the computer screen and the phone opens the profile.
+It's always black on white (phone-qr.ts, uqr's renderSVG) so it scans in
+dark mode too, plus a line for Android (Gmail or Outlook find the settings
+themselves). The mailbox overview links to it. Opening the page marks the
+"Connect a device" step for the home checklist (setup-progress.ts,
+localStorage amelu.setup), since the API can't see devices.

@@ -1,0 +1,17 @@
+Mailbox settings pages in the new style
+2026-11-08
+
+The 15 mailbox settings pages in the beta (internal access, password,
+services, delegation, filters, forwarding, identities, delete, expiration,
+limits, listing settings, notes) follow the new style. Each is a card with
+sentence-case sections and the save button in a footer behind a full-width
+line, often with an "Unsaved changes" hint. Lists are divide-y rows with
+icon tiles, and one help card per page gets the dither. switch-row.ts is the
+standard switch now, and the cards around it use divide-y. Password checks
+the 8-character minimum live. Filters is one numbered list with inline
+editing, and "Stop there" is a switch. Edit is now off while another filter
+is open or saving. Before, it silently threw away the open filter's
+unsaved changes. Expiration and limits show their current values as stat
+tiles. Delete mailbox puts the consequences in the card and uses
+UI.dangerOutline, with solid red only in the confirm. Placeholders say "For
+example:".

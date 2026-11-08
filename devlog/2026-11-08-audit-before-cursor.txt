@@ -1,0 +1,13 @@
+Activity log Load more: "before must be an RFC3339 timestamp"
+2026-11-08
+
+Load more on the organization activity log always failed with 400 "before
+must be an RFC3339 timestamp". GET /api/organization/audit returns
+createdAt in http.TimeFormat, like the rest of the API ("Sun, 08 Nov 2026
+17:00:00 GMT"). Both dashboards sent that value back as ?before=, but
+ListOrganizationAudit parsed only time.RFC3339. Each entry now also carries
+"cursor", its exact created_at in RFC3339Nano UTC, and the beta pages with
+it. ?before= accepts RFC3339Nano and, for the old dashboard, the
+http.TimeFormat createdAt via http.ParseTime. That one is only exact to
+the second, because createdAt has no fractions. The backend change needs a
+deploy of the Go API to fix production.

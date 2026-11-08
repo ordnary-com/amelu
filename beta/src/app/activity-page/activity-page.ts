@@ -1,11 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { Api, AuditEntry, errorMessage } from '../api';
+import { Api, AuditEntry, OrganizationRole, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
 import { Avatar } from '../avatar';
+import { Icon, IconName } from '../icon';
+import { PageHeader } from '../page-header/page-header';
+import { DitherShader } from '../login/dither-shader';
+import { ROLE, badgeClass } from '../status';
 
 type Category = 'all' | 'team' | 'domains' | 'mailboxes' | 'billing' | 'account';
 
@@ -33,16 +38,34 @@ const DOT: Record<Exclude<Category, 'all'>, string> = {
   account: 'bg-muted',
 };
 
+// The timeline's icon per category, on a tile tinted like its dot.
+const ICON: Record<Exclude<Category, 'all'>, IconName> = {
+  team: 'users',
+  domains: 'globe',
+  mailboxes: 'mail',
+  billing: 'card',
+  account: 'key',
+};
+
+const TILE: Record<Exclude<Category, 'all'>, string> = {
+  team: 'bg-[#a371f7]/15 text-[#a371f7]',
+  domains: 'bg-accent/12 text-link',
+  mailboxes: 'bg-ok/15 text-ok',
+  billing: 'bg-warn/15 text-warn',
+  account: 'bg-bg text-muted',
+};
+
 interface Row {
   entry: AuditEntry;
   category: Exclude<Category, 'all'>;
   text: string;
+  bySupport: boolean;
 }
 
 /** The current dashboard's /organization/activity, grouped by day with a filter. */
 @Component({
   selector: 'amelu-activity-page',
-  imports: [EmptyState, DatePipe, Alert, Avatar],
+  imports: [PageHeader, EmptyState, DatePipe, Alert, Avatar, Icon, RouterLink, DitherShader],
   templateUrl: './activity-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -51,6 +74,16 @@ export class ActivityPage {
   private readonly api = inject(Api);
   protected readonly ui = UI;
   protected readonly dot = DOT;
+  protected readonly icon = ICON;
+  protected readonly tile = TILE;
+  protected readonly role = ROLE;
+  protected readonly badge = badgeClass;
+
+  protected readonly visibility: { roles: OrganizationRole[]; text: string }[] = [
+    { roles: ['owner', 'admin'], text: 'See everything.' },
+    { roles: ['billing'], text: 'Sees only billing events.' },
+    { roles: ['helpdesk', 'read_only'], text: 'See domain and mailbox events.' },
+  ];
 
   protected readonly filters: { value: Category; label: string }[] = [
     { value: 'all', label: 'All' },
@@ -95,6 +128,15 @@ export class ActivityPage {
       .map((option) => ({ ...option, count: counts[option.value] ?? 0 }));
   });
 
+  protected readonly chips = computed(() => {
+    const loaded = !!this.entries();
+    const counts = new Map(this.summary().map((item) => [item.value, item.count]));
+    return this.filters.map((option) => ({
+      ...option,
+      count: !loaded ? null : option.value === 'all' ? (this.entries()?.length ?? 0) : (counts.get(option.value) ?? 0),
+    }));
+  });
+
   constructor() {
     void this.load();
   }
@@ -113,7 +155,7 @@ export class ActivityPage {
     if (!entries?.length) return;
     this.loadingMore.set(true);
     try {
-      const next = await firstValueFrom(this.api.listAudit(entries[entries.length - 1].createdAt));
+      const next = await firstValueFrom(this.api.listAudit(entries[entries.length - 1].cursor));
       if (next.length === 0) this.exhausted.set(true);
       this.entries.set([...entries, ...next]);
     } catch (err) {
@@ -140,6 +182,7 @@ function toRow(entry: AuditEntry): Row {
   return {
     entry,
     category: CATEGORY_BY_PREFIX[parts[0]] ?? 'account',
+    bySupport: entry.action.startsWith('admin.'),
     text: (words.charAt(0).toUpperCase() + words.slice(1)).replace(/\bapi\b/gi, 'API'),
   };
 }

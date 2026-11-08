@@ -72,6 +72,8 @@ export interface AuditEntry {
   objectLabel?: string;
   metadata: Record<string, unknown>;
   createdAt: string;
+  /** The exact created_at (RFC3339), to pass back as `before` for the next page. */
+  cursor: string;
 }
 
 export interface Domain {

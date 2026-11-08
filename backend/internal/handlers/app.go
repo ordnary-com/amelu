@@ -4,6 +4,7 @@
 package handlers
 
 import (
+	"amelu/backend/internal/cfdns"
 	"amelu/backend/internal/cfsaas"
 	"amelu/backend/internal/db"
 	"amelu/backend/internal/domainconnect"
@@ -21,6 +22,11 @@ type App struct {
 	// internal/domainconnect) — handlers must treat that as "unsupported",
 	// not an error.
 	DomainConnect *domainconnect.Client
+
+	// AmeluDNS hosts zones for domains on Amelu nameservers. Nil without the
+	// Cloudflare token and account: the add-domain page then only offers
+	// "keep my current DNS".
+	AmeluDNS *cfdns.Client
 
 	// Mailer is nil when MAIL_RELAY_URL isn't configured (local dev without
 	// the container network) - password reset and invite emails then report

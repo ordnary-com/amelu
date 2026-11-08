@@ -299,11 +299,18 @@
         </div>
         <div [class]="ui.card">
           @if (activity(); as entries) {
-            <ul>
-              @for (entry of entries; track entry.id) {
-                <li class="border-b border-line px-4 py-2.5 last:border-b-0">
-                  <span class="block text-[13px]">{{ entry.message }}</span>
-                  <span class="block text-[12px] text-muted">{{ entry.createdAt | date: 'd MMM, HH:mm' }}</span>
+            <!-- The same timeline as the Recent activity page, in small. -->
+            <ul class="px-4 py-1">
+              @for (entry of entries; track entry.id; let last = $last) {
+                <li class="relative flex gap-3 py-2.5">
+                  @if (!last) {
+                    <span class="absolute top-[26px] -bottom-1.5 left-[3.5px] w-px bg-line" aria-hidden="true"></span>
+                  }
+                  <span class="relative mt-[5px] size-2 flex-none rounded-full bg-accent" aria-hidden="true"></span>
+                  <span class="min-w-0">
+                    <span class="block text-[13px] break-words">{{ entry.message }}</span>
+                    <span class="block text-[12px] text-muted">{{ entry.createdAt | date: 'd MMM, HH:mm' }}</span>
+                  </span>
                 </li>
               } @empty {
                 <li>

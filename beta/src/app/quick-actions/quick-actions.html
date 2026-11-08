@@ -53,7 +53,7 @@
     <span class="text-muted">Add:</span>
     @for (a of available(); track a.id) {
       <button type="button" class="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-line bg-surface px-2.5 font-medium hover:bg-bg" (click)="add(a.id)">
-        <amelu-icon name="plus" [size]="12" /> {{ a.title }}
+        {{ a.title }}
       </button>
     }
   </div>

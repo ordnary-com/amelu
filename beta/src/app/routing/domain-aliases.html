@@ -9,7 +9,6 @@
   Other domain names that also route mail to this domain's mailboxes. Add the alias domain's own DNS
   records separately.
   <a actions [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'" [class]="ui.primary">
-    <amelu-icon name="plus" [size]="14" />
     New domain alias
   </a>
 </amelu-page-header>
@@ -70,7 +69,6 @@
                     [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'"
                     [class]="ui.primary"
                   >
-                    <amelu-icon name="plus" [size]="14" />
                     New domain alias
                   </a>
                 </amelu-empty-state>

@@ -92,7 +92,7 @@ const blank = (): MailboxFilterInput => ({ field: 'from', match: 'contains', val
           @if (editing() === 'new') {
             <ng-container *ngTemplateOutlet="form" />
           } @else if (list.length) {
-            <button type="button" [class]="ui.outline" (click)="startNew()"><amelu-icon name="plus" [size]="14" /> Add a filter</button>
+            <button type="button" [class]="ui.outline" (click)="startNew()">Add a filter</button>
           }
         } @else {
           <div [class]="ui.card + ' h-24 animate-pulse'"></div>

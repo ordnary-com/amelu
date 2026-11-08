@@ -46,7 +46,6 @@
                     @if (row.password) {
                       <code class="min-w-0 truncate rounded-md bg-bg px-2.5 py-1 font-mono text-[12px]">{{ row.password }}</code>
                       <button type="button" [class]="ui.outline + ' h-7'" (click)="copy(row)">
-                        <amelu-icon [name]="copied() === row.address ? 'check' : 'copy'" [size]="14" />
                         {{ copied() === row.address ? 'Copied' : 'Copy' }}
                       </button>
                     }

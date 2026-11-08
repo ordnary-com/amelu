@@ -6,7 +6,6 @@ import { Api, Mailbox, errorMessage } from '../../api';
 import { injectDomain } from '../../domain-context';
 import { PageHeader } from '../../page-header/page-header';
 import { Alert } from '../../alert/alert';
-import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
 import { countedMailboxes } from '../../standard-addresses';
@@ -16,7 +15,7 @@ type PasswordMethod = 'generate' | 'password';
 /** The current dashboard's /domains/:id/mailboxes/new. */
 @Component({
   selector: 'amelu-new-mailbox',
-  imports: [RouterLink, PageHeader, Alert, Icon],
+  imports: [RouterLink, PageHeader, Alert],
   templateUrl: './new-mailbox.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

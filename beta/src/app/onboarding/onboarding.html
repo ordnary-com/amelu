@@ -83,7 +83,6 @@
         <div class="mt-10 flex justify-end">
           <button type="submit" [class]="ui.primary">
             Continue
-            <amelu-icon name="arrowRight" [size]="14" />
           </button>
         </div>
       </form>
@@ -127,12 +126,10 @@
 
         <div class="mt-10 flex items-center justify-between">
           <button type="button" [class]="ui.outline" (click)="back()">
-            <amelu-icon name="arrowBack" [size]="14" />
             Back
           </button>
           <button type="submit" [class]="ui.primary" [disabled]="busy()">
             {{ busy() ? 'Saving...' : 'Continue' }}
-            <amelu-icon name="arrowRight" [size]="14" />
           </button>
         </div>
       </form>
@@ -176,7 +173,6 @@
           </button>
           <button type="submit" [class]="ui.primary" [disabled]="!domainValid() || busy()">
             Add domain
-            <amelu-icon name="arrowRight" [size]="14" />
           </button>
         </div>
       </form>

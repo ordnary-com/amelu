@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { Api, ApiKey, errorMessage } from '../api';
-import { Icon } from '../icon';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
@@ -10,7 +9,7 @@ import { EmptyState } from '../empty-state/empty-state';
 /** The current dashboard's /account/api-keys: list, create and revoke personal API keys. */
 @Component({
   selector: 'amelu-account-api-keys',
-  imports: [EmptyState, DatePipe, Icon, Alert],
+  imports: [EmptyState, DatePipe, Alert],
   templateUrl: './account-api-keys.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

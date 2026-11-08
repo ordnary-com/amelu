@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Beta: text buttons without icons, everywhere
+            2026-11-08-buttons-no-icons.txt
+
 2026-11-08  Domains page: buttons without icons
             2026-11-08-domains-buttons-no-icons.txt
 

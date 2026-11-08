@@ -27,7 +27,6 @@
           <div class="flex flex-wrap items-center gap-2">
             <code class="min-w-0 flex-1 truncate rounded-md bg-bg px-2.5 py-1.5 font-mono text-[13px]">{{ password }}</code>
             <button type="button" [class]="ui.outline" (click)="copy()">
-              <amelu-icon [name]="copied() ? 'check' : 'copy'" [size]="14" />
               {{ copied() ? 'Copied' : 'Copy' }}
             </button>
           </div>

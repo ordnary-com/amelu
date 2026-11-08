@@ -5,7 +5,6 @@ import { errorMessage } from '../../api';
 import { injectDomain } from '../../domain-context';
 import { PageHeader } from '../../page-header/page-header';
 import { Alert } from '../../alert/alert';
-import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { ImportMailboxResult, MailboxesApi } from '../mailboxes-api';
 
@@ -28,7 +27,7 @@ const EXAMPLES = ['Bob, bob@domain.tld, s3cReTPa55,,,,', 'Alice, alice@domain.tl
 /** The current dashboard's /domains/:id/mailboxes/import: bulk create mailboxes from pasted CSV. */
 @Component({
   selector: 'amelu-import-mailboxes',
-  imports: [RouterLink, PageHeader, Alert, Icon],
+  imports: [RouterLink, PageHeader, Alert],
   templateUrl: './import-mailboxes.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

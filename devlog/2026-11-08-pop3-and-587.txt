@@ -1,0 +1,15 @@
+POP3 (995) and SMTP submission with STARTTLS (587) are open
+2026-11-08
+
+The mailbox usage page said POP3 and port 587 "aren't available on this
+cluster yet". Two different causes on marduk: Stalwart already listened on
+995 (listener pop3s) but UFW didn't allow it, and 587 was allowed in UFW but
+had no listener. Added x:NetworkListener "submission" on [::]:587 (smtp,
+useTls, tlsImplicit false); a ReloadSettings doesn't bind a new port, so
+stalwart.service was restarted (15:46:33 to 15:46:36 UTC). ufw allow 995/tcp.
+Checked from outside: 587 offers STARTTLS with a valid certificate, MAIL FROM
+without login answers "503 5.5.1 You must authenticate first", and 995 greets.
+x:MtaStageAuth only offers plain/login after TLS (local_port != 25 &&
+is_tls), so a password never goes over 587 unencrypted. Port 110 stays
+closed. The usage page lists POP3 995 TLS and SMTP 587 STARTTLS now,
+instead of the warning.

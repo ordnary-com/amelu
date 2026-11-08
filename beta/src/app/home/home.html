@@ -1,51 +1,40 @@
-<div class="flex flex-col gap-4 xl:flex-row xl:items-stretch">
-<section class="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg bg-hero bg-[linear-gradient(110deg,var(--hero)_35%,color-mix(in_srgb,var(--hero),white_5%))] px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
-  <!-- The lighter slanted panel on the right. Both tones run a little lighter
-       towards one corner, so neither is a flat colour. -->
-  <div class="absolute inset-y-0 right-0 w-[30%] max-mobile:hidden bg-[linear-gradient(160deg,color-mix(in_srgb,var(--hero-light),white_6%),var(--hero-light)_70%)] [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
+<section class="relative flex min-w-0 flex-col overflow-hidden rounded-lg bg-hero px-7 pt-6 pb-6 text-hero-ink max-mobile:px-5 max-mobile:pt-5">
+  <!-- An animated dither in the accent colour across the whole banner, a smooth gradient from
+       dark on the right to almost nothing behind the text, so there's no edge where it starts. -->
+  <div class="pointer-events-none absolute inset-0 opacity-45 [mask-image:linear-gradient(to_left,black_0%,rgba(0,0,0,0.75)_25%,rgba(0,0,0,0.4)_55%,rgba(0,0,0,0.12)_85%,rgba(0,0,0,0.05)_100%)] max-mobile:opacity-25" aria-hidden="true">
+    <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
+  </div>
 
-  <!-- Links top right; the beta notice sits at the bottom of the banner. -->
-  <div class="relative z-[1] flex justify-end">
-    <div class="flex flex-none gap-5 pt-px max-mobile:gap-4">
-      <a routerLink="/changelog" [class]="heroLink" aria-label="Changelog">
-        <amelu-icon name="map" [size]="16" /><span class="max-mobile:hidden">Changelog</span>
+  <div class="relative flex flex-wrap items-center justify-between gap-3">
+    <p class="text-[13px] font-medium text-hero-ink/70">{{ today | date: 'EEEE d MMMM' }}</p>
+    <nav class="flex flex-wrap gap-5 max-mobile:gap-4" aria-label="Amelu links">
+      <a routerLink="/changelog" [class]="heroLink" aria-label="What's new">
+        <amelu-icon name="map" [size]="15" /><span class="max-mobile:hidden">What's new</span>
       </a>
       <a routerLink="/support" [class]="heroLink" aria-label="Support">
-        <amelu-icon name="lifebuoy" [size]="16" /><span class="max-mobile:hidden">Support</span>
+        <amelu-icon name="lifebuoy" [size]="15" /><span class="max-mobile:hidden">Support</span>
       </a>
       <a routerLink="/network" [class]="heroLink" aria-label="Sending IPs">
-        <amelu-icon name="pulse" [size]="16" /><span class="max-mobile:hidden">Sending IPs</span>
+        <amelu-icon name="pulse" [size]="15" /><span class="max-mobile:hidden">Sending IPs</span>
       </a>
       @if (discordUrl) {
         <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink" aria-label="Discord">
-          <amelu-icon name="discord" [size]="16" /><span class="max-mobile:hidden">Discord</span>
+          <amelu-icon name="discord" [size]="15" /><span class="max-mobile:hidden">Discord</span>
         </a>
       }
-    </div>
+    </nav>
   </div>
 
-  <h1 class="relative mt-6 text-[38px] font-bold tracking-[-0.01em] max-mobile:mt-7 max-mobile:text-[30px]">
-    Hello{{ firstName() ? ', ' + firstName() : '' }}.
+  <h1 class="relative mt-8 text-[40px] leading-[1.1] font-normal tracking-[-0.02em] text-ink max-mobile:mt-6 max-mobile:text-[30px]">
+    {{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}
   </h1>
-  <a routerLink="/organization/activity" class="relative mt-2 self-start text-[17px] text-hero-ink hover:underline">
-    View all my activity
-  </a>
+  <p class="relative mt-2 text-[16px] text-hero-ink/80">
+    Here's how your mail is doing.
+    <a routerLink="/organization/activity" class="font-medium text-link hover:underline">View all activity</a>
+  </p>
 
-  <div class="relative z-[1] mt-auto min-w-0 max-w-[620px] pt-8 text-[13px] text-hero-ink max-mobile:mt-6" role="note">
-    <p class="flex items-start gap-2 font-semibold">
-      <span class="mt-px inline-flex h-[18px] flex-none items-center rounded-[3px] bg-accent px-1.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase">Beta</span>
-      <span>You're using the new Amelu dashboard, which is still being built.</span>
-    </p>
-    <p class="mt-0.5 leading-relaxed text-hero-ink/80">
-      See <a routerLink="/changelog" class="font-medium text-link hover:underline">what changed</a>,
-      or follow along and report a problem on
-      <a [href]="githubUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">GitHub</a>.
-    </p>
-  </div>
+  <amelu-setup-checklist class="relative mt-7 self-start" />
 </section>
-
-<amelu-setup-checklist class="xl:w-[340px] xl:flex-none" />
-</div>
 
 <amelu-quick-actions />
 

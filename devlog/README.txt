@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Overview: a clearer Your plan card
+            2026-11-08-plan-card.txt
+
 2026-11-08  The Black Friday card is a one-line alert
             2026-11-08-promo-alert.txt
 

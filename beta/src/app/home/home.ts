@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { DatePipe, CurrencyPipe } from '@angular/common';
+import { DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
@@ -19,7 +19,7 @@ import { DitherShader } from '../login/dither-shader';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard, SetupChecklist, DitherShader],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, DomainCard, SetupChecklist, DitherShader],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-4' },
@@ -81,4 +81,19 @@ export class Home {
   });
 
   protected readonly latestInvoice = computed(() => this.invoices()?.[0] ?? null);
+
+  /** "No charge", or how the subscription is billed. */
+  protected readonly planBilling = computed(() => {
+    const overview = this.billing();
+    if (!overview) return '';
+    if (isFree(overview.plan)) return 'No charge';
+    return overview.billingInterval === 'annual' ? 'Billed yearly' : overview.billingInterval === 'monthly' ? 'Billed monthly' : 'Active';
+  });
+
+  // The daily sending limit per domain for each plan (the API's plan tiers).
+  private readonly sendingLimits: Record<string, number> = { free: 150, go: 1000, pro: 3000 };
+  protected readonly sendingLimit = computed(() => {
+    const id = this.billing()?.plan.id;
+    return id ? (this.sendingLimits[id] ?? null) : null;
+  });
 }

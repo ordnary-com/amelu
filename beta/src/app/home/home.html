@@ -86,57 +86,68 @@
       </div>
       <div [class]="panel">
         @if (billing() === undefined) {
-          <p class="text-[13px] text-muted">Loading...</p>
+          <div class="space-y-3" aria-hidden="true">
+            <span class="block h-3 w-20 animate-pulse rounded bg-bg"></span>
+            <span class="block h-6 w-28 animate-pulse rounded bg-bg"></span>
+            <span class="block h-1.5 w-full animate-pulse rounded bg-bg"></span>
+          </div>
         } @else if (billing() === null) {
           <amelu-empty-state class="-m-4" title="Your plan couldn't be loaded" [error]="true" [compact]="true" />
         } @else {
-          <div class="flex items-center gap-3">
-            <div class="min-w-0 flex-1">
-              <div class="text-[12px] text-muted">Current plan</div>
-              <div class="truncate text-[18px] leading-tight font-bold">{{ billing()!.plan.name }}</div>
+          @let plan = billing()!.plan;
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-[12px] text-muted">Current plan</p>
+              <p class="truncate text-[22px] leading-tight font-medium">{{ plan.name }}</p>
+              <p class="mt-0.5 text-[12px] text-muted">{{ planBilling() }}</p>
             </div>
-            <a
-              routerLink="/billing/plans"
-              class="rounded-md border border-accent px-2.5 py-1 text-[12px] font-bold text-link hover:bg-accent/10"
-            >
-              Upgrade
-            </a>
+            @if (!upgrade()) {
+              <a routerLink="/billing" class="flex-none text-[12px] font-medium text-link hover:underline">Manage</a>
+            }
           </div>
 
-          <div class="mt-4 space-y-3 border-t border-line pt-4">
+          <dl class="mt-4 space-y-3 border-t border-line pt-4 text-[13px]">
             @if (domainUsage(); as usage) {
               <div>
-                <div class="flex items-baseline justify-between gap-3 text-[13px]">
-                  <span class="text-muted">Domains</span>
-                  <span [class.text-bad]="usage.over">
-                    <span class="font-bold">{{ usage.used }}</span> of {{ usage.limit }}
-                  </span>
+                <div class="flex items-baseline justify-between gap-3">
+                  <dt class="text-muted">Domains</dt>
+                  <dd [class.text-bad]="usage.over"><span class="font-medium">{{ usage.used }}</span> of {{ usage.limit }}</dd>
                 </div>
-                <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-bg">
                   <div class="h-full rounded-full" [class]="usage.over ? 'bg-bad' : 'bg-accent'" [style.width.%]="usage.percent"></div>
                 </div>
-                @if (usage.over) {
-                  <p class="mt-1.5 text-[12px] text-bad">You're over your plan's domain limit.</p>
-                }
               </div>
             }
-            <div class="flex items-baseline justify-between gap-3 text-[13px]">
-              <span class="text-muted">Mailboxes per domain</span>
-              <span>Up to <span class="font-bold">{{ billing()!.plan.maxMailboxesPerDomain }}</span></span>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="text-muted">Mailboxes per domain</dt>
+              <dd>Up to <span class="font-medium">{{ plan.maxMailboxesPerDomain | number }}</span></dd>
             </div>
-          </div>
+            @if (sendingLimit(); as limit) {
+              <div class="flex items-baseline justify-between gap-3">
+                <dt class="text-muted">Sending per domain</dt>
+                <dd><span class="font-medium">{{ limit | number }}</span> a day</dd>
+              </div>
+            }
+          </dl>
+
+          @if (domainUsage()?.over) {
+            <p class="mt-3 flex items-start gap-2 text-[12px] text-bad">
+              <amelu-icon name="circleAlert" [size]="14" class="mt-px flex-none" />
+              You're over your plan's domain limit. Remove a domain or upgrade.
+            </p>
+          }
 
           @if (upgrade(); as up) {
-            <div class="mt-4 border-t border-line pt-4">
-              <p class="text-[13px] font-semibold">With Go, from {{ up.perMonth }}/mo billed yearly</p>
+            <div class="mt-4 rounded-lg bg-accent/8 p-3.5">
+              <p class="text-[13px] font-medium">Go, from {{ up.perMonth }}/mo <span class="font-normal text-muted">billed yearly</span></p>
               <ul class="mt-2 space-y-1.5">
                 @for (line of up.lines; track line) {
-                  <li class="flex gap-2 text-[13px] text-muted">
-                    <amelu-icon name="check" [size]="14" class="mt-0.5 flex-none text-ok" />{{ line }}
+                  <li class="flex gap-2 text-[12px] text-muted">
+                    <amelu-icon name="check" [size]="13" class="mt-0.5 flex-none text-link" />{{ line }}
                   </li>
                 }
               </ul>
-              <a routerLink="/billing/plans" class="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-[13px] font-medium text-white hover:bg-accent/80">
+              <a routerLink="/billing/plans" class="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-md bg-accent text-[13px] font-medium text-white hover:bg-accent/85">
                 Upgrade to Go <amelu-icon name="arrowRight" [size]="14" />
               </a>
             </div>

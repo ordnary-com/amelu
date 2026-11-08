@@ -345,6 +345,11 @@ func main() {
 	mux.HandleFunc("POST /api/mailboxes/{id}/identities", auth.Require(app.Store, app.CreateMailboxIdentity))
 	mux.HandleFunc("DELETE /api/mailboxes/{id}/identities/{identityId}", auth.Require(app.Store, app.DeleteMailboxIdentity))
 
+	mux.HandleFunc("GET /api/mailboxes/{id}/filters", auth.Require(app.Store, app.ListMailboxFilters))
+	mux.HandleFunc("POST /api/mailboxes/{id}/filters", auth.Require(app.Store, app.CreateMailboxFilter))
+	mux.HandleFunc("PUT /api/mailboxes/{id}/filters/order", auth.Require(app.Store, app.ReorderMailboxFilters))
+	mux.HandleFunc("PUT /api/mailboxes/{id}/filters/{filterId}", auth.Require(app.Store, app.UpdateMailboxFilter))
+	mux.HandleFunc("DELETE /api/mailboxes/{id}/filters/{filterId}", auth.Require(app.Store, app.DeleteMailboxFilter))
 	mux.HandleFunc("GET /api/mailboxes/{id}/forwards", auth.Require(app.Store, app.ListMailboxForwards))
 	mux.HandleFunc("POST /api/mailboxes/{id}/forwards", auth.Require(app.Store, app.CreateMailboxForward))
 	mux.HandleFunc("DELETE /api/mailboxes/{id}/forwards/{forwardId}", auth.Require(app.Store, app.DeleteMailboxForward))

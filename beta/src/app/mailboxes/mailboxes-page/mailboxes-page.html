@@ -141,6 +141,9 @@
                       {{ mailbox.displayName || 'No display name' }} · Added {{ mailbox.createdAt | date: 'd MMM y' }}
                     </span>
                   </span>
+                  @if (sent()[mailbox.address.toLowerCase()]; as series) {
+                    <amelu-sparkline class="max-sm:hidden" [values]="series" [title]="'Messages sent per day, last 14 days'" />
+                  }
                   @let status = this.status(mailbox);
                   <span [class]="status.class">{{ status.label }}</span>
                 </a>

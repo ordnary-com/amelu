@@ -1,3 +1,4 @@
+import { DeliveryChart } from '../delivery/delivery-chart';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -37,7 +38,7 @@ type Loaded<T> = T | null | undefined;
  */
 @Component({
   selector: 'amelu-domain-detail',
-  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, ActionIcon, Alert, Icon],
+  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, ActionIcon, Alert, Icon, DeliveryChart],
   templateUrl: './domain-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

@@ -1,0 +1,20 @@
+Delivery charts: 14 days per domain, a sparkline per mailbox
+2026-11-08
+
+The dashboard only knew "sent in the last 24 hours". ops/marduk/amelu-sending-stats.py
+now also reports history: per sender domain and UTC day the messages sent,
+recipients delivered, deferred (4xx) and rejected (5xx), per sender address
+the messages sent, and per domain the five most common 5xx reasons of the
+last 7 days, with trace ids and long tokens with digits replaced by # so
+the same reason groups (163.com appends one to every reply). Finished days
+are counted once into /var/lib/amelu-sending-stats/days; a run takes 0.5 s.
+Live on marduk (backup /root/amelu-sending-stats.backup-2026-11-08); the
+API ignores the new field until the backend is deployed.
+
+Backend: tables sending_history, sending_history_senders, sending_reasons
+(migration 0042), written with unnest, older than 30 days dropped; GET
+/api/domains/{id}/sending/history returns all 14 days. Dashboard: a stacked
+bar chart on the domain page (delivered, deferred, rejected, with hover,
+legend totals and a screen-reader table) and the rejection reasons with a
+plain-language hint (delivery/reasons.ts); a sparkline of sent mail per
+mailbox in the mailbox list.

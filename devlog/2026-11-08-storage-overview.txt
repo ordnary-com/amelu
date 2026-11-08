@@ -1,0 +1,12 @@
+Mailboxes: a storage overview per domain
+2026-11-08
+
+There was no way to see which mailbox takes how much space. New endpoint
+GET /api/domains/{id}/mailboxes/storage (handlers/mailbox_storage.go) joins
+the domain's mailboxes with stalwart.DomainStorage, one x:Account/query
+filtered on domainId plus one x:Account/get of name, usedDiskQuota and
+quotas (filtering on domainId alone was confirmed live on marduk). New page
+/domains/:id/mailboxes/storage, linked from the mailbox settings list: a
+bar per mailbox, biggest first, size against its limit or, without a limit,
+against the biggest mailbox, a "Nearly full" badge from 85%, a Limit link,
+and the domain total in the sidebar. formatBytes uses binary units.

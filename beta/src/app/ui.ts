@@ -10,6 +10,9 @@ export const UI = {
     'inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-line px-3 text-[13px] font-medium hover:bg-bg disabled:cursor-default disabled:opacity-50',
   danger:
     'inline-flex h-8 cursor-pointer items-center rounded-md bg-bad px-3 text-[13px] font-medium text-white hover:brightness-110 disabled:cursor-default disabled:opacity-50',
+  // The page-level button on destructive pages; the solid danger style is kept for the final confirm.
+  dangerOutline:
+    'inline-flex h-8 cursor-pointer items-center rounded-md border border-bad/40 px-3 text-[13px] font-medium text-bad hover:bg-bad/5 disabled:cursor-default disabled:opacity-50',
   card: 'rounded-lg border border-line bg-surface',
   sectionTitle: 'mb-3 text-[14px] font-bold',
 } as const;

@@ -1,12 +1,22 @@
-<div class="relative h-full">
-  <a
-    [routerLink]="'/domains/' + domain().id"
-    class="group flex h-full min-h-[7.5rem] flex-col gap-4 rounded-lg border border-line bg-surface p-4 hover:bg-bg/60"
-  >
+<!-- The name is the link and stretches over the whole card, so the star can sit next to it as its own button. -->
+<div class="group relative flex h-full min-h-[7.5rem] flex-col gap-4 rounded-lg border border-line bg-surface p-4 hover:bg-bg/60">
     <span class="flex items-center gap-3.5">
       <amelu-action-icon name="domains" class="text-ink" />
       <span class="flex min-w-0 flex-1 flex-col">
-        <span class="truncate text-[14px] font-medium group-hover:underline">{{ domain().name }}</span>
+        <span class="flex min-w-0 items-center gap-1">
+          <a [routerLink]="'/domains/' + domain().id" class="truncate text-[14px] font-medium group-hover:underline after:absolute after:inset-0 after:rounded-lg">{{ domain().name }}</a>
+          <button
+            type="button"
+            class="relative z-10 inline-flex size-5 flex-none cursor-pointer items-center justify-center"
+            [class]="favoriteFailed() ? 'text-bad' : domain().favorite ? 'text-warn [&_svg]:fill-current' : 'text-muted/60'"
+            [attr.aria-label]="(domain().favorite ? 'Remove ' : 'Add ') + domain().name + (domain().favorite ? ' from favorites' : ' to favorites')"
+            [attr.aria-pressed]="domain().favorite"
+            [title]="favoriteFailed() ? 'Could not save, try again' : domain().favorite ? 'Remove from favorites' : 'Add to favorites'"
+            (click)="toggleFavorite()"
+          >
+            <amelu-icon name="star" [size]="14" />
+          </button>
+        </span>
         <span class="text-[12px] text-muted">Added {{ domain().createdAt | date: 'd MMM y' }}</span>
       </span>
       <!-- Status and DNS health in one badge: a small ring with how many records check out. -->
@@ -27,7 +37,7 @@
         }
       </span>
     </span>
-    <span class="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-3 pr-16">
+    <span class="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-3 pr-9">
       @if (checks(); as rows) {
         @for (row of rows; track row.label) {
           <span class="inline-flex items-center gap-1.5 text-[12px]" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">
@@ -46,21 +56,8 @@
         <span class="h-4 w-40 animate-pulse rounded bg-bg"></span>
       }
     </span>
-  </a>
 
-  <!-- Outside the link: a button inside an <a> isn't valid, and clicks here mustn't open the domain. -->
-  <span class="absolute right-3 bottom-3 flex items-center gap-0.5">
-    <button
-      type="button"
-      class="inline-flex size-7 cursor-pointer items-center justify-center rounded-md hover:bg-bg"
-      [class]="domain().favorite ? 'text-warn [&_svg]:fill-current' : 'text-muted hover:text-ink'"
-      [attr.aria-label]="(domain().favorite ? 'Remove ' : 'Add ') + domain().name + (domain().favorite ? ' from favorites' : ' to favorites')"
-      [attr.aria-pressed]="domain().favorite"
-      [title]="favoriteFailed() ? 'Could not save, try again' : domain().favorite ? 'Remove from favorites' : 'Add to favorites'"
-      (click)="toggleFavorite()"
-    >
-      <amelu-icon name="star" [size]="16" />
-    </button>
+  <span class="absolute right-3 bottom-3 z-10 flex items-center gap-0.5">
     <ng-content select="[cardAction]" />
   </span>
 </div>

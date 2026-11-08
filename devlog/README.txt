@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domain cards: the favorite star sits next to the domain name
+            2026-11-08-favorite-star.txt
+
 2026-11-08  Domain cards: status and DNS health in one badge
             2026-11-08-domain-card-badge.txt
 

@@ -24,6 +24,12 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Changelog is called What's new
+            2026-11-08-whats-new.txt
+
+2026-11-08  Overview: a new banner with a dither and the setup checklist inside
+            2026-11-08-overview-banner.txt
+
 2026-11-08  POP3 (995) and SMTP submission with STARTTLS (587) are open
             2026-11-08-pop3-and-587.txt
 

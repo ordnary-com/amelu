@@ -36,7 +36,7 @@ const GLOBAL: PageDef[] = [
   { path: '/billing/plans', label: 'Plans', hint: 'Compare and upgrade', keywords: 'plans upgrade pricing go pro free promo code discount' },
   { path: '/billing/invoices', label: 'Invoices', hint: 'Download your invoices', keywords: 'invoices receipts billing history vat' },
   { path: '/support', label: 'Support', hint: 'Get help from our team', keywords: 'help contact ticket support question' },
-  { path: '/changelog', label: 'Changelog', hint: "What's new in the dashboard", keywords: 'changes new release notes updates' },
+  { path: '/changelog', label: "What's new", hint: 'Changes to Amelu, newest first', keywords: 'changelog changes new release notes updates' },
   { path: '/status', label: 'Service status', hint: 'Is everything up?', keywords: 'status outage down incident uptime' },
 ];
 

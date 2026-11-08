@@ -1,0 +1,7 @@
+Changelog is called What's new
+2026-11-08
+
+The Overview banner link, the page header, the tab title ("What's new ·
+Amelu") and the search entry say What's new instead of Changelog. The path
+stays /changelog, so old links keep working, and "changelog" is still a
+search keyword.

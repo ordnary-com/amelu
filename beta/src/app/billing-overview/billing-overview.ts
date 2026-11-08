@@ -10,11 +10,13 @@ import { INVOICE_STATUS, SUBSCRIPTION_STATUS, badgeClass } from '../status';
 import { planPriceLine } from '../billing';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 /** The current dashboard's /billing/overview: plan, status, payment method and the Stripe portal. */
 @Component({
   selector: 'amelu-billing-overview',
-  imports: [EmptyState, CurrencyPipe, DatePipe, RouterLink, Alert],
+  imports: [EmptyState, CurrencyPipe, DatePipe, RouterLink, Alert, Icon, DitherShader],
   templateUrl: './billing-overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

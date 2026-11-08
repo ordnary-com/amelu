@@ -43,6 +43,33 @@
     @if (deleted(); as address) {
       <amelu-alert kind="success" [title]="address + ' is deleted'" [dismissible]="true" (dismissed)="deleted.set(null)" />
     }
+    @if (bulkResult(); as result) {
+      <amelu-alert [kind]="result.failed.length ? 'warning' : 'success'" [title]="result.title" [dismissible]="true" (dismissed)="bulkResult.set(null)">
+        @for (f of result.failed; track f.address) {
+          <p>{{ f.address }}: {{ f.error }}</p>
+        }
+      </amelu-alert>
+    }
+    @if (newPasswords(); as rows) {
+      <section [class]="ui.card + ' p-4'">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-[14px] font-bold">New passwords</h2>
+          <div class="flex gap-2">
+            <button type="button" [class]="ui.outline" (click)="copyPasswords()">Copy as CSV</button>
+            <button type="button" [class]="ui.outline" (click)="newPasswords.set(null)">Done</button>
+          </div>
+        </div>
+        <p class="mt-1 text-[12px] text-muted">Shown only now. Save them before you close this, or set new ones later.</p>
+        <ul class="mt-3 divide-y divide-line rounded-md border border-line">
+          @for (row of rows; track row.address) {
+            <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 text-[13px]">
+              <span class="truncate">{{ row.address }}</span>
+              <code class="font-mono text-[12px] select-all">{{ row.password }}</code>
+            </li>
+          }
+        </ul>
+      </section>
+    }
 
     <div>
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -65,14 +92,43 @@
         </label>
       </div>
 
+      @if (selected().size > 0) {
+        <div class="sticky top-2 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-accent/40 bg-popover px-3 py-2 shadow-sm" role="toolbar" aria-label="Bulk actions">
+          <span class="mr-1 text-[13px] font-semibold">{{ selected().size }} selected</span>
+          @if (bulkProgress(); as p) {
+            <span class="text-[12px] text-muted">Working... {{ p.done }} of {{ p.total }}</span>
+          } @else {
+            <button type="button" [class]="ui.outline" (click)="suspendSelected()">Suspend</button>
+            <button type="button" [class]="ui.outline" (click)="activateSelected()">Activate</button>
+            <button type="button" [class]="ui.outline" (click)="newPasswordsForSelected()">New passwords</button>
+            <button type="button" [class]="ui.outline" (click)="bulkDialog.set('limits')">Storage limit</button>
+            <button type="button" class="h-8 cursor-pointer rounded-md px-3 text-[13px] font-medium text-bad hover:bg-bad/10" (click)="bulkDialog.set('delete')">Delete</button>
+            <button type="button" class="ml-auto cursor-pointer text-[12px] text-muted hover:text-ink hover:underline" (click)="clearSelection()">Clear</button>
+          }
+        </div>
+      }
+
       <div [class]="ui.card" class="overflow-hidden">
+        @if (filtered()?.length) {
+          <label class="flex cursor-pointer items-center gap-3 border-b border-line bg-bg/40 px-4 py-2 text-[12px] text-muted">
+            <input type="checkbox" class="size-4 accent-accent" [checked]="allShownSelected()" (change)="toggleAll()" />
+            Select all{{ search() ? ' shown' : '' }}
+          </label>
+        }
         @if (mailboxes() === null) {
           <amelu-empty-state title="The mailboxes couldn't be loaded" [error]="true" />
         } @else if (filtered(); as rows) {
           <ul>
             @for (mailbox of rows; track mailbox.id) {
-              <li class="flex items-center border-b border-line last:border-b-0 hover:bg-bg/60">
-                <a [routerLink]="base() + '/mailboxes/' + mailbox.id" class="group flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-4">
+              <li class="flex items-center border-b border-line last:border-b-0 hover:bg-bg/60" [class.bg-accent-soft]="selected().has(mailbox.id)">
+                <input
+                  type="checkbox"
+                  class="ml-4 size-4 flex-none cursor-pointer accent-accent"
+                  [checked]="selected().has(mailbox.id)"
+                  [attr.aria-label]="'Select ' + mailbox.address"
+                  (change)="toggle(mailbox)"
+                />
+                <a [routerLink]="base() + '/mailboxes/' + mailbox.id" class="group flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3">
                   <span
                     class="flex size-8 flex-none items-center justify-center rounded-full bg-accent-soft text-[13px] font-bold text-link uppercase"
                     aria-hidden="true"
@@ -211,6 +267,48 @@
           {{ deleting() ? 'Deleting...' : 'Yes, delete it' }}
         </button>
       </div>
+    </div>
+  </div>
+}
+
+@if (bulkDialog(); as dialog) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeBulk()">
+    <div
+      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      role="alertdialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()"
+    >
+      @if (dialog === 'delete') {
+        <h3 class="text-[15px] font-bold">Delete {{ selected().size }} mailboxes?</h3>
+        <p class="mt-2 text-[13px] leading-relaxed text-muted">
+          They and all mail in them are removed from the mail server. This can't be undone.
+        </p>
+        <ul class="mt-3 max-h-40 overflow-auto rounded-md border border-line px-3 py-2 text-[12px]">
+          @for (m of selectedMailboxes(); track m.id) {
+            <li class="truncate py-0.5">{{ m.address }}</li>
+          }
+        </ul>
+        <div class="mt-5 flex justify-end gap-2">
+          <button type="button" [class]="ui.outline" (click)="closeBulk()" [disabled]="bulkBusy()">Cancel</button>
+          <button type="button" [class]="ui.danger" (click)="deleteSelected()" [disabled]="bulkBusy()">
+            {{ bulkBusy() ? 'Deleting...' : 'Yes, delete them' }}
+          </button>
+        </div>
+      } @else {
+        <h3 class="text-[15px] font-bold">Storage limit for {{ selected().size }} mailboxes</h3>
+        <p class="mt-2 text-[13px] leading-relaxed text-muted">The most mail each of them may hold. Their message limits stay as they are.</p>
+        <label [class]="ui.label + ' mt-4'">
+          Limit in GB
+          <input type="number" min="0.5" step="0.5" [class]="ui.input" [value]="limitGb()" (input)="limitGb.set($any($event.target).value)" />
+        </label>
+        <div class="mt-5 flex justify-end gap-2">
+          <button type="button" [class]="ui.outline" (click)="closeBulk()" [disabled]="bulkBusy()">Cancel</button>
+          <button type="button" [class]="ui.primary" (click)="limitSelected()" [disabled]="bulkBusy() || !(+limitGb() > 0)">
+            {{ bulkBusy() ? 'Saving...' : 'Set limit' }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 }

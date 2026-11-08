@@ -12,7 +12,7 @@ import { Icon } from '../../icon';
 import { MAILBOX_STATUS, badgeClass } from '../../status';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
-import { RepairResult } from '../../mailbox/mailbox-api';
+import { MailboxApi, RepairResult } from '../../mailbox/mailbox-api';
 import { apiUrl } from '../../config';
 import { countedMailboxes } from '../../standard-addresses';
 
@@ -24,12 +24,13 @@ import { countedMailboxes } from '../../standard-addresses';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'block',
-    '(document:keydown.escape)': 'closeDelete()',
+    '(document:keydown.escape)': 'closeDelete(); closeBulk()',
   },
 })
 export class MailboxesPage {
   private readonly api = inject(Api);
   private readonly mailboxesApi = inject(MailboxesApi);
+  private readonly mailboxApi = inject(MailboxApi);
   protected readonly ui = UI;
   protected readonly ctx = injectDomain();
 
@@ -110,6 +111,105 @@ export class MailboxesPage {
   }
   protected readonly deleted = signal<string | null>(null);
 
+  // --- bulk actions ---
+  protected readonly selected = signal<ReadonlySet<string>>(new Set());
+  protected readonly selectedMailboxes = computed(() => (this.mailboxes() ?? []).filter((m) => this.selected().has(m.id)));
+  protected readonly allShownSelected = computed(() => {
+    const rows = this.filtered() ?? [];
+    return rows.length > 0 && rows.every((m) => this.selected().has(m.id));
+  });
+  // Which bulk dialog is open: delete and storage ask first.
+  protected readonly bulkDialog = signal<'delete' | 'limits' | null>(null);
+  protected readonly bulkBusy = signal(false);
+  protected readonly bulkProgress = signal<{ done: number; total: number } | null>(null);
+  protected readonly bulkResult = signal<{ title: string; failed: { address: string; error: string }[] } | null>(null);
+  // New passwords, shown once after "New passwords".
+  protected readonly newPasswords = signal<{ address: string; password: string }[] | null>(null);
+  protected readonly limitGb = signal('');
+
+  protected toggle(mailbox: Mailbox): void {
+    this.selected.update((set) => {
+      const next = new Set(set);
+      if (next.has(mailbox.id)) next.delete(mailbox.id);
+      else next.add(mailbox.id);
+      return next;
+    });
+  }
+
+  protected toggleAll(): void {
+    const rows = this.filtered() ?? [];
+    this.selected.set(this.allShownSelected() ? new Set() : new Set(rows.map((m) => m.id)));
+  }
+
+  protected clearSelection(): void {
+    this.selected.set(new Set());
+  }
+
+  protected closeBulk(): void {
+    if (!this.bulkBusy()) this.bulkDialog.set(null);
+  }
+
+  /** Runs one request per selected mailbox, one at a time, and keeps going past failures. */
+  private async bulk(title: string, run: (m: Mailbox) => Promise<unknown>): Promise<void> {
+    const targets = this.selectedMailboxes();
+    if (targets.length === 0 || this.bulkBusy()) return;
+    this.bulkBusy.set(true);
+    this.bulkResult.set(null);
+    this.bulkProgress.set({ done: 0, total: targets.length });
+    const failed: { address: string; error: string }[] = [];
+    for (const [i, mailbox] of targets.entries()) {
+      try {
+        await run(mailbox);
+      } catch (err) {
+        failed.push({ address: mailbox.address, error: errorMessage(err, 'Failed') });
+      }
+      this.bulkProgress.set({ done: i + 1, total: targets.length });
+    }
+    this.bulkBusy.set(false);
+    this.bulkProgress.set(null);
+    this.bulkDialog.set(null);
+    this.bulkResult.set({ title: `${title}: ${targets.length - failed.length} of ${targets.length} done`, failed });
+    this.clearSelection();
+    this.reloads.update((n) => n + 1);
+  }
+
+  protected suspendSelected(): Promise<void> {
+    return this.bulk('Suspended', (m) => firstValueFrom(this.mailboxApi.suspend(m.id)));
+  }
+
+  protected activateSelected(): Promise<void> {
+    return this.bulk('Activated', (m) => firstValueFrom(this.mailboxApi.activate(m.id)));
+  }
+
+  protected deleteSelected(): Promise<void> {
+    return this.bulk('Deleted', (m) => firstValueFrom(this.mailboxesApi.deleteMailbox(m.id)));
+  }
+
+  protected async newPasswordsForSelected(): Promise<void> {
+    const made: { address: string; password: string }[] = [];
+    await this.bulk('New passwords set', async (m) => {
+      const password = randomPassword();
+      await firstValueFrom(this.mailboxApi.setPassword(m.id, password));
+      made.push({ address: m.address, password });
+    });
+    if (made.length) this.newPasswords.set(made);
+  }
+
+  protected async limitSelected(): Promise<void> {
+    const gb = Number(this.limitGb());
+    if (!Number.isFinite(gb) || gb <= 0) return;
+    const bytes = Math.round(gb * 1024 ** 3);
+    await this.bulk('Storage limit set', async (m) => {
+      const current = await firstValueFrom(this.mailboxApi.limits(m.id));
+      await firstValueFrom(this.mailboxApi.updateLimits(m.id, { ...current, maxDiskQuotaBytes: bytes }));
+    });
+  }
+
+  protected copyPasswords(): void {
+    const rows = this.newPasswords() ?? [];
+    navigator.clipboard.writeText(rows.map((r) => `${r.address},${r.password}`).join('\n'));
+  }
+
   protected status(mailbox: Mailbox) {
     const status = MAILBOX_STATUS[mailbox.status];
     return { label: status.label, class: badgeClass(status.tone) };
@@ -137,4 +237,11 @@ export class MailboxesPage {
       this.deleting.set(false);
     }
   }
+}
+
+/** 20 characters from a set without look-alikes (no 0/O, 1/l/I). */
+function randomPassword(): string {
+  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint32Array(20));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
 }

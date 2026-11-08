@@ -7,6 +7,7 @@ import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { injectDnsCheck } from './dns-check';
 import { DnsRecord } from './dns-record';
+import { NameserversCard } from './nameservers-card';
 import { DNS_TABS, SectionTabs } from '../section-tabs';
 
 /**
@@ -15,7 +16,7 @@ import { DNS_TABS, SectionTabs } from '../section-tabs';
  */
 @Component({
   selector: 'amelu-dns-overview',
-  imports: [Alert, DatePipe, DnsRecord, EmptyState, SectionTabs, PageHeader, RouterLink],
+  imports: [Alert, DatePipe, DnsRecord, EmptyState, NameserversCard, SectionTabs, PageHeader, RouterLink],
   templateUrl: './dns-overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

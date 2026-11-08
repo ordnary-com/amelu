@@ -7,8 +7,16 @@
 @if (result(); as done) {
   <div class="max-w-2xl space-y-5">
     <amelu-alert kind="success" [title]="done.domain.name + ' is added'">
-      Set its DNS records next, so mail for it reaches Amelu.
+      @if (addedWith() === 'amelu') {
+        Change its nameservers next. Once they point at Amelu, mail for it arrives here.
+      } @else {
+        Set its DNS records next, so mail for it reaches Amelu.
+      }
     </amelu-alert>
+
+    @if (addedWith() === 'amelu') {
+      <amelu-nameservers-card [domainId]="done.domain.id" [domain]="done.domain.name" />
+    }
 
     @if (connect(); as status) {
       @if (status.supported && status.applyUrl) {
@@ -115,21 +123,49 @@
       <section>
         <h2 [class]="ui.sectionTitle">Nameservers</h2>
         <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Nameservers">
-          <label class="flex cursor-pointer gap-3 rounded-lg border-2 border-accent bg-surface p-4">
-            <input type="radio" name="nameservers" value="external" checked class="mt-0.5 accent-accent" />
+          <label
+            class="flex cursor-pointer gap-3 rounded-lg bg-surface p-4"
+            [class]="nameservers() === 'external' ? 'border-2 border-accent' : 'border border-line'"
+          >
+            <input
+              type="radio"
+              name="nameservers"
+              value="external"
+              [checked]="nameservers() === 'external'"
+              (change)="nameservers.set('external')"
+              class="mt-0.5 accent-accent"
+            />
             <span>
               <span class="block text-[14px] font-semibold">Keep my current DNS</span>
               <span class="mt-0.5 block text-[13px] text-muted">You add a few records where your DNS lives. We show which ones, and check them.</span>
             </span>
           </label>
-          <label class="flex cursor-not-allowed gap-3 rounded-lg border border-line bg-surface p-4 opacity-60">
-            <input type="radio" name="nameservers" value="amelu" disabled class="mt-0.5" />
+          <label
+            class="flex gap-3 rounded-lg bg-surface p-4"
+            [class]="!ameluNs()?.available ? 'cursor-not-allowed border border-line opacity-60' : nameservers() === 'amelu' ? 'cursor-pointer border-2 border-accent' : 'cursor-pointer border border-line'"
+          >
+            <input
+              type="radio"
+              name="nameservers"
+              value="amelu"
+              [disabled]="!ameluNs()?.available"
+              [checked]="nameservers() === 'amelu'"
+              (change)="nameservers.set('amelu')"
+              class="mt-0.5 accent-accent"
+            />
             <span>
               <span class="flex items-center gap-2 text-[14px] font-semibold">
                 Amelu nameservers
-                <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-muted uppercase">Soon</span>
+                @if (ameluNs()?.available) {
+                  <span class="rounded bg-accent/15 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-accent uppercase">Easiest</span>
+                } @else {
+                  <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-muted uppercase">Soon</span>
+                }
               </span>
-              <span class="mt-0.5 block text-[13px] text-muted">Point your domain at us and every record is set for you.</span>
+              <span class="mt-0.5 block text-[13px] text-muted">
+                Point your domain at {{ ameluNs()?.nameservers?.join(' and ') ?? 'us' }} and every record is set for you. We
+                copy the records you have now, so your website keeps working.
+              </span>
             </span>
           </label>
         </div>
@@ -172,7 +208,7 @@
       <section>
         <h2 [class]="ui.sectionTitle">What happens next</h2>
         <ol [class]="ui.card + ' space-y-4 p-4'">
-          @for (step of steps; track step.title; let i = $index) {
+          @for (step of steps(); track step.title; let i = $index) {
             <li class="flex gap-3">
               <span
                 class="flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-bold"

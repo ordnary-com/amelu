@@ -41,6 +41,7 @@ export class SectionTabs {
 export const DNS_TABS: SectionTab[] = [
   { label: 'Overview', path: '/dns' },
   { label: 'Records', path: '/dns/records' },
+  { label: 'DNS zone', path: '/dns/zone' },
 ];
 
 export const SPAM_TABS: SectionTab[] = [

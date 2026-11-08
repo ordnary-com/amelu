@@ -9,28 +9,34 @@
         <span class="truncate text-[14px] font-medium group-hover:underline">{{ domain().name }}</span>
         <span class="text-[12px] text-muted">Added {{ domain().createdAt | date: 'd MMM y' }}</span>
       </span>
-      <span [class]="badge()">{{ status().label }}</span>
-      @if (score() !== null) {
-        <span class="relative inline-flex size-9 flex-none items-center justify-center" [class]="scoreTone()" [title]="'DNS health: ' + health()?.matched + ' of ' + health()?.total + ' records verified'">
-          <svg viewBox="0 0 32 32" class="absolute inset-0 -rotate-90" aria-hidden="true">
-            <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-opacity="0.15" stroke-width="3" />
-            <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" [attr.stroke-dasharray]="dash()" />
-          </svg>
-          <span class="text-[10px] font-bold">{{ score() }}</span>
-          <span class="sr-only">% DNS health</span>
-        </span>
-      }
+      <!-- Status and DNS health in one badge: a small ring with how many records check out. -->
+      <span
+        class="inline-flex h-7 flex-none items-center gap-1.5 rounded-full pr-2.5 pl-1 text-[12px] font-medium"
+        [class]="tone()"
+        [title]="score() === null ? status().label : status().label + ', ' + health()?.matched + ' of ' + health()?.total + ' DNS records verified'"
+      >
+        <svg viewBox="0 0 20 20" class="size-5 -rotate-90" aria-hidden="true">
+          <circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.5" />
+          @if (score() !== null) {
+            <circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" [attr.stroke-dasharray]="dash()" />
+          }
+        </svg>
+        {{ status().label }}
+        @if (score() !== null) {
+          <span class="opacity-75">· {{ score() }}%</span>
+        }
+      </span>
     </span>
-    <span class="mt-auto flex items-center gap-1.5 border-t border-line pt-3 pr-16">
-      <span class="mr-1 text-[11px] font-bold tracking-wide text-muted uppercase">DNS</span>
+    <span class="mt-auto flex flex-wrap items-center gap-1.5 border-t border-line pt-3 pr-16">
+      <span class="mr-0.5 text-[11px] font-medium text-muted">DNS</span>
       @if (checks(); as rows) {
         @for (row of rows; track row.label) {
           <span
-            class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide"
-            [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'"
+            class="inline-flex h-6 items-center gap-1 rounded-full pr-2 pl-1.5 text-[11px] font-medium"
+            [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok/12 text-ok' : 'bg-bad/12 text-bad'"
             [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')"
           >
-            <span class="size-1.5 rounded-full" [class]="row.ok === null ? 'bg-muted/50' : row.ok ? 'bg-ok' : 'bg-bad'"></span>
+            <amelu-icon [name]="row.ok === null ? 'dots' : row.ok ? 'check' : 'close'" [size]="12" />
             {{ row.label }}
           </span>
         }

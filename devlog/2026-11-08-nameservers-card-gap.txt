@@ -1,0 +1,11 @@
+Sidebar column no longer starts 24px low on DNS pages
+2026-11-08
+
+On DNS configuration (and the DNS zone tab and the Add domain result), the
+right-hand column started 24px lower than the left one. The first card in
+it, amelu-nameservers-card, renders nothing for a domain that keeps its own
+DNS without the Amelu nameservers. But its empty host element still took
+the space-y-6 gap, so the Import a zone file card lined up with neither the
+"Records to add or fix" heading nor the card under it. The component's host
+is now "block empty:hidden", so an empty card takes no space and the column
+starts level with the heading on the left.

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { errorMessage } from '../api';
@@ -12,6 +13,7 @@ import { DNS_TABS, SectionTabs } from '../section-tabs';
 import { UI } from '../ui';
 import { DnsSpamApi, ZoneRecord, ZoneRecordInput } from './dns-spam-api';
 import { NameserversCard } from './nameservers-card';
+import { DitherShader } from '../login/dither-shader';
 
 const TYPES = ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'CAA', 'SRV', 'NS'];
 
@@ -29,7 +31,7 @@ const HINTS: Record<string, string> = {
 /** The records in a zone Amelu hosts. Mail records are kept by Amelu and shown read-only. */
 @Component({
   selector: 'amelu-dns-zone',
-  imports: [Alert, EmptyState, FormsModule, Icon, NameserversCard, NgTemplateOutlet, PageHeader, SectionTabs],
+  imports: [Alert, DitherShader, EmptyState, FormsModule, Icon, NameserversCard, NgTemplateOutlet, PageHeader, RouterLink, SectionTabs],
   templateUrl: './dns-zone.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

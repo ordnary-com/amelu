@@ -1,0 +1,17 @@
+Domain overview page in the new style
+2026-11-08
+
+/domains/:id in the beta opens with a banner like the Overview greeting:
+bg-hero with the accent warp dither fading from the right, the breadcrumb
+and the New alias and New mailbox buttons on top, and the domain name at
+36px in normal weight. Under it is the status badge from the domain cards
+(ring plus DNS %, amber when an active domain has a failing record) with
+the added and verified dates. The four stat tiles get a 26px normal-weight
+number, a chevron and no underline on hover. Mailboxes also gets a thin
+usage bar against the plan limit. The address filter matches the Domains
+page (own × button, Escape clears, accent focus ring), and the
+All/Mailboxes/Aliases switch marks the active tab in accent. Rows use
+divide-y, no underline on hover, and the chevron nudges right. Mailbox
+status badges are sentence case pills. The DNS card drops the uppercase
+labels and OK/WRONG badges: a filled check or cross circle, the record
+name and what it does, and Verified, Wrong or Not checked on the right.

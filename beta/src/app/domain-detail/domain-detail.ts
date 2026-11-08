@@ -72,6 +72,7 @@ export class DomainDetail {
       { label: 'MX', what: 'Receives mail', ok: health.mx },
       { label: 'SPF', what: 'Allowed to send', ok: health.spf },
       { label: 'DKIM', what: 'Signs outgoing mail', ok: health.dkim },
+      { label: 'DMARC', what: 'Tells receivers what to do with fakes', ok: health.dmarc },
     ];
   });
   protected readonly dnsBroken = computed(() => this.dns()?.some((row) => row.ok === false) ?? false);

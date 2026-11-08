@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Domain } from '../api';
 import { ActionIcon } from '../action-icon';
 import { Icon } from '../icon';
-import { DomainHealth } from '../domain-health';
+import { DomainHealth, healthScore } from '../domain-health';
 import { Domains } from '../domains';
 import { DOMAIN_STATUS, badgeClass } from '../status';
 
@@ -36,7 +36,16 @@ export class DomainCard {
       { label: 'MX', ok: health.mx },
       { label: 'SPF', ok: health.spf },
       { label: 'DKIM', ok: health.dkim },
+      { label: 'DMARC', ok: health.dmarc },
     ];
+  });
+
+  protected readonly score = computed(() => healthScore(this.health()));
+  // The ring is drawn as a dash of a circle with r=14 (circumference ~88).
+  protected readonly dash = computed(() => `${((this.score() ?? 0) / 100) * 87.96} 87.96`);
+  protected readonly scoreTone = computed(() => {
+    const score = this.score();
+    return score === null ? 'text-muted' : score === 100 ? 'text-ok' : score >= 60 ? 'text-warn' : 'text-bad';
   });
 
   // Handled here rather than by the page, so the star works wherever the

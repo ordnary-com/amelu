@@ -36,6 +36,10 @@
   <amelu-setup-checklist class="relative mt-7 self-start" />
 </section>
 
+@if (upgrade()) {
+  <amelu-promo-banner />
+}
+
 <amelu-quick-actions />
 
 <div class="grid grid-cols-[minmax(0,1fr)] gap-4 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
@@ -79,9 +83,6 @@
   </section>
 
   <div class="space-y-6">
-    @if (upgrade()) {
-      <amelu-promo-banner />
-    }
     <section>
       <div [class]="sectionHeader">
         <h2 [class]="cardTitle">Your plan</h2>

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Sidebar column no longer starts 24px low on DNS pages
+            2026-11-08-nameservers-card-gap.txt
+
 2026-11-08  DNS zone page: filters, groups, copy and inline delete
             2026-11-08-dns-zone-improve.txt
 

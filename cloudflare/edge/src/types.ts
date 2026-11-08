@@ -60,4 +60,9 @@ export interface Env {
   // White-label webmail: own hostnames as Cloudflare custom hostnames (backend/internal/cfsaas).
   CLOUDFLARE_SAAS_API_TOKEN?: string;
   CLOUDFLARE_SAAS_ZONE_ID?: string;
+  // Amelu nameservers (docs/AMELU_NAMESERVERS.md).
+  AMELU_DNS_API_TOKEN?: string;
+  AMELU_DNS_ACCOUNT_ID?: string;
+  AMELU_NS_SET?: string;
+  AMELU_NAMESERVERS?: string;
 }

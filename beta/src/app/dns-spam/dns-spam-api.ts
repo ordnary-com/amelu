@@ -14,6 +14,39 @@ export interface DomainConnectStatus {
   provider?: DnsProvider;
 }
 
+export interface AmeluNameservers {
+  available: boolean;
+  nameservers?: string[];
+}
+
+/** Whether Amelu hosts the domain's DNS; status is pending until the registrar points at Amelu. */
+export interface DomainNameservers {
+  mode: 'amelu' | 'external';
+  available: boolean;
+  status?: 'pending' | 'active';
+  nameservers?: string[];
+  activatedAt?: string;
+}
+
+/** A record in a zone Amelu hosts. Managed records keep mail working and can't be changed. */
+export interface ZoneRecord {
+  id: string;
+  type: string;
+  name: string;
+  content: string;
+  ttl: number;
+  priority?: number;
+  managed: boolean;
+}
+
+export interface ZoneRecordInput {
+  type: string;
+  name: string;
+  content: string;
+  ttl?: number;
+  priority?: number;
+}
+
 export interface SpamOverview {
   subjectRewrite: boolean;
   junkIfSubjectSpam: boolean;
@@ -43,6 +76,34 @@ export class DnsSpamApi {
 
   domainConnect(domainId: string) {
     return this.http.get<DomainConnectStatus>(`/api/domains/${domainId}/domain-connect`);
+  }
+
+  ameluNameservers() {
+    return this.http.get<AmeluNameservers>('/api/nameservers');
+  }
+
+  domainNameservers(domainId: string) {
+    return this.http.get<DomainNameservers>(`/api/domains/${domainId}/nameservers`);
+  }
+
+  useAmeluNameservers(domainId: string) {
+    return this.http.post<DomainNameservers>(`/api/domains/${domainId}/nameservers`, {});
+  }
+
+  zoneRecords(domainId: string) {
+    return this.http.get<ZoneRecord[]>(`/api/domains/${domainId}/dns-records`);
+  }
+
+  createZoneRecord(domainId: string, record: ZoneRecordInput) {
+    return this.http.post<ZoneRecord>(`/api/domains/${domainId}/dns-records`, record);
+  }
+
+  updateZoneRecord(domainId: string, recordId: string, record: ZoneRecordInput) {
+    return this.http.put<ZoneRecord>(`/api/domains/${domainId}/dns-records/${recordId}`, record);
+  }
+
+  deleteZoneRecord(domainId: string, recordId: string) {
+    return this.http.delete<{ ok: boolean }>(`/api/domains/${domainId}/dns-records/${recordId}`);
   }
 
   bindFileUrl(domainId: string): string {

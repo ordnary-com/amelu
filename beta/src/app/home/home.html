@@ -1,22 +1,11 @@
-<section class="relative overflow-hidden rounded-lg bg-hero bg-[linear-gradient(110deg,var(--hero)_35%,color-mix(in_srgb,var(--hero),white_5%))] px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
+<div class="flex flex-col gap-4 xl:flex-row xl:items-stretch">
+<section class="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-lg bg-hero bg-[linear-gradient(110deg,var(--hero)_35%,color-mix(in_srgb,var(--hero),white_5%))] px-[22px] pt-[18px] pb-7 max-mobile:px-[18px] max-mobile:pt-3.5 max-mobile:pb-[22px]">
   <!-- The lighter slanted panel on the right. Both tones run a little lighter
        towards one corner, so neither is a flat colour. -->
   <div class="absolute inset-y-0 right-0 w-[30%] max-mobile:hidden bg-[linear-gradient(160deg,color-mix(in_srgb,var(--hero-light),white_6%),var(--hero-light)_70%)] [clip-path:polygon(0_0,100%_0,100%_100%,14%_100%)]"></div>
 
-  <!-- Beta notice left, links right; on phones the links go above it so the notice keeps the full width. -->
-  <div class="relative z-[1] flex items-start justify-between gap-6 max-mobile:flex-col-reverse max-mobile:gap-3">
-    <div class="min-w-0 max-w-[620px] text-[13px] text-hero-ink" role="note">
-      <p class="flex items-start gap-2 font-semibold">
-        <span class="mt-px inline-flex h-[18px] flex-none items-center rounded-[3px] bg-accent px-1.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase">Beta</span>
-        <span>You're using the new Amelu dashboard, which is still being built.</span>
-      </p>
-      <p class="mt-0.5 leading-relaxed text-hero-ink/80">
-        See <a routerLink="/changelog" class="font-medium text-link hover:underline">what changed</a>,
-        or follow along and report a problem on
-        <a [href]="githubUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">GitHub</a>.
-      </p>
-    </div>
-
+  <!-- Links top right; the beta notice sits at the bottom of the banner. -->
+  <div class="relative z-[1] flex justify-end">
     <div class="flex flex-none gap-5 pt-px max-mobile:gap-4">
       <a routerLink="/changelog" [class]="heroLink" aria-label="Changelog">
         <amelu-icon name="map" [size]="16" /><span class="max-mobile:hidden">Changelog</span>
@@ -35,15 +24,28 @@
     </div>
   </div>
 
-  <h1 class="relative mt-9 text-[38px] font-bold tracking-[-0.01em] max-mobile:mt-7 max-mobile:text-[30px]">
+  <h1 class="relative mt-6 text-[38px] font-bold tracking-[-0.01em] max-mobile:mt-7 max-mobile:text-[30px]">
     Hello{{ firstName() ? ', ' + firstName() : '' }}.
   </h1>
-  <a routerLink="/organization/activity" class="relative mt-2 inline-block text-[17px] text-hero-ink hover:underline">
+  <a routerLink="/organization/activity" class="relative mt-2 self-start text-[17px] text-hero-ink hover:underline">
     View all my activity
   </a>
+
+  <div class="relative z-[1] mt-auto min-w-0 max-w-[620px] pt-8 text-[13px] text-hero-ink max-mobile:mt-6" role="note">
+    <p class="flex items-start gap-2 font-semibold">
+      <span class="mt-px inline-flex h-[18px] flex-none items-center rounded-[3px] bg-accent px-1.5 text-[10px] leading-none font-bold tracking-wide text-white uppercase">Beta</span>
+      <span>You're using the new Amelu dashboard, which is still being built.</span>
+    </p>
+    <p class="mt-0.5 leading-relaxed text-hero-ink/80">
+      See <a routerLink="/changelog" class="font-medium text-link hover:underline">what changed</a>,
+      or follow along and report a problem on
+      <a [href]="githubUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">GitHub</a>.
+    </p>
+  </div>
 </section>
 
-<amelu-setup-checklist />
+<amelu-setup-checklist class="xl:w-[340px] xl:flex-none" />
+</div>
 
 <amelu-quick-actions />
 

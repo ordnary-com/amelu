@@ -27,10 +27,11 @@ interface Step {
   selector: 'amelu-setup-checklist',
   imports: [RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  // Hidden entirely when there's nothing to show, so the hero next to it takes the full width.
+  host: { class: 'block', '[class.hidden]': '!visible()' },
   template: `
     @if (visible() && steps(); as list) {
-      <section class="rounded-lg border border-line bg-surface p-4" aria-labelledby="setup-title">
+      <section class="h-full rounded-lg border border-line bg-surface p-4" aria-labelledby="setup-title">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 id="setup-title" class="text-[14px] font-bold">Get Amelu ready</h2>

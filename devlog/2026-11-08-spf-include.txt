@@ -1,0 +1,12 @@
+SPF: customers are asked for include:_spf.amelu.org
+2026-11-08
+
+New TXT _spf.amelu.org: v=spf1 ip4:141.95.52.66 plus ip4 for out1-out11 -all.
+The backend swaps Stalwart's generated "v=spf1 mx -all" for
+"v=spf1 include:_spf.amelu.org -all" (stalwart.UseAmeluSPF) in GET
+/api/domains/{id}/dns, the zone file download and Amelu-hosted zones.
+dnscheck.spfCovers accepts "mx" for the include, so every domain set up
+earlier stays verified. A sending IP still has to be an A record of
+marduk.mx.amelu.org as long as those "mx" domains exist; amelu-ip-pools
+warns when _spf.amelu.org misses a sending IP. Domain Connect's template
+still merges "mx". Committed, not deployed yet.

@@ -1,0 +1,18 @@
+Sending IPs grouped so no group has two IPs of one /24
+2026-11-08
+
+Outlook's S3140 blocks a whole range, and newdomains held out3, out8 and
+(soon) out11, all in 51.89.76.0/24. ops/marduk/amelu-ip-pools.py now has
+system out4+out2, trusted out1/out5/out8/out9, newdomains out3/out6/out7/out10,
+spare out11 (a .0 address, not in marduk.mx). check_ranges() refuses to run
+when a group has two IPs of one /24. out9 and out10 went into marduk.mx at
+about 14:50 UTC and start after the 2 hour SPF grace, cold, on a quarter of
+their group's mail each.
+
+What went wrong: reputation.json had every active IP degraded (Outlook S3140
+on out1/out2/out6/out8 after Microsoft answered "mitigated", Proofpoint out4,
+Bigpond out5), and status.json still said "active" because a group keeps
+blocked IPs when all are blocked. With out9/out10 healthy, the old logic
+would have sent all trusted and newdomains mail to those two cold IPs. A
+group now only drops blocked IPs while half of it, and two IPs, stay.
+Live on marduk, backup /root/amelu-ip-pools.backup-2026-11-08.

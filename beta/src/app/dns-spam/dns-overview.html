@@ -28,10 +28,11 @@
         </amelu-alert>
       }
 
-      <section [class]="ui.card + ' p-4'">
+      <section [class]="ui.card + ' overflow-hidden px-4 pt-4'">
         <div class="flex flex-wrap items-baseline justify-between gap-2">
-          <p class="text-[14px]">
-            <span class="font-bold">{{ summary.matched }} of {{ summary.total }}</span> records verified
+          <p class="text-[13px] text-muted">
+            <span class="text-[26px] leading-tight font-normal tracking-[-0.01em] text-ink">{{ summary.matched }}</span>
+            of {{ summary.total }} records verified
           </p>
           @if (dns.checkedAt(); as at) {
             <span class="text-[12px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</span>
@@ -40,23 +41,31 @@
         <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
           <div class="h-full rounded-full" [class]="summary.allMatched ? 'bg-ok' : 'bg-accent'" [style.width.%]="percent()"></div>
         </div>
-        <p class="mt-2 text-[12px] text-muted">{{ detail() }}</p>
+        <p class="mt-2 text-[12px] text-muted" [class.pb-4]="!health()">{{ detail() }}</p>
 
         @if (health(); as rows) {
-          <div class="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line">
             @for (row of rows; track row.label) {
-              <div class="flex items-center gap-2.5 rounded-md border border-line px-3 py-2">
-                <span class="w-10 text-[11px] font-bold tracking-wide text-muted uppercase">{{ row.label }}</span>
-                <span class="min-w-0 flex-1 truncate text-[13px]">{{ row.what }}</span>
+              <li class="flex items-center gap-3 px-4 py-2.5" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">
                 <span
-                  class="size-2 flex-none rounded-full"
-                  [class]="row.ok === null ? 'bg-muted/50' : row.ok ? 'bg-ok' : 'bg-bad'"
-                  [attr.title]="row.ok === null ? 'Unchecked' : row.ok ? 'OK' : 'Wrong'"
-                ></span>
-                <span class="sr-only">{{ row.ok === null ? 'Unchecked' : row.ok ? 'OK' : 'Wrong' }}</span>
-              </div>
+                  class="inline-flex size-5 flex-none items-center justify-center rounded-full"
+                  [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok text-white' : 'bg-bad text-white'"
+                  aria-hidden="true"
+                >
+                  @if (row.ok !== null) {
+                    <amelu-icon [name]="row.ok ? 'check' : 'close'" [size]="12" />
+                  }
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[13px] font-medium" [class.text-bad]="row.ok === false">{{ row.label }}</span>
+                  <span class="block truncate text-[12px] text-muted">{{ row.what }}</span>
+                </span>
+                <span class="flex-none text-[12px]" [class]="row.ok === null ? 'text-muted' : row.ok ? 'text-ok' : 'font-medium text-bad'">
+                  {{ row.ok === null ? 'Not checked' : row.ok ? 'Verified' : 'Wrong' }}
+                </span>
+              </li>
             }
-          </div>
+          </ul>
         }
       </section>
     } @else if (dns.records() === undefined) {
@@ -72,14 +81,14 @@
         <h2 class="text-[14px] font-bold">{{ dns.summary()?.allMatched ? 'Records' : 'Records to add or fix' }}</h2>
         <a [routerLink]="'/domains/' + dns.id() + '/dns/records'" class="text-[13px] font-medium text-link hover:underline">All records</a>
       </div>
-      <div [class]="ui.card + ' overflow-hidden'">
+      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
         @if (dns.records() === null) {
           <amelu-empty-state title="The DNS records couldn't be checked" [error]="true">
             {{ dns.error() }}
           </amelu-empty-state>
         } @else if (todo(); as records) {
           @for (record of records; track $index) {
-            <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="border-b border-line px-4 py-4 last:border-b-0" />
+            <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="px-4 py-4" />
           } @empty {
             <amelu-empty-state title="Nothing left to do" illustration="all-checked">
               Every record matches. Keep them in place: removing one later stops mail or hurts delivery.
@@ -88,7 +97,7 @@
           }
         } @else {
           @for (i of [1, 2, 3]; track i) {
-            <div class="space-y-2.5 border-b border-line px-4 py-4 last:border-b-0" aria-hidden="true">
+            <div class="space-y-2.5 px-4 py-4" aria-hidden="true">
               <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
               <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
               <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
@@ -122,12 +131,17 @@
       </section>
     }
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Import a zone file</h2>
+    <!-- Same dither as the DNS help card on the Domains page, rising from the bottom right. -->
+    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      </div>
+      <amelu-icon name="download" [size]="20" class="block text-ink" />
+      <h2 class="mt-3 text-[14px] font-bold">Import a zone file</h2>
       <p class="mt-1 text-[13px] leading-relaxed text-muted">
         Many DNS providers can import every record at once from a BIND zone file, usually under DNS import and export.
       </p>
-      <a [href]="dns.bindUrl()" [class]="ui.outline + ' mt-3'">Download zone file</a>
+      <a [href]="dns.bindUrl()" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">Download zone file</a>
     </section>
 
     <section [class]="ui.card + ' p-4'">

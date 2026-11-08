@@ -71,3 +71,21 @@ func TestSPFCovers(t *testing.T) {
 		}
 	}
 }
+
+func TestSPFCoversAmeluInclude(t *testing.T) {
+	cases := []struct {
+		actual string
+		want   bool
+	}{
+		{"v=spf1 include:_spf.amelu.org -all", true},
+		{"v=spf1 include:_spf.google.com include:_spf.amelu.org ~all", true},
+		// Set up before _spf.amelu.org existed.
+		{"v=spf1 mx -all", true},
+		{"v=spf1 include:_spf.google.com ~all", false},
+	}
+	for _, c := range cases {
+		if got := spfCovers(c.actual, "v=spf1 include:_spf.amelu.org -all"); got != c.want {
+			t.Errorf("spfCovers(%q) = %v, want %v", c.actual, got, c.want)
+		}
+	}
+}

@@ -12,7 +12,8 @@ group is a Stalwart connection strategy; the x:MtaOutboundStrategy
 connection expression picks one by sender domain.
 
 An IP only joins its group once it is bound on marduk, is an A record of
-marduk.mx.amelu.org (customer SPF is "mx -all") and its PTR and outN name
+marduk.mx.amelu.org (customer SPF is "mx -all", or the newer
+"include:_spf.amelu.org") and its PTR and outN name
 point at each other. A group with no usable IP falls back to trusted; with
 no trusted IP everything goes out from marduk's own IP ('default').
 
@@ -28,19 +29,35 @@ Runs every 10 minutes from cron.
   amelu-ip-pools.py --dry-run   print the decision, change nothing
   amelu-ip-pools.py --off       send everything from marduk's own IP again
 """
-import base64, datetime, json, os, re, socket, sys, urllib.request
+import base64, datetime, json, os, re, socket, subprocess, sys, urllib.request
 
 JMAP = "http://127.0.0.1:8080/jmap"
 MX_HOST = "marduk.mx.amelu.org"
+# No group holds two IPs from the same /24: a receiver that blocks a whole
+# range (Outlook's S3140 did) then takes out one IP per group, never a group.
+# out9 and out10 joined on 2026-11-08 as the cold ones, one per group, so each
+# warms up on a quarter of its group's mail.
 GROUPS = {
-    "system": {"out4.mx.amelu.org": "51.89.39.34"},
-    "trusted": {"out1.mx.amelu.org": "51.89.60.60", "out2.mx.amelu.org": "51.89.60.49", "out5.mx.amelu.org": "51.89.2.193"},
-    # out6 holds new domains until out3, out7 and out8 are live; then it moves to trusted.
+    "system": {"out4.mx.amelu.org": "51.89.39.34", "out2.mx.amelu.org": "51.89.60.49"},
+    "trusted": {"out1.mx.amelu.org": "51.89.60.60", "out5.mx.amelu.org": "51.89.2.193",
+                "out8.mx.amelu.org": "51.89.76.15", "out9.mx.amelu.org": "51.89.85.197"},
     "newdomains": {"out3.mx.amelu.org": "51.89.76.2", "out6.mx.amelu.org": "51.89.1.228",
-                   "out7.mx.amelu.org": "51.89.102.29", "out8.mx.amelu.org": "51.89.76.15"},
+                   "out7.mx.amelu.org": "51.89.102.29", "out10.mx.amelu.org": "51.89.85.192"},
 }
-# Spares, not in any group yet ("a .0 address some receivers refuse" makes out11 the last to use).
-SPARES = {"out9.mx.amelu.org": "51.89.85.197", "out10.mx.amelu.org": "51.89.85.192", "out11.mx.amelu.org": "51.89.76.0"}
+# Not in any group: a .0 address, which some receivers refuse, so it's the last to use.
+SPARES = {"out11.mx.amelu.org": "51.89.76.0"}
+# Every IP that may send, for customers on "v=spf1 include:_spf.amelu.org -all".
+# Kept by hand in DNS; main() warns when it drifts.
+SPF_HOST = "_spf.amelu.org"
+
+
+def check_ranges():
+    for group, ips in GROUPS.items():
+        nets = [ip.rsplit(".", 1)[0] for ip in ips.values()]
+        if len(nets) != len(set(nets)):
+            raise SystemExit(f"{group} has two IPs in the same /24: {sorted(ips.values())}")
+
+
 # Read by amelu-sending-stats.py for the dashboard's "Sending network" page.
 STATUS_FILE = "/var/lib/amelu-ip-pools/status.json"
 DESCRIPTIONS = {
@@ -260,9 +277,23 @@ def write_status(pools, out):
     os.replace(STATUS_FILE + ".tmp", STATUS_FILE)
 
 
+def spf_ips():
+    try:
+        out = subprocess.run(["dig", "+short", "TXT", SPF_HOST], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    txt = "".join(part.strip('"') for part in out.split())
+    return set(re.findall(r"ip4:([0-9.]+)", txt)) if "v=spf1" in txt else None
+
+
 def main():
     dry, off = "--dry-run" in sys.argv, "--off" in sys.argv
+    check_ranges()
     mx = mx_ips()
+    spf = spf_ips()
+    sending = {ip for g in GROUPS.values() for ip in g.values()}
+    if spf is not None and not sending <= spf:
+        print(f"warning: {SPF_HOST} misses {sorted(sending - spf)}", flush=True)
     out, news = watch_reputation(dry)
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)
@@ -278,10 +309,15 @@ def main():
         for group, ips in GROUPS.items():
             ready = usable(ips, mx, seen)
             ok = {n: ip for n, ip in ready.items() if ip not in out}
-            if ready and not ok:
-                notes.append(f"every {group} IP has a reputation block but the group keeps them")
+            # Dropping blocked IPs only helps while enough healthy ones stay: with
+            # one or two left (often the cold, just-added ones) they'd get all of
+            # the group's mail at once, which is how a cold IP gets blocked too.
+            if ready and len(ok) < max(2, len(ready) // 2):
+                if len(ok) < len(ready):
+                    notes.append(f"{len(ready) - len(ok)} of {len(ready)} {group} IPs have a reputation block, the group keeps them")
+                ok = ready
             if ready:
-                pools[group] = ok or ready
+                pools[group] = ok
     rate = warmup_rate(dry) if pools else None
     if not dry:
         write_status(pools, out)

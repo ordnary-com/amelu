@@ -6,6 +6,7 @@ import { Alert } from '../alert/alert';
 import { injectDomain } from '../domain-context';
 import { Domains } from '../domains';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
 import { PageHeader } from '../page-header/page-header';
 import { DOMAIN_STATUS, badgeClass } from '../status';
 import { UI } from '../ui';
@@ -13,7 +14,7 @@ import { DomainAdminApi } from './domain-admin-api';
 
 @Component({
   selector: 'amelu-deactivate-domain',
-  imports: [PageHeader, Alert, EmptyState, RouterLink],
+  imports: [PageHeader, Alert, EmptyState, Icon, RouterLink],
   templateUrl: './deactivate-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

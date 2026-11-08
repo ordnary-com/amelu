@@ -15,7 +15,8 @@ import { DnsSpamApi, DomainNameservers } from './dns-spam-api';
   selector: 'amelu-nameservers-card',
   imports: [Icon, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  // Hidden when there's nothing to show, so an empty card doesn't add a gap to the column it sits in.
+  host: { class: 'block empty:hidden' },
   template: `
     @if (state(); as ns) {
       @if (ns.mode === 'amelu') {

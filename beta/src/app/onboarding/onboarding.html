@@ -1,187 +1,191 @@
 <!-- The same accent dither as the Overview banner, in the top right corner and fading out
-     before the form, so the questions stay on a calm background. -->
+     before the conversation, so the messages stay on a calm background. -->
 <div class="pointer-events-none fixed inset-x-0 top-0 -z-10 h-dvh opacity-35 [mask-image:radial-gradient(45%_60%_at_100%_0%,black,rgba(0,0,0,0.45)_45%,transparent_100%)] max-mobile:opacity-25" aria-hidden="true">
   <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
 </div>
 
-<header class="flex items-center justify-between px-6 py-5 sm:px-10">
-  <img src="/amelu-icon.png" alt="Amelu" class="h-8 w-auto" />
+<header class="flex flex-none items-center justify-between gap-4 px-6 py-4 sm:px-10">
+  <div class="flex min-w-0 items-center gap-3">
+    <ng-container *ngTemplateOutlet="avatar; context: { $implicit: 'size-9' }" />
+    <div class="min-w-0">
+      <p class="text-[14px] font-semibold">Amelu Assistant</p>
+      <p class="flex items-center gap-1.5 text-[12px] text-muted">
+        <span class="size-1.5 rounded-full bg-ok" aria-hidden="true"></span>
+        @if (typing() && !leaving()) {
+          Typing...
+        } @else {
+          Setting up your account
+        }
+      </p>
+    </div>
+  </div>
   <button type="button" class="cursor-pointer text-[13px] font-medium text-muted hover:text-ink" [disabled]="busy()" (click)="skip()">
     Skip for now
   </button>
 </header>
 
-<main class="mx-auto w-full max-w-[560px] flex-1 px-6 pb-16 pt-4">
-  <!-- Step dots -->
-  <ol class="mb-8 flex items-center gap-2" aria-label="Progress">
-    @for (n of [1, 2, 3]; track n) {
-      <li
-        class="h-1.5 flex-1 rounded-full"
-        [class]="n <= step() ? 'bg-accent' : 'bg-line'"
-        [attr.aria-current]="n === step() ? 'step' : null"
-      ></li>
-    }
-  </ol>
-  <p class="text-[12px] font-semibold tracking-wide text-muted uppercase">Step {{ step() }} of 3</p>
-
-  @if (error(); as message) {
-    <div class="mt-4">
-      <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">{{ message }}</amelu-alert>
-    </div>
+<!-- Progress: one segment per question -->
+<ol class="mx-auto flex w-full max-w-[640px] flex-none gap-1.5 px-6" aria-label="Progress">
+  @for (q of questions(); track q; let i = $index) {
+    <li
+      class="h-1 flex-1 rounded-full transition-colors duration-300"
+      [class]="i < index() || leaving() ? 'bg-accent' : i === index() ? 'bg-accent/40' : 'bg-line'"
+      [attr.aria-current]="i === index() ? 'step' : null"
+    ></li>
   }
+</ol>
 
-  @switch (step()) {
-    @case (1) {
-      <form class="mt-2" (submit)="next($event)">
-        <h1 class="text-[24px] font-bold tracking-[-0.4px]">Welcome to Amelu{{ firstName() ? ', ' + firstName() : '' }}</h1>
-        <p class="mt-1.5 text-[14px] leading-relaxed text-muted">A few quick questions so we can set things up for you. It takes under a minute.</p>
+<div #scroller class="min-h-0 flex-1 overflow-y-auto">
+  <div class="mx-auto flex w-full max-w-[640px] flex-col gap-4 px-6 pt-8 pb-6" role="log" aria-live="polite">
+    <ng-container *ngTemplateOutlet="assistant; context: { $implicit: greeting() }" />
 
-        <div class="mt-8">
-          <label for="org-name" [class]="ui.label">Organization name</label>
-          <input
-            id="org-name"
-            [class]="ui.input"
-            maxlength="100"
-            autocomplete="organization"
-            [value]="organizationName()"
-            (input)="organizationName.set($any($event.target).value)"
-          />
-          <p [class]="ui.hint">Your company, family or project. You can change it later.</p>
-        </div>
-
-        <fieldset class="mt-7">
-          <legend [class]="ui.label">What will you use Amelu for?</legend>
-          <div class="mt-2 grid gap-2 sm:grid-cols-2">
-            @for (choice of useCases; track choice.value) {
-              <label
-                class="flex cursor-pointer gap-3 rounded-lg border p-3"
-                [class]="useCase() === choice.value ? 'border-accent bg-accent/5' : 'border-line bg-surface hover:border-muted'"
-              >
-                <input type="radio" name="use-case" class="mt-0.5 accent-accent" [checked]="useCase() === choice.value" (change)="useCase.set(choice.value)" />
-                <span>
-                  <span class="block text-[13px] font-semibold">{{ choice.label }}</span>
-                  @if (choice.hint) {
-                    <span class="block text-[12px] text-muted">{{ choice.hint }}</span>
-                  }
-                </span>
-              </label>
-            }
-          </div>
-        </fieldset>
-
-        <fieldset class="mt-7">
-          <legend [class]="ui.label">How many people will use email?</legend>
-          <div class="mt-2 flex flex-wrap gap-2">
-            @for (choice of teamSizes; track choice.value) {
-              <button
-                type="button"
-                class="h-8 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium"
-                [class]="teamSize() === choice.value ? 'border-accent bg-accent text-white' : 'border-line hover:bg-surface'"
-                [attr.aria-pressed]="teamSize() === choice.value"
-                (click)="teamSize.set(choice.value)"
-              >
-                {{ choice.label }}
-              </button>
-            }
-          </div>
-        </fieldset>
-
-        <div class="mt-10 flex justify-end">
-          <button type="submit" [class]="ui.primary">
-            Continue
-          </button>
-        </div>
-      </form>
+    @for (q of answered(); track q) {
+      <ng-container *ngTemplateOutlet="assistant; context: { $implicit: ask(q) }" />
+      <div class="rise flex justify-end">
+        <button
+          type="button"
+          class="group max-w-[80%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-left text-[14px] text-white enabled:cursor-pointer enabled:hover:bg-accent/85"
+          [disabled]="!canEdit()"
+          [title]="canEdit() ? 'Change this answer' : ''"
+          (click)="edit(q)"
+        >
+          {{ reply(q) }}
+          @if (canEdit()) {
+            <span class="ml-1.5 text-[12px] text-white/60 group-hover:text-white/90">Edit</span>
+          }
+        </button>
+      </div>
     }
 
-    @case (2) {
-      <form class="mt-2" (submit)="next($event)">
-        <h1 class="text-[24px] font-bold tracking-[-0.4px]">How did you find us?</h1>
-        <p class="mt-1.5 text-[14px] leading-relaxed text-muted">We're a small team, so this helps us know where to show up.</p>
+    @if (typing() && !leaving()) {
+      <div class="rise flex items-end gap-2.5" aria-label="Amelu Assistant is typing">
+        <ng-container *ngTemplateOutlet="avatar; context: { $implicit: 'size-7' }" />
+        <div class="flex h-9 items-center gap-1 rounded-2xl rounded-bl-md border border-line bg-surface px-3.5">
+          <span class="typing-dot size-1.5 rounded-full bg-muted"></span>
+          <span class="typing-dot size-1.5 rounded-full bg-muted [animation-delay:0.15s]"></span>
+          <span class="typing-dot size-1.5 rounded-full bg-muted [animation-delay:0.3s]"></span>
+        </div>
+      </div>
+    } @else {
+      <ng-container *ngTemplateOutlet="assistant; context: { $implicit: ask(current()) }" />
+      @if (current() === 'domain' && !leaving()) {
+        <div class="rise ml-[38px] space-y-1.5 text-[13px] text-muted">
+          <p>Mail keeps going to your old provider until you change the MX records.</p>
+          <p>The standard addresses (admin, postmaster and abuse) are created for you.</p>
+        </div>
+      }
+    }
 
-        <fieldset class="mt-8">
-          <legend class="sr-only">Where you heard about Amelu</legend>
-          <div class="grid gap-2">
-            @for (choice of sources; track choice.value) {
-              <label
-                class="flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5"
-                [class]="source() === choice.value ? 'border-accent bg-accent/5' : 'border-line bg-surface hover:border-muted'"
+    @if (leaving(); as name) {
+      <div class="rise flex justify-end">
+        <p class="max-w-[80%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-[14px] text-white">{{ name }}</p>
+      </div>
+      <ng-container *ngTemplateOutlet="assistant; context: { $implicit: farewell(name) }" />
+    }
+
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">{{ message }}</amelu-alert>
+    }
+  </div>
+</div>
+
+<!-- The composer: quick replies for a choice, a text box for the rest. -->
+<div class="flex-none border-t border-line bg-bg/80 backdrop-blur-sm">
+  <div class="mx-auto w-full max-w-[640px] px-6 py-4">
+    @if (!leaving()) {
+      @switch (current()) {
+        @case ('useCase') {
+          <ng-container *ngTemplateOutlet="choices; context: { $implicit: useCases, question: 'useCase', selected: useCase(), cols: 'grid-cols-1 sm:grid-cols-2' }" />
+        }
+        @case ('teamSize') {
+          <ng-container *ngTemplateOutlet="choices; context: { $implicit: teamSizes, question: 'teamSize', selected: teamSize(), cols: 'grid-cols-2 sm:grid-cols-4' }" />
+        }
+        @case ('source') {
+          <ng-container *ngTemplateOutlet="choices; context: { $implicit: sources, question: 'source', selected: source(), cols: 'grid-cols-1 sm:grid-cols-3' }" />
+        }
+        @default {
+          <form class="flex items-center gap-2" (submit)="send($event)">
+            <label
+              class="flex h-11 min-w-0 flex-1 items-center rounded-full border border-line bg-surface pr-1.5 pl-4 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20"
+            >
+              @if (current() === 'domain') {
+                <span class="pr-0.5 text-[14px] text-muted select-none">you&#64;</span>
+              }
+              <input
+                #textbox
+                class="h-full w-full min-w-0 bg-transparent text-[14px] outline-none placeholder:text-muted"
+                [attr.aria-label]="ask(current())"
+                [placeholder]="current() === 'domain' ? 'mydomain.com' : current() === 'organization' ? 'Organization name' : 'Type your answer'"
+                [attr.maxlength]="current() === 'organization' ? 100 : current() === 'sourceDetail' ? 200 : null"
+                [attr.autocomplete]="current() === 'organization' ? 'organization' : 'off'"
+                [attr.autocapitalize]="current() === 'domain' ? 'off' : null"
+                [attr.spellcheck]="current() === 'domain' ? 'false' : null"
+                [disabled]="typing() || busy()"
+                [value]="current() === 'domain' ? domainInput() : draft()"
+                (input)="current() === 'domain' ? domainInput.set($any($event.target).value) : draft.set($any($event.target).value)"
+              />
+              <button
+                type="submit"
+                class="inline-flex h-8 flex-none cursor-pointer items-center rounded-full bg-accent px-3.5 text-[13px] font-medium text-white hover:bg-accent/85 disabled:cursor-default disabled:opacity-40"
+                [disabled]="typing() || busy() || (current() === 'domain' ? !domainValid() : current() === 'organization' && !draft().trim())"
               >
-                <input type="radio" name="source" class="accent-accent" [checked]="source() === choice.value" (change)="source.set(choice.value)" />
-                <span class="text-[13px] font-medium">{{ choice.label }}</span>
-                @if (choice.hint) {
-                  <span class="text-[12px] text-muted">{{ choice.hint }}</span>
-                }
-              </label>
+                {{ busy() ? 'Saving...' : current() === 'domain' ? 'Add domain' : 'Send' }}
+              </button>
+            </label>
+          </form>
+          <div class="mt-2.5 flex justify-center gap-4 text-[12px]">
+            @if (current() === 'domain') {
+              <button type="button" class="cursor-pointer font-medium text-muted hover:text-ink" [disabled]="busy()" (click)="finish()">I'll do this later</button>
+            } @else {
+              <button type="button" class="cursor-pointer font-medium text-muted hover:text-ink" [disabled]="typing() || busy()" (click)="skipQuestion()">Skip this question</button>
             }
-          </div>
-        </fieldset>
-
-        @if (detailPrompt(); as prompt) {
-          <div class="mt-5">
-            <label for="source-detail" [class]="ui.label">{{ prompt }}</label>
-            <input
-              id="source-detail"
-              [class]="ui.input"
-              maxlength="200"
-              [value]="sourceDetail()"
-              (input)="sourceDetail.set($any($event.target).value)"
-            />
           </div>
         }
-
-        <div class="mt-10 flex items-center justify-between">
-          <button type="button" [class]="ui.outline" (click)="back()">
-            Back
-          </button>
-          <button type="submit" [class]="ui.primary" [disabled]="busy()">
-            {{ busy() ? 'Saving...' : 'Continue' }}
-          </button>
-        </div>
-      </form>
+      }
     }
+  </div>
+</div>
 
-    @case (3) {
-      <form class="mt-2" (submit)="addDomain($event)">
-        <h1 class="text-[24px] font-bold tracking-[-0.4px]">Add your first domain</h1>
-        <p class="mt-1.5 text-[14px] leading-relaxed text-muted">
-          The part after the &#64; in your email addresses. Bring one you already own; it stays at your current registrar.
-        </p>
+<ng-template #avatar let-size>
+  <!-- The assistant's face: the Amelu mark on a soft accent tile. -->
+  <span class="inline-flex flex-none items-center justify-center rounded-full border border-line bg-surface" [class]="size" aria-hidden="true">
+    <img src="/amelu-icon.png" alt="" class="h-1/2 w-auto" />
+  </span>
+</ng-template>
 
-        <div [class]="ui.card + ' mt-8 p-4'">
-          <label for="first-domain" [class]="ui.label">Domain</label>
-          <div
-            class="mt-1.5 flex h-10 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
-          >
-            <span class="flex h-full items-center border-r border-line px-3 text-[13px] text-muted select-none">you&#64;</span>
-            <input
-              id="first-domain"
-              class="h-full w-full min-w-0 bg-transparent px-3 text-[14px] outline-none placeholder:text-muted"
-              placeholder="mydomain.com"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              [value]="domainInput()"
-              (input)="domainInput.set($any($event.target).value)"
-            />
-          </div>
-          <p [class]="ui.hint">Next you'll see the DNS records to add. If your DNS provider supports it, we can add them for you.</p>
-        </div>
+<ng-template #assistant let-text>
+  <div class="rise flex items-end gap-2.5">
+    <ng-container *ngTemplateOutlet="avatar; context: { $implicit: 'size-7' }" />
+    <p class="max-w-[80%] rounded-2xl rounded-bl-md border border-line bg-surface px-3.5 py-2 text-[14px] leading-relaxed">{{ text }}</p>
+  </div>
+</ng-template>
 
-        <ul class="mt-6 space-y-2 text-[13px] text-muted">
-          <li class="flex gap-2"><amelu-icon name="check" [size]="14" /> Mail keeps going to your old provider until you change the MX records.</li>
-          <li class="flex gap-2"><amelu-icon name="check" [size]="14" /> The standard addresses (admin, postmaster and abuse) are created for you.</li>
-        </ul>
-
-        <div class="mt-10 flex flex-wrap items-center justify-between gap-3">
-          <button type="button" class="cursor-pointer text-[13px] font-medium text-muted hover:text-ink" [disabled]="busy()" (click)="finish()">
-            I'll do this later
-          </button>
-          <button type="submit" [class]="ui.primary" [disabled]="!domainValid() || busy()">
-            Add domain
-          </button>
-        </div>
-      </form>
+<ng-template #choices let-list let-question="question" let-selected="selected" let-cols="cols">
+  <!-- Quick replies as an even grid of cards, each with the number key that picks it. -->
+  <div class="grid gap-2" [class]="cols" role="group" [attr.aria-label]="ask(question)">
+    @for (choice of list; track choice.value; let i = $index) {
+      <button
+        type="button"
+        class="rise group flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors disabled:cursor-default disabled:opacity-40"
+        [class]="selected === choice.value ? 'border-accent bg-accent/10' : 'border-line bg-surface hover:border-accent/50 hover:bg-accent/5'"
+        [style.animation-delay.ms]="i * 30"
+        [disabled]="typing() || busy()"
+        [attr.aria-keyshortcuts]="i < 9 ? '' + (i + 1) : null"
+        (click)="choose(question, choice.value)"
+      >
+        <span class="min-w-0 flex-1">
+          <span class="block text-[13px] leading-snug font-medium">{{ choice.label }}</span>
+          @if (choice.hint) {
+            <span class="mt-0.5 block text-[12px] leading-snug text-muted">{{ choice.hint }}</span>
+          }
+        </span>
+        @if (i < 9) {
+          <kbd class="inline-flex size-5 flex-none items-center justify-center rounded border border-line font-sans text-[11px] text-muted group-hover:border-accent/40 group-hover:text-ink max-mobile:hidden">{{ i + 1 }}</kbd>
+        }
+      </button>
     }
-  }
-</main>
+  </div>
+  <div class="mt-3 flex justify-center text-[12px]">
+    <button type="button" class="cursor-pointer font-medium text-muted hover:text-ink" [disabled]="typing() || busy()" (click)="skipQuestion()">Skip this question</button>
+  </div>
+</ng-template>

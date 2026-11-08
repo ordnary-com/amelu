@@ -1,0 +1,15 @@
+Domain mailbox pages in the new style
+2026-11-08
+
+The domain-level mailbox pages in the beta follow the reworked pages.
+Mailboxes gets the new filter field, divide-y rows without hover underline,
+a stat tile with a usage bar for the plan limit, and the dither on "Mailbox
+or alias?" with an "Add an alias" button. On New mailbox, the two password
+methods are option cards with a round check and What happens next is a
+timeline. Import mailboxes and Storage show Created and Nearly full as
+sentence-case pills instead of uppercase tags. Storage gets a "By mailbox"
+heading with a count and the large stat number for the domain total.
+Default services uses the larger switches, plus a usage bar for how many
+services are on. That line said "N of 5" while there are six services
+(ManageSieve too), so it could read "6 of 5". It now counts the settings
+themselves.

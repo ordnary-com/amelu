@@ -8,6 +8,8 @@ import { PageHeader } from '../../page-header/page-header';
 import { Alert } from '../../alert/alert';
 import { EmptyState } from '../../empty-state/empty-state';
 import { UI } from '../../ui';
+import { Icon } from '../../icon';
+import { DitherShader } from '../../login/dither-shader';
 import { EnabledServices, MailboxesApi } from '../mailboxes-api';
 
 type ServiceKey = keyof EnabledServices;
@@ -15,7 +17,7 @@ type ServiceKey = keyof EnabledServices;
 /** The current dashboard's Default Mailbox Services: the services a new mailbox on this domain starts with. */
 @Component({
   selector: 'amelu-default-services',
-  imports: [RouterLink, PageHeader, Alert, EmptyState],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, DitherShader],
   templateUrl: './default-services.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

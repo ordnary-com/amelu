@@ -1,0 +1,18 @@
+My Account in the new style
+2026-11-08
+
+The /account pages in the beta open with a profile banner in AccountLayout,
+like the Overview greeting: bg-hero with the accent warp dither, the
+Ordnary picture (amelu-avatar, 64px with a soft ring), the name at 32px in
+normal weight, and email, organization and role pill under it. The
+separate avatar card on Overview is gone. Profile gains an Organization row
+and shows the permissions level as a pill. Rows use divide-y. Two-step
+verification has a small outlined Manage button instead of a text link.
+The Ordnary account card gets the dither, a key icon and an outlined
+button. Terminate account uses UI.dangerOutline instead of the hard-coded
+solid #d91515. Appearance splits Theme and Accent colour into two cards.
+Theme options get a round check and the accent ring, and the chosen
+accent swatch carries a check. API keys get a key tile per key, the prefix
+as a mono chip, divide-y rows and a dither on "Using a key". The Copy
+button for a new key is the standard primary button, and the name
+placeholder says "For example:" instead of "eg.".

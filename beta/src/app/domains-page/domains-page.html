@@ -29,27 +29,38 @@
       </h2>
       @if (domains()?.length) {
         <div class="flex w-full items-center gap-2 sm:w-auto">
-          <label class="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-line px-2.5 focus-within:border-accent sm:w-56 sm:flex-none">
-            <amelu-icon name="search" [size]="14" class="text-muted" />
+          <label class="group flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-surface px-2.5 hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 sm:w-60 sm:flex-none">
+            <amelu-icon name="search" [size]="14" class="flex-none text-muted group-focus-within:text-ink" />
             <input
               type="search"
-              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted"
-              placeholder="Filter"
+              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
+              placeholder="Filter domains"
               aria-label="Filter domains"
               [value]="search()"
               (input)="search.set($any($event.target).value)"
+              (keydown.escape)="search.set('')"
             />
-          </label>
-          <select
-            class="h-8 flex-none cursor-pointer rounded-md border border-line bg-surface px-2 text-[13px] outline-none focus:border-accent"
-            aria-label="Sort domains"
-            [value]="sort()"
-            (change)="sort.set($any($event.target).value)"
-          >
-            @for (option of sorts; track option.value) {
-              <option [value]="option.value" [selected]="option.value === sort()">{{ option.label }}</option>
+            @if (search()) {
+              <button type="button" class="-mr-1 inline-flex size-5 flex-none cursor-pointer items-center justify-center rounded text-muted hover:bg-bg hover:text-ink" aria-label="Clear filter" (click)="search.set('')">
+                <amelu-icon name="close" [size]="12" />
+              </button>
             }
-          </select>
+          </label>
+          <!-- A native select for the keyboard and screen readers, with its own arrow swapped for ours. -->
+          <label class="relative flex h-8 flex-none items-center rounded-md border border-line bg-surface hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+            <span class="pointer-events-none pl-2.5 text-[13px] text-muted">Sort</span>
+            <select
+              class="h-full cursor-pointer appearance-none bg-transparent pr-7 pl-1.5 text-[13px] font-medium outline-none [&>option]:bg-surface"
+              aria-label="Sort domains"
+              [value]="sort()"
+              (change)="sort.set($any($event.target).value)"
+            >
+              @for (option of sorts; track option.value) {
+                <option [value]="option.value" [selected]="option.value === sort()">{{ option.label }}</option>
+              }
+            </select>
+            <amelu-icon name="chevronDown" [size]="14" class="pointer-events-none absolute right-2 text-muted" />
+          </label>
         </div>
       }
     </div>

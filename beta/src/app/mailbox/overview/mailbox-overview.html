@@ -110,9 +110,10 @@
         Sign in with the full address and the mailbox password. Incoming mail is IMAP, outgoing is SMTP, both on
         <span class="font-mono text-[12px] text-ink">{{ server }}</span>.
       </p>
-      <a [routerLink]="ctx.base() + '/usage'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
-        All server settings
-      </a>
+      <div class="mt-2.5 flex flex-wrap gap-x-4 gap-y-1">
+        <a [routerLink]="ctx.base() + '/usage'" fragment="phone" class="text-[13px] font-medium text-link hover:underline">Set up a phone with a QR code</a>
+        <a [routerLink]="ctx.base() + '/usage'" class="text-[13px] font-medium text-link hover:underline">All server settings</a>
+      </div>
     </section>
 
     @if (ctx.mailbox(); as mailbox) {

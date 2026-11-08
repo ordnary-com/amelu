@@ -1,5 +1,5 @@
 <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="space-y-4">
+  <div class="space-y-6">
     @if (error(); as message) {
       <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
         {{ message }}
@@ -11,11 +11,7 @@
         <p>It isn't stored and can't be shown again.</p>
         <div class="mt-2.5 flex items-center gap-2">
           <code class="min-w-0 flex-1 truncate rounded-md bg-black/10 px-2.5 py-1.5 font-mono text-[12px]">{{ key }}</code>
-          <button
-            type="button"
-            class="inline-flex h-8 flex-none cursor-pointer items-center gap-1.5 rounded-md bg-[#14171f] px-3 text-[13px] font-medium text-white hover:bg-black"
-            (click)="copyKey()"
-          >
+          <button type="button" [class]="ui.primary + ' flex-none'" (click)="copyKey()">
             {{ copied() ? 'Copied' : 'Copy' }}
           </button>
         </div>
@@ -29,22 +25,27 @@
           <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
         }
       </h2>
-      <div [class]="ui.card + ' overflow-hidden'">
+      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
         @if (keys() === undefined) {
           @for (i of [1, 2]; track i) {
-            <div class="space-y-2 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+            <div class="space-y-2 px-4 py-3" aria-hidden="true">
               <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
               <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
             </div>
           }
         } @else {
           @for (key of keys(); track key.id) {
-            <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
+            <div class="flex items-center gap-3 px-4 py-3">
+              <span class="inline-flex size-8 flex-none items-center justify-center rounded-full bg-bg text-muted" aria-hidden="true">
+                <amelu-icon name="key" [size]="15" />
+              </span>
               <div class="min-w-0 flex-1">
-                <div class="truncate text-[13px] font-medium">{{ key.name }}</div>
+                <div class="flex min-w-0 items-center gap-2">
+                  <span class="truncate text-[13px] font-medium">{{ key.name }}</span>
+                  <code class="flex-none rounded bg-bg px-1.5 py-px font-mono text-[11px] text-muted">{{ key.prefix }}…</code>
+                </div>
                 <div class="mt-0.5 truncate text-[12px] text-muted">
-                  <span class="font-mono">{{ key.prefix }}…</span>
-                  · created {{ key.createdAt | date: 'd MMM y' }} ·
+                  Created {{ key.createdAt | date: 'd MMM y' }} ·
                   @if (key.lastUsedAt) {
                     last used {{ key.lastUsedAt | date: 'd MMM y, HH:mm' }}
                   } @else {
@@ -76,7 +77,7 @@
           <span [class]="ui.label">Name</span>
           <input
             [class]="ui.input"
-            placeholder="eg. provisioning script"
+            placeholder="For example: provisioning script"
             [value]="name()"
             (input)="name.set($any($event.target).value)"
             required
@@ -89,14 +90,19 @@
     </section>
   </div>
 
-  <aside class="space-y-4">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Using a key</h2>
+  <aside class="space-y-6">
+    <!-- Same dither as the other help cards, rising from the bottom right. -->
+    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      </div>
+      <amelu-icon name="key" [size]="20" class="block text-ink" />
+      <h2 class="mt-3 text-[14px] font-bold">Using a key</h2>
       <p class="mt-1 text-[13px] leading-relaxed text-muted">
         An API key lets a script or service call the Amelu API as you, with the same permissions your account has. Send
         it as a bearer token:
       </p>
-      <code class="mt-2 block rounded-md bg-bg px-2.5 py-1.5 font-mono text-[12px]">Authorization: Bearer amelu_live_...</code>
+      <code class="mt-3 block rounded-md border border-line bg-surface px-2.5 py-1.5 font-mono text-[12px]">Authorization: Bearer amelu_live_...</code>
     </section>
     <section [class]="ui.card + ' p-4'">
       <h2 class="text-[14px] font-bold">Treat it like a password</h2>

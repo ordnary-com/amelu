@@ -17,7 +17,7 @@ import { BUILD_INFO } from '../build-info';
   selector: 'amelu-changelog',
   imports: [PageHeader, DatePipe, RouterLink, Alert, EmptyState],
   template: `
-    <amelu-page-header title="Changelog">What's new in Amelu.</amelu-page-header>
+    <amelu-page-header title="What's new">Changes to Amelu, newest first.</amelu-page-header>
 
     @if (error(); as message) {
       <amelu-alert class="mb-5" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">

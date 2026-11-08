@@ -3,6 +3,8 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { injectDnsCheck } from './dns-check';
@@ -16,7 +18,7 @@ import { DNS_TABS, SectionTabs } from '../section-tabs';
  */
 @Component({
   selector: 'amelu-dns-overview',
-  imports: [Alert, DatePipe, DnsRecord, EmptyState, NameserversCard, SectionTabs, PageHeader, RouterLink],
+  imports: [Alert, DatePipe, DitherShader, DnsRecord, EmptyState, Icon, NameserversCard, SectionTabs, PageHeader, RouterLink],
   templateUrl: './dns-overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

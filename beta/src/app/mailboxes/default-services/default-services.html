@@ -31,9 +31,9 @@
     } @else {
       <section>
         <h2 [class]="ui.sectionTitle">Enabled services</h2>
-        <ul [class]="ui.card">
+        <ul [class]="ui.card + ' divide-y divide-line'">
           @for (service of services; track service.key) {
-            <li class="flex items-center gap-4 border-b border-line px-4 py-3 last:border-b-0">
+            <li class="flex items-center gap-4 px-4 py-3">
               <span class="min-w-0 flex-1">
                 <span class="block text-[14px] font-medium">{{ service.label }}</span>
                 <span class="block text-[12px] text-muted">{{ service.hint }}</span>
@@ -42,19 +42,16 @@
                 <button
                   type="button"
                   role="switch"
-                  class="relative h-5 w-9 flex-none cursor-pointer rounded-full transition-colors"
+                  class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
                   [class]="d[service.key] ? 'bg-accent' : 'bg-line'"
                   [attr.aria-checked]="d[service.key]"
                   [attr.aria-label]="service.label"
                   (click)="toggle(service.key)"
                 >
-                  <span
-                    class="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform"
-                    [class.translate-x-4]="d[service.key]"
-                  ></span>
+                  <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="d[service.key] ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
                 </button>
               } @else {
-                <span class="h-5 w-9 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+                <span class="h-6 w-10 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
               }
             </li>
           }
@@ -76,16 +73,16 @@
               <button
                 type="button"
                 role="switch"
-                class="relative h-5 w-9 flex-none cursor-pointer rounded-full transition-colors"
+                class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
                 [class]="d.maySieve ? 'bg-accent' : 'bg-line'"
                 [attr.aria-checked]="d.maySieve"
                 aria-label="May access ManageSieve"
                 (click)="toggle('maySieve')"
               >
-                <span class="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform" [class.translate-x-4]="d.maySieve"></span>
+                <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="d.maySieve ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
               </button>
             } @else {
-              <span class="h-5 w-9 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+              <span class="h-6 w-10 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
             }
           </div>
         </div>
@@ -109,13 +106,20 @@
   </form>
 
   <aside class="space-y-6">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Keep it minimal</h2>
+    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      </div>
+      <amelu-icon name="shield" [size]="20" class="block text-ink" />
+      <h2 class="mt-3 text-[14px] font-bold">Keep it minimal</h2>
       <p class="mt-1 text-[13px] leading-relaxed text-muted">
         We recommend keeping the enabled services to the necessary minimum in order to reduce attack surface.
       </p>
       @if (draft()) {
-        <p class="mt-2 text-[12px] text-muted">{{ enabledCount() }} of 5 services on for new mailboxes.</p>
+        <p class="mt-3 text-[12px] text-muted">{{ enabledCount() }} of {{ serviceTotal() }} services on for new mailboxes.</p>
+        <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-bg">
+          <div class="h-full rounded-full bg-accent" [style.width.%]="enabledPercent()"></div>
+        </div>
       }
     </section>
 

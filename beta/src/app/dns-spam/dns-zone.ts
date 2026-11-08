@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { errorMessage } from '../api';
@@ -12,6 +13,7 @@ import { DNS_TABS, SectionTabs } from '../section-tabs';
 import { UI } from '../ui';
 import { DnsSpamApi, ZoneRecord, ZoneRecordInput } from './dns-spam-api';
 import { NameserversCard } from './nameservers-card';
+import { DitherShader } from '../login/dither-shader';
 
 const TYPES = ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'CAA', 'SRV', 'NS'];
 
@@ -29,7 +31,7 @@ const HINTS: Record<string, string> = {
 /** The records in a zone Amelu hosts. Mail records are kept by Amelu and shown read-only. */
 @Component({
   selector: 'amelu-dns-zone',
-  imports: [Alert, EmptyState, FormsModule, Icon, NameserversCard, NgTemplateOutlet, PageHeader, SectionTabs],
+  imports: [Alert, DitherShader, EmptyState, FormsModule, Icon, NameserversCard, NgTemplateOutlet, PageHeader, RouterLink, SectionTabs],
   templateUrl: './dns-zone.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -63,6 +65,38 @@ export class DnsZone {
     const list = this.records();
     if (!list) return list;
     return [...list].sort((a, b) => Number(a.managed) - Number(b.managed) || a.name.localeCompare(b.name) || a.type.localeCompare(b.type));
+  });
+
+  protected readonly typeFilter = signal<string>('all');
+  protected readonly search = signal('');
+  protected readonly confirmingDelete = signal<string | null>(null);
+  protected readonly copied = signal<string | null>(null);
+
+  // Only the types the zone has, in the order of the form's type list.
+  protected readonly typeChips = computed(() => {
+    const list = this.records() ?? [];
+    const counts = new Map<string, number>();
+    for (const record of list) counts.set(record.type, (counts.get(record.type) ?? 0) + 1);
+    const known = TYPES.filter((t) => counts.has(t));
+    const other = [...counts.keys()].filter((t) => !TYPES.includes(t)).sort();
+    return [{ value: 'all', label: 'All', count: list.length }, ...[...known, ...other].map((t) => ({ value: t, label: t, count: counts.get(t)! }))];
+  });
+
+  /** Your own records first, then the ones Amelu keeps for email; empty groups drop out. */
+  protected readonly groups = computed(() => {
+    const list = this.sorted();
+    if (!list) return list;
+    const type = this.typeFilter();
+    const query = this.search().trim().toLowerCase();
+    const shown = list.filter(
+      (record) =>
+        (type === 'all' || record.type === type) &&
+        (!query || this.short(record.name).toLowerCase().includes(query) || record.content.toLowerCase().includes(query)),
+    );
+    return [
+      { key: 'own', title: 'Your records', hint: 'For your website and other services. Edit or delete them as you like.', records: shown.filter((r) => !r.managed) },
+      { key: 'managed', title: 'Kept by Amelu for email', hint: 'These keep mail arriving and leaving. Amelu sets them and keeps them right.', records: shown.filter((r) => r.managed) },
+    ].filter((group) => group.records.length > 0);
   });
 
   private sub?: Subscription;
@@ -139,16 +173,29 @@ export class DnsZone {
     });
   }
 
+  protected clearFilters(): void {
+    this.typeFilter.set('all');
+    this.search.set('');
+  }
+
+  protected async copy(record: ZoneRecord): Promise<void> {
+    await navigator.clipboard.writeText(record.content);
+    this.copied.set(record.id);
+    setTimeout(() => this.copied.set(null), 1500);
+  }
+
+  // Confirmed inline on the row (Delete? Yes / No) instead of a browser dialog.
   protected remove(record: ZoneRecord): void {
-    if (!confirm(`Delete the ${record.type} record for ${this.short(record.name)}?`)) return;
     this.deleting.set(record.id);
     this.api.deleteZoneRecord(this.ctx.id(), record.id).subscribe({
       next: () => {
         this.deleting.set(null);
+        this.confirmingDelete.set(null);
         this.load();
       },
       error: (err) => {
         this.deleting.set(null);
+        this.confirmingDelete.set(null);
         this.loadError.set(errorMessage(err, 'The record could not be deleted.'));
       },
     });

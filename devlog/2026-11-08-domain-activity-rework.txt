@@ -1,0 +1,12 @@
+Domain Recent activity page in the new style
+2026-11-08
+
+/domains/:id/activity in the beta replaces its filter buttons and the
+Summary card with one row of filter chips (All, Domain, Mailboxes, Spam
+filtering), each with its colour dot and count. Day headings are 14px bold
+with a count instead of 12px uppercase. The events are a timeline: one thin
+line through a card per day, a round tile per event with an icon for its
+category (globe, mail, shield, tinted like the dot), the message, and the
+time with the full date and seconds on hover. Changes by support show a
+"By Amelu support" pill. "Looking for who did it?" gets the accent dither
+and an icon like the DNS help card, plus an "Open the activity log" button.

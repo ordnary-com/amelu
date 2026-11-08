@@ -4,6 +4,6 @@ Domains page: Need a hand with DNS? card with a dither
 The DNS help card in the /domains sidebar of the beta gets the same warp
 dither as the Overview banner and the Go upgrade box: accent colour at 30%,
 masked so it rises from the bottom right corner and fades out before the
-text. Above the heading sits a lifebuoy icon in an accent tile. Contact
+text. Above the heading sits a lifebuoy icon in the link colour. Contact
 Support is now an outlined button with an arrow instead of a bare link. The
 copy also names DMARC now, since the cards check four records, not three.

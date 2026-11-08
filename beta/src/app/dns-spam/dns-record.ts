@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { DnsRecordCheck } from '../api';
-import { Icon } from '../icon';
 import { badgeClass } from '../status';
 import { RECORD_STATUS, relativeHost } from './dns-check';
 
 /** One required record: each field with its own copy button, and what the live lookup found. */
 @Component({
   selector: 'amelu-dns-record',
-  imports: [Icon],
+  imports: [],
   template: `
     <div class="flex flex-wrap items-center gap-2">
       <span class="rounded bg-bg px-1.5 py-0.5 font-mono text-[12px] font-bold">{{ record().type }}</span>
@@ -27,7 +26,6 @@ import { RECORD_STATUS, relativeHost } from './dns-check';
               [attr.aria-label]="'Copy ' + field.label.toLowerCase()"
               (click)="copy(field.label, field.value)"
             >
-              <amelu-icon [name]="copied() === field.label ? 'check' : 'copy'" [size]="13" />
               {{ copied() === field.label ? 'Copied' : 'Copy' }}
             </button>
           </dd>

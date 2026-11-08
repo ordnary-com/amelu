@@ -3,7 +3,6 @@ import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
-import { Icon } from '../icon';
 import { Alert } from '../alert/alert';
 import { LoadErrors } from '../load-errors';
 import { MailboxApi, RepairResult } from './mailbox-api';
@@ -18,7 +17,7 @@ import { MailboxContext } from './mailbox-context';
 /** Header and the shared mailbox for every /domains/:domainId/mailboxes/:mailboxId page. */
 @Component({
   selector: 'amelu-mailbox-layout',
-  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe, Icon, Alert],
+  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe, Alert],
   providers: [MailboxContext],
   template: `
     @if (mailbox() === null) {
@@ -44,7 +43,7 @@ import { MailboxContext } from './mailbox-context';
         @if (mailbox(); as m) {
           <!-- A real link: the API answers with a redirect into webmail, signed in as this mailbox. -->
           <a actions [href]="webmailUrl()" target="_blank" rel="noreferrer" [class]="ui.outline">
-            Open in webmail <amelu-icon name="external" [size]="14" />
+            Open in webmail
           </a>
         }
       </amelu-page-header>

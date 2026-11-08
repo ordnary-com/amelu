@@ -1,0 +1,14 @@
+Beta: text buttons without icons, everywhere
+2026-11-08
+
+Every button in the beta dashboard with a text label is text only now. That
+drops the plus on New mailbox, New alias, New domain alias, New Bcc.
+capture, New pattern rewrite, Add a filter and Add your first mailbox. It
+drops the arrows on Upgrade to Go and the onboarding Continue, Back and Add
+domain, external on Open in webmail and download on Download profile. The
+copy and check icons on the Copy/Copied buttons go too (API key, DNS
+records, Copy all IPs, new mailbox password, CSV import, usage page). So
+does the plus on the quick-action catalog buttons. Icon-only buttons, the
+sidebar and banner links, list rows, the dashed "Add a domain" tiles and the
+copyable promo code chips keep theirs, since there the icon is the content.
+Unused Icon imports went from nine components (NG8113).

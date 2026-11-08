@@ -1,7 +1,6 @@
 <amelu-page-header title="Sending IPs">
   All addresses our mail server sends from. Each one has its own hostname, with matching reverse DNS.
   <button actions type="button" [class]="ui.outline" (click)="copy('all')">
-    <amelu-icon [name]="copied() === 'all' ? 'check' : 'copy'" [size]="14" />
     {{ copied() === 'all' ? 'Copied' : 'Copy all IPs' }}
   </button>
 </amelu-page-header>

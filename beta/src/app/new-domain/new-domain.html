@@ -48,7 +48,6 @@
               @if (address.password) {
                 <code class="rounded-md bg-bg px-2.5 py-1 font-mono text-[12px]">{{ address.password }}</code>
                 <button type="button" [class]="ui.outline" (click)="copy(address)">
-                  <amelu-icon [name]="copied() === address.address ? 'check' : 'copy'" [size]="14" />
                   {{ copied() === address.address ? 'Copied' : 'Copy' }}
                 </button>
               } @else {

@@ -35,7 +35,6 @@
     <div class="flex gap-2">
       <a [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.outline">New alias</a>
       <a [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">
-        <amelu-icon name="plus" [size]="14" />
         New mailbox
       </a>
     </div>
@@ -162,7 +161,6 @@
                   <amelu-empty-state title="No mailboxes yet" illustration="empty-mailbox">
                     Create the first mailbox on {{ domain()?.name }}, then sign in from any mail app.
                     <a actions [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">
-                      <amelu-icon name="plus" [size]="14" />
                       New mailbox
                     </a>
                   </amelu-empty-state>

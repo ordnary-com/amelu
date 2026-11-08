@@ -1,0 +1,12 @@
+The Black Friday card is a one-line alert
+2026-11-08
+
+The promo banner (beta/src/app/promo-banner) was a tinted card with an
+uppercase label and two boxed codes, unlike anything else on the page. It's
+now one line in a plain surface box with a star icon: "Black Week until 23
+November. 30% off your first year on Go or Pro with BLACKWEEK30, or 15% off
+your first 3 months paying monthly with WEEK15. See plans". The codes are
+small monospace chips that copy on click. An × hides it, remembered per
+deal in localStorage (amelu.promo.dismissed.<yearly code>), so the next
+phase's deal shows again. On Overview it moved from the narrow plan column
+to full width under the banner; the plans page keeps it without the link.

@@ -38,7 +38,7 @@ func (a *App) GetDomainDNS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
+	zoneFile := stalwart.UseAmeluSPF(stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile))
 	records := stalwart.ParseZoneFile(zoneFile)
 	checks := dnscheck.Check(r.Context(), records)
 
@@ -96,7 +96,7 @@ func (a *App) GetDomainBindFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/dns")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.zone"`, domain.Name))
-	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
+	zoneFile := stalwart.UseAmeluSPF(stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile))
 	if !strings.HasSuffix(zoneFile, "\n") {
 		zoneFile += "\n"
 	}

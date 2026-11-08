@@ -171,3 +171,14 @@ func joinQuotedSegments(rdata string) string {
 	}
 	return b.String()
 }
+
+// AmeluSPF is the SPF record Amelu asks customers for: every sending IP is
+// listed under _spf.amelu.org, so IPs can come and go without touching
+// marduk.mx. The older "v=spf1 mx -all" still works while the sending IPs are
+// also A records of marduk.mx.amelu.org, and the DNS check accepts both.
+const AmeluSPF = "v=spf1 include:_spf.amelu.org -all"
+
+// UseAmeluSPF swaps Stalwart's generated "mx -all" SPF for AmeluSPF.
+func UseAmeluSPF(zoneFile string) string {
+	return strings.ReplaceAll(zoneFile, `"v=spf1 mx -all"`, `"`+AmeluSPF+`"`)
+}

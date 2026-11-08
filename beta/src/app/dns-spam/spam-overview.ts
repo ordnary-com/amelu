@@ -35,22 +35,22 @@ interface Row {
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
       <section class="min-w-0">
         <h2 [class]="ui.sectionTitle">Settings</h2>
-        <div [class]="ui.card + ' overflow-hidden'">
+        <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
           @if (rows(); as list) {
-            <ul>
+            <ul class="divide-y divide-line">
               @for (row of list; track row.label) {
-                <li class="border-b border-line last:border-b-0">
+                <li>
                   <a [routerLink]="row.link" class="group flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
                     <span class="min-w-0 flex-1">
-                      <span class="block text-[14px] font-medium group-hover:underline">{{ row.label }}</span>
+                      <span class="block text-[14px] font-medium">{{ row.label }}</span>
                       <span class="block text-[12px] text-muted">{{ row.hint }}</span>
                     </span>
                     @if (row.badge; as badge) {
                       <span [class]="badge.class">{{ badge.label }}</span>
                     } @else {
-                      <span class="text-[13px] text-muted">{{ row.count }} {{ row.count === 1 ? 'entry' : 'entries' }}</span>
+                      <span class="flex-none text-[13px] text-muted tabular-nums">{{ row.count }} {{ row.count === 1 ? 'entry' : 'entries' }}</span>
                     }
-                    <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+                    <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
                   </a>
                 </li>
               }
@@ -59,7 +59,7 @@ interface Row {
             <amelu-empty-state title="The spam settings couldn't be loaded" [error]="true" />
           } @else {
             @for (i of [1, 2, 3, 4, 5]; track i) {
-              <div class="space-y-2 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+              <div class="space-y-2 px-4 py-3" aria-hidden="true">
                 <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
                 <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
               </div>

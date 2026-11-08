@@ -1,0 +1,15 @@
+DNS, spam and domain settings pages in the new style
+2026-11-08
+
+The rest of the domain pages in the beta follow the reworked ones. DNS
+configuration shows "N of M records verified" large, with the four checks
+as a list of check or cross circles instead of uppercase tiles, and the
+zone import card gets the dither. DNS records, the nameservers card, the
+DNS zone, spam filtering and its sub pages use divide-y rows, standard
+pills (In use, Waiting, For email, Listed), the larger switches and count
+chips on their headings. On DNS zone, record types become mono chips and
+Edit and Delete become small buttons. Transfer, deactivate and delete put
+the consequences in a list inside the card and use a red outline button.
+The solid red button is only for the final confirm in the dialog. That
+style is now UI.dangerOutline in ui.ts. Placeholders say "For example:"
+instead of "eg.".

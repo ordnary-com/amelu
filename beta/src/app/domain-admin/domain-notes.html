@@ -29,12 +29,12 @@
         <amelu-empty-state [class]="ui.card" title="Notes couldn't be loaded" [error]="true" />
       } @else {
         <div [class]="ui.card + ' p-4'">
-          <label for="domain-notes" [class]="ui.label">Notes</label>
+          <label for="domain-notes" class="sr-only">Notes</label>
           <textarea
             id="domain-notes"
             rows="10"
-            class="mt-1.5 w-full resize-y rounded-md border border-line bg-transparent px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
-            placeholder="eg. Registrar, renewal date, who asked for this domain"
+            class="block w-full resize-y rounded-md border border-line bg-transparent px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:text-muted hover:border-ink/20 focus:border-accent focus:ring-2 focus:ring-accent/30"
+            placeholder="For example: registrar, renewal date, who asked for this domain"
             [value]="notes()"
             (input)="edit($any($event.target).value)"
           ></textarea>
@@ -43,7 +43,7 @@
       }
     </section>
 
-    <div class="flex justify-end">
+    <div class="flex items-center gap-3">
       <button type="submit" [class]="ui.primary" [disabled]="busy() || !settings() || !changed()">
         {{ busy() ? 'Saving...' : 'Save' }}
       </button>

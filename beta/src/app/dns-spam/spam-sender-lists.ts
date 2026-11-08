@@ -34,7 +34,10 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
         @if (form.draft(); as lists) {
           @for (list of fields; track list.key) {
             <section>
-              <h2 [class]="ui.sectionTitle">{{ list.title }}</h2>
+              <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
+                {{ list.title }}
+                <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ counts()[list.key] }}</span>
+              </h2>
               <div [class]="ui.card + ' p-4'">
                 <label [for]="'spam-' + list.key" [class]="ui.label">{{ list.label }}</label>
                 <textarea
@@ -42,7 +45,7 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
                   rows="8"
                   spellcheck="false"
                   autocapitalize="off"
-                  class="mt-1.5 w-full rounded-md border border-line bg-transparent px-2.5 py-2 font-mono text-[13px] outline-none placeholder:font-sans placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
+                  class="mt-1.5 w-full rounded-md border border-line bg-transparent px-2.5 py-2 font-mono text-[13px] outline-none placeholder:font-sans placeholder:text-muted hover:border-ink/20 focus:border-accent focus:ring-2 focus:ring-accent/30"
                   placeholder="email addresses or wildcard rules, e.g. *@domain.com"
                   [value]="lists[list.key]"
                   (input)="set(list.key, $any($event.target).value)"

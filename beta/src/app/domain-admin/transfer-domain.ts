@@ -5,13 +5,14 @@ import { errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { injectDomain } from '../domain-context';
 import { Domains } from '../domains';
+import { Icon } from '../icon';
 import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { DomainAdminApi } from './domain-admin-api';
 
 @Component({
   selector: 'amelu-transfer-domain',
-  imports: [PageHeader, Alert, RouterLink],
+  imports: [PageHeader, Alert, Icon, RouterLink],
   templateUrl: './transfer-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

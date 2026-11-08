@@ -32,7 +32,12 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
         }
 
         <section>
-          <h2 [class]="ui.sectionTitle">Blocked recipients</h2>
+          <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
+            Blocked recipients
+            @if (form.draft()) {
+              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ count() }}</span>
+            }
+          </h2>
           <div [class]="ui.card + ' p-4'">
             @if (form.draft(); as list) {
               <label for="recipient-denylist" [class]="ui.label">Recipients (complete addresses)</label>
@@ -42,7 +47,7 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
                 spellcheck="false"
                 autocapitalize="off"
                 class="mt-1.5 w-full rounded-md border bg-transparent px-2.5 py-2 font-mono text-[13px] outline-none placeholder:font-sans placeholder:text-muted focus:ring-2"
-                [class]="wildcards().length ? 'border-bad focus:ring-bad/30' : 'border-line focus:border-accent focus:ring-accent/30'"
+                [class]="wildcards().length ? 'border-bad focus:ring-bad/30' : 'border-line hover:border-ink/20 focus:border-accent focus:ring-accent/30'"
                 placeholder="List full addresses to block"
                 [value]="list.denylist"
                 (input)="form.update({ denylist: $any($event.target).value })"

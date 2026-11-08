@@ -30,13 +30,13 @@
           Records
         }
       </h2>
-      <div class="flex rounded-md border border-line p-0.5" role="tablist">
+      <div class="flex h-8 items-center rounded-md border border-line bg-surface p-0.5" role="tablist">
         @for (option of filters; track option.value) {
           <button
             type="button"
             role="tab"
-            class="h-6 cursor-pointer rounded px-2.5 text-[12px] font-medium"
-            [class]="filter() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+            class="h-full cursor-pointer rounded px-2.5 text-[12px] font-medium transition-colors"
+            [class]="filter() === option.value ? 'bg-accent/10 text-ink' : 'text-muted hover:text-ink'"
             [attr.aria-selected]="filter() === option.value"
             (click)="filter.set(option.value)"
           >
@@ -46,14 +46,14 @@
       </div>
     </div>
 
-    <div [class]="ui.card + ' overflow-hidden'">
+    <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
       @if (dns.records() === null) {
         <amelu-empty-state title="The DNS records couldn't be checked" [error]="true">
           {{ dns.error() }}
         </amelu-empty-state>
       } @else if (filtered(); as records) {
         @for (record of records; track $index) {
-          <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="border-b border-line px-4 py-4 last:border-b-0" />
+          <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="px-4 py-4" />
         } @empty {
           @if (filter() === 'todo') {
             <amelu-empty-state title="Nothing needs attention" illustration="all-checked">Every record matches what we expect.</amelu-empty-state>
@@ -68,7 +68,7 @@
         }
       } @else {
         @for (i of [1, 2, 3, 4]; track i) {
-          <div class="space-y-2.5 border-b border-line px-4 py-4 last:border-b-0" aria-hidden="true">
+          <div class="space-y-2.5 px-4 py-4" aria-hidden="true">
             <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
             <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
             <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
@@ -81,12 +81,12 @@
   <aside class="space-y-6">
     <section>
       <h2 [class]="ui.sectionTitle">Status</h2>
-      <ul [class]="ui.card">
+      <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
         @if (counts(); as rows) {
           @for (row of rows; track row.status) {
-            <li class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5 last:border-b-0">
+            <li class="flex items-center justify-between gap-3 px-4 py-2.5">
               <span [class]="row.class">{{ row.label }}</span>
-              <span class="text-[13px] font-semibold">{{ row.count }}</span>
+              <span class="text-[13px] font-semibold tabular-nums">{{ row.count }}</span>
             </li>
           }
           @if (dns.checkedAt(); as at) {
@@ -94,7 +94,7 @@
           }
         } @else {
           @for (i of [1, 2, 3, 4]; track i) {
-            <li class="border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+            <li class="px-4 py-3" aria-hidden="true">
               <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
             </li>
           }

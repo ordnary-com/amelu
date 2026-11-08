@@ -13,10 +13,6 @@
       </amelu-alert>
     }
 
-    <amelu-alert kind="warning" title="This cannot be undone">
-      Every mailbox, message, alias, and setting under this domain is erased from the mail cluster.
-    </amelu-alert>
-
     <section>
       <h2 [class]="ui.sectionTitle">Delete {{ ctx.domain()?.name ?? 'this domain' }}</h2>
       <div [class]="ui.card + ' p-4'">
@@ -29,8 +25,28 @@
           Use this when you need to permanently remove a domain's data, for example to fulfil a data subject's erasure
           request under the GDPR, or because the domain is no longer in use.
         </p>
-        <div class="mt-4 flex justify-end">
-          <button type="button" [class]="ui.danger" (click)="open()" [disabled]="!ctx.domain()">Delete this domain</button>
+        <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line" aria-label="What deleting does">
+          <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+            <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+              <amelu-icon name="close" [size]="12" />
+            </span>
+            Every mailbox and the messages in it are erased.
+          </li>
+          <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+            <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+              <amelu-icon name="close" [size]="12" />
+            </span>
+            Aliases and settings under the domain are erased.
+          </li>
+          <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+            <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+              <amelu-icon name="close" [size]="12" />
+            </span>
+            This cannot be undone, and the data can't be recovered.
+          </li>
+        </ul>
+        <div class="-mx-4 -mb-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
+          <button type="button" [class]="ui.dangerOutline" (click)="open()" [disabled]="!ctx.domain()">Delete this domain</button>
         </div>
       </div>
     </section>

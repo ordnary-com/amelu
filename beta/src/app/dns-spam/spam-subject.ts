@@ -33,10 +33,10 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
 
         <section>
           <h2 [class]="ui.sectionTitle">Subject handling</h2>
-          <div [class]="ui.card + ' overflow-hidden'">
+          <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
             @if (form.draft(); as settings) {
               @for (option of options; track option.key) {
-                <div class="flex items-start gap-4 border-b border-line px-4 py-3 last:border-b-0">
+                <div class="flex items-start gap-4 px-4 py-3">
                   <span class="min-w-0 flex-1">
                     <span [id]="'spam-' + option.key" class="block text-[14px] font-medium">{{ option.label }}</span>
                     <span class="block text-[12px] text-muted">{{ option.hint }}</span>
@@ -44,15 +44,15 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
                   <button
                     type="button"
                     role="switch"
-                    class="relative mt-0.5 h-5 w-9 flex-none cursor-pointer rounded-full transition-colors"
+                    class="relative mt-0.5 inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
                     [class]="settings[option.key] ? 'bg-accent' : 'bg-line'"
                     [attr.aria-checked]="settings[option.key]"
                     [attr.aria-labelledby]="'spam-' + option.key"
                     (click)="toggle(option.key, !settings[option.key])"
                   >
                     <span
-                      class="absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform"
-                      [class.translate-x-4]="settings[option.key]"
+                      class="size-5 rounded-full bg-white shadow-sm transition-transform"
+                      [class]="settings[option.key] ? 'translate-x-[18px]' : 'translate-x-0.5'"
                     ></span>
                   </button>
                 </div>
@@ -61,7 +61,7 @@ import { SPAM_TABS, SectionTabs } from '../section-tabs';
               <amelu-empty-state title="The settings couldn't be loaded" [error]="true" />
             } @else {
               @for (i of [1, 2]; track i) {
-                <div class="space-y-2 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+                <div class="space-y-2 px-4 py-3" aria-hidden="true">
                   <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
                   <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
                 </div>

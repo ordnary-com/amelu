@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Subscription, catchError, of } from 'rxjs';
 import { errorMessage } from '../api';
 import { Icon } from '../icon';
+import { badgeClass } from '../status';
 import { UI } from '../ui';
 import { DnsSpamApi, DomainNameservers } from './dns-spam-api';
 
@@ -22,9 +23,9 @@ import { DnsSpamApi, DomainNameservers } from './dns-spam-api';
           <div class="flex items-center justify-between gap-3">
             <h2 class="text-[14px] font-bold">Amelu nameservers</h2>
             @if (ns.status === 'active') {
-              <span class="rounded bg-ok/15 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-ok uppercase">In use</span>
+              <span [class]="badge.ok">In use</span>
             } @else {
-              <span class="rounded bg-warn/15 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-warn uppercase">Waiting</span>
+              <span [class]="badge.warn">Waiting</span>
             }
           </div>
           @if (ns.status === 'active') {
@@ -37,11 +38,17 @@ import { DnsSpamApi, DomainNameservers } from './dns-spam-api';
               takes a few minutes, sometimes up to a day.
             </p>
           }
-          <ul class="mt-3 space-y-1.5">
+          <ul class="mt-3 divide-y divide-line overflow-hidden rounded-md border border-line">
             @for (name of ns.nameservers ?? []; track name) {
-              <li class="flex items-center gap-2 rounded-md border border-line px-2.5 py-1.5">
-                <code class="min-w-0 flex-1 truncate text-[13px]">{{ name }}</code>
-                <button type="button" class="cursor-pointer text-muted hover:text-ink" [attr.aria-label]="'Copy ' + name" (click)="copy(name)">
+              <li class="flex items-center gap-2 py-1.5 pr-1.5 pl-2.5">
+                <code class="min-w-0 flex-1 truncate font-mono text-[13px]">{{ name }}</code>
+                <button
+                  type="button"
+                  class="inline-flex size-7 flex-none cursor-pointer items-center justify-center rounded-md hover:bg-bg"
+                  [class]="copied() === name ? 'text-ok' : 'text-muted hover:text-ink'"
+                  [attr.aria-label]="'Copy ' + name"
+                  (click)="copy(name)"
+                >
                   <amelu-icon [name]="copied() === name ? 'check' : 'copy'" [size]="14" />
                 </button>
               </li>
@@ -90,6 +97,7 @@ import { DnsSpamApi, DomainNameservers } from './dns-spam-api';
 export class NameserversCard {
   private readonly api = inject(DnsSpamApi);
   protected readonly ui = UI;
+  protected readonly badge = { ok: badgeClass('ok'), warn: badgeClass('warn') };
 
   readonly domainId = input.required<string>();
   readonly domain = input('');

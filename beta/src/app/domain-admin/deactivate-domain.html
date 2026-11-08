@@ -48,7 +48,7 @@
               No data has been removed. Every mailbox, message, and setting on this domain has been retained exactly as
               it was and will be available again as soon as you reactivate.
             </p>
-            <div class="mt-4 flex justify-end">
+            <div class="-mx-4 -mb-4 mt-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
               <button type="button" [class]="ui.primary" (click)="reactivate()" [disabled]="busy()">
                 {{ busy() ? 'Reactivating...' : 'Reactivate domain' }}
               </button>
@@ -62,8 +62,28 @@
               This is a reversible operational change, not a data-deletion action: mailboxes, messages, and settings
               are left untouched and become available again the moment you reactivate.
             </p>
-            <div class="mt-4 flex justify-end">
-              <button type="button" [class]="ui.danger" (click)="confirming.set(true)" [disabled]="busy()">
+            <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line" aria-label="While it's deactivated">
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="close" [size]="12" />
+                </span>
+                Incoming mail is rejected, so senders get a bounce.
+              </li>
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="close" [size]="12" />
+                </span>
+                Mailboxes can't send mail.
+              </li>
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-ok/15 text-ok" aria-hidden="true">
+                  <amelu-icon name="check" [size]="12" />
+                </span>
+                All mailboxes, messages and settings are kept.
+              </li>
+            </ul>
+            <div class="-mx-4 -mb-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
+              <button type="button" [class]="ui.dangerOutline" (click)="confirming.set(true)" [disabled]="busy()">
                 Deactivate this domain
               </button>
             </div>
@@ -81,15 +101,6 @@
         subject's erasure request under the GDPR, use
         <a [routerLink]="'/domains/' + ctx.id() + '/delete'" class="text-link hover:underline">Delete domain</a>.
       </p>
-    </section>
-
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">While it's deactivated</h2>
-      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-        <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-bad"></span>Incoming mail is rejected, so senders get a bounce.</li>
-        <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-bad"></span>Mailboxes can't send mail.</li>
-        <li class="flex gap-2.5"><span class="mt-[7px] size-1.5 flex-none rounded-full bg-ok"></span>All mailboxes, messages and settings are kept.</li>
-      </ul>
     </section>
 
     <section [class]="ui.card + ' p-4'">

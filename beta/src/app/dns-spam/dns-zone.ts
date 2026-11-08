@@ -6,6 +6,7 @@ import { errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { injectDomain } from '../domain-context';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
 import { PageHeader } from '../page-header/page-header';
 import { DNS_TABS, SectionTabs } from '../section-tabs';
 import { UI } from '../ui';
@@ -28,7 +29,7 @@ const HINTS: Record<string, string> = {
 /** The records in a zone Amelu hosts. Mail records are kept by Amelu and shown read-only. */
 @Component({
   selector: 'amelu-dns-zone',
-  imports: [Alert, EmptyState, FormsModule, NameserversCard, NgTemplateOutlet, PageHeader, SectionTabs],
+  imports: [Alert, EmptyState, FormsModule, Icon, NameserversCard, NgTemplateOutlet, PageHeader, SectionTabs],
   templateUrl: './dns-zone.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

@@ -22,30 +22,41 @@
           id="new-owner"
           type="email"
           [class]="ui.input"
-          placeholder="eg. someone@example.com"
+          placeholder="someone@example.com"
           autocomplete="off"
           required
           [value]="email()"
           (input)="email.set($any($event.target).value)"
         />
         <p [class]="ui.hint">The email address they sign in to Amelu with. They need an account already.</p>
+        <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line" aria-label="What a transfer does">
+          <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+            <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-ok/15 text-ok" aria-hidden="true">
+              <amelu-icon name="check" [size]="12" />
+            </span>
+            Mailboxes, messages, aliases and settings move with the domain.
+          </li>
+          <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+            <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-ok/15 text-ok" aria-hidden="true">
+              <amelu-icon name="check" [size]="12" />
+            </span>
+            Mail keeps flowing; only who manages it changes.
+          </li>
+          <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+            <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+              <amelu-icon name="close" [size]="12" />
+            </span>
+            You lose access right away and can't undo it yourself.
+          </li>
+        </ul>
+        <div class="-mx-4 -mb-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
+          <button type="submit" [class]="ui.dangerOutline" [disabled]="!trimmed() || !ctx.domain()">Transfer this domain</button>
+        </div>
       </div>
     </section>
-
-    <div class="flex justify-end">
-      <button type="submit" [class]="ui.danger" [disabled]="!trimmed() || !ctx.domain()">Transfer this domain</button>
-    </div>
   </form>
 
   <aside class="space-y-6">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">What moves</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        The domain with all of its mailboxes, messages, aliases and settings. Mail keeps flowing during and after the
-        transfer; only who manages it changes.
-      </p>
-    </section>
-
     <section [class]="ui.card + ' p-4'">
       <h2 class="text-[14px] font-bold">Before you transfer</h2>
       <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">

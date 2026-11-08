@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domains page: cleaner filter field and sort select
+            2026-11-08-domains-search-sort.txt
+
 2026-11-08  Sidebar: second menu column gets headings, no uppercase
             2026-11-08-second-menu-rework.txt
 

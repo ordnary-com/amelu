@@ -111,14 +111,28 @@
       </p>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Many at once?</h2>
+    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+      <div
+        class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
+        aria-hidden="true"
+      >
+        <amelu-dither-shader
+          colorBack="rgba(0,0,0,0)"
+          colorFront="var(--accent)"
+          shape="warp"
+          type="4x4"
+          [size]="2"
+          [speed]="0.3"
+        />
+      </div>
+      <amelu-icon name="doc" [size]="20" class="block text-ink" />
+      <h2 class="mt-3 text-[14px] font-bold">Many at once?</h2>
       <p class="mt-1 text-[13px] leading-relaxed text-muted">
         Paste a list of aliases and their mailboxes as CSV instead.
       </p>
       <a
         [routerLink]="'/domains/' + ctx.id() + '/aliases/import'"
-        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+        class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
         >Import from CSV</a
       >
     </section>

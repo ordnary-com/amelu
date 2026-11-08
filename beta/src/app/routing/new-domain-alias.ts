@@ -5,13 +5,15 @@ import { errorMessage } from '../api';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 
 /** The current dashboard's /domains/:id/domain-aliases/new. */
 @Component({
   selector: 'amelu-new-domain-alias',
-  imports: [RouterLink, PageHeader, Alert],
+  imports: [RouterLink, PageHeader, Alert, Icon, DitherShader],
   templateUrl: './new-domain-alias.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

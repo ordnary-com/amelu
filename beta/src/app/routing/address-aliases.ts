@@ -7,6 +7,7 @@ import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
 import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
@@ -15,7 +16,7 @@ import { apiUrl } from '../config';
 /** The current dashboard's /domains/:id/aliases: every address alias across the domain's mailboxes. */
 @Component({
   selector: 'amelu-address-aliases',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, ConfirmDelete, ListSkeleton],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, ConfirmDelete, ListSkeleton, DitherShader],
   templateUrl: './address-aliases.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -25,6 +26,10 @@ export class AddressAliases {
   private readonly routing = inject(RoutingApi);
   protected readonly ui = UI;
   protected readonly ctx = injectDomain();
+  protected readonly related = [
+    { link: 'domain-aliases', label: 'Domain aliases', hint: 'Alias a whole other domain to this one' },
+    { link: 'catchall', label: 'Catch-all recipient', hint: 'Where mail to unknown addresses goes' },
+  ];
   protected readonly exportUrl = computed(() => apiUrl(`/api/domains/${this.ctx.id()}/address-aliases/export`));
 
   private readonly resource = domainResource(this.ctx.id, (id) => this.api.listAddressAliases(id));

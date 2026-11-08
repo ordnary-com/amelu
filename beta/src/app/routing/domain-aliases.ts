@@ -6,6 +6,8 @@ import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
@@ -13,7 +15,7 @@ import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
 /** The current dashboard's /domains/:id/domain-aliases: other domain names that deliver into this domain. */
 @Component({
   selector: 'amelu-domain-aliases',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, ConfirmDelete, ListSkeleton],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, ConfirmDelete, ListSkeleton, Icon, DitherShader],
   templateUrl: './domain-aliases.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

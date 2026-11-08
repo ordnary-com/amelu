@@ -106,6 +106,20 @@ func (a *App) redeployMailboxScript(ctx context.Context, domain *db.Domain, loca
 		parts = append(parts, subjectScript)
 	}
 
+	// The mailbox's own filters run before forwarding and delegation, so a
+	// filter that deletes or files a message decides before it's passed on.
+	filters, err := a.Store.ListMailboxFilters(ctx, mailbox.ID)
+	if err != nil {
+		return err
+	}
+	if len(filters) > 0 {
+		filterScript, err := sieve.GenerateFilterScript(toSieveFilters(filters))
+		if err != nil {
+			return err
+		}
+		parts = append(parts, filterScript)
+	}
+
 	forwards, err := a.Store.ListMailboxForwards(ctx, mailbox.ID)
 	if err != nil {
 		return err

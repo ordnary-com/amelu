@@ -17,6 +17,7 @@ var enabledExtensions = []string{
 	"comparator-i;ascii-casemap",
 	"imap4flags",
 	"fileinto",
+	"mailbox",
 	"editheader",
 	"variables",
 }

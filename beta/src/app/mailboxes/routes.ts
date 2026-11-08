@@ -1,3 +1,4 @@
+import { MailboxStoragePage } from './storage/mailbox-storage-page';
 import { Routes } from '@angular/router';
 import { MailboxesPage } from './mailboxes-page/mailboxes-page';
 import { NewMailbox } from './new-mailbox/new-mailbox';
@@ -9,6 +10,7 @@ export const ROUTES: Routes = [
   { path: 'mailboxes', component: MailboxesPage, title: 'Mailboxes · Amelu' },
   { path: 'mailboxes/new', component: NewMailbox, title: 'New mailbox · Amelu' },
   { path: 'mailboxes/import', component: ImportMailboxes, title: 'Import mailboxes · Amelu' },
+  { path: 'mailboxes/storage', component: MailboxStoragePage, title: 'Storage · Amelu' },
   { path: 'mailboxes/services', component: DefaultServices, title: 'Default services · Amelu' },
   { path: 'mailboxes/limits', component: DefaultLimits, title: 'Default limits · Amelu' },
 ];

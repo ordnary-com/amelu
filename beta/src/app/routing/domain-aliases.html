@@ -39,11 +39,9 @@
         @if (aliases() === null) {
           <amelu-empty-state title="The domain aliases couldn't be loaded" [error]="true" />
         } @else if (aliases(); as list) {
-          <ul>
+          <ul class="divide-y divide-line">
             @for (alias of list; track alias.name) {
-              <li
-                class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-bg/60"
-              >
+              <li class="flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-[14px] font-medium">{{ alias.name }}</div>
                   <div class="truncate text-[12px] text-muted">
@@ -93,15 +91,29 @@
       </p>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">DNS for the alias domain</h2>
+    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+      <div
+        class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
+        aria-hidden="true"
+      >
+        <amelu-dither-shader
+          colorBack="rgba(0,0,0,0)"
+          colorFront="var(--accent)"
+          shape="warp"
+          type="4x4"
+          [size]="2"
+          [speed]="0.3"
+        />
+      </div>
+      <amelu-icon name="globe" [size]="20" class="block text-ink" />
+      <h2 class="mt-3 text-[14px] font-bold">DNS for the alias domain</h2>
       <p class="mt-1 text-[13px] leading-relaxed text-muted">
         Mail only arrives once the alias domain's MX records point at the same mail servers as this
         domain. Set them at your DNS provider for the alias domain.
       </p>
       <a
         [routerLink]="'/domains/' + ctx.id() + '/dns'"
-        class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+        class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
       >
         See this domain's DNS records
       </a>

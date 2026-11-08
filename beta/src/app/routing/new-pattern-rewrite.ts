@@ -5,6 +5,8 @@ import { Api, errorMessage } from '../api';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { MailboxField, domainResource, localPart } from './shared';
@@ -12,7 +14,7 @@ import { MailboxField, domainResource, localPart } from './shared';
 /** The current dashboard's /domains/:id/rewrites/new. */
 @Component({
   selector: 'amelu-new-pattern-rewrite',
-  imports: [RouterLink, PageHeader, Alert, MailboxField],
+  imports: [RouterLink, PageHeader, Alert, MailboxField, Icon, DitherShader],
   templateUrl: './new-pattern-rewrite.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

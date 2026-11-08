@@ -5,6 +5,9 @@ import { errorMessage } from '../api';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
+import { Icon } from '../icon';
+import { badgeClass } from '../status';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { ImportAliasResult, RoutingApi } from './routing-api';
 import { apiUrl } from '../config';
@@ -24,7 +27,7 @@ const FIELDS = [
 /** The current dashboard's /domains/:id/aliases/import: bulk-create aliases from pasted CSV. */
 @Component({
   selector: 'amelu-import-aliases',
-  imports: [RouterLink, PageHeader, Alert],
+  imports: [RouterLink, PageHeader, Alert, Icon, DitherShader],
   templateUrl: './import-aliases.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -32,6 +35,7 @@ const FIELDS = [
 export class ImportAliases {
   private readonly routing = inject(RoutingApi);
   protected readonly ui = UI;
+  protected readonly badgeClass = badgeClass;
   protected readonly ctx = injectDomain();
   protected readonly exportUrl = computed(() => apiUrl(`/api/domains/${this.ctx.id()}/address-aliases/export`));
   protected readonly fields = FIELDS;

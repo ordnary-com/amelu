@@ -34,7 +34,12 @@
 
     @if (rows.length) {
       <section>
-        <h2 [class]="ui.sectionTitle">Rows</h2>
+        <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
+          Rows
+          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
+            rows.length
+          }}</span>
+        </h2>
         <div [class]="ui.card + ' overflow-x-auto'">
           <table class="w-full text-left text-[13px]">
             <thead class="border-b border-line text-[12px] text-muted">
@@ -44,16 +49,17 @@
                 <th class="px-4 py-2.5 font-medium">Result</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-line">
               @for (row of rows; track $index) {
-                <tr class="border-b border-line last:border-b-0">
-                  <td class="px-4 py-2.5 font-medium break-all">{{ row.alias }}</td>
-                  <td class="px-4 py-2.5 break-all">{{ row.destination }}</td>
-                  <td class="px-4 py-2.5">
+                <tr class="hover:bg-bg/60">
+                  <td class="px-4 py-2.5 align-top font-medium break-all">{{ row.alias }}</td>
+                  <td class="px-4 py-2.5 align-top break-all">{{ row.destination }}</td>
+                  <td class="px-4 py-2.5 align-top">
                     @if (row.error) {
-                      <span class="text-bad">{{ row.error }}</span>
+                      <span [class]="badgeClass('bad')">Failed</span>
+                      <span class="mt-1 block text-[12px] text-bad">{{ row.error }}</span>
                     } @else {
-                      <span class="text-ok">Created</span>
+                      <span [class]="badgeClass('ok')">Created</span>
                     }
                   </td>
                 </tr>
@@ -164,15 +170,29 @@
         </p>
       </section>
 
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Starting from an export?</h2>
+      <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+        <div
+          class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
+          aria-hidden="true"
+        >
+          <amelu-dither-shader
+            colorBack="rgba(0,0,0,0)"
+            colorFront="var(--accent)"
+            shape="warp"
+            type="4x4"
+            [size]="2"
+            [speed]="0.3"
+          />
+        </div>
+        <amelu-icon name="download" [size]="20" class="block text-ink" />
+        <h2 class="mt-3 text-[14px] font-bold">Starting from an export?</h2>
         <p class="mt-1 text-[13px] leading-relaxed text-muted">
           The alias export uses this same format, so it can be edited and imported again.
         </p>
         <a
           [href]="exportUrl()"
           download
-          class="mt-2 inline-block text-[13px] font-medium text-link hover:underline"
+          class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
         >
           Export current aliases
         </a>

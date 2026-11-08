@@ -3,6 +3,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, Subject, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { Mailbox } from '../api';
+import { Icon } from '../icon';
 import { UI } from '../ui';
 
 // undefined while loading, null when the request failed
@@ -88,14 +89,14 @@ export class ConfirmDelete {
   selector: 'amelu-list-skeleton',
   template: `
     @for (i of [1, 2, 3]; track i) {
-      <div class="space-y-2 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+      <div class="space-y-2 px-4 py-3" aria-hidden="true">
         <span class="block h-3 w-48 animate-pulse rounded bg-bg"></span>
         <span class="block h-3 w-32 animate-pulse rounded bg-bg"></span>
       </div>
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block' },
+  host: { class: 'block divide-y divide-line' },
 })
 export class ListSkeleton {}
 
@@ -106,7 +107,7 @@ export class ListSkeleton {}
  */
 @Component({
   selector: 'amelu-mailbox-field',
-  imports: [RouterLink],
+  imports: [RouterLink, Icon],
   template: `
     <label [for]="fieldId()" [class]="ui.label">{{ label() }}</label>
     @if (mailboxes() === undefined) {
@@ -116,20 +117,28 @@ export class ListSkeleton {}
       ></span>
     } @else if (mailboxes(); as list) {
       @if (list.length) {
-        <select
-          [id]="fieldId()"
-          [class]="ui.input + ' cursor-pointer'"
-          required
-          [value]="value()"
-          (change)="value.set($any($event.target).value)"
-        >
-          <option value="" disabled>Choose a mailbox</option>
-          @for (mailbox of list; track mailbox.id) {
-            <option [value]="mailbox.localPart" [selected]="mailbox.localPart === value()">
-              {{ mailbox.address }}{{ mailbox.displayName ? ' (' + mailbox.displayName + ')' : '' }}
-            </option>
-          }
-        </select>
+        <!-- A native select for the keyboard and screen readers, with its own arrow swapped for ours. -->
+        <div class="relative">
+          <select
+            [id]="fieldId()"
+            [class]="ui.input + ' cursor-pointer appearance-none pr-8 hover:border-ink/20 [&>option]:bg-surface'"
+            required
+            [value]="value()"
+            (change)="value.set($any($event.target).value)"
+          >
+            <option value="" disabled>Choose a mailbox</option>
+            @for (mailbox of list; track mailbox.id) {
+              <option [value]="mailbox.localPart" [selected]="mailbox.localPart === value()">
+                {{ mailbox.address }}{{ mailbox.displayName ? ' (' + mailbox.displayName + ')' : '' }}
+              </option>
+            }
+          </select>
+          <amelu-icon
+            name="chevronDown"
+            [size]="14"
+            class="pointer-events-none absolute top-1/2 right-2.5 mt-[3px] -translate-y-1/2 text-muted"
+          />
+        </div>
       } @else {
         <p class="mt-1.5 rounded-md bg-bg px-3 py-2 text-[13px] text-muted">
           There are no mailboxes on this domain yet.

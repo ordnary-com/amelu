@@ -7,6 +7,7 @@ import { Alert } from '../alert/alert';
 import { injectDomain } from '../domain-context';
 import { EmptyState } from '../empty-state/empty-state';
 import { PageHeader } from '../page-header/page-header';
+import { badgeClass } from '../status';
 import { UI } from '../ui';
 import { DomainAdminApi, DomainSettings } from './domain-admin-api';
 
@@ -20,6 +21,7 @@ import { DomainAdminApi, DomainSettings } from './domain-admin-api';
 export class ListingSettings {
   private readonly api = inject(DomainAdminApi);
   protected readonly ui = UI;
+  protected readonly badge = { ok: badgeClass('ok'), neutral: badgeClass('neutral') };
   protected readonly ctx = injectDomain();
 
   // undefined while loading, null when the request failed or the domain is gone

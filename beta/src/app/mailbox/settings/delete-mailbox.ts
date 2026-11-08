@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { errorMessage } from '../../api';
 import { Alert } from '../../alert/alert';
+import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { MailboxApi } from '../mailbox-api';
 import { MailboxContext } from '../mailbox-context';
@@ -11,28 +12,57 @@ import { MailboxHeading } from '../shared/heading';
 /** The current dashboard's DeleteMailboxPage, with the same confirmation step. */
 @Component({
   selector: 'amelu-delete-mailbox',
-  imports: [RouterLink, Alert, MailboxHeading],
+  imports: [RouterLink, Alert, Icon, MailboxHeading],
   template: `
     <amelu-mailbox-heading title="Delete mailbox">
       This permanently removes the mailbox from the mail cluster. This cannot be undone.
     </amelu-mailbox-heading>
 
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="space-y-4">
+      <div class="min-w-0 space-y-6">
         @if (error(); as message) {
-          <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
+          <amelu-alert kind="error" title="The mailbox wasn't deleted" [dismissible]="true" (dismissed)="error.set(null)">
             {{ message }}
           </amelu-alert>
         }
-        <section class="rounded-lg border border-bad/40 bg-surface p-4">
-          <h2 class="text-[14px] font-bold">Delete {{ ctx.mailbox()?.address ?? 'this mailbox' }}</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            Its messages, aliases and settings are erased along with it, and mail sent to the address bounces from then
-            on.
-          </p>
-          <button type="button" [class]="ui.danger + ' mt-4'" [disabled]="!ctx.mailbox()" (click)="confirming.set(true)">
-            Delete this mailbox
-          </button>
+        <section>
+          <h2 [class]="ui.sectionTitle">Delete {{ ctx.mailbox()?.address ?? 'this mailbox' }}</h2>
+          <div [class]="ui.card + ' p-4'">
+            <p class="text-[13px] leading-relaxed">
+              Deleting a mailbox permanently removes it from the mail cluster, along with everything stored in it.
+            </p>
+            <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line" aria-label="What deleting does">
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="close" [size]="12" />
+                </span>
+                Every message in it is erased.
+              </li>
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="close" [size]="12" />
+                </span>
+                Its aliases and settings are erased.
+              </li>
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="close" [size]="12" />
+                </span>
+                Mail sent to the address bounces from then on.
+              </li>
+              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="close" [size]="12" />
+                </span>
+                This cannot be undone, and the data can't be recovered.
+              </li>
+            </ul>
+            <div class="-mx-4 -mb-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
+              <button type="button" [class]="ui.dangerOutline" [disabled]="!ctx.mailbox()" (click)="confirming.set(true)">
+                Delete this mailbox
+              </button>
+            </div>
+          </div>
         </section>
       </div>
 
@@ -40,13 +70,11 @@ import { MailboxHeading } from '../shared/heading';
         <section [class]="ui.card + ' p-4'">
           <h2 class="text-[14px] font-bold">Only need a break?</h2>
           <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            Suspending stops all mail and sign-ins but keeps everything, so it can be undone. An expiration date can do
-            either automatically later.
+            <a [routerLink]="ctx.base()" class="font-medium text-link hover:underline">Suspending</a>
+            stops all mail and sign-ins but keeps everything, so it can be undone. An
+            <a [routerLink]="ctx.base() + '/expiration'" class="font-medium text-link hover:underline">expiration date</a>
+            can do either automatically later.
           </p>
-          <div class="mt-2.5 flex gap-4 text-[13px] font-medium">
-            <a [routerLink]="ctx.base()" class="text-link hover:underline">Suspend</a>
-            <a [routerLink]="ctx.base() + '/expiration'" class="text-link hover:underline">Expiration</a>
-          </div>
         </section>
       </aside>
     </div>

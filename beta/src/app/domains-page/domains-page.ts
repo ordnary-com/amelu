@@ -9,6 +9,7 @@ import { Icon } from '../icon';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
 import { Alert } from '../alert/alert';
+import { DitherShader } from '../login/dither-shader';
 
 export type DomainSort = 'custom' | 'name' | 'name-desc' | 'newest' | 'oldest' | 'status';
 
@@ -43,7 +44,7 @@ const SORTERS: Record<Exclude<DomainSort, 'custom'>, (a: Domain, b: Domain) => n
 /** All domains as cards, with what still needs doing beside them. */
 @Component({
   selector: 'amelu-domains-page',
-  imports: [EmptyState, RouterLink, DomainCard, Icon, Alert, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder],
+  imports: [EmptyState, RouterLink, DomainCard, Icon, Alert, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, DitherShader],
   templateUrl: './domains-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

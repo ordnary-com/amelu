@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domains page: Need a hand with DNS? card with a dither
+            2026-11-08-dns-help-card.txt
+
 2026-11-08  Domains page: cleaner filter field and sort select
             2026-11-08-domains-search-sort.txt
 

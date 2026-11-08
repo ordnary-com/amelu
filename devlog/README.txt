@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Welcome flow as a chat with the setup assistant
+            2026-11-08-welcome-chat.txt
+
 2026-11-08  Welcome flow: dither in the top right corner
             2026-11-08-welcome-dither.txt
 

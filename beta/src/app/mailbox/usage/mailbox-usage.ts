@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Alert } from '../../alert/alert';
 import { Icon } from '../../icon';
 import { UI } from '../../ui';
 import { MailboxContext } from '../mailbox-context';
@@ -115,7 +114,7 @@ interface Setting {
 /** The current dashboard's MailboxUsageInstructionsPage: what to type into a mail app. */
 @Component({
   selector: 'amelu-mailbox-usage',
-  imports: [RouterLink, Alert, Icon, MailboxHeading, PhoneQr],
+  imports: [RouterLink, Icon, MailboxHeading, PhoneQr],
   template: `
     <amelu-mailbox-heading title="Usage instructions">
       To correctly configure your email client, you will need the correct server parameters. Please find them below.
@@ -210,10 +209,10 @@ interface Setting {
           </section>
         }
 
-        <amelu-alert kind="warning" title="Note">
-          POP3 and SMTP over StartTLS (port 587) aren't available on this cluster yet: only the ports listed above are
-          open. Use IMAP and implicit TLS submission (port 465) for now.
-        </amelu-alert>
+        <p class="text-[12px] leading-relaxed text-muted">
+          IMAP keeps mail in sync on all your devices; use POP3 only if an app needs it, since it downloads mail to one
+          device. If your app or network can't use port 465, use 587 with STARTTLS instead.
+        </p>
       </div>
 
       <aside class="space-y-6">
@@ -310,7 +309,9 @@ export class MailboxUsage {
     ];
     return [
       { title: 'Incoming mail', rows: [...server('IMAP', '993', 'TLS'), ...login] },
+      { title: 'Incoming mail with POP3', rows: [...server('POP3', '995', 'TLS'), ...login] },
       { title: 'Outgoing mail', rows: [...server('SMTP', '465', 'TLS'), ...login] },
+      { title: 'Outgoing mail with STARTTLS', rows: [...server('SMTP', '587', 'STARTTLS'), ...login] },
       {
         title: 'Calendar and contacts',
         rows: [

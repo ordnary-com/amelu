@@ -1,0 +1,13 @@
+Overview: a clearer Your plan card
+2026-11-08
+
+The plan card had an Upgrade button at the top and another at the bottom,
+and only listed domains and mailboxes. Now the plan name is larger with how
+it's paid under it ("No charge", "Billed yearly" or "Billed monthly"), and
+the top button is gone on Free; paid plans get a Manage link to /billing.
+The limits are one list: domains with a thin bar, mailboxes per domain, and
+the daily sending limit per domain (150, 1,000 or 3,000 by plan id, the
+same numbers as the API's plan tiers). Over the domain limit, one line with
+an alert icon says what to do. On Free, what Go adds sits in a light accent
+box with a single full-width "Upgrade to Go" button. Loading shows
+placeholders instead of "Loading...".

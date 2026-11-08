@@ -1,6 +1,11 @@
-<amelu-page-header title="DNS records" [crumbs]="crumbs()">
-  The records Amelu answers with for {{ ctx.domain()?.name }}. Mail records are kept right by Amelu; everything else is
-  yours to change.
+<!-- Same title as the Overview and Records tabs, so it doesn't jump when switching. -->
+<amelu-page-header title="DNS configuration" [crumbs]="crumbs()">
+  @if (hosted()) {
+    The records Amelu answers with for {{ ctx.domain()?.name }}. Mail records are kept right by Amelu; everything else is
+    yours to change.
+  } @else {
+    Where the DNS records for {{ ctx.domain()?.name }} live, and how to set them.
+  }
   @if (hosted() && records()) {
     <button actions type="button" [class]="ui.primary" (click)="startNew()">Add record</button>
   }
@@ -9,15 +14,18 @@
 <amelu-section-tabs label="DNS" [base]="'/domains/' + ctx.id()" [tabs]="tabs" />
 
 <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="min-w-0 space-y-4">
+  <div class="min-w-0 space-y-4" [class.xl:col-span-2]="!hosted()">
     @if (loadError(); as message) {
       <amelu-alert kind="error" [dismissible]="true" (dismissed)="loadError.set(null)">{{ message }}</amelu-alert>
     }
 
     @if (!hosted()) {
       <div [class]="ui.card">
-        <amelu-empty-state title="This domain keeps its own DNS">
-          Its records are managed where its nameservers point now. Switch to the Amelu nameservers to manage them here.
+        <amelu-empty-state title="This domain keeps its own DNS" illustration="in-progress">
+          Its records are managed where its nameservers point now, so that's where you add the ones for email. Switch to the
+          Amelu nameservers to manage the whole zone here.
+          <a actions [routerLink]="'/domains/' + ctx.id() + '/dns/records'" [class]="ui.primary">See the records to set</a>
+          <a actions [routerLink]="'/domains/' + ctx.id() + '/dns'" [class]="ui.outline">DNS overview</a>
         </amelu-empty-state>
       </div>
     } @else {
@@ -25,37 +33,113 @@
         <ng-container *ngTemplateOutlet="form" />
       }
 
-      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-        <div class="hidden grid-cols-[72px_minmax(0,1fr)_minmax(0,2fr)_120px] gap-3 bg-bg/60 px-4 py-2 text-[12px] font-medium text-muted md:grid">
-          <span>Type</span><span>Name</span><span>Value</span><span></span>
-        </div>
-        @if (sorted(); as list) {
-          @for (record of list; track record.id) {
-            @if (editing() === record.id) {
-              <div class="bg-bg/40 p-3"><ng-container *ngTemplateOutlet="form" /></div>
-            } @else {
-              <div class="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-1 px-4 py-3 hover:bg-bg/60 md:grid-cols-[72px_minmax(0,1fr)_minmax(0,2fr)_120px] md:items-center">
-                <span class="justify-self-start rounded bg-bg px-1.5 py-0.5 font-mono text-[12px] font-medium">{{ record.type }}</span>
-                <span class="truncate text-[13px] font-medium">{{ short(record.name) }}</span>
-                <code class="col-span-2 truncate text-[12px] text-muted md:col-span-1" [attr.title]="record.content">
-                  @if (record.priority !== undefined && record.type === 'MX') {{{ record.priority }} }{{ record.content }}
-                </code>
-                <span class="col-span-2 -mx-2 flex items-center justify-start gap-1 md:col-span-1 md:mx-0 md:-mr-2 md:justify-end">
-                  @if (record.managed) {
-                    <span class="rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted" title="Amelu keeps this record right so your email keeps working">For email</span>
-                  } @else {
-                    <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-2 text-[12px] font-medium text-link hover:bg-bg" (click)="startEdit(record)">Edit</button>
-                    <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-2 text-[12px] font-medium text-bad hover:bg-bad/10 disabled:cursor-default disabled:opacity-60" [disabled]="deleting() === record.id" (click)="remove(record)">
-                      {{ deleting() === record.id ? 'Deleting...' : 'Delete' }}
-                    </button>
-                  }
-                </span>
-              </div>
+      @if (records()?.length) {
+        <!-- Type chips with counts, and a search over names and values. -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-1.5" role="group" aria-label="Filter by type">
+            @for (chip of typeChips(); track chip.value) {
+              <button
+                type="button"
+                class="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-[12px] font-medium transition-colors"
+                [class]="typeFilter() === chip.value ? 'border-accent/40 bg-accent/10 text-ink' : 'border-line bg-surface text-muted hover:border-ink/20 hover:text-ink'"
+                [attr.aria-pressed]="typeFilter() === chip.value"
+                (click)="typeFilter.set(chip.value)"
+              >
+                <span [class.font-mono]="chip.value !== 'all'">{{ chip.label }}</span>
+                <span class="font-normal text-muted tabular-nums">{{ chip.count }}</span>
+              </button>
             }
-          } @empty {
-            <amelu-empty-state title="No records yet">Add the records your website or other services need.</amelu-empty-state>
-          }
-        } @else {
+          </div>
+          <label class="group flex h-8 w-full items-center gap-2 rounded-md border border-line bg-surface px-2.5 hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 sm:w-56">
+            <amelu-icon name="search" [size]="14" class="flex-none text-muted group-focus-within:text-ink" />
+            <input
+              type="search"
+              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
+              placeholder="Filter records"
+              aria-label="Filter records"
+              [value]="search()"
+              (input)="search.set($any($event.target).value)"
+              (keydown.escape)="search.set('')"
+            />
+            @if (search()) {
+              <button type="button" class="-mr-1 inline-flex size-5 flex-none cursor-pointer items-center justify-center rounded text-muted hover:bg-bg hover:text-ink" aria-label="Clear filter" (click)="search.set('')">
+                <amelu-icon name="close" [size]="12" />
+              </button>
+            }
+          </label>
+        </div>
+      }
+
+      @if (groups(); as list) {
+        @for (group of list; track group.key) {
+          <section>
+            <h2 class="mb-1 flex items-center gap-2 text-[14px] font-bold">
+              {{ group.title }}
+              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ group.records.length }}</span>
+            </h2>
+            <p class="mb-3 text-[12px] text-muted">{{ group.hint }}</p>
+            <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
+              <div class="hidden grid-cols-[72px_minmax(0,1fr)_minmax(0,2fr)_132px] gap-3 bg-bg/60 px-4 py-2 text-[12px] font-medium text-muted md:grid">
+                <span>Type</span><span>Name</span><span>Value</span><span></span>
+              </div>
+              @for (record of group.records; track record.id) {
+                @if (editing() === record.id) {
+                  <div class="bg-bg/40 p-3"><ng-container *ngTemplateOutlet="form" /></div>
+                } @else {
+                  <div class="group grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-1 px-4 py-3 hover:bg-bg/60 md:grid-cols-[72px_minmax(0,1fr)_minmax(0,2fr)_132px] md:items-center">
+                    <span class="justify-self-start rounded-md bg-bg px-1.5 py-0.5 font-mono text-[12px] font-medium">{{ record.type }}</span>
+                    <span class="truncate text-[13px] font-medium" [title]="record.name">{{ short(record.name) }}</span>
+                    <span class="col-span-2 flex min-w-0 items-center gap-1 md:col-span-1">
+                      <code class="min-w-0 truncate text-[12px] text-muted" [attr.title]="record.content">
+                        @if (record.priority !== undefined && record.type === 'MX') {<span class="text-ink">{{ record.priority }}</span> }{{ record.content }}
+                      </code>
+                      <button
+                        type="button"
+                        class="inline-flex size-6 flex-none cursor-pointer items-center justify-center rounded text-muted opacity-0 group-hover:opacity-100 hover:bg-surface hover:text-ink focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                        [class]="copied() === record.id ? 'text-ok opacity-100' : ''"
+                        [attr.aria-label]="'Copy the value of the ' + record.type + ' record for ' + short(record.name)"
+                        [title]="copied() === record.id ? 'Copied' : 'Copy value'"
+                        (click)="copy(record)"
+                      >
+                        <amelu-icon [name]="copied() === record.id ? 'check' : 'copy'" [size]="12" />
+                      </button>
+                    </span>
+                    <span class="col-span-2 -mx-2 flex items-center justify-start gap-1 md:col-span-1 md:mx-0 md:-mr-2 md:justify-end">
+                      @if (record.managed) {
+                        <span class="inline-flex items-center gap-1 rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted" title="Amelu keeps this record right so your email keeps working">
+                          <amelu-icon name="shield" [size]="11" />
+                          For email
+                        </span>
+                      } @else if (confirmingDelete() === record.id) {
+                        <span class="text-[12px] text-muted">Delete?</span>
+                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md bg-bad px-2 text-[12px] font-medium text-white hover:brightness-110 disabled:cursor-default disabled:opacity-60" [disabled]="deleting() === record.id" (click)="remove(record)">
+                          {{ deleting() === record.id ? 'Deleting...' : 'Yes' }}
+                        </button>
+                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-2 text-[12px] font-medium text-muted hover:bg-bg hover:text-ink" [disabled]="deleting() === record.id" (click)="confirmingDelete.set(null)">No</button>
+                      } @else {
+                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-2 text-[12px] font-medium text-link hover:bg-bg" (click)="startEdit(record)">Edit</button>
+                        <button type="button" class="inline-flex h-7 cursor-pointer items-center rounded-md px-2 text-[12px] font-medium text-bad hover:bg-bad/10" (click)="confirmingDelete.set(record.id)">Delete</button>
+                      }
+                    </span>
+                  </div>
+                }
+              }
+            </div>
+          </section>
+        } @empty {
+          <div [class]="ui.card">
+            @if (records()?.length) {
+              <amelu-empty-state title="No matching records" illustration="file-search">
+                Nothing matches this filter.
+                <button actions type="button" [class]="ui.outline" (click)="clearFilters()">Show all records</button>
+              </amelu-empty-state>
+            } @else {
+              <amelu-empty-state title="No records yet">Add the records your website or other services need.</amelu-empty-state>
+            }
+          </div>
+        }
+      } @else {
+        <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
           @for (i of [1, 2, 3, 4]; track i) {
             <div class="flex gap-3 px-4 py-3.5" aria-hidden="true">
               <span class="block h-3 w-12 animate-pulse rounded bg-bg"></span>
@@ -63,43 +147,52 @@
               <span class="block h-3 flex-1 animate-pulse rounded bg-bg"></span>
             </div>
           }
-        }
-      </div>
+        </div>
+      }
     }
   </div>
 
   <aside class="space-y-6">
     <amelu-nameservers-card [domainId]="ctx.id()" [domain]="ctx.domain()?.name ?? ''" [showEditorLink]="false" (changed)="load()" />
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">About these records</h2>
+    <!-- Same dither as the other help cards, rising from the bottom right. Only about a zone we host. -->
+    @if (hosted()) {
+    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      </div>
+      <amelu-icon name="globe" [size]="20" class="block text-ink" />
+      <h2 class="mt-3 text-[14px] font-bold">About these records</h2>
       <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-muted">
         <li>Use @ for {{ ctx.domain()?.name }} itself, or a name like www for a subdomain.</li>
         <li>Records marked "For email" are set and kept by Amelu. Changing them would stop mail.</li>
         <li>Changes are live within a minute.</li>
       </ul>
     </section>
+    }
   </aside>
 </div>
 
 <ng-template #form>
-  <form [class]="ui.card + ' space-y-3 p-4'" (submit)="save($event)">
-    <div class="grid gap-3 sm:grid-cols-[110px_minmax(0,1fr)]">
-      <label [class]="ui.label">
-        Type
-        <span class="relative block">
-          <select
-            [class]="ui.input + ' cursor-pointer appearance-none pr-7 [&>option]:bg-surface'"
-            [ngModel]="draft().type"
-            (ngModelChange)="patch({ type: $event })"
-            name="type"
-          >
-            @for (t of types; track t) {
-              <option [value]="t">{{ t }}</option>
-            }
-          </select>
-          <amelu-icon name="chevronDown" [size]="14" class="pointer-events-none absolute top-1/2 right-2.5 mt-[3px] -translate-y-1/2 text-muted" />
-        </span>
-      </label>
+  <form [class]="ui.card + ' space-y-4 p-4'" (submit)="save($event)">
+    <p class="text-[14px] font-bold">{{ editing() === 'new' ? 'New record' : 'Edit record' }}</p>
+    <div class="grid gap-3">
+      <fieldset>
+        <legend [class]="ui.label">Type</legend>
+        <!-- The types as chips: there are only eight, so one click beats a dropdown. -->
+        <div class="mt-1.5 flex flex-wrap gap-1.5">
+          @for (t of types; track t) {
+            <button
+              type="button"
+              class="inline-flex h-8 min-w-11 cursor-pointer items-center justify-center rounded-md border px-2 font-mono text-[12px] font-medium transition-colors"
+              [class]="draft().type === t ? 'border-accent bg-accent/10 text-ink ring-1 ring-accent' : 'border-line bg-surface text-muted hover:border-ink/20 hover:text-ink'"
+              [attr.aria-pressed]="draft().type === t"
+              (click)="patch({ type: t })"
+            >
+              {{ t }}
+            </button>
+          }
+        </div>
+      </fieldset>
       <label [class]="ui.label">
         Name
         <input [class]="ui.input" [ngModel]="draft().name" (ngModelChange)="patch({ name: $event })" name="name" placeholder="@ or www" autocomplete="off" />

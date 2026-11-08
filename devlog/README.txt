@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  POP3 (995) and SMTP submission with STARTTLS (587) are open
+            2026-11-08-pop3-and-587.txt
+
 2026-11-08  Delivery charts: 14 days per domain, a sparkline per mailbox
             2026-11-08-delivery-charts.txt
 

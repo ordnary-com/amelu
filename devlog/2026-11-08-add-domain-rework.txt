@@ -1,0 +1,16 @@
+Add domain page in the new style
+2026-11-08
+
+/domains/new in the beta reworks the form. The domain field is 48px tall
+with 16px text, on a card with the accent warp dither from the Overview
+banner in its top right. It shows a green check once the input is a valid
+domain. Under it, one line changes with what's typed: the www. warning, the
+cleaned name, "Addresses will look like you@...", or a tip that a website
+or address works too. The nameserver choice ("How do you want to handle
+DNS?") is two cards with a round check indicator instead of bare radios.
+The radios stay as sr-only inputs. The badges are sentence case pills
+(Easiest, Soon), no longer uppercase. "Create the standard addresses" is a
+switch, with the address chips under a full-width line. The submit button
+names the domain ("Add acme.com"). What happens next is a timeline with a
+connecting line. The plan usage card gets a See plans link at the limit.
+The success view is unchanged.

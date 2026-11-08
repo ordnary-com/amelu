@@ -1,0 +1,14 @@
+Routing pages in the new style
+2026-11-08
+
+The domain routing pages in the beta (address aliases, domain aliases,
+pattern rewrites, catch-all, Bcc. captures, their New forms and the alias
+CSV import) follow the reworked pages. List rows use divide-y instead of a
+border per row. The address alias filter works like the Domains page (own
+× button, Escape clears, accent focus ring). The Related rows no longer
+underline and their chevron nudges right. Each page's help card in the
+sidebar gets the accent dither with an icon, and its link becomes an
+outlined button. Side-card separators run full width. The mailbox picker
+in routing/shared.ts hides the browser arrow for our chevron. On the CSV
+import result, the Rows heading gets a count, and the result column shows
+Created or Failed pills, with the error under Failed.

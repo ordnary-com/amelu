@@ -5,11 +5,13 @@ import { Api, ApiKey, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 /** The current dashboard's /account/api-keys: list, create and revoke personal API keys. */
 @Component({
   selector: 'amelu-account-api-keys',
-  imports: [EmptyState, DatePipe, Alert],
+  imports: [EmptyState, DatePipe, Alert, Icon, DitherShader],
   templateUrl: './account-api-keys.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

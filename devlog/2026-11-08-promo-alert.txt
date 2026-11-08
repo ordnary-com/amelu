@@ -8,5 +8,8 @@ November. 30% off your first year on Go or Pro with BLACKWEEK30, or 15% off
 your first 3 months paying monthly with WEEK15. See plans". The codes are
 small monospace chips that copy on click. An × hides it, remembered per
 deal in localStorage (amelu.promo.dismissed.<yearly code>), so the next
-phase's deal shows again. On Overview it moved from the narrow plan column
-to full width under the banner; the plans page keeps it without the link.
+phase's deal shows again. The plans page keeps that line without the link.
+On free plans the deal now sits at the bottom of the main sidebar menu
+instead of on Overview (PromoBanner variant "sidebar"): a small card on the
+menu's colours with the deal, the yearly code to copy, See plans and ×. The
+main menu column is a flex column so it can stay at the bottom.

@@ -8,6 +8,8 @@ import { injectDomain } from '../domain-context';
 import { EmptyState } from '../empty-state/empty-state';
 import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
+import { Icon, IconName } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 type Category = 'all' | 'domain' | 'mailboxes' | 'spam';
 
@@ -30,6 +32,19 @@ const DOT: Record<Exclude<Category, 'all'>, string> = {
   spam: 'bg-warn',
 };
 
+// The timeline's icon per category, on a tile tinted like its dot.
+const ICON: Record<Exclude<Category, 'all'>, IconName> = {
+  domain: 'globe',
+  mailboxes: 'mail',
+  spam: 'shield',
+};
+
+const TILE: Record<Exclude<Category, 'all'>, string> = {
+  domain: 'bg-accent/12 text-link',
+  mailboxes: 'bg-ok/15 text-ok',
+  spam: 'bg-warn/15 text-warn',
+};
+
 interface Row {
   entry: ActivityEntry;
   category: Exclude<Category, 'all'>;
@@ -38,7 +53,7 @@ interface Row {
 
 @Component({
   selector: 'amelu-domain-activity',
-  imports: [PageHeader, EmptyState, DatePipe, RouterLink],
+  imports: [PageHeader, EmptyState, DatePipe, RouterLink, Icon, DitherShader],
   templateUrl: './domain-activity.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -48,6 +63,8 @@ export class DomainActivity {
   protected readonly ui = UI;
   protected readonly ctx = injectDomain();
   protected readonly dot = DOT;
+  protected readonly icon = ICON;
+  protected readonly tile = TILE;
 
   protected readonly filters: { value: Category; label: string }[] = [
     { value: 'all', label: 'All' },
@@ -96,6 +113,15 @@ export class DomainActivity {
     return this.filters
       .filter((option): option is { value: Exclude<Category, 'all'>; label: string } => option.value !== 'all')
       .map((option) => ({ ...option, count: counts[option.value] ?? 0 }));
+  });
+
+  protected readonly chips = computed(() => {
+    const loaded = !!this.entries();
+    const counts = new Map(this.summary().map((item) => [item.value, item.count]));
+    return this.filters.map((option) => ({
+      ...option,
+      count: !loaded ? null : option.value === 'all' ? (this.entries()?.length ?? 0) : (counts.get(option.value) ?? 0),
+    }));
   });
 
   protected dayLabel(day: string): string {

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domain Recent activity page in the new style
+            2026-11-08-domain-activity-rework.txt
+
 2026-11-08  Domain overview page in the new style
             2026-11-08-domain-overview-rework.txt
 

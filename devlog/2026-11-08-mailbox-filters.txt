@@ -1,0 +1,18 @@
+Mailboxes: mail filters as sentences
+2026-11-08
+
+Customers could forward and delegate, but not sort mail. New table
+mailbox_filters (migration 0041) and endpoints GET/POST
+/api/mailboxes/{id}/filters, PUT/DELETE /api/mailboxes/{id}/filters/{filterId}
+and PUT /api/mailboxes/{id}/filters/order. A filter is field (from, to+cc,
+subject), match (contains, is, starts with), value, action (move to folder,
+forward a copy, mark read, flag, delete) and "stop there".
+sieve.GenerateFilterScript compiles them to if-blocks; move uses
+fileinto :create, so "mailbox" joined the allowed extensions in
+sieve/validate.go. The filters part goes into redeployMailboxScript after
+the domain-wide spam rules and before forwarding and delegation. Each
+request is compiled and validated alone first, so a bad filter is refused
+with a plain message ("a folder is required") before it's stored; a create
+that fails to deploy is removed again, like forwards. A "*" typed in a
+"starts with" value is matched literally. New page Filters in the mailbox
+menu: each filter reads as a sentence, with up, down, edit and delete.

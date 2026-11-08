@@ -9,6 +9,7 @@ import { MailboxPassword } from './security/mailbox-password';
 import { MailboxInternalAccess } from './security/mailbox-internal-access';
 import { MailboxIdentities } from './delivery/mailbox-identities';
 import { MailboxForwarding } from './delivery/mailbox-forwarding';
+import { MailboxFilters } from './delivery/mailbox-filters';
 import { MailboxDelegation } from './delivery/mailbox-delegation';
 import { MailboxLimits } from './settings/mailbox-limits';
 import { MailboxExpiration } from './settings/mailbox-expiration';
@@ -31,6 +32,7 @@ export const ROUTES: Routes = [
       { path: 'password', component: MailboxPassword, title: 'Mailbox password · Amelu' },
       { path: 'internal-access', component: MailboxInternalAccess, title: 'Internal access · Amelu' },
       { path: 'identities', component: MailboxIdentities, title: 'Identities · Amelu' },
+      { path: 'filters', component: MailboxFilters, title: 'Filters · Amelu' },
       { path: 'forwarding', component: MailboxForwarding, title: 'Forwarding · Amelu' },
       { path: 'delegation', component: MailboxDelegation, title: 'Delegations · Amelu' },
       { path: 'expiration', component: MailboxExpiration, title: 'Mailbox expiration · Amelu' },

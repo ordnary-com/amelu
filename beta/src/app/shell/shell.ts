@@ -285,6 +285,7 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
         { label: 'Password', link: `${m}/password`, divider: true },
         { label: 'Internal Access', link: `${m}/internal-access` },
         { label: 'Identities', link: `${m}/identities`, divider: true },
+        { label: 'Filters', link: `${m}/filters` },
         { label: 'Forwarding', link: `${m}/forwarding` },
         { label: 'Delegation', link: `${m}/delegation` },
         { label: 'Expiration', link: `${m}/expiration` },

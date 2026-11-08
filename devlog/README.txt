@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  My Organization in the new style
+            2026-11-08-organization-page-rework.txt
+
 2026-11-08  Picking a theme no longer scrolls the whole page
             2026-11-08-sr-only-scroll.txt
 

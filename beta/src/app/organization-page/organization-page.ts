@@ -9,13 +9,15 @@ import { ROLE, badgeClass } from '../status';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
 import { Avatar } from '../avatar';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 const ASSIGNABLE_ROLES: OrganizationRole[] = ['owner', 'admin', 'helpdesk', 'billing', 'read_only'];
 
-/** The current dashboard's /organization: details, team members and invitations. */
+/** The current dashboard's /organization: a banner with its details, team members and invitations. */
 @Component({
   selector: 'amelu-organization-page',
-  imports: [EmptyState, DatePipe, RouterLink, Alert, Avatar],
+  imports: [EmptyState, DatePipe, RouterLink, Alert, Avatar, Icon, DitherShader],
   templateUrl: './organization-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

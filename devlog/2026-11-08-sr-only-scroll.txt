@@ -1,0 +1,12 @@
+Picking a theme no longer scrolls the whole page
+2026-11-08
+
+On /account/appearance, clicking the System option or an accent colour
+scrolled the whole document past the app, leaving a grey block of bare page
+background at the bottom. The options are labels around sr-only radio
+inputs. sr-only is position: absolute, and those labels weren't
+positioned, so each input was placed relative to some far-off ancestor.
+Focusing it on click made the browser scroll the document to it. The
+labels are relative now. The same setup was on the file pickers on
+organization webmail (logo upload) and the alias CSV import, so those
+labels got relative too.

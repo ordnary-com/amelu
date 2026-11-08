@@ -1,0 +1,12 @@
+Sidebar: the main menu column keeps its width
+2026-11-08
+
+The main menu column in the beta shell was w-[210px], with the 16px gutter
+(pr-4) on the nav after the last column. Without a second column that gutter
+made the main column look 226px wide. With a domain or mailbox menu open it
+shrank to 210px, so the first layer jumped narrower on every domain page.
+The gutter now lives on the main column itself (w-[226px] pr-4), and the nav
+only adds lg:pr-4 when a second column is shown. The main column sits at the
+same width on every page. The Black Friday card is back to a plain ml-4 on
+its li, which is symmetric in both layouts now. Its close button gets -mr-1.5,
+so the × glyph lines up with the text's left edge instead of sitting ~5px in.

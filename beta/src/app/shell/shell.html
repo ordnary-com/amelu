@@ -30,11 +30,14 @@
        one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
   <nav
     id="main-nav"
-    class="flex min-h-0 flex-none pr-4 text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-[68px] max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
+    class="flex min-h-0 flex-none text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-[68px] max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
     [class.max-lg:hidden]="!navOpen()"
+    [class.lg:pr-4]="shown()"
     aria-label="Main"
   >
-    <ul [class]="column + ' flex w-[210px] flex-col max-lg:w-full'">
+    <!-- The main column carries its own right gutter, so it keeps the same width whether
+         or not a second column opens next to it. -->
+    <ul [class]="column + ' flex w-[226px] flex-col pr-4 max-lg:w-full max-lg:pr-0'">
       <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Overview</span></a>
       </li>
@@ -74,7 +77,7 @@
       </li>
       @if (showPromo()) {
         <!-- The campaign deal, at the bottom of the main menu on the free plan. -->
-        <li class="mt-auto pt-6" [class]="shown() ? 'mx-3' : 'ml-4'"><amelu-promo-banner variant="sidebar" /></li>
+        <li class="mt-auto ml-4 pt-6 max-lg:mr-4"><amelu-promo-banner variant="sidebar" /></li>
       }
     </ul>
 

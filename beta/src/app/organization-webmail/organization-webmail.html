@@ -92,7 +92,7 @@
                     <span class="text-[12px] text-muted">No logo</span>
                   }
                 </div>
-                <label [class]="ui.outline" [class.pointer-events-none]="!editable() || busy() === 'logo'" [class.opacity-50]="!editable() || busy() === 'logo'">
+                <label [class]="ui.outline + ' relative'" [class.pointer-events-none]="!editable() || busy() === 'logo'" [class.opacity-50]="!editable() || busy() === 'logo'">
                   {{ busy() === 'logo' ? 'Uploading...' : b.hasLogo ? 'Replace' : 'Upload' }}
                   <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" [disabled]="!editable()" (change)="uploadLogo($event)" />
                 </label>

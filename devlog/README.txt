@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Sidebar deal card no longer touches the second menu column
+            2026-11-08-promo-sidebar-margin.txt
+
 2026-11-08  Overview: a clearer Your plan card
             2026-11-08-plan-card.txt
 

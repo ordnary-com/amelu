@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domain card: full-width separator above the DNS row
+            2026-11-08-domain-card-separator.txt
+
 2026-11-08  Domains page: Needs attention says what's wrong
             2026-11-08-needs-attention-list.txt
 

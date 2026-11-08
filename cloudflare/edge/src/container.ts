@@ -40,6 +40,10 @@ export class AmeluOriginContainer extends Container<Env> {
     WEBMAIL_SSO_SECRET: workerEnv.WEBMAIL_SSO_SECRET ?? "",
     CLOUDFLARE_SAAS_API_TOKEN: workerEnv.CLOUDFLARE_SAAS_API_TOKEN ?? "",
     CLOUDFLARE_SAAS_ZONE_ID: workerEnv.CLOUDFLARE_SAAS_ZONE_ID ?? "",
+    AMELU_DNS_API_TOKEN: workerEnv.AMELU_DNS_API_TOKEN ?? "",
+    AMELU_DNS_ACCOUNT_ID: workerEnv.AMELU_DNS_ACCOUNT_ID ?? "",
+    AMELU_NS_SET: workerEnv.AMELU_NS_SET ?? "",
+    AMELU_NAMESERVERS: workerEnv.AMELU_NAMESERVERS ?? "",
   };
 }
 

@@ -105,6 +105,33 @@ export class DomainsPage {
     return (this.domains() ?? []).filter((domain) => needsAttention(domain, health?.[domain.id]));
   });
 
+  /** Each domain that needs attention with what's actually wrong and where to fix it. */
+  protected readonly attentionItems = computed(() => {
+    const health = this.health();
+    return this.attention().map((domain) => {
+      const base = `/domains/${domain.id}`;
+      switch (domain.status) {
+        case 'suspended':
+          return { domain, dot: 'bg-bad', reason: 'Suspended', link: base };
+        case 'failed':
+          return { domain, dot: 'bg-bad', reason: 'Setup failed', link: base };
+        case 'provisioning':
+          return { domain, dot: 'bg-muted', reason: 'Still being set up', link: base };
+        case 'dns_pending':
+          return { domain, dot: 'bg-warn', reason: 'Add the DNS records', link: `${base}/dns` };
+        default: {
+          const check = health?.[domain.id];
+          const failing = check ? (['mx', 'spf', 'dkim', 'dmarc'] as const).filter((key) => check[key] === false) : [];
+          const names = failing.map((key) => key.toUpperCase());
+          const reason = names.length
+            ? `${names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names.at(-1) : names[0]} ${names.length > 1 ? "don't" : "doesn't"} check out`
+            : 'Check the DNS records';
+          return { domain, dot: 'bg-warn', reason, link: `${base}/dns` };
+        }
+      }
+    });
+  });
+
   protected readonly summary = computed(() => {
     const list = this.domains();
     if (!list || this.health() === undefined) return null;

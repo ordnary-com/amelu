@@ -6,11 +6,11 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { Api, Mailbox } from '../api';
 import { Domains } from '../domains';
-import { DomainHealthChecks } from '../domain-health';
-import { ActionIcon } from '../action-icon';
+import { DomainHealthChecks, healthScore } from '../domain-health';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
-import { DOMAIN_STATUS, MAILBOX_STATUS, badgeClass } from '../status';
+import { DOMAIN_STATUS, MAILBOX_STATUS, TONES, badgeClass } from '../status';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { isFree } from '../billing';
 import { EmptyState } from '../empty-state/empty-state';
@@ -38,7 +38,7 @@ type Loaded<T> = T | null | undefined;
  */
 @Component({
   selector: 'amelu-domain-detail',
-  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, ActionIcon, Alert, Icon, DeliveryChart],
+  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, Alert, Icon, DeliveryChart, DitherShader],
   templateUrl: './domain-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -75,6 +75,16 @@ export class DomainDetail {
       { label: 'DKIM', what: 'Signs outgoing mail', ok: health.dkim },
       { label: 'DMARC', what: 'Tells receivers what to do with fakes', ok: health.dmarc },
     ];
+  });
+  protected readonly score = computed(() => healthScore(this.healthById()?.[this.id()]));
+  // The ring is a dash of a circle with r=7.5 (circumference ~47.1).
+  protected readonly dash = computed(() => `${((this.score() ?? 0) / 100) * 47.12} 47.12`);
+  /** The status's colour, but amber when an active domain has a DNS record that doesn't check out. */
+  protected readonly tone = computed(() => {
+    const domain = this.domain();
+    if (!domain) return '';
+    const score = this.score();
+    return TONES[domain.status === 'active' && score !== null && score < 100 ? 'warn' : DOMAIN_STATUS[domain.status].tone];
   });
   protected readonly dnsBroken = computed(() => this.dns()?.some((row) => row.ok === false) ?? false);
 
@@ -217,7 +227,7 @@ function mailboxRow(mailbox: Mailbox, base: string): AddressRow {
     name: mailbox.displayName,
     detail: 'Mailbox',
     // Active is the normal case; only call out the exceptions.
-    badge: mailbox.status === 'active' ? null : { label: status.label, class: badgeClass(status.tone) },
+    badge: mailbox.status === 'active' ? null : { label: status.label, class: `flex-none rounded-full px-2 py-0.5 text-[11px] font-medium ${TONES[status.tone]}` },
     link: `${base}/mailboxes/${mailbox.id}`,
   };
 }

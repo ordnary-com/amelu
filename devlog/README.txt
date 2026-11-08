@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Mailbox overview, activity, logs and usage in the new style
+            2026-11-08-mailbox-overview-rework.txt
+
 2026-11-08  Billing in the new style
             2026-11-08-billing-rework.txt
 

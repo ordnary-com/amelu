@@ -1,0 +1,10 @@
+Domain card: full-width separator above the DNS row
+2026-11-08
+
+The line between a domain card's header and its MX, SPF, DKIM and DMARC row
+stopped 16px short of both card edges, because it was the row's border-t
+inside the card's p-4. The row now has -mx-4 px-4, so the line runs from edge
+to edge and the checks stay where they were. Its right padding went from pr-9
+(inside the padding) to pr-11 (from the card edge), so the checks still clear
+the drag handle at the bottom right. Applies on the Domains page and on
+Overview, which share amelu-domain-card.

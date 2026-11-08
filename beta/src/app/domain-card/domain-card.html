@@ -37,7 +37,8 @@
         }
       </span>
     </span>
-    <span class="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-3 pr-9">
+    <!-- The separator runs edge to edge: the row cancels the card's padding and puts it back inside. -->
+    <span class="-mx-4 mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line px-4 pt-3 pr-11">
       @if (checks(); as rows) {
         @for (row of rows; track row.label) {
           <span class="inline-flex items-center gap-1.5 text-[12px]" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">

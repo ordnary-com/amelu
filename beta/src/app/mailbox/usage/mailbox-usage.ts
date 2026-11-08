@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { UI } from '../../ui';
 import { MailboxContext } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
+import { Icon } from '../../icon';
+import { DitherShader } from '../../login/dither-shader';
 import { AUTOCONFIG_ORIGIN, AUTODISCOVER_HOST } from '../../config';
 import { PhoneQr } from '../../phone-qr';
 import { markSetupStep } from '../../setup-progress';
@@ -113,33 +115,33 @@ interface Setting {
 /** The current dashboard's MailboxUsageInstructionsPage: what to type into a mail app. */
 @Component({
   selector: 'amelu-mailbox-usage',
-  imports: [RouterLink, MailboxHeading, PhoneQr],
+  imports: [RouterLink, MailboxHeading, PhoneQr, Icon, DitherShader],
   template: `
     <amelu-mailbox-heading title="Usage instructions">
       To correctly configure your email client, you will need the correct server parameters. Please find them below.
     </amelu-mailbox-heading>
 
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="space-y-6">
+      <div class="min-w-0 space-y-6">
         <section>
-          <div class="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <h2 class="text-[14px] font-bold">Set up your apps</h2>
             @if (platformLabel(); as label) {
-              <span class="text-[12px] text-muted">Showing apps for {{ label }}</span>
+              <span class="rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">Showing apps for {{ label }}</span>
             }
           </div>
-          <div [class]="ui.card + ' overflow-hidden'">
+          <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
             @for (app of shownApps(); track app.id) {
-              <div class="border-b border-line px-4 py-3.5 last:border-b-0">
+              <div class="px-4 py-3.5">
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2.5">
                   <div class="min-w-0 flex-1">
                     <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold">
                       {{ app.name }}
                       @for (part of app.covers; track part) {
-                        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ part }}</span>
+                        <span class="rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">{{ part }}</span>
                       }
                     </p>
-                    <p class="mt-0.5 text-[13px] text-muted">{{ app.how }}</p>
+                    <p class="mt-1 text-[13px] leading-relaxed text-muted">{{ app.how }}</p>
                   </div>
                   @if (app.id === 'apple' && profileUrl(); as url) {
                     <a [href]="url" [class]="ui.outline" download>
@@ -148,8 +150,8 @@ interface Setting {
                   }
                 </div>
                 @if (app.id === 'outlook' && autodiscover(); as record) {
-                  <div class="mt-2.5 flex items-center gap-2 rounded-md bg-bg px-3 py-2">
-                    <code class="min-w-0 flex-1 truncate text-[12px]">{{ record }}</code>
+                  <div class="mt-2.5 flex items-center gap-2 rounded-md border border-line bg-bg/60 py-1 pr-1 pl-3">
+                    <code class="min-w-0 flex-1 truncate font-mono text-[12px]" [title]="record">{{ record }}</code>
                     <button
                       type="button"
                       class="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted hover:bg-surface hover:text-ink"
@@ -178,11 +180,11 @@ interface Setting {
         @for (section of sections(); track section.title) {
           <section>
             <h2 [class]="ui.sectionTitle">{{ section.title }}</h2>
-            <dl [class]="ui.card + ' overflow-hidden'">
+            <dl [class]="ui.card + ' divide-y divide-line overflow-hidden'">
               @for (row of section.rows; track row.label) {
-                <div class="flex items-center gap-4 border-b border-line px-4 py-2.5 last:border-b-0">
+                <div class="flex min-h-11 items-center gap-4 px-4 py-2">
                   <dt class="w-28 flex-none text-[13px] text-muted">{{ row.label }}</dt>
-                  <dd class="min-w-0 flex-1 truncate text-[13px]" [class.text-muted]="row.muted" [class.font-mono]="row.copy">
+                  <dd class="min-w-0 flex-1 truncate" [class]="row.copy ? 'font-mono text-[12px]' : 'text-[13px]'" [class.text-muted]="row.muted" [title]="row.copy ? row.value : ''">
                     @if (row.value) {
                       {{ row.value }}
                     } @else {
@@ -226,13 +228,17 @@ interface Setting {
             </p>
           </section>
         }
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Signing in</h2>
+        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+          </div>
+          <amelu-icon name="key" [size]="20" class="block text-ink" />
+          <h2 class="mt-3 text-[14px] font-bold">Signing in</h2>
           <p class="mt-1 text-[13px] leading-relaxed text-muted">
             The username is always the full address. The password is the mailbox password, not your Amelu account
             password.
           </p>
-          <a [routerLink]="ctx.base() + '/password'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
+          <a [routerLink]="ctx.base() + '/password'" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">
             Set or reset the password
           </a>
         </section>

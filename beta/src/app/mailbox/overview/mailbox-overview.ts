@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EmptyState } from '../../empty-state/empty-state';
 import { MAILBOX_STATUS, badgeClass } from '../../status';
 import { UI } from '../../ui';
 import { MailboxApi } from '../mailbox-api';
 import { Loaded, MailboxContext, perMailbox } from '../mailbox-context';
-import { MailboxHeading } from '../shared/heading';
+import { Icon } from '../../icon';
+import { DitherShader } from '../../login/dither-shader';
 import { SaveFeedback, Saving } from '../shared/saving';
 import { MAIL_SERVER } from '../usage/mailbox-usage';
 
@@ -15,6 +15,14 @@ interface Value {
   muted?: boolean;
   /** Shown as a status badge with this class. */
   badge?: string;
+}
+
+interface Stat {
+  label: string;
+  link: string;
+  value: Loaded<string | number>;
+  of?: number;
+  muted?: boolean;
 }
 
 interface Row {
@@ -26,7 +34,7 @@ interface Row {
 /** The current dashboard's MailboxOverviewPage: every setting at a glance, the name, and suspend/activate. */
 @Component({
   selector: 'amelu-mailbox-overview',
-  imports: [DatePipe, RouterLink, EmptyState, MailboxHeading, SaveFeedback],
+  imports: [RouterLink, EmptyState, SaveFeedback, Icon, DitherShader],
   templateUrl: './mailbox-overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -85,6 +93,31 @@ export class MailboxOverview {
               }
             : { text: 'Never', muted: true }),
         link: 'expiration',
+      },
+    ];
+  });
+
+  // The same settings as the rows below, the ones most worth seeing at a glance.
+  protected readonly stats = computed<Stat[]>(() => {
+    const services = this.services();
+    const forwards = this.forwards();
+    const internal = this.internal();
+    const expiration = this.expiration();
+    const enabled = services && Object.values(services).filter(Boolean).length;
+    return [
+      { label: 'Services on', link: 'services', value: enabled, of: services ? Object.keys(services).length : undefined },
+      { label: 'Forwards', link: 'forwarding', value: forwards && forwards.length, muted: forwards?.length === 0 },
+      {
+        label: 'Internal access only',
+        link: 'internal-access',
+        value: internal && (internal.internalAccessOnly ? 'Yes' : 'No'),
+        muted: internal ? !internal.internalAccessOnly : false,
+      },
+      {
+        label: 'Expires',
+        link: 'expiration',
+        value: expiration && (expiration.expiresAt ? formatDay(expiration.expiresAt) : 'Never'),
+        muted: expiration ? !expiration.expiresAt : false,
       },
     ];
   });

@@ -6,27 +6,34 @@ import { UI } from '../../ui';
 import { MailboxApi } from '../mailbox-api';
 import { MailboxContext, perMailbox } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
+import { Icon } from '../../icon';
+import { DitherShader } from '../../login/dither-shader';
 
 /** The current dashboard's MailboxRecentLogsPage: the latest sent and received messages. */
 @Component({
   selector: 'amelu-mailbox-logs',
-  imports: [DatePipe, RouterLink, EmptyState, MailboxHeading],
+  imports: [DatePipe, RouterLink, EmptyState, MailboxHeading, Icon, DitherShader],
   template: `
     <amelu-mailbox-heading title="Recent traffic logs">The 20 most recent messages this mailbox sent and received.</amelu-mailbox-heading>
 
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="space-y-6">
+      <div class="min-w-0 space-y-6">
         @if (logs() === null) {
           <amelu-empty-state [class]="ui.card" title="The traffic logs couldn't be loaded" [error]="true" />
         } @else {
           @for (section of sections(); track section.title) {
             <section>
-              <h2 [class]="ui.sectionTitle">{{ section.title }}</h2>
+              <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
+                {{ section.title }}
+                @if (section.emails) {
+                  <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ section.emails.length }}</span>
+                }
+              </h2>
               <div [class]="ui.card + ' overflow-x-auto'">
                 @if (section.emails; as emails) {
                   @if (emails.length) {
                     <table class="w-full min-w-[560px] text-left text-[13px]">
-                      <thead class="text-[12px] text-muted">
+                      <thead class="bg-bg/60 text-[12px] text-muted">
                         <tr class="border-b border-line">
                           <th class="px-4 py-2 font-medium">Date</th>
                           <th class="px-4 py-2 font-medium">From</th>
@@ -34,13 +41,13 @@ import { MailboxHeading } from '../shared/heading';
                           <th class="px-4 py-2 font-medium">Subject</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody class="divide-y divide-line">
                         @for (email of emails; track email.id) {
-                          <tr class="border-b border-line align-top last:border-b-0 hover:bg-bg/60">
-                            <td class="px-4 py-2.5 whitespace-nowrap text-muted tabular-nums">{{ email.receivedAt | date: 'd MMM y, HH:mm' }}</td>
-                            <td class="px-4 py-2.5 break-all">{{ email.from?.join(', ') }}</td>
-                            <td class="px-4 py-2.5 break-all">{{ email.to?.join(', ') }}</td>
-                            <td class="px-4 py-2.5">
+                          <tr class="align-top hover:bg-bg/60">
+                            <td class="px-4 py-2.5 whitespace-nowrap text-muted tabular-nums" [title]="email.receivedAt | date: 'd MMM y, HH:mm:ss'">{{ email.receivedAt | date: 'd MMM y, HH:mm' }}</td>
+                            <td class="px-4 py-2.5 font-mono text-[12px] break-all">{{ email.from?.join(', ') }}</td>
+                            <td class="px-4 py-2.5 font-mono text-[12px] break-all">{{ email.to?.join(', ') }}</td>
+                            <td class="px-4 py-2.5 break-words">
                               @if (email.subject) {
                                 {{ email.subject }}
                               } @else {
@@ -55,13 +62,15 @@ import { MailboxHeading } from '../shared/heading';
                     <amelu-empty-state title="No recent messages" [compact]="true">{{ section.empty }}</amelu-empty-state>
                   }
                 } @else {
+                  <div class="divide-y divide-line" aria-hidden="true">
                   @for (i of [1, 2, 3]; track i) {
-                    <div class="flex gap-4 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+                    <div class="flex gap-4 px-4 py-3">
                       <span class="h-3 w-24 animate-pulse rounded bg-bg"></span>
                       <span class="h-3 w-40 animate-pulse rounded bg-bg"></span>
                       <span class="h-3 flex-1 animate-pulse rounded bg-bg"></span>
                     </div>
                   }
+                  </div>
                 }
               </div>
             </section>
@@ -77,14 +86,18 @@ import { MailboxHeading } from '../shared/heading';
             deleted or moved isn't listed.
           </p>
         </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Missing mail?</h2>
+        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+          </div>
+          <amelu-icon name="search" [size]="20" class="block text-ink" />
+          <h2 class="mt-3 text-[14px] font-bold">Missing mail?</h2>
           <p class="mt-1 text-[13px] leading-relaxed text-muted">
             Spam lands in the Junk folder instead. Also check whether forwarding or delegation sends it elsewhere.
           </p>
-          <div class="mt-2.5 flex gap-4 text-[13px] font-medium">
-            <a [routerLink]="ctx.base() + '/forwarding'" class="text-link hover:underline">Forwarding</a>
-            <a [routerLink]="ctx.base() + '/delegation'" class="text-link hover:underline">Delegation</a>
+          <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <a [routerLink]="ctx.base() + '/forwarding'" class="inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">Forwarding</a>
+            <a [routerLink]="ctx.base() + '/delegation'" class="text-[13px] font-medium text-link hover:underline">Delegation</a>
           </div>
         </section>
       </aside>

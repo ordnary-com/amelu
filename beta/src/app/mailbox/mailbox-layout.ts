@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { injectDomain } from '../domain-context';
-import { PageHeader } from '../page-header/page-header';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { Alert } from '../alert/alert';
 import { LoadErrors } from '../load-errors';
 import { MailboxApi, RepairResult } from './mailbox-api';
@@ -17,7 +18,7 @@ import { MailboxContext } from './mailbox-context';
 /** Header and the shared mailbox for every /domains/:domainId/mailboxes/:mailboxId page. */
 @Component({
   selector: 'amelu-mailbox-layout',
-  imports: [RouterLink, RouterOutlet, PageHeader, DatePipe, Alert],
+  imports: [RouterLink, RouterOutlet, DatePipe, Alert, Icon, DitherShader],
   providers: [MailboxContext],
   template: `
     @if (mailbox() === null) {
@@ -27,26 +28,49 @@ import { MailboxContext } from './mailbox-context';
         <a [routerLink]="mailboxesLink()" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Mailboxes</a>
       </div>
     } @else {
-      <amelu-page-header [title]="mailbox()?.address ?? '\u00a0'" [crumbs]="crumbs()">
+      <!-- The mailbox as a banner, like the domain overview: the same dither, its address large, and
+           its status and details below. -->
+      <section class="relative mb-6 overflow-hidden rounded-lg bg-hero px-7 pt-5 pb-6 text-hero-ink max-mobile:px-5">
+        <div class="pointer-events-none absolute inset-0 opacity-45 [mask-image:linear-gradient(to_left,black_0%,rgba(0,0,0,0.7)_25%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.06)_85%,transparent_100%)] max-mobile:opacity-25" aria-hidden="true">
+          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
+        </div>
+
+        <div class="relative flex flex-wrap items-center justify-between gap-3">
+          <nav class="flex min-w-0 items-center gap-1 text-[13px] font-medium text-hero-ink/70" aria-label="Breadcrumb">
+            @for (crumb of crumbs(); track $index; let last = $last) {
+              @if (crumb.link) {
+                <a [routerLink]="crumb.link" class="truncate hover:text-ink hover:underline">{{ crumb.label }}</a>
+              } @else {
+                <span class="truncate">{{ crumb.label }}</span>
+              }
+              @if (!last) {
+                <amelu-icon name="chevronRight" [size]="12" class="flex-none" />
+              }
+            }
+          </nav>
+          @if (mailbox()) {
+            <!-- A real link: the API answers with a redirect into webmail, signed in as this mailbox. -->
+            <a [href]="webmailUrl()" target="_blank" rel="noreferrer" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">
+              Open in webmail
+            </a>
+          }
+        </div>
+
         @if (mailbox(); as m) {
-          <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h1 class="relative mt-7 truncate text-[34px] leading-[1.1] font-normal tracking-[-0.02em] text-ink max-mobile:mt-5 max-mobile:text-[26px]" [title]="m.address">{{ m.address }}</h1>
+          <div class="relative mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-hero-ink/75">
             <span [class]="status()!.class">{{ status()!.label }}</span>
             @if (m.displayName) {
               <span class="text-ink">{{ m.displayName }}</span>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
             }
             <span>Created {{ m.createdAt | date: 'd MMM y' }}</span>
-          </span>
+          </div>
         } @else {
-          <span class="block h-3 w-48 animate-pulse rounded bg-bg"></span>
+          <span class="relative mt-7 block h-9 w-72 max-w-full animate-pulse rounded bg-hero-ink/10"></span>
+          <span class="relative mt-3 block h-5 w-48 animate-pulse rounded bg-hero-ink/10"></span>
         }
-        @if (mailbox(); as m) {
-          <!-- A real link: the API answers with a redirect into webmail, signed in as this mailbox. -->
-          <a actions [href]="webmailUrl()" target="_blank" rel="noreferrer" [class]="ui.outline">
-            Open in webmail
-          </a>
-        }
-      </amelu-page-header>
+      </section>
 
       @if (repaired(); as r) {
         <amelu-alert class="mb-5" kind="success" title="Mailbox repaired">
@@ -114,7 +138,7 @@ export class MailboxLayout {
 
   protected readonly mailboxesLink = computed(() => `/domains/${this.domainCtx.id()}/mailboxes`);
 
-  protected readonly crumbs = computed(() => [
+  protected readonly crumbs = computed((): { label: string; link?: string }[] => [
     { label: 'Domains', link: '/domains' },
     { label: this.domainCtx.domain()?.name ?? '', link: '/domains/' + this.domainCtx.id() },
     { label: 'Mailboxes', link: this.mailboxesLink() },

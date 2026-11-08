@@ -138,7 +138,10 @@
           }
 
           @if (upgrade(); as up) {
-            <div class="mt-4 rounded-lg bg-accent/8 p-3.5">
+            <div class="relative mt-4 overflow-hidden rounded-lg bg-accent/8 p-3.5 *:relative">
+              <div class="pointer-events-none !absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom_left,black,rgba(0,0,0,0.4)_40%,transparent_75%)]" aria-hidden="true">
+                <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+              </div>
               <p class="text-[13px] font-medium">Go, from {{ up.perMonth }}/mo <span class="font-normal text-muted">billed yearly</span></p>
               <ul class="mt-2 space-y-1.5">
                 @for (line of up.lines; track line) {

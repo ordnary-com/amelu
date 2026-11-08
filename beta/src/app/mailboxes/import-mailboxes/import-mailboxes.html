@@ -27,22 +27,25 @@
     }
 
     <section>
-      <h2 [class]="ui.sectionTitle">Results</h2>
+      <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
+        Results
+        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ rows.length }}</span>
+      </h2>
       <div [class]="ui.card + ' overflow-hidden'">
         <div class="hidden border-b border-line bg-bg/60 px-4 py-2 text-[12px] font-medium text-muted sm:flex">
           <span class="w-64 flex-none">Address</span>
           <span>Result</span>
         </div>
-        <ul>
+        <ul class="divide-y divide-line">
           @for (row of rows; track $index) {
-            <li class="flex flex-col gap-x-3 gap-y-1.5 border-b border-line px-4 py-3 last:border-b-0 sm:flex-row sm:items-center">
+            <li class="flex flex-col gap-x-3 gap-y-1.5 px-4 py-3 sm:flex-row sm:items-center">
               <span class="truncate text-[14px] font-medium sm:w-64 sm:flex-none">{{ row.address }}</span>
               <div class="min-w-0 flex-1 text-[13px]">
                 @if (row.error) {
                   <span class="text-bad">{{ row.error }}</span>
                 } @else {
                   <div class="flex flex-wrap items-center gap-2">
-                    <span class="rounded bg-ok/15 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-ok uppercase">Created</span>
+                    <span [class]="createdBadge">Created</span>
                     @if (row.password) {
                       <code class="min-w-0 truncate rounded-md bg-bg px-2.5 py-1 font-mono text-[12px]">{{ row.password }}</code>
                       <button type="button" [class]="ui.outline + ' h-7'" (click)="copy(row)">
@@ -119,7 +122,7 @@
           </p>
           <code class="block rounded-md bg-bg px-2.5 py-1.5 font-mono text-[12px] break-words">{{ format }}</code>
           <p class="text-muted">The descriptive header in the first row should not be present. You should have exactly 6 commas on each line.</p>
-          <dl class="space-y-2.5 border-t border-line pt-3">
+          <dl class="-mx-4 space-y-2.5 border-t border-line px-4 pt-3">
             @for (field of fields; track field.name) {
               <div>
                 <dt class="font-mono text-[12px] font-semibold">{{ field.name }}</dt>

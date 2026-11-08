@@ -8,6 +8,8 @@ import { PageHeader } from '../../page-header/page-header';
 import { Alert } from '../../alert/alert';
 import { EmptyState } from '../../empty-state/empty-state';
 import { UI } from '../../ui';
+import { Icon } from '../../icon';
+import { DitherShader } from '../../login/dither-shader';
 import { EnabledServices, MailboxesApi } from '../mailboxes-api';
 
 type ServiceKey = keyof EnabledServices;
@@ -15,7 +17,7 @@ type ServiceKey = keyof EnabledServices;
 /** The current dashboard's Default Mailbox Services: the services a new mailbox on this domain starts with. */
 @Component({
   selector: 'amelu-default-services',
-  imports: [RouterLink, PageHeader, Alert, EmptyState],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, DitherShader],
   templateUrl: './default-services.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -66,6 +68,9 @@ export class DefaultServices {
     const draft = this.draft();
     return draft ? Object.values(draft).filter(Boolean).length : 0;
   });
+  // Counted from the settings themselves, so ManageSieve is included and the total can't go stale.
+  protected readonly serviceTotal = computed(() => Object.keys(this.draft() ?? {}).length);
+  protected readonly enabledPercent = computed(() => (this.serviceTotal() ? (this.enabledCount() / this.serviceTotal()) * 100 : 0));
 
   protected toggle(key: ServiceKey): void {
     this.success.set(false);

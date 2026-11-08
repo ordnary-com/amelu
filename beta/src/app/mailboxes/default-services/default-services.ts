@@ -66,6 +66,9 @@ export class DefaultServices {
     const draft = this.draft();
     return draft ? Object.values(draft).filter(Boolean).length : 0;
   });
+  // Counted from the settings themselves, so ManageSieve is included and the total can't go stale.
+  protected readonly serviceTotal = computed(() => Object.keys(this.draft() ?? {}).length);
+  protected readonly enabledPercent = computed(() => (this.serviceTotal() ? (this.enabledCount() / this.serviceTotal()) * 100 : 0));
 
   protected toggle(key: ServiceKey): void {
     this.success.set(false);

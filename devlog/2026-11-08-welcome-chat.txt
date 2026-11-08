@@ -1,0 +1,16 @@
+Welcome flow as a chat with the setup assistant
+2026-11-08
+
+/welcome in the beta was three form steps. It is now a conversation with
+"Amelu Assistant": one question at a time, each shown after a short typing
+indicator (650ms, none with prefers-reduced-motion). The order is
+organization name, use case, team size, source, the optional follow-up on
+the source and the first domain. Your answers appear as accent bubbles on
+the right and can be changed (Edit) until they're saved. The lines refer
+back to earlier answers ("Acme, nice. What will you use Amelu for?").
+Choices are quick-reply cards in an even grid in the composer, picked with
+a click or keys 1 to 9. Text questions use a pill text box with Send. Every
+question can be skipped. The answers still go to POST /api/onboarding
+before the domain question, and Add domain still opens /domains/new?name=.
+The header shows the assistant, a progress bar with one segment per
+question and Skip for now.

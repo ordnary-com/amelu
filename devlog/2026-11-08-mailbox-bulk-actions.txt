@@ -1,0 +1,14 @@
+Mailboxes: select several and act on them at once
+2026-11-08
+
+The mailbox list (/domains/:id/mailboxes) only had a Delete button per row.
+Each row now has a checkbox, with "Select all" (or "Select all shown" while
+filtering). With anything selected a bar shows Suspend, Activate, New
+passwords, Storage limit and Delete. They run one request per mailbox in a
+row (POST suspend/activate, POST /api/mailboxes/{id}/password, PUT limits,
+DELETE) with a "x of y" counter, carry on past failures and list the ones
+that failed. New passwords are 20 characters from crypto.getRandomValues
+without look-alike characters, shown once with "Copy as CSV". Storage limit
+keeps each mailbox's message limit and only accepts values above 0, since
+the API treats 0 as "don't change". Delete asks first and lists the
+addresses.

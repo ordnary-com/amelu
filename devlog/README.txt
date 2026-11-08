@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Mailboxes: a storage overview per domain
+            2026-11-08-storage-overview.txt
+
 2026-11-08  Mailboxes: select several and act on them at once
             2026-11-08-mailbox-bulk-actions.txt
 

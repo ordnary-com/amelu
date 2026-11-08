@@ -85,6 +85,7 @@ export class MailboxesPage {
   protected readonly exportUrl = computed(() => apiUrl(`/api/domains/${this.ctx.id()}/mailboxes/export`));
 
   protected readonly settings = [
+    { label: 'Storage', hint: 'Who uses how much, and who is nearly full', link: 'mailboxes/storage' },
     { label: 'Import from CSV', hint: 'Create up to 100 mailboxes at once', link: 'mailboxes/import' },
     { label: 'Default services', hint: 'What new mailboxes may do', link: 'mailboxes/services' },
     { label: 'Default limits', hint: 'Storage caps for new mailboxes', link: 'mailboxes/limits' },

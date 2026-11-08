@@ -25,6 +25,14 @@ export interface ImportMailboxResult {
   error?: string;
 }
 
+/** How much mail a mailbox holds; limitBytes 0 means no limit of its own. */
+export interface MailboxStorage {
+  mailboxId: string;
+  address: string;
+  usedBytes: number;
+  limitBytes: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MailboxesApi {
   private readonly http = inject(HttpClient);
@@ -37,6 +45,10 @@ export class MailboxesApi {
   // An empty password makes the API generate one; either way the response carries the password that was set.
   createMailbox(domainId: string, body: { localPart: string; displayName: string; password: string }) {
     return this.http.post<Mailbox>(`/api/domains/${domainId}/mailboxes`, body);
+  }
+
+  storage(domainId: string) {
+    return this.http.get<MailboxStorage[]>(`/api/domains/${domainId}/mailboxes/storage`);
   }
 
   deleteMailbox(id: string) {

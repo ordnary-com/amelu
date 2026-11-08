@@ -306,6 +306,7 @@ func main() {
 	mux.HandleFunc("POST /api/domains/{domainId}/mailboxes", auth.Require(app.Store, app.CreateMailbox))
 	mux.HandleFunc("GET /api/domains/{domainId}/mailboxes", auth.Require(app.Store, app.ListMailboxes))
 	mux.HandleFunc("GET /api/domains/{id}/mailboxes/export", auth.Require(app.Store, app.ExportMailboxesCSV))
+	mux.HandleFunc("GET /api/domains/{id}/mailboxes/storage", auth.Require(app.Store, app.GetDomainStorage))
 	mux.HandleFunc("POST /api/domains/{id}/mailboxes/import", auth.Require(app.Store, app.ImportMailboxesCSV))
 	mux.HandleFunc("GET /api/domains/{id}/mailboxes/default-services", auth.Require(app.Store, app.GetDomainDefaultServices))
 	mux.HandleFunc("PUT /api/domains/{id}/mailboxes/default-services", auth.Require(app.Store, app.UpdateDomainDefaultServices))

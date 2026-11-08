@@ -12,6 +12,8 @@ import { Api, errorMessage } from '../api';
 import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
+import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { MailboxField, domainResource, localPart } from './shared';
@@ -23,7 +25,7 @@ import { MailboxField, domainResource, localPart } from './shared';
  */
 @Component({
   selector: 'amelu-new-alias',
-  imports: [RouterLink, PageHeader, Alert, MailboxField],
+  imports: [RouterLink, PageHeader, Alert, MailboxField, Icon, DitherShader],
   templateUrl: './new-alias.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

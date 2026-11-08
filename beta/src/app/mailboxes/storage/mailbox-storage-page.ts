@@ -7,6 +7,7 @@ import { PageHeader } from '../../page-header/page-header';
 import { EmptyState } from '../../empty-state/empty-state';
 import { formatBytes } from '../../format-bytes';
 import { UI } from '../../ui';
+import { badgeClass } from '../../status';
 import { MailboxStorage, MailboxesApi } from '../mailboxes-api';
 
 const NEAR_FULL = 0.85;
@@ -23,43 +24,51 @@ const NEAR_FULL = 0.85;
     </amelu-page-header>
 
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <section [class]="ui.card + ' overflow-hidden'">
-        @if (rows() === null) {
-          <amelu-empty-state title="Storage couldn't be loaded" [error]="true">The mail cluster didn't answer. Try again in a minute.</amelu-empty-state>
-        } @else if (rows(); as list) {
-          @for (row of list; track row.mailboxId) {
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-line px-4 py-3 last:border-b-0">
-              <a [routerLink]="base() + '/mailboxes/' + row.mailboxId" class="min-w-0 flex-1 truncate text-[13px] font-medium hover:underline">{{ row.address }}</a>
-              <span class="text-[12px] tabular-nums text-muted">
-                {{ size(row.usedBytes) }}@if (row.limitBytes) { of {{ size(row.limitBytes) }} }
-              </span>
-              @if (row.near) {
-                <span class="rounded bg-warn/15 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-warn uppercase">Nearly full</span>
-              }
-              <a [routerLink]="base() + '/mailboxes/' + row.mailboxId + '/limits'" class="text-[12px] font-medium text-link hover:underline">Limit</a>
-              <div class="h-1.5 w-full overflow-hidden rounded-full bg-bg">
-                <div class="h-full rounded-full" [class]="row.near ? 'bg-warn' : 'bg-accent'" [style.width.%]="row.percent"></div>
+      <section class="min-w-0">
+        <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
+          By mailbox
+          @if (rows(); as list) {
+            <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
+          }
+        </h2>
+        <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
+          @if (rows() === null) {
+            <amelu-empty-state title="Storage couldn't be loaded" [error]="true">The mail cluster didn't answer. Try again in a minute.</amelu-empty-state>
+          } @else if (rows(); as list) {
+            @for (row of list; track row.mailboxId) {
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+                <a [routerLink]="base() + '/mailboxes/' + row.mailboxId" class="min-w-0 flex-1 truncate text-[13px] font-medium hover:text-link">{{ row.address }}</a>
+                <span class="text-[12px] tabular-nums text-muted">
+                  {{ size(row.usedBytes) }}@if (row.limitBytes) { of {{ size(row.limitBytes) }} }
+                </span>
+                @if (row.near) {
+                  <span [class]="nearBadge">Nearly full</span>
+                }
+                <a [routerLink]="base() + '/mailboxes/' + row.mailboxId + '/limits'" class="text-[12px] font-medium text-link hover:underline">Limit</a>
+                <div class="h-1 w-full overflow-hidden rounded-full bg-bg">
+                  <div class="h-full rounded-full" [class]="row.near ? 'bg-warn' : 'bg-accent'" [style.width.%]="row.percent"></div>
+                </div>
               </div>
-            </div>
-          } @empty {
-            <amelu-empty-state title="No mailboxes yet">Mailboxes you add show up here with their storage.</amelu-empty-state>
+            } @empty {
+              <amelu-empty-state title="No mailboxes yet">Mailboxes you add show up here with their storage.</amelu-empty-state>
+            }
+          } @else {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="space-y-2 px-4 py-3.5" aria-hidden="true">
+                <span class="block h-3 w-48 animate-pulse rounded bg-bg"></span>
+                <span class="block h-1 w-full animate-pulse rounded bg-bg"></span>
+              </div>
+            }
           }
-        } @else {
-          @for (i of [1, 2, 3, 4]; track i) {
-            <div class="space-y-2 border-b border-line px-4 py-3.5 last:border-b-0" aria-hidden="true">
-              <span class="block h-3 w-48 animate-pulse rounded bg-bg"></span>
-              <span class="block h-1.5 w-full animate-pulse rounded bg-bg"></span>
-            </div>
-          }
-        }
+        </div>
       </section>
 
       <aside class="space-y-6">
         @if (totals(); as t) {
-          <section [class]="ui.card + ' p-4'">
+          <section [class]="ui.card + ' px-4 pt-3 pb-4'">
             <p class="text-[12px] text-muted">Total on this domain</p>
-            <p class="mt-1 text-[24px] font-bold tabular-nums">{{ size(t.used) }}</p>
-            <p class="mt-1 text-[12px] text-muted">
+            <p class="mt-1 text-[26px] leading-tight font-normal tracking-[-0.01em] tabular-nums">{{ size(t.used) }}</p>
+            <p class="mt-2 text-[12px] text-muted">
               {{ t.count }} mailboxes@if (t.near) {, {{ t.near }} nearly full}
             </p>
           </section>
@@ -80,6 +89,7 @@ export class MailboxStoragePage {
   private readonly api = inject(MailboxesApi);
   protected readonly ctx = injectDomain();
   protected readonly ui = UI;
+  protected readonly nearBadge = badgeClass('warn');
   protected readonly size = formatBytes;
   protected readonly base = computed(() => `/domains/${this.ctx.id()}`);
   protected readonly crumbs = computed(() => [

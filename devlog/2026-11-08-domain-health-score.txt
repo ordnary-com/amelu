@@ -1,0 +1,12 @@
+Domain cards: DNS health score and DMARC
+2026-11-08
+
+The domain cards (Domains page, home) showed MX, SPF and DKIM dots only.
+deriveHealth (beta/src/app/domain-health.ts) now also checks DMARC
+(the _dmarc TXT record) and counts matched records out of all checked
+ones; healthScore turns that into 0-100. Each card has a small ring with
+the score: green at 100, orange from 60, red below, with "x of y records
+verified" on hover. The DNS overview and the domain page show a DMARC row
+next to MX, SPF and DKIM, and needsAttention also flags a wrong DMARC
+record. Unchecked records count neither way, so a domain isn't marked down
+for a record type we can't look up.

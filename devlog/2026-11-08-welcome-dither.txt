@@ -1,0 +1,11 @@
+Welcome flow: dither in the top right corner
+2026-11-08
+
+The onboarding page (/welcome) in the beta gets the warp dither from the
+Overview banner, in the accent colour at 35% opacity. It sits fixed behind
+the page (-z-10, with isolate on the host so it stays behind the content
+but above bg-bg). A radial mask (45% by 60%, anchored at the top right)
+fades it out well before the 560px form column, so the inputs and option
+cards keep a plain background. The first version used a wider mask, which
+showed the pattern through the transparent organization name input. It is
+25% on mobile.

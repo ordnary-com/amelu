@@ -1,3 +1,9 @@
+<!-- The same accent dither as the Overview banner, in the top right corner and fading out
+     before the form, so the questions stay on a calm background. -->
+<div class="pointer-events-none fixed inset-x-0 top-0 -z-10 h-dvh opacity-35 [mask-image:radial-gradient(45%_60%_at_100%_0%,black,rgba(0,0,0,0.45)_45%,transparent_100%)] max-mobile:opacity-25" aria-hidden="true">
+  <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
+</div>
+
 <header class="flex items-center justify-between px-6 py-5 sm:px-10">
   <img src="/amelu-icon.png" alt="Amelu" class="h-8 w-auto" />
   <button type="button" class="cursor-pointer text-[13px] font-medium text-muted hover:text-ink" [disabled]="busy()" (click)="skip()">

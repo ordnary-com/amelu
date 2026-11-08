@@ -16,7 +16,7 @@ import { activePromo } from '../promo';
     @if (promo && !dismissed() && variant() === 'sidebar') {
       <!-- Part of the menu: a dither in the menu's own ink, rising from the bottom and fading
            into the sidebar, with the deal on top of it. -->
-      <div class="relative ml-4 overflow-hidden rounded-lg px-3 pt-10 pb-3 text-[12px] leading-snug text-chrome-ink" role="note" [attr.aria-label]="promo.name + ' deal'">
+      <div class="relative overflow-hidden rounded-lg px-3 pt-10 pb-3 text-[12px] leading-snug text-chrome-ink" role="note" [attr.aria-label]="promo.name + ' deal'">
         <div class="pointer-events-none absolute inset-0 opacity-25 [mask-image:linear-gradient(to_top,black,rgba(0,0,0,0.5)_45%,transparent)]" aria-hidden="true">
           <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--chrome-ink)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
         </div>

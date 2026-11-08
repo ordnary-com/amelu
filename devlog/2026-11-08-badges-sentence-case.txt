@@ -1,0 +1,9 @@
+Beta: status badges in sentence case
+2026-11-08
+
+BADGE in beta/src/app/status.ts, the class set behind badgeClass() and every
+status badge in the beta (domain and mailbox status, invoices, roles), was
+a square 11px bold uppercase tag with letter spacing ("ACTIVE",
+"SUSPENDED"). It is now a rounded-full pill in 11px medium, sentence case,
+in the same tone colours (TONES), so "Active" and "Suspended" match the
+pills used on the domain cards and the reworked pages.

@@ -2,7 +2,7 @@ import { Domain, Invoice, Mailbox, OrganizationRole } from './api';
 
 export type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 
-export const BADGE = 'inline-flex flex-none items-center rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide uppercase';
+export const BADGE = 'inline-flex flex-none items-center rounded-full px-2 py-0.5 text-[11px] font-medium';
 
 export const TONES: Record<Tone, string> = {
   ok: 'bg-ok/15 text-ok',

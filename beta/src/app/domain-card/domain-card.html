@@ -27,21 +27,23 @@
         }
       </span>
     </span>
-    <span class="mt-auto flex flex-wrap items-center gap-1.5 border-t border-line pt-3 pr-16">
-      <span class="mr-0.5 text-[11px] font-medium text-muted">DNS</span>
+    <span class="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-1.5 border-t border-line pt-3 pr-16">
       @if (checks(); as rows) {
         @for (row of rows; track row.label) {
-          <span
-            class="inline-flex h-6 items-center gap-1 rounded-full pr-2 pl-1.5 text-[11px] font-medium"
-            [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok/12 text-ok' : 'bg-bad/12 text-bad'"
-            [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')"
-          >
-            <amelu-icon [name]="row.ok === null ? 'dots' : row.ok ? 'check' : 'close'" [size]="12" />
-            {{ row.label }}
+          <span class="inline-flex items-center gap-1.5 text-[12px]" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">
+            <span
+              class="inline-flex size-4 flex-none items-center justify-center rounded-full"
+              [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok text-white' : 'bg-bad text-white'"
+            >
+              @if (row.ok !== null) {
+                <amelu-icon [name]="row.ok ? 'check' : 'close'" [size]="10" />
+              }
+            </span>
+            <span [class]="row.ok === false ? 'font-medium text-bad' : 'text-muted'">{{ row.label }}</span>
           </span>
         }
       } @else {
-        <span class="h-4 w-32 animate-pulse rounded bg-bg"></span>
+        <span class="h-4 w-40 animate-pulse rounded bg-bg"></span>
       }
     </span>
   </a>

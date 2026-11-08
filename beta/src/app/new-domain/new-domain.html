@@ -84,120 +84,125 @@
         </amelu-alert>
       }
 
-      <section>
-        <h2 [class]="ui.sectionTitle">Domain name</h2>
-        <div [class]="ui.card + ' p-4'">
-          <label for="domain-name" [class]="ui.label">Domain</label>
-          <div
-            class="mt-1.5 flex h-10 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
-          >
-            <span class="flex h-full items-center border-r border-line px-3 text-[13px] text-muted select-none">you&#64;</span>
-            <input
-              id="domain-name"
-              class="h-full w-full min-w-0 bg-transparent px-3 text-[14px] outline-none placeholder:text-muted"
-              placeholder="mydomain.com"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              autofocus
-              required
-              [value]="input()"
-              (input)="input.set($any($event.target).value)"
-            />
-          </div>
-          @if (cleaned(); as name) {
-            <p [class]="ui.hint">We'll add <span class="font-medium text-ink">{{ name }}</span>.</p>
-          }
-          @if (www()) {
-            <p class="mt-1 text-[12px] text-warn">
-              You most likely want this without "www.", so addresses look like you&#64;{{ name().slice(4) }}.
-              <button type="button" class="cursor-pointer font-semibold underline" (click)="input.set(name().slice(4))">
-                Use {{ name().slice(4) }}
-              </button>
-            </p>
+      <!-- The domain itself, large, on a card with the same dither as the Overview banner. -->
+      <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-5 *:relative">
+        <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_bottom_left,black,rgba(0,0,0,0.4)_35%,transparent_70%)]" aria-hidden="true">
+          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+        </div>
+        <label for="domain-name" class="block text-[14px] font-bold">Your domain</label>
+        <div
+          class="mt-3 flex h-12 items-center rounded-lg border border-line bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25"
+        >
+          <span class="flex h-full items-center pr-1 pl-4 text-[16px] text-muted select-none">you&#64;</span>
+          <input
+            id="domain-name"
+            class="h-full w-full min-w-0 bg-transparent pr-4 text-[16px] outline-none placeholder:text-muted/70"
+            placeholder="mydomain.com"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            autofocus
+            required
+            [value]="input()"
+            (input)="input.set($any($event.target).value)"
+          />
+          @if (valid()) {
+            <span class="mr-3 inline-flex size-6 flex-none items-center justify-center rounded-full bg-ok/15 text-ok" title="Looks like a domain">
+              <amelu-icon name="check" [size]="14" />
+            </span>
           }
         </div>
+        <p class="mt-2.5 min-h-[18px] text-[12px] text-muted">
+          @if (www()) {
+            <span class="text-warn">
+              You most likely want this without "www.", so addresses look like you&#64;{{ name().slice(4) }}.
+              <button type="button" class="cursor-pointer font-semibold underline" (click)="input.set(name().slice(4))">Use {{ name().slice(4) }}</button>
+            </span>
+          } @else if (cleaned(); as clean) {
+            We'll add <span class="font-medium text-ink">{{ clean }}</span>.
+          } @else if (valid()) {
+            Addresses will look like <span class="font-medium text-ink">you&#64;{{ name() }}</span>.
+          } @else {
+            Paste a website or an email address too, we'll take the domain from it.
+          }
+        </p>
       </section>
 
       <section>
-        <h2 [class]="ui.sectionTitle">Nameservers</h2>
+        <h2 [class]="ui.sectionTitle">How do you want to handle DNS?</h2>
         <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Nameservers">
-          <label
-            class="flex cursor-pointer gap-3 rounded-lg bg-surface p-4"
-            [class]="nameservers() === 'external' ? 'border-2 border-accent' : 'border border-line'"
-          >
-            <input
-              type="radio"
-              name="nameservers"
-              value="external"
-              [checked]="nameservers() === 'external'"
-              (change)="nameservers.set('external')"
-              class="mt-0.5 accent-accent"
-            />
-            <span>
-              <span class="block text-[14px] font-semibold">Keep my current DNS</span>
-              <span class="mt-0.5 block text-[13px] text-muted">You add a few records where your DNS lives. We show which ones, and check them.</span>
-            </span>
-          </label>
-          <label
-            class="flex gap-3 rounded-lg bg-surface p-4"
-            [class]="!ameluNs()?.available ? 'cursor-not-allowed border border-line opacity-60' : nameservers() === 'amelu' ? 'cursor-pointer border-2 border-accent' : 'cursor-pointer border border-line'"
-          >
-            <input
-              type="radio"
-              name="nameservers"
-              value="amelu"
-              [disabled]="!ameluNs()?.available"
-              [checked]="nameservers() === 'amelu'"
-              (change)="nameservers.set('amelu')"
-              class="mt-0.5 accent-accent"
-            />
-            <span>
-              <span class="flex items-center gap-2 text-[14px] font-semibold">
-                Amelu nameservers
-                @if (ameluNs()?.available) {
-                  <span class="rounded bg-accent/15 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-accent uppercase">Easiest</span>
-                } @else {
-                  <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-muted uppercase">Soon</span>
+          @for (option of nsOptions(); track option.value) {
+            <label
+              class="relative flex gap-3 rounded-lg border bg-surface p-4 transition-colors"
+              [class]="option.disabled ? 'cursor-not-allowed border-line opacity-60' : nameservers() === option.value ? 'cursor-pointer border-accent bg-accent/5 ring-1 ring-accent' : 'cursor-pointer border-line hover:border-ink/20'"
+            >
+              <input
+                type="radio"
+                name="nameservers"
+                class="peer sr-only"
+                [value]="option.value"
+                [disabled]="option.disabled"
+                [checked]="nameservers() === option.value"
+                (change)="nameservers.set(option.value)"
+              />
+              <span
+                class="mt-0.5 inline-flex size-[18px] flex-none items-center justify-center rounded-full border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40"
+                [class]="nameservers() === option.value && !option.disabled ? 'border-accent bg-accent text-white' : 'border-line'"
+                aria-hidden="true"
+              >
+                @if (nameservers() === option.value && !option.disabled) {
+                  <amelu-icon name="check" [size]="11" />
                 }
               </span>
-              <span class="mt-0.5 block text-[13px] text-muted">
-                Point your domain at {{ ameluNs()?.nameservers?.join(' and ') ?? 'us' }} and every record is set for you. We
-                copy the records you have now, so your website keeps working.
+              <span class="min-w-0">
+                <span class="flex items-center gap-2 text-[14px] font-semibold">
+                  {{ option.title }}
+                  @if (option.badge) {
+                    <span class="rounded-full px-2 py-px text-[11px] font-medium" [class]="option.disabled ? 'bg-bg text-muted' : 'bg-accent/12 text-link'">{{ option.badge }}</span>
+                  }
+                </span>
+                <span class="mt-1 block text-[13px] leading-relaxed text-muted">{{ option.text }}</span>
               </span>
-            </span>
-          </label>
+            </label>
+          }
         </div>
       </section>
 
       <section>
-        <h2 [class]="ui.sectionTitle">Default addresses</h2>
-        <label [class]="ui.card + ' flex cursor-pointer gap-3 p-4'">
-          <input
-            type="checkbox"
-            class="mt-0.5 size-4 accent-accent"
-            [checked]="createDefaults()"
-            (change)="createDefaults.set($any($event.target).checked)"
-          />
-          <span class="min-w-0">
-            <span class="block text-[14px] font-semibold">Create the standard addresses</span>
-            <span class="mt-0.5 block text-[13px] text-muted">
-              Email standards expect these to exist on every domain. They don't count toward your plan's mailbox limit.
-            </span>
-            <span class="mt-2.5 flex flex-wrap gap-1.5">
-              @for (localPart of defaults; track localPart) {
-                <span class="rounded bg-bg px-2 py-0.5 font-mono text-[12px]" [class.text-muted]="!createDefaults()">
-                  {{ localPart }}&#64;{{ valid() ? name() : 'mydomain.com' }}
-                </span>
-              }
-            </span>
-          </span>
-        </label>
+        <h2 [class]="ui.sectionTitle">Standard addresses</h2>
+        <div [class]="ui.card + ' p-4'">
+          <div class="flex items-start gap-4">
+            <div class="min-w-0 flex-1">
+              <p class="text-[14px] font-semibold">Create them for me</p>
+              <p class="mt-0.5 text-[13px] leading-relaxed text-muted">
+                Email standards expect these on every domain. They don't count toward your plan's mailbox limit.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              class="relative mt-0.5 inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
+              [class]="createDefaults() ? 'bg-accent' : 'bg-line'"
+              [attr.aria-checked]="createDefaults()"
+              aria-label="Create the standard addresses"
+              (click)="createDefaults.set(!createDefaults())"
+            >
+              <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="createDefaults() ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
+            </button>
+          </div>
+          <div class="mt-3 flex flex-wrap gap-1.5 border-t border-line pt-3 -mx-4 px-4">
+            @for (localPart of defaults; track localPart) {
+              <span class="rounded-md bg-bg px-2 py-0.5 font-mono text-[12px] transition-opacity" [class.opacity-45]="!createDefaults()">
+                {{ localPart }}&#64;{{ valid() ? name() : 'mydomain.com' }}
+              </span>
+            }
+          </div>
+        </div>
       </section>
 
       <div class="flex items-center gap-3">
-        <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy() || atLimit()">
-          {{ busy() ? 'Adding...' : 'Add domain' }}
+        <button type="submit" [class]="ui.primary + ' h-9 px-4'" [disabled]="!valid() || busy() || atLimit()">
+          {{ busy() ? 'Adding...' : valid() ? 'Add ' + name() : 'Add domain' }}
         </button>
         <a routerLink="/domains" class="text-[13px] font-medium text-muted hover:text-ink hover:underline">Cancel</a>
       </div>
@@ -206,18 +211,22 @@
     <aside class="space-y-6">
       <section>
         <h2 [class]="ui.sectionTitle">What happens next</h2>
-        <ol [class]="ui.card + ' space-y-4 p-4'">
-          @for (step of steps(); track step.title; let i = $index) {
-            <li class="flex gap-3">
+        <!-- A timeline: the steps hang off one thin line. -->
+        <ol [class]="ui.card + ' p-4'">
+          @for (step of steps(); track step.title; let i = $index, last = $last) {
+            <li class="relative flex gap-3" [class.pb-5]="!last">
+              @if (!last) {
+                <span class="absolute top-7 bottom-1 left-3 w-px bg-line" aria-hidden="true"></span>
+              }
               <span
-                class="flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-bold"
-                [class]="i === 0 ? 'bg-accent text-white' : 'bg-bg text-muted'"
+                class="relative flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-semibold"
+                [class]="i === 0 ? 'bg-accent text-white' : 'border border-line bg-surface text-muted'"
               >
                 {{ i + 1 }}
               </span>
-              <span>
+              <span class="pt-0.5">
                 <span class="block text-[13px] font-semibold">{{ step.title }}</span>
-                <span class="block text-[13px] text-muted">{{ step.text }}</span>
+                <span class="mt-0.5 block text-[13px] leading-relaxed text-muted">{{ step.text }}</span>
               </span>
             </li>
           }
@@ -232,12 +241,11 @@
               <span><span class="font-bold">{{ used() }}</span> of {{ plan.max }}</span>
             </div>
             <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
-              <div
-                class="h-full rounded-full"
-                [class]="atLimit() ? 'bg-bad' : 'bg-accent'"
-                [style.width.%]="usedPercent()"
-              ></div>
+              <div class="h-full rounded-full" [class]="atLimit() ? 'bg-bad' : 'bg-accent'" [style.width.%]="usedPercent()"></div>
             </div>
+            @if (atLimit()) {
+              <a routerLink="/billing/plans" class="mt-3 inline-block text-[13px] font-medium text-link hover:underline">See plans</a>
+            }
           </section>
         }
       }

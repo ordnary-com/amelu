@@ -10,6 +10,7 @@ import { UI } from '../ui';
 import { STANDARD_ADDRESSES } from '../standard-addresses';
 import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
 import { NameserversCard } from '../dns-spam/nameservers-card';
+import { DitherShader } from '../login/dither-shader';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
 const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
@@ -23,7 +24,7 @@ interface CreatedAddress {
 /** The current dashboard's /domains/new: add a domain, optionally with its default addresses. */
 @Component({
   selector: 'amelu-new-domain',
-  imports: [RouterLink, Alert, Icon, NameserversCard],
+  imports: [RouterLink, Alert, Icon, NameserversCard, DitherShader],
   templateUrl: './new-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -87,6 +88,26 @@ export class NewDomain {
   protected readonly usedPercent = computed(() => {
     const usage = this.usage();
     return usage ? Math.min(100, ((this.used() ?? 0) / usage.max) * 100) : 0;
+  });
+
+  protected readonly nsOptions = computed(() => {
+    const amelu = this.ameluNs();
+    return [
+      {
+        value: 'external' as const,
+        title: 'Keep my current DNS',
+        text: 'You add a few records where your DNS lives. We show which ones, and check them.',
+        badge: null,
+        disabled: false,
+      },
+      {
+        value: 'amelu' as const,
+        title: 'Use Amelu nameservers',
+        text: `Point your domain at ${amelu?.nameservers?.join(' and ') ?? 'us'} and every record is set for you. We copy the records you have now, so your website keeps working.`,
+        badge: amelu?.available ? 'Easiest' : 'Soon',
+        disabled: !amelu?.available,
+      },
+    ];
   });
 
   protected readonly steps = computed(() => [

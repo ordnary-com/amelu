@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Add domain page in the new style
+            2026-11-08-add-domain-rework.txt
+
 2026-11-08  Welcome flow as a chat with the setup assistant
             2026-11-08-welcome-chat.txt
 

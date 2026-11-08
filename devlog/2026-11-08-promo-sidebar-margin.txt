@@ -1,0 +1,8 @@
+Sidebar deal card no longer touches the second menu column
+2026-11-08
+
+The Black Friday card at the bottom of the main sidebar column had only a
+left margin (ml-4), mirroring the nav's pr-4. That is only symmetric when
+the main column is the last one. With a domain or mailbox menu open next to
+it, the card ran straight into that column's border. The margin now lives
+on the li in shell.html: ml-4 without a second column, mx-3 with one.

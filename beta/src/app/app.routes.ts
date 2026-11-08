@@ -35,7 +35,7 @@ export const routes: Routes = [
     component: Shell,
     canActivate: [authGuard, onboardingGuard],
     children: [
-      { path: '', component: Home, title: 'Amelu' },
+      { path: '', component: Home, title: 'Overview · Amelu' },
       {
         path: 'domains',
         loadComponent: () => import('./domains-page/domains-page').then((m) => m.DomainsPage),

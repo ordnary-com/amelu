@@ -1,0 +1,10 @@
+Domain cards: the favorite star sits next to the domain name
+2026-11-08
+
+The star was a separate button in the card's bottom right corner. It's now
+a small star right after the domain name, filled amber for a favorite. A
+button can't sit inside the card's link, so the card is a div now and the
+name is the link, stretched over the whole card with an ::after overlay;
+the star and the Domains page's drag handle (cardAction, still bottom
+right) sit above it with z-10. A first attempt (star only on hover, an
+amber circle and a pop animation) was reverted.

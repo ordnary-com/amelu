@@ -10,6 +10,16 @@
         <span class="text-[12px] text-muted">Added {{ domain().createdAt | date: 'd MMM y' }}</span>
       </span>
       <span [class]="badge()">{{ status().label }}</span>
+      @if (score() !== null) {
+        <span class="relative inline-flex size-9 flex-none items-center justify-center" [class]="scoreTone()" [title]="'DNS health: ' + health()?.matched + ' of ' + health()?.total + ' records verified'">
+          <svg viewBox="0 0 32 32" class="absolute inset-0 -rotate-90" aria-hidden="true">
+            <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-opacity="0.15" stroke-width="3" />
+            <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" [attr.stroke-dasharray]="dash()" />
+          </svg>
+          <span class="text-[10px] font-bold">{{ score() }}</span>
+          <span class="sr-only">% DNS health</span>
+        </span>
+      }
     </span>
     <span class="mt-auto flex items-center gap-1.5 border-t border-line pt-3 pr-16">
       <span class="mr-1 text-[11px] font-bold tracking-wide text-muted uppercase">DNS</span>

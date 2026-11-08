@@ -11,13 +11,13 @@
 <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
   <p class="text-[13px] text-muted">Compare plans and upgrade at any time. Changes are prorated automatically.</p>
   @if (plans() && hasPaidPlans(plans()!)) {
-    <div class="inline-flex rounded-md border border-line p-0.5" role="radiogroup" aria-label="Billing period">
+    <div class="inline-flex h-8 items-center rounded-md border border-line bg-surface p-0.5" role="radiogroup" aria-label="Billing period">
       @for (option of [{ value: 'monthly', label: 'Monthly' }, { value: 'annual', label: 'Yearly' }]; track option.value) {
         <button
           type="button"
           role="radio"
-          class="cursor-pointer rounded px-3 py-1 text-[12px] font-medium"
-          [class]="interval() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+          class="h-full cursor-pointer rounded px-3 text-[12px] font-medium transition-colors"
+          [class]="interval() === option.value ? 'bg-accent/10 text-ink' : 'text-muted hover:text-ink'"
           [attr.aria-checked]="interval() === option.value"
           (click)="interval.set($any(option.value))"
         >
@@ -41,27 +41,25 @@
     @for (plan of plans(); track plan.id) {
       <section
         class="flex flex-col rounded-lg border bg-surface p-5"
-        [class]="plan.current ? 'border-accent ring-2 ring-accent/30' : 'border-line'"
+        [class]="plan.current ? 'border-accent ring-1 ring-accent' : 'border-line'"
       >
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-[16px] font-bold">{{ plan.name }}</h2>
           @if (plan.current) {
-            <span class="inline-flex items-center rounded bg-accent px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-white uppercase">
-              Current
-            </span>
+            <span class="inline-flex items-center rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-link">Current plan</span>
           }
         </div>
 
         <div class="mt-3 h-14">
           @if (isFree(plan)) {
-            <div class="text-[28px] leading-none font-bold">Free</div>
+            <div class="text-[32px] leading-none font-normal tracking-[-0.02em]">Free</div>
           } @else {
             <div>
-              <span class="text-[28px] leading-none font-bold">{{ money(price(plan)) }}</span>
+              <span class="text-[32px] leading-none font-normal tracking-[-0.02em]">{{ money(price(plan)) }}</span>
               <span class="text-[13px] text-muted">/{{ interval() === 'monthly' ? 'month' : 'year' }}</span>
             </div>
             @if (interval() === 'annual') {
-              <div class="mt-1 text-[12px] font-medium text-ok">Save {{ money(savings(plan)) }} a year</div>
+              <span class="mt-1.5 inline-flex rounded-full bg-ok/15 px-2 py-0.5 text-[11px] font-medium text-ok">Save {{ money(savings(plan)) }} a year</span>
             }
           }
         </div>
@@ -71,7 +69,7 @@
             @if (plan.current) {
               <button
                 type="button"
-                class="h-9 w-full cursor-pointer rounded-md border border-line text-[13px] font-medium text-bad hover:bg-bad/10 disabled:opacity-50"
+                [class]="ui.dangerOutline + ' h-9 w-full justify-center'"
                 [disabled]="busyKey() === plan.id + ':cancel'"
                 (click)="cancel(plan)"
               >
@@ -94,18 +92,18 @@
           }
         </div>
 
-        <ul class="mt-5 space-y-2 border-t border-line pt-4 text-[13px]">
+        <ul class="-mx-5 mt-5 space-y-2 border-t border-line px-5 pt-4 text-[13px]">
           <li class="flex gap-2.5">
-            <span class="mt-[7px] size-1.5 flex-none rounded-full bg-accent"></span>
+            <amelu-icon name="check" [size]="14" class="mt-[3px] flex-none text-link" />
             <span><span class="font-semibold">{{ plan.maxDomains }}</span> email domain{{ plan.maxDomains === 1 ? '' : 's' }}</span>
           </li>
           <li class="flex gap-2.5">
-            <span class="mt-[7px] size-1.5 flex-none rounded-full bg-accent"></span>
+            <amelu-icon name="check" [size]="14" class="mt-[3px] flex-none text-link" />
             <span><span class="font-semibold">{{ plan.maxMailboxesPerDomain }}</span> mailboxes per domain</span>
           </li>
           @for (perk of perks(plan); track perk) {
             <li class="flex gap-2.5 text-muted">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/50"></span>
+              <amelu-icon name="check" [size]="14" class="mt-[3px] flex-none" />
               {{ perk }}
             </li>
           }

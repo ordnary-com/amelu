@@ -1,0 +1,14 @@
+Home: a setup checklist for new accounts
+2026-11-08
+
+New accounts finished onboarding and then had to find the next steps
+themselves. The home page now starts with "Get Amelu ready"
+(beta/src/app/setup-checklist), a progress bar and four steps, each with a
+link to where it's done: add a domain (done when there's one), point the
+DNS at Amelu (done when a domain is active), create your own mailbox (done
+when the first five domains have a mailbox that isn't admin@, postmaster@ or
+abuse@), and connect a phone or mail app (done once a usage page was
+opened, the localStorage flag from the QR change). Paid plans get a fifth:
+brand webmail (GET /api/organization/webmail enabled). The next open step
+is highlighted. It disappears when everything is done, or for good after
+"Hide" (amelu.setup.dismissed in localStorage).

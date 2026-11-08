@@ -15,10 +15,11 @@ import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
 import { PromoBanner } from '../promo-banner/promo-banner';
+import { SetupChecklist } from '../setup-checklist/setup-checklist';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard, PromoBanner],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, RouterLink, QuickActions, DomainCard, PromoBanner, SetupChecklist],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-4' },

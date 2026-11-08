@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Home: a setup checklist for new accounts
+            2026-11-08-setup-checklist.txt
+
 2026-11-08  Mailbox setup: a QR code for iPhone and iPad
             2026-11-08-qr-device-setup.txt
 

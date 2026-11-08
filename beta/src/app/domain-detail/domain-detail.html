@@ -5,40 +5,57 @@
     <a routerLink="/domains" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Domains</a>
   </div>
 } @else {
-  <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
-    <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
-    <amelu-icon name="chevronRight" [size]="12" />
-    <span class="truncate text-ink">{{ domain()?.name }}</span>
-  </nav>
+  <!-- The domain as a banner, like the Overview greeting: the same dither, its name large, and
+       its status and DNS checks in one place. -->
+  <section class="relative overflow-hidden rounded-lg bg-hero px-7 pt-5 pb-6 text-hero-ink max-mobile:px-5">
+    <div class="pointer-events-none absolute inset-0 opacity-45 [mask-image:linear-gradient(to_left,black_0%,rgba(0,0,0,0.7)_25%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.06)_85%,transparent_100%)] max-mobile:opacity-25" aria-hidden="true">
+      <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
+    </div>
 
-  <div class="flex flex-wrap items-start justify-between gap-4">
-    <div class="flex min-w-0 items-center gap-3.5">
-      <amelu-action-icon name="domains" class="text-link" />
-      <div class="min-w-0">
-        @if (domain(); as d) {
-          <h1 class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[22px] font-bold tracking-[-0.4px]">
-            <span class="truncate">{{ d.name }}</span>
-            <span [class]="status()!.class">{{ status()!.label }}</span>
-          </h1>
-          <p class="mt-1 text-[13px] text-muted">
-            Added {{ d.createdAt | date: 'd MMM y' }}
-            @if (d.verifiedAt) {
-              · Verified {{ d.verifiedAt | date: 'd MMM y' }}
-            }
-          </p>
-        } @else {
-          <span class="block h-6 w-56 animate-pulse rounded bg-bg"></span>
-          <span class="mt-2 block h-3 w-32 animate-pulse rounded bg-bg"></span>
-        }
+    <div class="relative flex flex-wrap items-center justify-between gap-3">
+      <nav class="flex min-w-0 items-center gap-1 text-[13px] font-medium text-hero-ink/70" aria-label="Breadcrumb">
+        <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
+        <amelu-icon name="chevronRight" [size]="12" />
+        <span class="truncate">{{ domain()?.name }}</span>
+      </nav>
+      <div class="flex gap-2">
+        <a [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">New alias</a>
+        <a [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">New mailbox</a>
       </div>
     </div>
-    <div class="flex gap-2">
-      <a [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.outline">New alias</a>
-      <a [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">
-        New mailbox
-      </a>
-    </div>
-  </div>
+
+    @if (domain(); as d) {
+      <h1 class="relative mt-7 truncate text-[36px] leading-[1.1] font-normal tracking-[-0.02em] text-ink max-mobile:mt-5 max-mobile:text-[28px]">{{ d.name }}</h1>
+      <div class="relative mt-3 flex flex-wrap items-center gap-x-4 gap-y-2.5">
+        <!-- Status and DNS health in one badge, the same as on the domain cards. -->
+        <span
+          class="inline-flex h-7 flex-none items-center gap-1.5 rounded-full pr-2.5 pl-1 text-[12px] font-medium"
+          [class]="tone()"
+          [title]="score() === null ? status()!.label : status()!.label + ', ' + score() + '% of the DNS records verified'"
+        >
+          <svg viewBox="0 0 20 20" class="size-5 -rotate-90" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-width="2.5" />
+            @if (score() !== null) {
+              <circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" [attr.stroke-dasharray]="dash()" />
+            }
+          </svg>
+          {{ status()!.label }}
+          @if (score() !== null) {
+            <span class="opacity-75">· {{ score() }}%</span>
+          }
+        </span>
+        <span class="text-[13px] text-hero-ink/75">
+          Added {{ d.createdAt | date: 'd MMM y' }}
+          @if (d.verifiedAt) {
+            · Verified {{ d.verifiedAt | date: 'd MMM y' }}
+          }
+        </span>
+      </div>
+    } @else {
+      <span class="relative mt-7 block h-9 w-72 animate-pulse rounded bg-hero-ink/10"></span>
+      <span class="relative mt-3 block h-6 w-48 animate-pulse rounded bg-hero-ink/10"></span>
+    }
+  </section>
 
   @if (domain(); as d) {
     @if (d.status !== 'active' || dnsBroken()) {
@@ -57,20 +74,28 @@
     @for (stat of stats(); track stat.label) {
       <a
         [routerLink]="'/domains/' + id() + '/' + stat.link"
-        class="group rounded-lg border border-line bg-surface px-4 py-3 hover:bg-bg/60"
+        class="flex flex-col rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5 transition-colors hover:border-ink/20 hover:bg-bg/40"
       >
-        <span class="block text-[12px] text-muted group-hover:underline">{{ stat.label }}</span>
+        <span class="flex items-center justify-between gap-2 text-[12px] text-muted">
+          {{ stat.label }}
+          <amelu-icon name="chevronRight" [size]="13" class="opacity-60" />
+        </span>
         @if (stat.value === undefined) {
-          <span class="mt-2 block h-5 w-10 animate-pulse rounded bg-bg"></span>
+          <span class="mt-2.5 block h-6 w-12 animate-pulse rounded bg-bg"></span>
         } @else if (stat.value === null) {
           <span class="mt-2 block text-[13px] text-muted">Unavailable</span>
         } @else {
-          <span class="mt-0.5 block text-[22px] font-bold" [class.text-bad]="stat.full">
+          <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]" [class.text-bad]="stat.full">
             {{ stat.value }}
             @if (stat.of) {
-              <span class="text-[13px] font-normal text-muted">of {{ stat.of }}</span>
+              <span class="text-[13px] tracking-normal text-muted">of {{ stat.of }}</span>
             }
           </span>
+          @if (stat.of) {
+            <span class="mt-2 block h-1 overflow-hidden rounded-full bg-bg">
+              <span class="block h-full rounded-full" [class]="stat.full ? 'bg-bad' : 'bg-accent'" [style.width.%]="(+stat.value / stat.of) * 100"></span>
+            </span>
+          }
         }
       </a>
     }
@@ -83,13 +108,13 @@
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-[14px] font-bold">All addresses</h2>
         <div class="flex flex-wrap items-center gap-2">
-          <div class="flex rounded-md border border-line p-0.5" role="tablist">
+          <div class="flex h-8 items-center rounded-md border border-line bg-surface p-0.5" role="tablist">
             @for (option of kinds; track option.value) {
               <button
                 type="button"
                 role="tab"
-                class="h-6 cursor-pointer rounded px-2.5 text-[12px] font-medium"
-                [class]="kind() === option.value ? 'bg-bg text-ink' : 'text-muted hover:text-ink'"
+                class="h-full cursor-pointer rounded px-2.5 text-[12px] font-medium transition-colors"
+                [class]="kind() === option.value ? 'bg-accent/10 text-ink' : 'text-muted hover:text-ink'"
                 [attr.aria-selected]="kind() === option.value"
                 (click)="kind.set(option.value)"
               >
@@ -97,16 +122,22 @@
               </button>
             }
           </div>
-          <label class="flex h-8 w-48 items-center gap-2 rounded-md border border-line px-2.5 focus-within:border-accent">
-            <amelu-icon name="search" [size]="14" class="text-muted" />
+          <label class="group flex h-8 w-52 items-center gap-2 rounded-md border border-line bg-surface px-2.5 hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+            <amelu-icon name="search" [size]="14" class="flex-none text-muted group-focus-within:text-ink" />
             <input
               type="search"
-              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted"
+              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
               placeholder="Filter addresses"
               aria-label="Filter addresses"
               [value]="search()"
               (input)="search.set($any($event.target).value)"
+              (keydown.escape)="search.set('')"
             />
+            @if (search()) {
+              <button type="button" class="-mr-1 inline-flex size-5 flex-none cursor-pointer items-center justify-center rounded text-muted hover:bg-bg hover:text-ink" aria-label="Clear filter" (click)="search.set('')">
+                <amelu-icon name="close" [size]="12" />
+              </button>
+            }
           </label>
         </div>
       </div>
@@ -118,9 +149,9 @@
           @if (aliases() === null) {
             <p class="border-b border-line bg-bg/60 px-4 py-2 text-[12px] text-muted">Aliases couldn't be loaded, so only mailboxes are listed.</p>
           }
-          <ul>
+          <ul class="divide-y divide-line">
             @for (row of rows; track row.key) {
-              <li class="border-b border-line last:border-b-0">
+              <li>
                 <a [routerLink]="row.link" class="group flex items-center gap-3 px-4 py-2.5 hover:bg-bg/60">
                   <span
                     class="flex size-8 flex-none items-center justify-center rounded-full text-[13px] font-bold uppercase"
@@ -130,7 +161,7 @@
                     {{ row.kind === 'mailbox' ? (row.name || row.address)[0] : '@' }}
                   </span>
                   <span class="min-w-0 flex-1">
-                    <span class="block truncate text-[14px] group-hover:underline">
+                    <span class="block truncate text-[14px]">
                       @if (row.name) {
                         <span class="font-semibold">{{ row.name }}</span>
                         <span class="text-muted"> · </span>
@@ -142,7 +173,7 @@
                   @if (row.badge; as badge) {
                     <span [class]="badge.class">{{ badge.label }}</span>
                   }
-                  <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+                  <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
                 </a>
               </li>
             } @empty {
@@ -185,24 +216,31 @@
           <h2 class="text-[14px] font-bold">DNS</h2>
           <a [routerLink]="'/domains/' + id() + '/dns'" class="text-[13px] font-medium text-link hover:underline">All records</a>
         </div>
-        <ul [class]="ui.card">
+        <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
           @if (dns(); as rows) {
             @for (row of rows; track row.label) {
-              <li class="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0">
-                <span class="w-10 text-[11px] font-bold tracking-wide text-muted uppercase">{{ row.label }}</span>
-                <span class="min-w-0 flex-1 truncate text-[13px]">{{ row.what }}</span>
+              <li class="flex items-center gap-3 px-4 py-2.5" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">
                 <span
-                  class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-bold tracking-wide uppercase"
-                  [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'"
+                  class="inline-flex size-5 flex-none items-center justify-center rounded-full"
+                  [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok text-white' : 'bg-bad text-white'"
+                  aria-hidden="true"
                 >
-                  <span class="size-1.5 rounded-full" [class]="row.ok === null ? 'bg-muted/50' : row.ok ? 'bg-ok' : 'bg-bad'"></span>
-                  {{ row.ok === null ? 'Unchecked' : row.ok ? 'OK' : 'Wrong' }}
+                  @if (row.ok !== null) {
+                    <amelu-icon [name]="row.ok ? 'check' : 'close'" [size]="12" />
+                  }
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[13px] font-medium" [class.text-bad]="row.ok === false">{{ row.label }}</span>
+                  <span class="block truncate text-[12px] text-muted">{{ row.what }}</span>
+                </span>
+                <span class="flex-none text-[12px]" [class]="row.ok === null ? 'text-muted' : row.ok ? 'text-ok' : 'font-medium text-bad'">
+                  {{ row.ok === null ? 'Not checked' : row.ok ? 'Verified' : 'Wrong' }}
                 </span>
               </li>
             }
           } @else {
             @for (i of [1, 2, 3]; track i) {
-              <li class="border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+              <li class="px-4 py-3" aria-hidden="true">
                 <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
               </li>
             }
@@ -296,10 +334,10 @@
                 class="group flex items-center gap-3 border-b border-line px-4 py-2.5 hover:bg-bg/60"
               >
                 <span class="min-w-0 flex-1">
-                  <span class="block text-[13px] font-medium group-hover:underline">{{ item.label }}</span>
+                  <span class="block text-[13px] font-medium">{{ item.label }}</span>
                   <span class="block text-[12px] text-muted">{{ item.hint }}</span>
                 </span>
-                <amelu-icon name="chevronRight" [size]="14" class="text-muted" />
+                <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
               </a>
             </li>
           }

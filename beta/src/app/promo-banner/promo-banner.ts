@@ -23,7 +23,7 @@ import { activePromo } from '../promo';
         <div class="relative">
           <div class="flex items-center justify-between gap-2">
             <p class="text-[13px] font-semibold">{{ promo.name }}</p>
-            <button type="button" class="cursor-pointer rounded p-0.5 text-chrome-ink/55 hover:text-chrome-ink" aria-label="Dismiss" (click)="dismiss()">
+            <button type="button" class="-mr-1.5 cursor-pointer rounded p-0.5 text-chrome-ink/55 hover:text-chrome-ink" aria-label="Dismiss" (click)="dismiss()">
               <amelu-icon name="close" [size]="13" />
             </button>
           </div>

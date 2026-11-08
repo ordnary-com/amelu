@@ -1,30 +1,38 @@
 <div class="w-full max-w-[520px]">
-  <p class="text-[56px] leading-none font-bold tracking-[-2px] text-accent">404</p>
-  <h1 class="mt-4 text-[22px] font-bold tracking-[-0.4px]">This page doesn't exist</h1>
-  <p class="mt-2 text-[14px] leading-relaxed text-muted">
-    There's nothing at
-    <code class="rounded bg-surface px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{{ path() }}</code>. It may
-    have moved, or it isn't part of the new dashboard yet.
-  </p>
+  <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-6 *:relative">
+    <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+      <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+    </div>
+    <p class="text-[56px] leading-none font-normal tracking-[-0.02em] text-accent">404</p>
+    <h1 class="mt-4 text-[22px] font-bold tracking-[-0.4px]">This page doesn't exist</h1>
+    <p class="mt-2 text-[14px] leading-relaxed text-muted">
+      There's nothing at
+      <code class="rounded bg-bg px-1.5 py-0.5 font-mono text-[12px] break-all text-ink">{{ path() }}</code>. It may
+      have moved, or it isn't part of the new dashboard yet.
+    </p>
 
-  <div class="mt-6 flex gap-2">
-    <a routerLink="/" [class]="ui.primary">Go to the dashboard</a>
-    <button type="button" (click)="back()" [class]="ui.outline">Go back</button>
-  </div>
+    <div class="mt-6 flex flex-wrap gap-2">
+      <a routerLink="/" [class]="ui.primary">Go to the dashboard</a>
+      <button type="button" (click)="back()" [class]="ui.outline + ' bg-surface'">Go back</button>
+    </div>
+  </section>
 
-  <p class="mt-10 text-[11px] font-medium tracking-wide text-muted uppercase">Or try</p>
-  <ul class="mt-1">
+  <h2 class="mt-8 mb-3 text-[14px] font-bold">Or try</h2>
+  <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
     @for (link of links; track link.path) {
       <li>
-        <a [routerLink]="link.path" class="group flex items-baseline gap-2 py-1.5 text-[13px]">
-          <span class="font-medium text-link group-hover:underline">{{ link.label }}</span>
-          <span class="text-muted">{{ link.hint }}</span>
+        <a [routerLink]="link.path" class="group flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
+          <span class="min-w-0 flex-1">
+            <span class="block text-[14px] font-medium">{{ link.label }}</span>
+            <span class="mt-0.5 block truncate text-[12px] text-muted">{{ link.hint }}</span>
+          </span>
+          <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
         </a>
       </li>
     }
   </ul>
 
-  <p class="mt-8 text-[13px] text-muted">
+  <p class="mt-6 text-[13px] text-muted">
     Still stuck? <a routerLink="/support" class="text-link hover:underline">Contact support</a>.
   </p>
 </div>

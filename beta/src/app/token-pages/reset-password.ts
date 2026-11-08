@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, errorMessage } from '../api';
+import { Icon } from '../icon';
 import { TokenFrame, tokenUi } from './token-frame';
 
 /**
@@ -10,7 +11,7 @@ import { TokenFrame, tokenUi } from './token-frame';
  */
 @Component({
   selector: 'amelu-reset-password',
-  imports: [TokenFrame],
+  imports: [TokenFrame, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <amelu-token-frame>
@@ -19,10 +20,12 @@ import { TokenFrame, tokenUi } from './token-frame';
           <p [class]="ui.text">Loading…</p>
         }
         @case ('invalid') {
+          <span [class]="ui.mark + ' bg-bad/15 text-bad'" aria-hidden="true"><amelu-icon name="circleAlert" [size]="18" /></span>
           <h1 [class]="ui.title">This link doesn't work anymore</h1>
           <p [class]="ui.text">It's invalid or has expired. Ask for a new one to be sent.</p>
         }
         @case ('done') {
+          <span [class]="ui.mark + ' bg-ok/15 text-ok'" aria-hidden="true"><amelu-icon name="circleCheck" [size]="18" /></span>
           <h1 [class]="ui.title">Password set</h1>
           <p [class]="ui.text">You can now sign in to {{ address() }} in your mail app.</p>
         }

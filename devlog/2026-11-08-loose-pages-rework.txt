@@ -1,0 +1,16 @@
+Sending IPs, What's new, status, support and the standalone pages
+2026-11-08
+
+The remaining pages in the beta follow the new style. Sending IPs shows
+three stat tiles, then one divide-y card of addresses with a mono IP chip
+and a copy icon on each. What's new is a timeline grouped by month with a
+Latest pill, and each entry now links to its full post (entry.link, which
+the page never used). Service status gets divide-y service rows with dots
+and pills, impact dots on incidents and skeleton rows while loading. It
+used to say "No services listed." while still loading. Contact support
+gets numbered "What to include" rows and link cards. Terminate account
+moves the consequences into the card and uses UI.dangerOutline instead of
+the hard-coded #d91515. The bell dropdown gets an unread count chip,
+tinted alert tiles and an accent unread dot. Not found and the invite and
+reset token pages get a subtle dither and no uppercase. The tab titles now
+match the headings: "Contact support · Amelu", "Service status · Amelu".

@@ -3,12 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, errorMessage } from '../api';
 import { Session } from '../session';
+import { Icon } from '../icon';
 import { TokenFrame, tokenUi } from './token-frame';
 
 /** /accept-invite/:token, from the email an organization invitation sends. */
 @Component({
   selector: 'amelu-accept-invite',
-  imports: [TokenFrame],
+  imports: [TokenFrame, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <amelu-token-frame>
@@ -17,6 +18,7 @@ import { TokenFrame, tokenUi } from './token-frame';
           <p [class]="ui.text">Loading…</p>
         }
         @case ('invalid') {
+          <span [class]="ui.mark + ' bg-bad/15 text-bad'" aria-hidden="true"><amelu-icon name="circleAlert" [size]="18" /></span>
           <h1 [class]="ui.title">This invitation doesn't work anymore</h1>
           <p [class]="ui.text">It's invalid, expired or already used. Ask for a new one to be sent.</p>
         }

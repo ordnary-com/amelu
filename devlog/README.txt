@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domain mailbox pages in the new style
+            2026-11-08-mailbox-pages-rework.txt
+
 2026-11-08  Routing pages in the new style
             2026-11-08-routing-pages-rework.txt
 

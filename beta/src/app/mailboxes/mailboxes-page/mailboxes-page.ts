@@ -16,11 +16,12 @@ import { MailboxApi, RepairResult } from '../../mailbox/mailbox-api';
 import { apiUrl } from '../../config';
 import { countedMailboxes } from '../../standard-addresses';
 import { Sparkline } from '../../delivery/sparkline';
+import { DitherShader } from '../../login/dither-shader';
 
 /** The current dashboard's "All Mailboxes" page: every mailbox on one domain. */
 @Component({
   selector: 'amelu-mailboxes-page',
-  imports: [DatePipe, RouterLink, PageHeader, Alert, EmptyState, Icon, Sparkline],
+  imports: [DatePipe, RouterLink, PageHeader, Alert, EmptyState, Icon, Sparkline, DitherShader],
   templateUrl: './mailboxes-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

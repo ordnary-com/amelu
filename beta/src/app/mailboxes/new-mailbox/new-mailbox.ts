@@ -9,13 +9,15 @@ import { Alert } from '../../alert/alert';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
 import { countedMailboxes } from '../../standard-addresses';
+import { Icon } from '../../icon';
+import { DitherShader } from '../../login/dither-shader';
 
 type PasswordMethod = 'generate' | 'password';
 
 /** The current dashboard's /domains/:id/mailboxes/new. */
 @Component({
   selector: 'amelu-new-mailbox',
-  imports: [RouterLink, PageHeader, Alert],
+  imports: [RouterLink, PageHeader, Alert, Icon, DitherShader],
   templateUrl: './new-mailbox.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -64,6 +66,16 @@ export class NewMailbox {
     const usage = this.usage();
     return !!usage && usage.used >= usage.max;
   });
+
+  protected readonly usedPercent = computed(() => {
+    const usage = this.usage();
+    return usage ? Math.min(100, (usage.used / Math.max(1, usage.max)) * 100) : 0;
+  });
+
+  protected readonly methods: { value: PasswordMethod; title: string; text: string }[] = [
+    { value: 'generate', title: 'Generate a password for me', text: 'A strong password, shown once after the mailbox is created.' },
+    { value: 'password', title: 'Set initial password', text: 'Type one yourself, for example to hand it over in person.' },
+  ];
 
   protected readonly steps = [
     { title: 'Create the mailbox', text: 'It gets the default services and limits set for this domain.' },

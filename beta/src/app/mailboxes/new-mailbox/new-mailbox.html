@@ -101,38 +101,34 @@
       <section>
         <h2 [class]="ui.sectionTitle">Password</h2>
         <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Password method">
-          <label
-            class="flex cursor-pointer gap-3 rounded-lg bg-surface p-4"
-            [class]="method() === 'generate' ? 'border-2 border-accent' : 'border border-line'"
-          >
-            <input
-              type="radio"
-              name="password-method"
-              class="mt-0.5 accent-accent"
-              [checked]="method() === 'generate'"
-              (change)="method.set('generate')"
-            />
-            <span>
-              <span class="block text-[14px] font-semibold">Generate a password for me</span>
-              <span class="mt-0.5 block text-[13px] text-muted">A strong password, shown once after the mailbox is created.</span>
-            </span>
-          </label>
-          <label
-            class="flex cursor-pointer gap-3 rounded-lg bg-surface p-4"
-            [class]="method() === 'password' ? 'border-2 border-accent' : 'border border-line'"
-          >
-            <input
-              type="radio"
-              name="password-method"
-              class="mt-0.5 accent-accent"
-              [checked]="method() === 'password'"
-              (change)="method.set('password')"
-            />
-            <span>
-              <span class="block text-[14px] font-semibold">Set initial password</span>
-              <span class="mt-0.5 block text-[13px] text-muted">Type one yourself, for example to hand it over in person.</span>
-            </span>
-          </label>
+          @for (option of methods; track option.value) {
+            <label
+              class="relative flex cursor-pointer gap-3 rounded-lg border bg-surface p-4 transition-colors"
+              [class]="method() === option.value ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line hover:border-ink/20'"
+            >
+              <input
+                type="radio"
+                name="password-method"
+                class="peer sr-only"
+                [value]="option.value"
+                [checked]="method() === option.value"
+                (change)="method.set(option.value)"
+              />
+              <span
+                class="mt-0.5 inline-flex size-[18px] flex-none items-center justify-center rounded-full border-2 peer-focus-visible:ring-2 peer-focus-visible:ring-accent/40"
+                [class]="method() === option.value ? 'border-accent bg-accent text-white' : 'border-line'"
+                aria-hidden="true"
+              >
+                @if (method() === option.value) {
+                  <amelu-icon name="check" [size]="11" />
+                }
+              </span>
+              <span class="min-w-0">
+                <span class="block text-[14px] font-semibold">{{ option.title }}</span>
+                <span class="mt-1 block text-[13px] leading-relaxed text-muted">{{ option.text }}</span>
+              </span>
+            </label>
+          }
         </div>
 
         @if (method() === 'password') {
@@ -168,18 +164,22 @@
     <aside class="space-y-6">
       <section>
         <h2 [class]="ui.sectionTitle">What happens next</h2>
-        <ol [class]="ui.card + ' space-y-4 p-4'">
-          @for (step of steps; track step.title; let i = $index) {
-            <li class="flex gap-3">
+        <!-- A timeline, the same as on Add domain: the steps hang off one thin line. -->
+        <ol [class]="ui.card + ' p-4'">
+          @for (step of steps; track step.title; let i = $index, last = $last) {
+            <li class="relative flex gap-3" [class.pb-5]="!last">
+              @if (!last) {
+                <span class="absolute top-7 bottom-1 left-3 w-px bg-line" aria-hidden="true"></span>
+              }
               <span
-                class="flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-bold"
-                [class]="i === 0 ? 'bg-accent text-white' : 'bg-bg text-muted'"
+                class="relative flex size-6 flex-none items-center justify-center rounded-full text-[12px] font-semibold"
+                [class]="i === 0 ? 'bg-accent text-white' : 'border border-line bg-surface text-muted'"
               >
                 {{ i + 1 }}
               </span>
-              <span>
+              <span class="pt-0.5">
                 <span class="block text-[13px] font-semibold">{{ step.title }}</span>
-                <span class="block text-[13px] text-muted">{{ step.text }}</span>
+                <span class="mt-0.5 block text-[13px] leading-relaxed text-muted">{{ step.text }}</span>
               </span>
             </li>
           }
@@ -192,18 +192,27 @@
             <span class="text-muted">Mailboxes on this domain</span>
             <span><span class="font-bold" [class.text-bad]="atLimit()">{{ u.used }}</span> of {{ u.max }}</span>
           </div>
+          <div class="mt-2 h-1 overflow-hidden rounded-full bg-bg">
+            <div class="h-full rounded-full" [class]="atLimit() ? 'bg-bad' : 'bg-accent'" [style.width.%]="usedPercent()"></div>
+          </div>
         </section>
       }
 
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Adding many at once?</h2>
+      <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
+        <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+        </div>
+        <amelu-icon name="users" [size]="20" class="block text-ink" />
+        <h2 class="mt-3 text-[14px] font-bold">Adding many at once?</h2>
         <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          <a [routerLink]="base() + '/mailboxes/import'" class="font-medium text-link hover:underline">Import from CSV</a>
-          to create up to 100 mailboxes in one go. Change what new mailboxes may do under
+          Import from CSV to create up to 100 mailboxes in one go. Change what new mailboxes may do under
           <a [routerLink]="base() + '/mailboxes/services'" class="font-medium text-link hover:underline">default services</a>
           and
           <a [routerLink]="base() + '/mailboxes/limits'" class="font-medium text-link hover:underline">default limits</a>.
         </p>
+        <a [routerLink]="base() + '/mailboxes/import'" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">
+          Import from CSV
+        </a>
       </section>
     </aside>
   </div>

@@ -1,0 +1,18 @@
+Amelu nameservers on the add-domain page (built, off)
+2026-11-08
+
+"Amelu nameservers" on /domains/new was greyed out "Soon". It now creates a
+Cloudflare zone in the Ordnary account per domain (internal/cfdns, table
+domain_dns_zones, migration 0040), copies the domain's current records
+with the dns_records/scan endpoint and writes Stalwart's mail records with
+the comment "Managed by Amelu for email" (read-only in the dashboard). New
+endpoints: GET /api/nameservers, GET/POST /api/domains/{id}/nameservers,
+GET/POST/PUT/DELETE /api/domains/{id}/dns-records. New "DNS zone" tab.
+Deleting a domain deletes its zone.
+
+What's blocking it: POST /accounts/{id}/custom_ns answers "This feature is
+not enabled for your account" (1002), so ns1/ns2.amelu.org needs Cloudflare
+to enable account custom nameservers. AMELU_NS_SET=0 runs it on the pair
+Cloudflare assigns per zone. Off until AMELU_DNS_API_TOKEN is set on the
+edge Worker. A subdomain test zone (nstest.amelu.org) was refused, so it is
+untested against Cloudflare. See docs/AMELU_NAMESERVERS.md.

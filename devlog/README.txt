@@ -24,6 +24,15 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Amelu nameservers on the add-domain page (built, off)
+            2026-11-08-amelu-nameservers.txt
+
+2026-11-08  SPF: customers are asked for include:_spf.amelu.org
+            2026-11-08-spf-include.txt
+
+2026-11-08  Sending IPs grouped so no group has two IPs of one /24
+            2026-11-08-ip-groups-by-range.txt
+
 2026-11-07  marduk reports per sending IP state and delivery results
             2026-11-07-ip-status-report.txt
 

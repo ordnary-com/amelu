@@ -12,7 +12,25 @@ import { activePromo } from '../promo';
   selector: 'amelu-promo-banner',
   imports: [DatePipe, NgTemplateOutlet, RouterLink, Icon],
   template: `
-    @if (promo && !dismissed()) {
+    @if (promo && !dismissed() && variant() === 'sidebar') {
+      <div class="relative rounded-lg bg-chrome-ink/10 p-3 text-[12px] leading-snug text-chrome-ink" role="note" [attr.aria-label]="promo.name + ' deal'">
+        <button type="button" class="absolute top-1.5 right-1.5 cursor-pointer rounded p-0.5 text-chrome-ink/60 hover:text-chrome-ink" aria-label="Dismiss" (click)="dismiss()">
+          <amelu-icon name="close" [size]="13" />
+        </button>
+        <p class="pr-5 font-semibold">{{ promo.name }}</p>
+        <p class="mt-0.5 text-chrome-ink/75">{{ capital(promo.yearly.deal) }} on Go or Pro, until {{ promo.lastDay | date: 'd MMM' }}.</p>
+        <button
+          type="button"
+          class="mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded bg-chrome-ink/15 px-2 py-1 font-mono text-[12px] font-bold tracking-wide hover:bg-chrome-ink/25"
+          [attr.aria-label]="'Copy ' + promo.yearly.code"
+          (click)="copy(promo.yearly.code)"
+        >
+          {{ promo.yearly.code }}
+          <amelu-icon [name]="copied() === promo.yearly.code ? 'check' : 'copy'" [size]="11" />
+        </button>
+        <a routerLink="/billing/plans" class="mt-2 block font-medium text-chrome-ink underline-offset-2 hover:underline">See plans</a>
+      </div>
+    } @else if (promo && !dismissed()) {
       <div class="flex items-start gap-3 rounded-lg border border-line bg-surface px-4 py-3" role="note" [attr.aria-label]="promo.name + ' deal'">
         <amelu-icon name="star" [size]="18" class="mt-0.5 flex-none text-link" />
         <div class="min-w-0 flex-1 text-[13px] leading-relaxed">
@@ -51,6 +69,8 @@ import { activePromo } from '../promo';
 export class PromoBanner {
   /** Off on the plans page itself. */
   readonly showLink = input(true);
+  /** "sidebar": a small card on the menu's colours, at the bottom of the main menu. */
+  readonly variant = input<'inline' | 'sidebar'>('inline');
   protected readonly promo = activePromo();
   protected readonly copied = signal<string | null>(null);
   private readonly key = this.promo ? `amelu.promo.dismissed.${this.promo.yearly.code}` : '';

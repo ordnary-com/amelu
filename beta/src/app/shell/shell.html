@@ -34,7 +34,7 @@
     [class.max-lg:hidden]="!navOpen()"
     aria-label="Main"
   >
-    <ul [class]="column + ' w-[210px] max-lg:w-full'">
+    <ul [class]="column + ' flex w-[210px] flex-col max-lg:w-full'">
       <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Overview</span></a>
       </li>
@@ -72,6 +72,10 @@
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
       </li>
+      @if (showPromo()) {
+        <!-- The campaign deal, at the bottom of the main menu on the free plan. -->
+        <li class="mx-2 mt-auto pt-6"><amelu-promo-banner variant="sidebar" /></li>
+      }
     </ul>
 
     <!-- One menu column next to the main one: the domain's, or, inside a mailbox,

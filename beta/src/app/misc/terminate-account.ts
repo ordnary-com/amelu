@@ -6,16 +6,13 @@ import { Session } from '../session';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
+import { Icon } from '../icon';
 import { MiscApi } from './misc-api';
-
-// Same solid red as the Terminate account button on the account page.
-const RED_BUTTON =
-  'inline-flex h-8 cursor-pointer items-center rounded-md bg-[#d91515] px-3 text-[13px] font-medium text-white hover:brightness-110 disabled:cursor-default disabled:opacity-50';
 
 /** The current dashboard's /account/terminate: password, then a confirm dialog, then DELETE /api/account. */
 @Component({
   selector: 'amelu-terminate-account',
-  imports: [PageHeader, Alert, RouterLink],
+  imports: [PageHeader, Alert, RouterLink, Icon],
   template: `
     <amelu-page-header
       title="Terminate account"
@@ -26,17 +23,34 @@ const RED_BUTTON =
     </amelu-page-header>
 
     <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="space-y-4">
+      <div class="min-w-0 space-y-4">
         @if (error(); as message) {
           <amelu-alert kind="error" title="Could not terminate account" [dismissible]="true" (dismissed)="error.set(null)">
             {{ message }}
           </amelu-alert>
         }
 
-        <section>
-          <h2 [class]="ui.sectionTitle">Confirm it's you</h2>
-          <form [class]="ui.card + ' p-4'" (submit)="startConfirm($event)">
-            <label class="block max-w-sm">
+        <section [class]="ui.card">
+          <div class="p-4">
+            <h2 class="text-[14px] font-bold">What gets deleted</h2>
+            <ul class="mt-3 space-y-2.5 text-[13px] leading-relaxed">
+              <li class="flex items-start gap-2.5">
+                <amelu-icon name="circleX" [size]="15" class="mt-0.5 flex-none text-bad" />
+                Every domain and mailbox, including all mail stored in them.
+              </li>
+              <li class="flex items-start gap-2.5">
+                <amelu-icon name="circleX" [size]="15" class="mt-0.5 flex-none text-bad" />
+                Your account and organization, and their settings and API keys.
+              </li>
+              <li class="flex items-start gap-2.5 text-muted">
+                <amelu-icon name="logout" [size]="15" class="mt-0.5 flex-none" />
+                You're signed out right away. There is no way to recover this data afterwards.
+              </li>
+            </ul>
+          </div>
+          <form class="border-t border-line p-4" (submit)="startConfirm($event)">
+            <h2 class="text-[14px] font-bold">Confirm it's you</h2>
+            <label class="mt-3 block max-w-sm">
               <span [class]="ui.label">Current password</span>
               <input
                 type="password"
@@ -48,7 +62,7 @@ const RED_BUTTON =
               />
             </label>
             <div class="mt-4 flex flex-wrap gap-2">
-              <button type="submit" [class]="redButton" [disabled]="!password() || busy()">Terminate account</button>
+              <button type="submit" [class]="ui.dangerOutline" [disabled]="!password() || busy()">Terminate account</button>
               <a routerLink="/account" [class]="ui.outline">Cancel</a>
             </div>
           </form>
@@ -57,31 +71,13 @@ const RED_BUTTON =
 
       <aside class="space-y-6">
         <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">What gets deleted</h2>
-          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-bad"></span>
-              Every domain and mailbox, including all mail stored in them.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-bad"></span>
-              Your account and organization, and their settings and API keys.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              You're signed out right away. There is no way to recover this data afterwards.
-            </li>
-          </ul>
-        </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Part of a team?</h2>
+          <amelu-icon name="users" [size]="20" class="block text-ink" />
+          <h2 class="mt-3 text-[14px] font-bold">Part of a team?</h2>
           <p class="mt-1 text-[13px] leading-relaxed text-muted">
             If your organization has other members, have another owner or admin remove you, or transfer ownership,
             instead. Their domains and mailboxes stay intact.
           </p>
-          <a routerLink="/organization" class="mt-3 inline-block text-[13px] font-medium text-link hover:underline">
-            View organization
-          </a>
+          <a routerLink="/organization" [class]="ui.outline + ' mt-4'">View organization</a>
         </section>
       </aside>
     </div>
@@ -102,7 +98,7 @@ const RED_BUTTON =
           </p>
           <div class="mt-5 flex flex-wrap justify-end gap-2">
             <button type="button" [class]="ui.outline" (click)="closeConfirm()" [disabled]="busy()">Cancel</button>
-            <button type="button" [class]="redButton" (click)="terminate()" [disabled]="busy()">
+            <button type="button" [class]="ui.danger" (click)="terminate()" [disabled]="busy()">
               {{ busy() ? 'Terminating...' : 'Yes, permanently terminate my account' }}
             </button>
           </div>
@@ -120,7 +116,6 @@ export class TerminateAccount {
   private readonly api = inject(MiscApi);
   private readonly session = inject(Session);
   protected readonly ui = UI;
-  protected readonly redButton = RED_BUTTON;
 
   protected readonly password = signal('');
   protected readonly confirming = signal(false);

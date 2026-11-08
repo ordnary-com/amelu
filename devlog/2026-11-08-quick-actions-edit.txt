@@ -1,0 +1,13 @@
+Quick actions: rearrange, remove and add them
+2026-11-08
+
+The six quick actions on Overview were fixed. "Edit" next to the heading
+now makes the cards draggable (Angular CDK drop list, mixed orientation
+over flex-wrap tiles sized like the 1/2/3/6 column grid), gives each an ×
+to remove it, and lists the others to add: Add a domain, New mailbox, DNS
+records, Invoices, Plans, Webmail branding, What's new, Sending IPs and
+Service status, next to the original six. "Done" or Escape ends editing,
+"Reset" brings back the default six. The order is stored per browser in
+localStorage (amelu.quick-actions.v1). Actions under a domain (Mailboxes,
+Recent Activity, New mailbox, DNS records) wait until there is a domain and
+keep their place in the order meanwhile. The cards keep their old look.

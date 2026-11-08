@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Quick actions: rearrange, remove and add them
+            2026-11-08-quick-actions-edit.txt
+
 2026-11-08  Changelog is called What's new
             2026-11-08-whats-new.txt
 

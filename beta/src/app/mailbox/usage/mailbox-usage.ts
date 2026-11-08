@@ -6,6 +6,8 @@ import { UI } from '../../ui';
 import { MailboxContext } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
 import { AUTOCONFIG_ORIGIN, AUTODISCOVER_HOST } from '../../config';
+import { PhoneQr } from '../../phone-qr';
+import { markSetupStep } from '../../setup-progress';
 
 export const MAIL_SERVER = 'marduk.mx.amelu.org';
 
@@ -113,7 +115,7 @@ interface Setting {
 /** The current dashboard's MailboxUsageInstructionsPage: what to type into a mail app. */
 @Component({
   selector: 'amelu-mailbox-usage',
-  imports: [RouterLink, Alert, Icon, MailboxHeading],
+  imports: [RouterLink, Alert, Icon, MailboxHeading, PhoneQr],
   template: `
     <amelu-mailbox-heading title="Usage instructions">
       To correctly configure your email client, you will need the correct server parameters. Please find them below.
@@ -215,6 +217,20 @@ interface Setting {
       </div>
 
       <aside class="space-y-6">
+        @if (profileUrl(); as url) {
+          <section id="phone" [class]="ui.card + ' p-4'">
+            <h2 class="text-[14px] font-bold">Set up your iPhone or iPad</h2>
+            <p class="mt-1 text-[13px] leading-relaxed text-muted">
+              Point the camera at this code and tap the link. Install the profile in Settings and enter the mailbox
+              password when asked.
+            </p>
+            <amelu-phone-qr class="mx-auto mt-3 max-w-[180px]" [url]="url" [label]="'QR code for the ' + (ctx.mailbox()?.address ?? '') + ' profile'" />
+            <p class="mt-3 text-[12px] leading-relaxed text-muted">
+              On Android, add the account in Gmail or Outlook with the full address; most apps find the settings by
+              themselves.
+            </p>
+          </section>
+        }
         <section [class]="ui.card + ' p-4'">
           <h2 class="text-[14px] font-bold">Signing in</h2>
           <p class="mt-1 text-[13px] leading-relaxed text-muted">
@@ -248,6 +264,11 @@ interface Setting {
   host: { class: 'block' },
 })
 export class MailboxUsage {
+  // Seeing the instructions counts as setting up a device for the home checklist.
+  constructor() {
+    markSetupStep('device');
+  }
+
   protected readonly ctx = inject(MailboxContext);
   protected readonly ui = UI;
   protected readonly copied = signal<string | null>(null);

@@ -1,3 +1,4 @@
+import { NotificationBell } from '../notifications/notification-bell';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -35,7 +36,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({

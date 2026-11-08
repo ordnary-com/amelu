@@ -1,0 +1,16 @@
+Top bar: a notification bell
+2026-11-08
+
+Problems only showed on the page they belong to. A bell next to the account
+menu (beta/src/app/notifications) now lists what needs attention, worked
+out in the browser from what the dashboard already loads: a domain that
+failed or isn't active yet (link to its DNS page), a DNS record that's
+wrong on an active domain (needsAttention), a domain at 80% or more of its
+daily sending limit (GET /api/domains/{id}/sending, first 10 domains),
+mailboxes at 85% of their storage limit (the new storage endpoint, first 5
+domains) and open invoices. The badge counts unread ones; "Mark all as
+read" stores the current ids in localStorage (amelu.notices.read), and an
+id changes when the situation does (sending near vs full, how many
+mailboxes are full), so a new problem shows as unread again. Empty list:
+"All good". The initial bundle is now 519 kB against the 500 kB budget
+(a warning, not an error).

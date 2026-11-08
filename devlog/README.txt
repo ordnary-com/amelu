@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Domain cards: DNS health score and DMARC
+            2026-11-08-domain-health-score.txt
+
 2026-11-08  Amelu nameservers on the add-domain page (built, off)
             2026-11-08-amelu-nameservers.txt
 

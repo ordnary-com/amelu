@@ -1,6 +1,7 @@
 package main
 
 import (
+	"amelu/backend/internal/cfdns"
 	"amelu/backend/internal/cfsaas"
 	"context"
 	"log"
@@ -59,6 +60,9 @@ func main() {
 		WebmailSSOSecret:         cfg.WebmailSSOSecret,
 		WebmailSubdomainSuffix:   cfg.WebmailSubdomainSuffix,
 		WebmailCNAMETarget:       cfg.WebmailCNAMETarget,
+	}
+	if cfg.AmeluDNSToken != "" && cfg.AmeluDNSAccountID != "" && (cfg.AmeluNSSet == 0 || len(cfg.AmeluNameservers) >= 2) {
+		app.AmeluDNS = cfdns.NewClient(cfg.AmeluDNSToken, cfg.AmeluDNSAccountID, cfg.AmeluNSSet, cfg.AmeluNameservers)
 	}
 	if cfg.CloudflareSaaSToken != "" && cfg.CloudflareSaaSZoneID != "" {
 		app.WebmailSaaS = cfsaas.NewClient(cfg.CloudflareSaaSToken, cfg.CloudflareSaaSZoneID, cfg.WebmailWorkerName)
@@ -253,6 +257,13 @@ func main() {
 	mux.HandleFunc("DELETE /api/domains/{id}", auth.Require(app.Store, app.DeleteDomain))
 	mux.HandleFunc("GET /api/domains/{id}/dns", auth.Require(app.Store, app.GetDomainDNS))
 	mux.HandleFunc("GET /api/domains/{id}/domain-connect", auth.Require(app.Store, app.GetDomainConnect))
+	mux.HandleFunc("GET /api/nameservers", auth.Require(app.Store, app.GetAmeluNameservers))
+	mux.HandleFunc("GET /api/domains/{id}/nameservers", auth.Require(app.Store, app.GetDomainNameservers))
+	mux.HandleFunc("POST /api/domains/{id}/nameservers", auth.Require(app.Store, app.UseAmeluNameservers))
+	mux.HandleFunc("GET /api/domains/{id}/dns-records", auth.Require(app.Store, app.ListZoneRecords))
+	mux.HandleFunc("POST /api/domains/{id}/dns-records", auth.Require(app.Store, app.CreateZoneRecord))
+	mux.HandleFunc("PUT /api/domains/{id}/dns-records/{recordId}", auth.Require(app.Store, app.UpdateZoneRecord))
+	mux.HandleFunc("DELETE /api/domains/{id}/dns-records/{recordId}", auth.Require(app.Store, app.DeleteZoneRecord))
 	mux.HandleFunc("GET /api/domains/{id}/bind", auth.Require(app.Store, app.GetDomainBindFile))
 	mux.HandleFunc("GET /api/domains/{id}/sending", auth.Require(app.Store, app.GetDomainSending))
 

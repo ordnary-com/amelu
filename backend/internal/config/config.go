@@ -5,6 +5,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -109,6 +110,15 @@ type Config struct {
 	WebmailWorkerName      string
 	CloudflareSaaSToken    string
 	CloudflareSaaSZoneID   string
+
+	// Amelu nameservers (docs/AMELU_NAMESERVERS.md): customer zones live in
+	// this Cloudflare account on its custom nameserver set AmeluNSSet, whose
+	// names are AmeluNameservers. Without the token and account the option
+	// is hidden.
+	AmeluDNSToken     string
+	AmeluDNSAccountID string
+	AmeluNSSet        int
+	AmeluNameservers  []string
 }
 
 func Load() (*Config, error) {
@@ -122,6 +132,10 @@ func Load() (*Config, error) {
 		WebmailWorkerName:      getEnv("WEBMAIL_WORKER_NAME", "amelu-webmail"),
 		CloudflareSaaSToken:    os.Getenv("CLOUDFLARE_SAAS_API_TOKEN"),
 		CloudflareSaaSZoneID:   os.Getenv("CLOUDFLARE_SAAS_ZONE_ID"),
+		AmeluDNSToken:          os.Getenv("AMELU_DNS_API_TOKEN"),
+		AmeluDNSAccountID:      os.Getenv("AMELU_DNS_ACCOUNT_ID"),
+		AmeluNSSet:             getEnvInt("AMELU_NS_SET", 0),
+		AmeluNameservers:       splitList(getEnv("AMELU_NAMESERVERS", "ns1.amelu.org,ns2.amelu.org")),
 		DatabaseURL:            os.Getenv("DATABASE_URL"),
 		StalwartBaseURL:        os.Getenv("STALWART_BASE_URL"),
 		StalwartUser:           os.Getenv("STALWART_ADMIN_USER"),
@@ -182,6 +196,13 @@ func Load() (*Config, error) {
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
+	}
+	return fallback
+}
+
+func getEnvInt(key string, fallback int) int {
+	if n, err := strconv.Atoi(os.Getenv(key)); err == nil {
+		return n
 	}
 	return fallback
 }

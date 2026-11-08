@@ -9,6 +9,7 @@ import { Icon } from '../icon';
 import { UI } from '../ui';
 import { STANDARD_ADDRESSES } from '../standard-addresses';
 import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
+import { NameserversCard } from '../dns-spam/nameservers-card';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
 const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
@@ -22,7 +23,7 @@ interface CreatedAddress {
 /** The current dashboard's /domains/new: add a domain, optionally with its default addresses. */
 @Component({
   selector: 'amelu-new-domain',
-  imports: [RouterLink, Alert, Icon],
+  imports: [RouterLink, Alert, Icon, NameserversCard],
   templateUrl: './new-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -43,6 +44,12 @@ export class NewDomain {
   protected readonly copied = signal<string | null>(null);
   // Looked up once the domain exists; null until then or when it fails.
   protected readonly connect = signal<DomainConnectStatus | null>(null);
+
+  // Whether Amelu can host the DNS; the option stays greyed out until we know.
+  protected readonly ameluNs = toSignal(this.dnsApi.ameluNameservers().pipe(catchError(() => of(null))), { initialValue: null });
+  protected readonly nameservers = signal<'external' | 'amelu'>('external');
+  // The mode the finished domain was added with.
+  protected readonly addedWith = signal<'external' | 'amelu'>('external');
 
   /** What people paste is often a URL or an address; keep only the domain part. */
   protected readonly name = computed(() =>
@@ -82,11 +89,13 @@ export class NewDomain {
     return usage ? Math.min(100, ((this.used() ?? 0) / usage.max) * 100) : 0;
   });
 
-  protected readonly steps = [
+  protected readonly steps = computed(() => [
     { title: 'Add the domain', text: 'We set it up on our mail servers.' },
-    { title: 'Set the DNS records', text: 'At your domain registrar or DNS host. We check them live.' },
+    this.nameservers() === 'amelu'
+      ? { title: 'Change the nameservers', text: 'At your registrar, to the two Amelu nameservers. We set every record.' }
+      : { title: 'Set the DNS records', text: 'At your domain registrar or DNS host. We check them live.' },
     { title: 'Create mailboxes', text: 'Then sign in from any mail app.' },
-  ];
+  ]);
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();
@@ -94,12 +103,16 @@ export class NewDomain {
     this.busy.set(true);
     this.error.set(null);
     try {
-      const domain = await firstValueFrom(this.api.createDomain(this.name()));
+      const mode = this.ameluNs()?.available ? this.nameservers() : 'external';
+      const domain = await firstValueFrom(this.api.createDomain(this.name(), mode));
+      this.addedWith.set(mode);
       this.connect.set(null);
-      this.dnsApi
-        .domainConnect(domain.id)
-        .pipe(catchError(() => of(null)))
-        .subscribe((status) => this.connect.set(status));
+      if (mode === 'external') {
+        this.dnsApi
+          .domainConnect(domain.id)
+          .pipe(catchError(() => of(null)))
+          .subscribe((status) => this.connect.set(status));
+      }
       const addresses: CreatedAddress[] = [];
       if (this.createDefaults()) {
         // One by one, and a failure doesn't stop the rest: the domain exists either way.

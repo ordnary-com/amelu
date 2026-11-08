@@ -52,6 +52,9 @@ func toDomainResponse(d *db.Domain) domainResponse {
 
 type createDomainRequest struct {
 	Name string `json:"name"`
+	// Nameservers is "amelu" to have Amelu host the domain's DNS; anything
+	// else keeps the DNS where it is.
+	Nameservers string `json:"nameservers"`
 }
 
 // CreateDomain creates the Domain principal in Stalwart. DNS is the
@@ -77,6 +80,11 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 	name := strings.ToLower(strings.TrimSpace(req.Name))
 	if name == "" {
 		writeError(w, http.StatusBadRequest, "domain name is required")
+		return
+	}
+	useAmeluDNS := req.Nameservers == "amelu"
+	if useAmeluDNS && a.AmeluDNS == nil {
+		writeError(w, http.StatusServiceUnavailable, "Amelu nameservers aren't available yet")
 		return
 	}
 	if isReservedDomain(name) {
@@ -124,6 +132,14 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 	}
 	a.Store.UpdateDomainStatus(r.Context(), domain.ID, "dns_pending", "")
 	a.Store.LogActivity(r.Context(), domain.ID, "domain.created", "Domain "+name+" created")
+	if useAmeluDNS {
+		// The domain works either way; if hosting fails it simply keeps its own
+		// DNS, and the DNS page offers the switch again.
+		if err := a.hostDomainDNS(r.Context(), domain); err != nil {
+			log.Printf("host DNS for %s on Amelu nameservers: %v", name, err)
+			a.Store.LogActivity(r.Context(), domain.ID, "domain.nameservers_failed", err.Error())
+		}
+	}
 	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
 		"domain.created", "domain", domain.ID, name, nil, requestIP(r))
 
@@ -192,6 +208,7 @@ func (a *App) DeleteDomain(w http.ResponseWriter, r *http.Request) {
 		writeUpstreamError(w, "", err)
 		return
 	}
+	a.releaseDomainZone(r.Context(), domain)
 
 	if err := a.Store.DeleteDomainForOrganization(r.Context(), customer.OrganizationID.String, domainID); err != nil {
 		writeError(w, http.StatusInternalServerError, "domain removed from mail cluster but could not update records")
@@ -230,4 +247,18 @@ func (a *App) destroyDomainInStalwart(ctx context.Context, domain *db.Domain) er
 		return fmt.Errorf("failed to delete domain in mail cluster: %w", err)
 	}
 	return nil
+}
+
+// releaseDomainZone deletes the zone Amelu hosted for a removed domain, so
+// the name can be added again, here or anywhere else.
+func (a *App) releaseDomainZone(ctx context.Context, domain *db.Domain) {
+	zone, err := a.Store.GetDNSZone(ctx, domain.ID)
+	if err != nil || a.AmeluDNS == nil {
+		return
+	}
+	if err := a.AmeluDNS.DeleteZone(ctx, zone.ZoneID); err != nil {
+		log.Printf("delete zone %s for %s: %v", zone.ZoneID, domain.Name, err)
+		return
+	}
+	a.Store.DeleteDNSZone(ctx, domain.ID)
 }

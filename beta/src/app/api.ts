@@ -252,8 +252,8 @@ export class Api {
     return this.http.put<void>('/api/domains/order', { domainIds });
   }
 
-  createDomain(name: string) {
-    return this.http.post<Domain>('/api/domains', { name });
+  createDomain(name: string, nameservers: 'external' | 'amelu' = 'external') {
+    return this.http.post<Domain>('/api/domains', { name, nameservers });
   }
 
   createMailbox(domainId: string, localPart: string) {

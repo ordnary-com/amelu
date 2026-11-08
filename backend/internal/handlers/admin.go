@@ -239,6 +239,7 @@ func (a *App) AdminDeleteDomain(w http.ResponseWriter, r *http.Request, operator
 		writeUpstreamError(w, "", err)
 		return
 	}
+	a.releaseDomainZone(r.Context(), domain)
 	if err := a.Store.DeleteDomain(r.Context(), domain.CustomerID, domain.ID); err != nil {
 		writeError(w, http.StatusInternalServerError, "domain removed from mail cluster but could not update records")
 		return

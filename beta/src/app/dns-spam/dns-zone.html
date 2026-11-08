@@ -1,0 +1,121 @@
+<amelu-page-header title="DNS records" [crumbs]="crumbs()">
+  The records Amelu answers with for {{ ctx.domain()?.name }}. Mail records are kept right by Amelu; everything else is
+  yours to change.
+  @if (hosted() && records()) {
+    <button actions type="button" [class]="ui.primary" (click)="startNew()">Add record</button>
+  }
+</amelu-page-header>
+
+<amelu-section-tabs label="DNS" [base]="'/domains/' + ctx.id()" [tabs]="tabs" />
+
+<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <div class="min-w-0 space-y-4">
+    @if (loadError(); as message) {
+      <amelu-alert kind="error" [dismissible]="true" (dismissed)="loadError.set(null)">{{ message }}</amelu-alert>
+    }
+
+    @if (!hosted()) {
+      <div [class]="ui.card">
+        <amelu-empty-state title="This domain keeps its own DNS">
+          Its records are managed where its nameservers point now. Switch to the Amelu nameservers to manage them here.
+        </amelu-empty-state>
+      </div>
+    } @else {
+      @if (editing() === 'new') {
+        <ng-container *ngTemplateOutlet="form" />
+      }
+
+      <div [class]="ui.card + ' overflow-hidden'">
+        <div class="hidden grid-cols-[72px_minmax(0,1fr)_minmax(0,2fr)_120px] gap-3 border-b border-line bg-bg/60 px-4 py-2 text-[12px] font-medium text-muted md:grid">
+          <span>Type</span><span>Name</span><span>Value</span><span></span>
+        </div>
+        @if (sorted(); as list) {
+          @for (record of list; track record.id) {
+            @if (editing() === record.id) {
+              <div class="border-b border-line p-3 last:border-b-0"><ng-container *ngTemplateOutlet="form" /></div>
+            } @else {
+              <div class="grid grid-cols-[72px_minmax(0,1fr)] gap-x-3 gap-y-1 border-b border-line px-4 py-3 last:border-b-0 md:grid-cols-[72px_minmax(0,1fr)_minmax(0,2fr)_120px] md:items-center">
+                <span class="text-[12px] font-bold tracking-wide text-muted uppercase">{{ record.type }}</span>
+                <span class="truncate text-[13px] font-medium">{{ short(record.name) }}</span>
+                <code class="col-span-2 truncate text-[12px] text-muted md:col-span-1" [attr.title]="record.content">
+                  @if (record.priority !== undefined && record.type === 'MX') {{{ record.priority }} }{{ record.content }}
+                </code>
+                <span class="col-span-2 flex justify-start gap-2 md:col-span-1 md:justify-end">
+                  @if (record.managed) {
+                    <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-medium text-muted" title="Amelu keeps this record right so your email keeps working">For email</span>
+                  } @else {
+                    <button type="button" class="cursor-pointer text-[12px] font-medium text-link hover:underline" (click)="startEdit(record)">Edit</button>
+                    <button type="button" class="cursor-pointer text-[12px] font-medium text-bad hover:underline" [disabled]="deleting() === record.id" (click)="remove(record)">
+                      {{ deleting() === record.id ? 'Deleting...' : 'Delete' }}
+                    </button>
+                  }
+                </span>
+              </div>
+            }
+          } @empty {
+            <amelu-empty-state title="No records yet">Add the records your website or other services need.</amelu-empty-state>
+          }
+        } @else {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="flex gap-3 border-b border-line px-4 py-3.5 last:border-b-0" aria-hidden="true">
+              <span class="block h-3 w-12 animate-pulse rounded bg-bg"></span>
+              <span class="block h-3 w-24 animate-pulse rounded bg-bg"></span>
+              <span class="block h-3 flex-1 animate-pulse rounded bg-bg"></span>
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+
+  <aside class="space-y-6">
+    <amelu-nameservers-card [domainId]="ctx.id()" [domain]="ctx.domain()?.name ?? ''" [showEditorLink]="false" (changed)="load()" />
+    <section [class]="ui.card + ' p-4'">
+      <h2 class="text-[14px] font-bold">About these records</h2>
+      <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-muted">
+        <li>Use @ for {{ ctx.domain()?.name }} itself, or a name like www for a subdomain.</li>
+        <li>Records marked "For email" are set and kept by Amelu. Changing them would stop mail.</li>
+        <li>Changes are live within a minute.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<ng-template #form>
+  <form [class]="ui.card + ' space-y-3 p-4'" (submit)="save($event)">
+    <div class="grid gap-3 sm:grid-cols-[110px_minmax(0,1fr)]">
+      <label [class]="ui.label">
+        Type
+        <select [class]="ui.input" [ngModel]="draft().type" (ngModelChange)="patch({ type: $event })" name="type">
+          @for (t of types; track t) {
+            <option [value]="t">{{ t }}</option>
+          }
+        </select>
+      </label>
+      <label [class]="ui.label">
+        Name
+        <input [class]="ui.input" [ngModel]="draft().name" (ngModelChange)="patch({ name: $event })" name="name" placeholder="@ or www" autocomplete="off" />
+      </label>
+    </div>
+    <div class="grid gap-3" [class.sm:grid-cols-[110px_minmax(0,1fr)]]="draft().type === 'MX'">
+      @if (draft().type === 'MX') {
+        <label [class]="ui.label">
+          Priority
+          <input [class]="ui.input" type="number" min="0" [ngModel]="draft().priority ?? 10" (ngModelChange)="patch({ priority: +$event })" name="priority" />
+        </label>
+      }
+      <label [class]="ui.label">
+        Value
+        <input [class]="ui.input" [ngModel]="draft().content" (ngModelChange)="patch({ content: $event })" name="content" autocomplete="off" />
+        <span [class]="ui.hint">{{ hints[draft().type] }}</span>
+      </label>
+    </div>
+    @if (formError(); as message) {
+      <p class="text-[12px] text-bad">{{ message }}</p>
+    }
+    <div class="flex gap-2">
+      <button type="submit" [class]="ui.primary" [disabled]="saving() || !draft().content.trim()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+      <button type="button" [class]="ui.outline" (click)="editing.set(null)">Cancel</button>
+    </div>
+  </form>
+</ng-template>

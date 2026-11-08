@@ -139,6 +139,7 @@ func (a *App) TerminateAccount(w http.ResponseWriter, r *http.Request) {
 			writeUpstreamError(w, "", err)
 			return
 		}
+		a.releaseDomainZone(r.Context(), &domains[i])
 	}
 
 	if err := a.Store.DeleteCustomer(r.Context(), customer.ID); err != nil {

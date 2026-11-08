@@ -22,7 +22,7 @@ interface PageDef {
 
 // Account-wide pages.
 const GLOBAL: PageDef[] = [
-  { path: '/', label: 'Dashboard', hint: 'Overview of your domains and plan', keywords: 'home overview start' },
+  { path: '/', label: 'Overview', hint: 'Your domains and plan at a glance', keywords: 'home dashboard start' },
   { path: '/domains', label: 'Domains', hint: 'All your domains', keywords: 'email domains list' },
   { path: '/domains/new', label: 'Add a domain', hint: 'Connect a new domain', keywords: 'new domain create connect setup' },
   { path: '/account', label: 'My account', hint: 'Your profile and sign-in', keywords: 'profile name email login sign in' },

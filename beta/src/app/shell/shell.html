@@ -103,8 +103,8 @@
           </li>
         }
         @for (entry of menu.items; track entry.link) {
-          @if (entry.divider) {
-            <li class="mx-4 my-1.5 h-px bg-chrome-ink/10" aria-hidden="true"></li>
+          @if (entry.group) {
+            <li class="mx-2 px-2 pt-4 pb-1 text-[12px] font-medium text-chrome-ink/45" aria-hidden="true">{{ entry.group }}</li>
           }
           <li
             [class]="entry.sub ? subitem : item"

@@ -231,8 +231,8 @@ interface MenuEntry {
   kind?: 'create' | 'danger' | 'download';
   /** Muted, for the rarely used settings at the end. */
   secondary?: boolean;
-  /** Starts a new group: a thin line above it. */
-  divider?: boolean;
+  /** Starts a new group under this heading. */
+  group?: string;
 }
 
 interface MenuColumn {
@@ -285,19 +285,19 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
     domain.push({ label: 'New Rewrite', link: `${d}/rewrites/new`, sub: true, kind: 'create' });
   }
   domain.push(
-    { label: 'Catchall Recipients', link: `${d}/catchall`, divider: true },
+    { label: 'Catchall Recipients', link: `${d}/catchall`, group: 'Routing' },
     { label: 'Bcc. Captures', link: `${d}/bccs`, area: true },
   );
   if (section === 'bccs') {
     domain.push({ label: 'New Capture', link: `${d}/bccs/new`, sub: true, kind: 'create' });
   }
   domain.push(
-    { label: 'DNS Configuration', link: `${d}/dns`, area: true, divider: true },
+    { label: 'DNS Configuration', link: `${d}/dns`, area: true, group: 'Delivery' },
     { label: 'Spam Filtering', link: `${d}/spam`, area: true },
-    { label: 'Transfer Ownership...', link: `${d}/transfer`, divider: true },
+    { label: 'Transfer Ownership...', link: `${d}/transfer`, group: 'Manage' },
     { label: 'Deactivate Domain...', link: `${d}/deactivate` },
     { label: 'Delete Domain...', link: `${d}/delete`, kind: 'danger' },
-    { label: 'Listing Settings', link: `${d}/listing-settings`, secondary: true, divider: true },
+    { label: 'Listing Settings', link: `${d}/listing-settings`, secondary: true, group: 'More' },
     { label: 'Attached Notes', link: `${d}/notes`, secondary: true },
   );
   columns.push({ key: 'domain', label: 'Domain', items: domain });
@@ -315,15 +315,15 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
         { label: 'Usage Instructions', link: `${m}/usage` },
         { label: 'Enabled Services', link: `${m}/services` },
         { label: 'Limits', link: `${m}/limits` },
-        { label: 'Password', link: `${m}/password`, divider: true },
+        { label: 'Password', link: `${m}/password`, group: 'Access' },
         { label: 'Internal Access', link: `${m}/internal-access` },
-        { label: 'Identities', link: `${m}/identities`, divider: true },
+        { label: 'Identities', link: `${m}/identities`, group: 'Mail handling' },
         { label: 'Filters', link: `${m}/filters` },
         { label: 'Forwarding', link: `${m}/forwarding` },
         { label: 'Delegation', link: `${m}/delegation` },
         { label: 'Expiration', link: `${m}/expiration` },
-        { label: 'Delete Mailbox...', link: `${m}/delete`, kind: 'danger', divider: true },
-        { label: 'Listing Settings', link: `${m}/listing-settings`, secondary: true, divider: true },
+        { label: 'Delete Mailbox...', link: `${m}/delete`, kind: 'danger', group: 'Manage' },
+        { label: 'Listing Settings', link: `${m}/listing-settings`, secondary: true, group: 'More' },
         { label: 'Attached Notes', link: `${m}/notes`, secondary: true },
       ],
     });

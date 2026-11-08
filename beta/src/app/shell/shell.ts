@@ -1,10 +1,11 @@
 import { NotificationBell } from '../notifications/notification-bell';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, filter, map, of } from 'rxjs';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, distinctUntilChanged, filter, map, of, startWith, switchMap } from 'rxjs';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Domains } from '../domains';
 import { Api, Domain } from '../api';
+import { MailboxApi } from '../mailbox/mailbox-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { isFree } from '../billing';
 import { DOMAIN_STATUS, Tone } from '../status';
@@ -94,6 +95,25 @@ export class Shell {
 
   protected readonly columns = computed(() => menuColumns(this.at()));
 
+  // The mailbox menu's heading. A second, small fetch: the shell sits above MailboxLayout,
+  // so it can't use that page's MailboxContext.
+  private readonly mailboxApi = inject(MailboxApi);
+  private readonly mailboxAddress = toSignal(
+    toObservable(computed(() => this.at().mailboxId)).pipe(
+      distinctUntilChanged(),
+      switchMap((id) =>
+        id
+          ? this.mailboxApi.get(id).pipe(
+              map((mailbox): string | null => mailbox.address),
+              catchError(() => of(null)),
+              startWith(null),
+            )
+          : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
+
   // Only one menu column shows next to the main one. Inside a mailbox that is
   // the mailbox's, with a button back up to the domain's; level is the column
   // picked with those buttons, null for the deepest. Navigating resets it.
@@ -128,10 +148,10 @@ export class Shell {
     return DOT[DOMAIN_STATUS[domain.status].tone];
   }
 
-  /** A column's heading: the domain's name for the domain menu, else the menu's own label. */
+  /** A column's heading: the domain's name or the mailbox's address, else the menu's own label. */
   protected columnTitle(menu: { key: string; label: string }): string {
-    if (menu.key !== 'domain') return menu.label;
-    return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
+    if (menu.key === 'domain') return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
+    return this.mailboxAddress() ?? menu.label;
   }
 
   protected readonly hiddenDomains = computed(() => (this.domains()?.length ?? 0) - SIDEBAR_DOMAINS);
@@ -211,8 +231,8 @@ interface MenuEntry {
   kind?: 'create' | 'danger' | 'download';
   /** Muted, for the rarely used settings at the end. */
   secondary?: boolean;
-  /** Starts a new group: a thin line above it. */
-  divider?: boolean;
+  /** Starts a new group under this heading. */
+  group?: string;
 }
 
 interface MenuColumn {
@@ -265,19 +285,19 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
     domain.push({ label: 'New Rewrite', link: `${d}/rewrites/new`, sub: true, kind: 'create' });
   }
   domain.push(
-    { label: 'Catchall Recipients', link: `${d}/catchall`, divider: true },
+    { label: 'Catchall Recipients', link: `${d}/catchall`, group: 'Routing' },
     { label: 'Bcc. Captures', link: `${d}/bccs`, area: true },
   );
   if (section === 'bccs') {
     domain.push({ label: 'New Capture', link: `${d}/bccs/new`, sub: true, kind: 'create' });
   }
   domain.push(
-    { label: 'DNS Configuration', link: `${d}/dns`, area: true, divider: true },
+    { label: 'DNS Configuration', link: `${d}/dns`, area: true, group: 'Delivery' },
     { label: 'Spam Filtering', link: `${d}/spam`, area: true },
-    { label: 'Transfer Ownership...', link: `${d}/transfer`, divider: true },
+    { label: 'Transfer Ownership...', link: `${d}/transfer`, group: 'Manage' },
     { label: 'Deactivate Domain...', link: `${d}/deactivate` },
     { label: 'Delete Domain...', link: `${d}/delete`, kind: 'danger' },
-    { label: 'Listing Settings', link: `${d}/listing-settings`, secondary: true, divider: true },
+    { label: 'Listing Settings', link: `${d}/listing-settings`, secondary: true, group: 'More' },
     { label: 'Attached Notes', link: `${d}/notes`, secondary: true },
   );
   columns.push({ key: 'domain', label: 'Domain', items: domain });
@@ -295,15 +315,15 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
         { label: 'Usage Instructions', link: `${m}/usage` },
         { label: 'Enabled Services', link: `${m}/services` },
         { label: 'Limits', link: `${m}/limits` },
-        { label: 'Password', link: `${m}/password`, divider: true },
+        { label: 'Password', link: `${m}/password`, group: 'Access' },
         { label: 'Internal Access', link: `${m}/internal-access` },
-        { label: 'Identities', link: `${m}/identities`, divider: true },
+        { label: 'Identities', link: `${m}/identities`, group: 'Mail handling' },
         { label: 'Filters', link: `${m}/filters` },
         { label: 'Forwarding', link: `${m}/forwarding` },
         { label: 'Delegation', link: `${m}/delegation` },
         { label: 'Expiration', link: `${m}/expiration` },
-        { label: 'Delete Mailbox...', link: `${m}/delete`, kind: 'danger', divider: true },
-        { label: 'Listing Settings', link: `${m}/listing-settings`, secondary: true, divider: true },
+        { label: 'Delete Mailbox...', link: `${m}/delete`, kind: 'danger', group: 'Manage' },
+        { label: 'Listing Settings', link: `${m}/listing-settings`, secondary: true, group: 'More' },
         { label: 'Attached Notes', link: `${m}/notes`, secondary: true },
       ],
     });

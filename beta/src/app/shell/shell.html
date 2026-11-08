@@ -32,7 +32,6 @@
     id="main-nav"
     class="flex min-h-0 flex-none text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-[68px] max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
     [class.max-lg:hidden]="!navOpen()"
-    [class.lg:pr-4]="shown()"
     aria-label="Main"
   >
     <!-- The main column carries its own right gutter, so it keeps the same width whether
@@ -84,7 +83,7 @@
     <!-- One menu column next to the main one: the domain's, or, inside a mailbox,
          the mailbox's with a way back up to the domain's (drill-down, see shell.ts). -->
     @if (shown(); as menu) {
-      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 pl-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:pl-0'" [attr.aria-label]="menu.label">
+      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 px-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:px-0'" [attr.aria-label]="menu.label">
         @if (parentMenu(); as parent) {
           <li class="mx-2">
             <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() - 1)">
@@ -92,7 +91,10 @@
             </button>
           </li>
         }
-        <li class="mx-2 truncate px-2 pt-2 pb-1.5 text-[11px] tracking-wide text-chrome-ink/45 uppercase" aria-hidden="true">{{ columnTitle(menu) }}</li>
+        <li class="mx-2 px-2 pt-1.5 pb-2" aria-hidden="true">
+          <p class="text-[12px] text-chrome-ink/50">{{ menu.label }}</p>
+          <p class="truncate text-[15px] font-medium text-chrome-ink" [title]="columnTitle(menu)">{{ columnTitle(menu) }}</p>
+        </li>
         @if (childMenu(); as child) {
           <li class="mx-2 mb-1">
             <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() + 1)">
@@ -101,8 +103,8 @@
           </li>
         }
         @for (entry of menu.items; track entry.link) {
-          @if (entry.divider) {
-            <li class="mx-4 my-1.5 h-px bg-chrome-ink/10" aria-hidden="true"></li>
+          @if (entry.group) {
+            <li class="mx-2 px-2 pt-4 pb-1 text-[12px] font-medium text-chrome-ink/45" aria-hidden="true">{{ entry.group }}</li>
           }
           <li
             [class]="entry.sub ? subitem : item"

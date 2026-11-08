@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-08  Sidebar: second menu column gets headings, no uppercase
+            2026-11-08-second-menu-rework.txt
+
 2026-11-08  The deal card can't be dismissed anymore
             2026-11-08-promo-not-dismissable.txt
 

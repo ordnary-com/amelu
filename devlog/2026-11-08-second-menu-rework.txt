@@ -1,0 +1,14 @@
+Sidebar: the second menu column gets headings instead of an uppercase label
+2026-11-08
+
+The domain and mailbox menu column in the beta shell opened with the domain
+name as an 11px uppercase label, and split its groups with bare 1px lines.
+It now starts with a small "Domain" or "Mailbox" line over the domain name or
+mailbox address in 15px. The mailbox address comes from GET
+/api/mailboxes/:id, fetched by the shell, because it sits above
+MailboxLayout's MailboxContext. MenuEntry.divider became MenuEntry.group, a
+named heading in sentence case: Routing, Delivery, Manage and More for a
+domain, and Access, Mail handling, Manage and More for a mailbox. The nav's
+lg:pr-4 after the second column is gone, and the column has px-1 instead of
+pl-1, so its items sit 12px from the border on the left and 12px from the
+page on the right.

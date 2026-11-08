@@ -1,0 +1,12 @@
+Domains page: Needs attention says what's wrong
+2026-11-08
+
+The Needs attention list on /domains in the beta gave every row a
+border-b, so the last row's line ran into the list's own border and the
+bottom looked doubled. The rows now use divide-y. Each row shows the actual
+reason instead of always "Finish the DNS setup", with a matching dot:
+Suspended and Setup failed in red, linking to the domain; Still being set
+up in grey; Add the DNS records (dns_pending) in amber, linking to its DNS
+page; and for an active domain, which records fail ("MX and DKIM don't
+check out"). The name no longer underlines on hover. The chevron nudges
+right instead.

@@ -1,10 +1,35 @@
-<div class="flex flex-wrap items-start justify-between gap-4">
-  <div class="min-w-0">
-    <h1 class="text-[22px] font-bold tracking-[-0.4px]">My Organization</h1>
-    <p class="mt-1.5 text-[13px] text-muted">Manage your organization's details, team members, and invitations.</p>
+<!-- The organization as a banner, like the Overview greeting and My Account. -->
+<section class="relative overflow-hidden rounded-lg bg-hero px-7 pt-5 pb-6 text-hero-ink max-mobile:px-5">
+  <div
+    class="pointer-events-none absolute inset-0 opacity-45 [mask-image:linear-gradient(to_left,black_0%,rgba(0,0,0,0.7)_25%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.06)_85%,transparent_100%)] max-mobile:opacity-25"
+    aria-hidden="true"
+  >
+    <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
   </div>
-  <a routerLink="/organization/activity" [class]="ui.outline">Activity Log</a>
-</div>
+  <div class="relative flex flex-wrap items-center justify-between gap-3">
+    <p class="text-[13px] font-medium text-hero-ink/70">My Organization</p>
+    <div class="flex gap-2">
+      <a routerLink="/organization/webmail" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">Webmail</a>
+      <a routerLink="/organization/activity" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">Activity Log</a>
+    </div>
+  </div>
+  @if (customer(); as me) {
+    <h1 class="relative mt-6 truncate text-[32px] leading-[1.15] font-normal tracking-[-0.02em] text-ink max-mobile:mt-5 max-mobile:text-[26px]">
+      {{ me.organizationName }}
+    </h1>
+    <p class="relative mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-hero-ink/75">
+      <span>{{ me.planTierName }} plan</span>
+      @if (members(); as list) {
+        <span aria-hidden="true">·</span>
+        <span>{{ list.length }} {{ list.length === 1 ? 'member' : 'members' }}</span>
+      }
+      <span aria-hidden="true">·</span>
+      <span class="inline-flex items-center gap-1.5">You're <span [class]="badge(roles[me.role].tone)">{{ roles[me.role].label }}</span></span>
+    </p>
+  } @else {
+    <span class="relative mt-6 block h-9 w-72 animate-pulse rounded bg-hero-ink/10" aria-hidden="true"></span>
+  }
+</section>
 
 @if (error(); as message) {
   <amelu-alert class="mt-5" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
@@ -21,10 +46,10 @@
           <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
         }
       </h2>
-      <div [class]="ui.card + ' overflow-hidden'">
+      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
         @if (members() === undefined) {
           @for (i of [1, 2]; track i) {
-            <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0" aria-hidden="true">
+            <div class="flex items-center gap-3 px-4 py-3" aria-hidden="true">
               <span class="size-8 animate-pulse rounded-full bg-bg"></span>
               <span class="space-y-1.5">
                 <span class="block h-3 w-32 animate-pulse rounded bg-bg"></span>
@@ -34,31 +59,35 @@
           }
         } @else {
           @for (member of members(); track member.id) {
-            <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
-              <amelu-avatar class="size-8" [src]="member.avatarUrl" [name]="member.name" [email]="member.email" />
+            <div class="flex flex-wrap items-center gap-3 px-4 py-3">
+              <amelu-avatar class="size-9" [src]="member.avatarUrl" [name]="member.name" [email]="member.email" [size]="36" />
               <div class="min-w-0 flex-1">
                 <div class="truncate text-[13px] font-medium">
                   {{ member.name }}
                   @if (member.isSelf) {
-                    <span class="font-normal text-muted">(you)</span>
+                    <span class="ml-1 rounded-full bg-bg px-1.5 py-px text-[11px] font-normal text-muted">You</span>
                   }
                 </div>
                 <div class="truncate text-[12px] text-muted">{{ member.email }}</div>
               </div>
 
               @if (canManage() && !member.isSelf) {
-                <select
-                  class="h-8 flex-none cursor-pointer rounded-md border border-line bg-surface px-2 text-[13px] outline-none focus:border-accent disabled:cursor-default disabled:opacity-60"
-                  [attr.aria-label]="'Role for ' + member.name"
-                  [disabled]="!isOwner() && member.role === 'owner'"
-                  (change)="changeRole(member, $any($event.target).value)"
-                >
+                <!-- A native select for the keyboard and screen readers, with its own arrow swapped for ours. -->
+                <span class="relative flex-none">
+                  <select
+                    class="h-8 cursor-pointer appearance-none rounded-md border border-line bg-surface pr-7 pl-2.5 text-[13px] font-medium outline-none hover:border-ink/20 focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-default disabled:opacity-60 [&>option]:bg-surface"
+                    [attr.aria-label]="'Role for ' + member.name"
+                    [disabled]="!isOwner() && member.role === 'owner'"
+                    (change)="changeRole(member, $any($event.target).value)"
+                  >
                   @for (role of assignableRoles; track role) {
                     <option [value]="role" [selected]="role === member.role" [disabled]="role === 'owner' && !isOwner()">
                       {{ roles[role].label }}
                     </option>
                   }
                 </select>
+                  <amelu-icon name="chevronDown" [size]="14" class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-muted" />
+                </span>
                 <button
                   type="button"
                   class="h-8 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
@@ -83,23 +112,27 @@
             <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
           }
         </h2>
-        <div [class]="ui.card + ' overflow-hidden'">
+        <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
           @if (invitations() === undefined) {
             <div class="px-4 py-3" aria-hidden="true"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></div>
           } @else {
             @for (invitation of invitations(); track invitation.id) {
-              <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
+              <div class="flex items-center gap-3 px-4 py-3">
+                <span class="inline-flex size-9 flex-none items-center justify-center rounded-full bg-bg text-muted" aria-hidden="true">
+                  <amelu-icon name="mail" [size]="15" />
+                </span>
                 <div class="min-w-0 flex-1">
                   <div class="truncate text-[13px] font-medium">{{ invitation.email }}</div>
                   <div class="truncate text-[12px] text-muted">
-                    Invited as {{ roles[invitation.role].label }} ·
-                    @if (invitation.expired) {
-                      <span class="text-bad">expired</span>
-                    } @else {
-                      expires {{ invitation.expiresAt | date: 'd MMM y' }}
+                    Invited as {{ roles[invitation.role].label }}
+                    @if (!invitation.expired) {
+                      · expires {{ invitation.expiresAt | date: 'd MMM y' }}
                     }
                   </div>
                 </div>
+                @if (invitation.expired) {
+                  <span [class]="badge('bad')">Expired</span>
+                }
                 <button
                   type="button"
                   class="h-8 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
@@ -120,26 +153,6 @@
   </div>
 
   <aside class="space-y-6">
-    @if (customer(); as me) {
-      <section>
-        <h2 [class]="ui.sectionTitle">Details</h2>
-        <dl [class]="ui.card + ' overflow-hidden text-[13px]'">
-          <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3">
-            <dt class="text-muted">Name</dt>
-            <dd class="min-w-0 truncate text-right">{{ me.organizationName }}</dd>
-          </div>
-          <div class="flex items-center justify-between gap-4 border-b border-line px-4 py-3">
-            <dt class="text-muted">Plan</dt>
-            <dd>{{ me.planTierName }}</dd>
-          </div>
-          <div class="flex items-center justify-between gap-4 px-4 py-3">
-            <dt class="text-muted">Your role</dt>
-            <dd><span [class]="badge(roles[me.role].tone)">{{ roles[me.role].label }}</span></dd>
-          </div>
-        </dl>
-      </section>
-    }
-
     @if (canManage()) {
       <section>
         <h2 [class]="ui.sectionTitle">Invite a teammate</h2>
@@ -152,7 +165,7 @@
             <input
               type="email"
               [class]="ui.input"
-              placeholder="eg. teammate@example.com"
+              placeholder="For example: teammate@example.com"
               [value]="inviteEmail()"
               (input)="inviteEmail.set($any($event.target).value)"
               required
@@ -160,8 +173,9 @@
           </label>
           <label class="block">
             <span [class]="ui.label">Role</span>
+            <span class="relative block">
             <select
-              [class]="ui.input + ' cursor-pointer bg-surface'"
+              [class]="ui.input + ' cursor-pointer appearance-none bg-surface pr-8 [&>option]:bg-surface'"
               (change)="inviteRole.set($any($event.target).value)"
             >
               @for (role of assignableRoles; track role) {
@@ -170,6 +184,8 @@
                 </option>
               }
             </select>
+              <amelu-icon name="chevronDown" [size]="14" class="pointer-events-none absolute top-1/2 right-2.5 mt-[3px] -translate-y-1/2 text-muted" />
+            </span>
           </label>
 
           @if (inviteSuccess(); as message) {
@@ -182,7 +198,7 @@
             </amelu-alert>
           }
 
-          <div class="flex justify-end">
+          <div class="-mx-4 flex justify-end border-t border-line px-4 pt-4">
             <button type="submit" [class]="ui.primary" [disabled]="inviting()">
               {{ inviting() ? 'Sending...' : 'Send invite' }}
             </button>

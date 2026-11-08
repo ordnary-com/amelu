@@ -1,0 +1,14 @@
+My Organization in the new style
+2026-11-08
+
+/organization in the beta opens with a banner like My Account: bg-hero with
+the accent warp dither, the organization name at 32px in normal weight, and
+"Free plan · N members · You're Owner" under it. Webmail and Activity Log
+are outlined buttons in its top right. The Details card in the sidebar is
+gone, since the banner says the same. Team members and Pending invitations
+use divide-y rows. Your own row shows a "You" pill instead of "(you)", the
+role select hides the browser arrow for our chevron, and each invitation
+gets a mail tile. An expired invitation shows an Expired pill instead of
+red inline text. The invite form's role select gets the same chevron, the
+send button sits behind a full-width line, and the placeholder says "For
+example:" instead of "eg.".

@@ -1,10 +1,11 @@
 import { NotificationBell } from '../notifications/notification-bell';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { catchError, filter, map, of } from 'rxjs';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, distinctUntilChanged, filter, map, of, startWith, switchMap } from 'rxjs';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Domains } from '../domains';
 import { Api, Domain } from '../api';
+import { MailboxApi } from '../mailbox/mailbox-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { isFree } from '../billing';
 import { DOMAIN_STATUS, Tone } from '../status';
@@ -94,6 +95,25 @@ export class Shell {
 
   protected readonly columns = computed(() => menuColumns(this.at()));
 
+  // The mailbox menu's heading. A second, small fetch: the shell sits above MailboxLayout,
+  // so it can't use that page's MailboxContext.
+  private readonly mailboxApi = inject(MailboxApi);
+  private readonly mailboxAddress = toSignal(
+    toObservable(computed(() => this.at().mailboxId)).pipe(
+      distinctUntilChanged(),
+      switchMap((id) =>
+        id
+          ? this.mailboxApi.get(id).pipe(
+              map((mailbox): string | null => mailbox.address),
+              catchError(() => of(null)),
+              startWith(null),
+            )
+          : of(null),
+      ),
+    ),
+    { initialValue: null },
+  );
+
   // Only one menu column shows next to the main one. Inside a mailbox that is
   // the mailbox's, with a button back up to the domain's; level is the column
   // picked with those buttons, null for the deepest. Navigating resets it.
@@ -128,10 +148,10 @@ export class Shell {
     return DOT[DOMAIN_STATUS[domain.status].tone];
   }
 
-  /** A column's heading: the domain's name for the domain menu, else the menu's own label. */
+  /** A column's heading: the domain's name or the mailbox's address, else the menu's own label. */
   protected columnTitle(menu: { key: string; label: string }): string {
-    if (menu.key !== 'domain') return menu.label;
-    return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
+    if (menu.key === 'domain') return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
+    return this.mailboxAddress() ?? menu.label;
   }
 
   protected readonly hiddenDomains = computed(() => (this.domains()?.length ?? 0) - SIDEBAR_DOMAINS);

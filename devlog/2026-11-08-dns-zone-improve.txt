@@ -1,0 +1,15 @@
+DNS zone page: filters, groups, copy and inline delete
+2026-11-08
+
+/domains/:id/dns/zone in the beta gets type chips with counts (only the
+types the zone has) and a search over names and values. The records are
+split into "Your records" and "Kept by Amelu for email", each with a count
+and a line on what they are. Every value has a copy button that shows on
+row hover, always on touch. "For email" records carry a shield on their
+pill. Delete now asks inline on the row (Delete? Yes / No) instead of a
+browser confirm(). The add and edit form has a heading, and the record type
+is a row of eight chips instead of a select. The About card gets the dither
+and only shows for a zone Amelu hosts. When the domain keeps its own DNS,
+the page title stays "DNS configuration" like the other two tabs (it said
+"DNS records"). The empty state then spans the full width and links to the
+records to set and the DNS overview.

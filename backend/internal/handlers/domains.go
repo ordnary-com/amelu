@@ -88,7 +88,7 @@ func (a *App) CreateDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isReservedDomain(name) {
-		writeError(w, http.StatusForbidden, "this domain is reserved and can't be added")
+		writeError(w, http.StatusForbidden, reservedDomainMessage(name))
 		return
 	}
 

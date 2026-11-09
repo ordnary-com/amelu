@@ -255,6 +255,7 @@ func main() {
 	mux.HandleFunc("PUT /api/domains/order", auth.Require(app.Store, app.SetDomainOrder))
 	mux.HandleFunc("PUT /api/domains/{id}/favorite", auth.Require(app.Store, app.SetDomainFavorite))
 	mux.HandleFunc("DELETE /api/domains/{id}", auth.Require(app.Store, app.DeleteDomain))
+	mux.HandleFunc("POST /api/domains/{id}/verify-ownership", auth.Require(app.Store, app.VerifyDomainOwnership))
 	mux.HandleFunc("GET /api/domains/{id}/dns", auth.Require(app.Store, app.GetDomainDNS))
 	mux.HandleFunc("GET /api/domains/{id}/domain-connect", auth.Require(app.Store, app.GetDomainConnect))
 	mux.HandleFunc("GET /api/nameservers", auth.Require(app.Store, app.GetAmeluNameservers))
@@ -420,7 +421,7 @@ func main() {
 	// through the edge Worker before CORS or any route even runs. Empty
 	// secret (today's default) makes it a no-op passthrough. See
 	// docs/cloudflare/TUNNEL.md and SECURITY.md.
-	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigins, handlers.RequestID(mux)))
+	handler := handlers.EdgeAuth(cfg.OriginSharedSecret, handlers.CORS(cfg.CORSOrigins, handlers.RequestID(app.GuardUnverifiedDomains(mux))))
 	if err := http.ListenAndServe(cfg.HTTPAddr, handler); err != nil {
 		log.Fatalf("serve: %v", err)
 	}

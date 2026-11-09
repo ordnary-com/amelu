@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-09  Free mail domains can't be added as a domain anymore
+            2026-11-09-public-mail-domains.txt
+
 2026-11-08  Mailbox settings pages in the new style
             2026-11-08-mailbox-settings-rework.txt
 

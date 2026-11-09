@@ -13,6 +13,11 @@ func TestIsReservedDomain(t *testing.T) {
 		"notordnary.com":      false,
 		"ordnary.com.evil.io": false,
 		"jjawardtravel.com":   false,
+		"hotmail.com":         true,
+		"Hotmail.com.":        true,
+		"gmail.com":           true,
+		"outlook.be":          true,
+		"myhotmail.com":       false,
 	}
 	for name, want := range cases {
 		if got := isReservedDomain(name); got != want {

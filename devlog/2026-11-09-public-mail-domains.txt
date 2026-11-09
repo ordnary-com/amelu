@@ -1,0 +1,16 @@
+Free mail domains can't be added as a domain anymore
+2026-11-09
+
+A customer added hotmail.com as their own domain on 2026-11-05 14:15 UTC,
+then created the mailbox puzzleclapper2@hotmail.com at 14:30. Stalwart
+treats every domain it hosts as local and doesn't follow MX for it. So
+from that moment on, every authenticated Amelu sender got "550 5.1.2
+Mailbox does not exist" at RCPT TO for any other @hotmail.com address, and
+that mail never reached our outbound queue. A customer (tuyuka.be) found it
+with an openssl test. isReservedDomain in handlers/reserved_domains.go only
+knew ordnary.com, ordnary.cloud and amelu.org. It now also refuses an exact
+list of free mail provider domains (Gmail, Hotmail, Outlook, Live, Yahoo,
+iCloud, Proton, GMX and the big Dutch, Belgian and French ISPs), for new
+domains and domain aliases alike. Those get the error "this is a public
+email provider's domain, add a domain you own instead". The hotmail.com
+domain on marduk still has to be removed separately.

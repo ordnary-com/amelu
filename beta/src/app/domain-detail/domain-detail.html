@@ -18,10 +18,12 @@
         <amelu-icon name="chevronRight" [size]="12" />
         <span class="truncate">{{ domain()?.name }}</span>
       </nav>
-      <div class="flex gap-2">
-        <a [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">New alias</a>
-        <a [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">New mailbox</a>
-      </div>
+      @if (domain()?.status !== 'unverified') {
+        <div class="flex gap-2">
+          <a [routerLink]="'/domains/' + id() + '/aliases/new'" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">New alias</a>
+          <a [routerLink]="'/domains/' + id() + '/mailboxes/new'" [class]="ui.primary">New mailbox</a>
+        </div>
+      }
     </div>
 
     @if (domain(); as d) {
@@ -57,6 +59,10 @@
     }
   </section>
 
+  <!-- An unverified domain isn't on the mail server yet: proving ownership is all there is to do. -->
+  @if (domain()?.status === 'unverified') {
+    <amelu-verify-ownership class="mt-6 max-w-3xl" [domain]="domain()!" />
+  } @else {
   @if (domain(); as d) {
     @if (d.status !== 'active' || dnsBroken()) {
       <amelu-alert kind="warning" class="mt-5" [title]="d.status === 'active' ? 'Some DNS records are wrong' : 'Finish setting up this domain'">
@@ -363,4 +369,5 @@
       </section>
     </aside>
   </div>
+  }
 }

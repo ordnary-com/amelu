@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"amelu/backend/internal/authz"
 	"amelu/backend/internal/db"
+	"amelu/backend/internal/dnscheck"
 )
 
 // --- domain aliases (Domain.aliases: other domain names that also route to this domain) ---
@@ -71,6 +73,13 @@ func (a *App) CreateDomainAlias(w http.ResponseWriter, r *http.Request) {
 	}
 	if isReservedDomain(aliasName) {
 		writeError(w, http.StatusForbidden, reservedDomainMessage(aliasName))
+		return
+	}
+	// An alias domain becomes local in Stalwart just like a domain does, so it
+	// has to prove ownership the same way, with this domain's token.
+	if !dnscheck.HasOwnershipRecord(r.Context(), aliasName, domain.VerificationToken) {
+		writeError(w, http.StatusConflict, fmt.Sprintf("to prove you own %s, add a TXT record at %s with the value %s, then try again",
+			aliasName, dnscheck.OwnershipRecordName(aliasName), dnscheck.OwnershipRecordValue(domain.VerificationToken)))
 		return
 	}
 

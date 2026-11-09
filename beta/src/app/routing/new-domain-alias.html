@@ -31,7 +31,7 @@
         <input
           id="alias-domain"
           [class]="ui.input"
-          placeholder="eg. example.org"
+          placeholder="For example: example.org"
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
@@ -49,6 +49,26 @@
         }
       </div>
     </section>
+
+    <!-- An alias domain is served by our mail server just like a domain, so it proves ownership the same way. -->
+    @if (ctx.domain(); as d) {
+      <section>
+        <h2 [class]="ui.sectionTitle">Prove that it's yours</h2>
+        <div [class]="ui.card + ' overflow-hidden text-[13px]'">
+          <p class="p-4 leading-relaxed text-muted">
+            Before adding it, publish this TXT record in the alias domain's DNS. We check it when you click Create.
+          </p>
+          <dl class="divide-y divide-line border-t border-line">
+            @for (row of [{ label: 'Type', value: 'TXT' }, { label: 'Name', value: '_amelu.' + (cleaned() || 'example.org') }, { label: 'Value', value: d.ownershipValue }]; track row.label) {
+              <div class="flex min-h-11 items-center gap-4 px-4 py-2">
+                <dt class="w-16 flex-none text-muted">{{ row.label }}</dt>
+                <dd class="min-w-0 flex-1 truncate font-mono" [title]="row.value">{{ row.value }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+      </section>
+    }
 
     <div class="flex items-center gap-3">
       <button

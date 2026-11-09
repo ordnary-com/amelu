@@ -79,9 +79,14 @@ export interface AuditEntry {
 export interface Domain {
   id: string;
   name: string;
-  status: 'provisioning' | 'dns_pending' | 'active' | 'failed' | 'suspended';
+  /** 'unverified' until a TXT record proves the customer owns it; only then does it exist on the mail server. */
+  status: 'unverified' | 'provisioning' | 'dns_pending' | 'active' | 'failed' | 'suspended';
   createdAt: string;
   verifiedAt?: string;
+  /** The TXT record that proves ownership; only while status is 'unverified'. */
+  verification?: { type: 'TXT'; name: string; value: string };
+  /** The TXT value that proves ownership of a domain alias added to this domain. */
+  ownershipValue: string;
   /** The signed-in customer's own star and drag-and-drop position. */
   favorite: boolean;
   position?: number;
@@ -274,6 +279,12 @@ export class Api {
   createDomain(name: string, nameservers: 'external' | 'amelu' = 'external') {
     return this.http.post<Domain>('/api/domains', { name, nameservers });
   }
+
+  /** Looks up the domain's ownership TXT record; on success the domain is set up and comes back as dns_pending. */
+  verifyDomainOwnership(id: string) {
+    return this.http.post<Domain>(`/api/domains/${id}/verify-ownership`, {});
+  }
+
 
   createMailbox(domainId: string, localPart: string) {
     return this.http.post<Mailbox>(`/api/domains/${domainId}/mailboxes`, { localPart });

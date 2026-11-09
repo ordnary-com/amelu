@@ -64,6 +64,28 @@
       <a [routerLink]="'/domains/' + done.domain.id" [class]="ui.outline">Go to domain</a>
     </div>
   </div>
+} @else if (pending(); as claim) {
+  <div class="max-w-3xl space-y-5">
+    <div>
+      <h1 class="text-[22px] font-bold tracking-[-0.4px]">One more step for {{ claim.name }}</h1>
+      <p class="mt-1.5 text-[13px] text-muted">
+        Before {{ claim.name }} goes live on our mail servers, we check that it's yours. It's saved, so you can leave and
+        come back to it from Domains.
+      </p>
+    </div>
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">{{ message }}</amelu-alert>
+    }
+    @if (busy()) {
+      <div [class]="ui.card + ' p-4 text-[13px] text-muted'">Verified. Setting up {{ claim.name }}...</div>
+    } @else {
+      <amelu-verify-ownership [domain]="claim" (verified)="onVerified($event)" />
+    }
+    <div class="flex items-center gap-3">
+      <a [routerLink]="'/domains/' + claim.id" [class]="ui.outline">Go to domain</a>
+      <a routerLink="/domains" class="text-[13px] font-medium text-muted hover:text-ink">Back to Domains</a>
+    </div>
+  </div>
 } @else {
   <h1 class="text-[22px] font-bold tracking-[-0.4px]">Add an email domain</h1>
   <p class="mt-1.5 max-w-2xl text-[13px] text-muted">

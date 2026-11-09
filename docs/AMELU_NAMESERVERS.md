@@ -12,6 +12,11 @@ set for them.
   switched to the account's custom nameserver set `AMELU_NS_SET`
   (ns1/ns2.amelu.org). That set is NOT the account default, so Ordnary's own
   zones keep their nameservers.
+- Picked on the add-domain page, it's only remembered (`domains.wants_amelu_dns`)
+  until the customer proves they own the domain with the `_amelu` TXT record
+  (see `internal/handlers/domains.go`, VerifyDomainOwnership). Only then does
+  the domain go to Stalwart and get its zone, so the TXT record has to be added
+  at the domain's current DNS, before switching nameservers.
 - On creation the backend (`internal/cfdns`, `internal/handlers/nameservers.go`):
   1. creates the zone and switches it to the Amelu set,
   2. runs Cloudflare's record scan to copy what the domain answers with today

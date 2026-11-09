@@ -103,7 +103,7 @@ func TestRemoveMember_ReassignsDomainsToRemainingOwner(t *testing.T) {
 	orgID, ownerID := newTestOrgWithOwner(t, s)
 	adminID := newTestMember(t, s, orgID, RoleAdmin)
 
-	domain, err := s.CreateDomain(ctx, adminID, "example-"+randomSuffix(t)+".test")
+	domain, err := s.CreateDomain(ctx, adminID, "example-"+randomSuffix(t)+".test", false)
 	if err != nil {
 		t.Fatalf("create domain: %v", err)
 	}

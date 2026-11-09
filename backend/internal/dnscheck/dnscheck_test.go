@@ -89,3 +89,30 @@ func TestSPFCoversAmeluInclude(t *testing.T) {
 		}
 	}
 }
+
+// txtResolver answers TXT lookups for one name only.
+type txtResolver struct {
+	fakeResolver
+	name string
+	txts []string
+}
+
+func (f txtResolver) LookupTXT(_ context.Context, name string) ([]string, error) {
+	if name != f.name {
+		return nil, &net.DNSError{Err: "no such host", Name: name, IsNotFound: true}
+	}
+	return f.txts, nil
+}
+
+func TestHasOwnershipRecord(t *testing.T) {
+	useResolver(t, txtResolver{name: "_amelu.example.com", txts: []string{"v=spf1 -all", "amelu-verify=abc123"}})
+	if !HasOwnershipRecord(context.Background(), "example.com", "abc123") {
+		t.Error("record with the right token should count")
+	}
+	if HasOwnershipRecord(context.Background(), "example.com", "other") {
+		t.Error("a different token must not count")
+	}
+	if HasOwnershipRecord(context.Background(), "hotmail.com", "abc123") {
+		t.Error("a domain without the record must not count")
+	}
+}

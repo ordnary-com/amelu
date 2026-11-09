@@ -11,6 +11,7 @@ import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { DOMAIN_STATUS, MAILBOX_STATUS, TONES, badgeClass } from '../status';
 import { DitherShader } from '../login/dither-shader';
+import { VerifyOwnership } from '../verify-ownership/verify-ownership';
 import { UI } from '../ui';
 import { isFree } from '../billing';
 import { EmptyState } from '../empty-state/empty-state';
@@ -38,7 +39,7 @@ type Loaded<T> = T | null | undefined;
  */
 @Component({
   selector: 'amelu-domain-detail',
-  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, Alert, Icon, DeliveryChart, DitherShader],
+  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, Alert, Icon, DeliveryChart, DitherShader, VerifyOwnership],
   templateUrl: './domain-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

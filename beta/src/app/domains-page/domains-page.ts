@@ -28,9 +28,10 @@ const SORT_KEY = 'amelu.domain-sort';
 const STATUS_RANK: Record<Domain['status'], number> = {
   failed: 0,
   suspended: 1,
-  dns_pending: 2,
-  provisioning: 3,
-  active: 4,
+  unverified: 2,
+  dns_pending: 3,
+  provisioning: 4,
+  active: 5,
 };
 
 const SORTERS: Record<Exclude<DomainSort, 'custom'>, (a: Domain, b: Domain) => number> = {
@@ -111,6 +112,8 @@ export class DomainsPage {
     return this.attention().map((domain) => {
       const base = `/domains/${domain.id}`;
       switch (domain.status) {
+        case 'unverified':
+          return { domain, dot: 'bg-warn', reason: 'Verify that you own it', link: base };
         case 'suspended':
           return { domain, dot: 'bg-bad', reason: 'Suspended', link: base };
         case 'failed':

@@ -12,6 +12,7 @@ export const TONES: Record<Tone, string> = {
 };
 
 export const DOMAIN_STATUS: Record<Domain['status'], { label: string; tone: Tone }> = {
+  unverified: { label: 'Verify ownership', tone: 'warn' },
   active: { label: 'Active', tone: 'ok' },
   dns_pending: { label: 'DNS pending', tone: 'warn' },
   provisioning: { label: 'Setting up', tone: 'neutral' },

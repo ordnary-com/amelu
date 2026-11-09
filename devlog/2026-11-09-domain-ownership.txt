@@ -1,0 +1,22 @@
+Domains need a TXT record to prove ownership before they go live
+2026-11-09
+
+Adding a domain created it in Stalwart right away, and Stalwart treats every
+domain it hosts as local and stops following MX for it. Anyone could add any
+domain (hotmail.com was, on 2026-11-05). From then on every Amelu sender
+bounced on mail to it, or the mail landed in a mailbox the claimant made.
+domains.name was also UNIQUE, so a squatter could lock out the real owner.
+Migration 0043 adds verification_token, ownership_verified_at and
+wants_amelu_dns. It marks every existing domain verified, deletes the
+leftover hotmail.com row, and swaps the unique name for a partial unique
+index on verified names (first to verify wins) plus one per customer.
+POST /api/domains now only records an "unverified" claim. The new POST
+/api/domains/{id}/verify-ownership looks up TXT _amelu.<domain> =
+"amelu-verify=<token>" via 1.1.1.1 and only then creates the domain in
+Stalwart (and the Amelu NS zone, if picked). GuardUnverifiedDomains refuses
+every other domain endpoint with 409 until then. MarkDomainVerified and
+UpdateDomainStatus no longer touch unverified rows. Domain aliases need the
+same TXT record with the parent domain's token. In the beta, Add domain and
+an unverified domain's page show the record with copy buttons and a Check
+now button that also re-checks every 20 seconds. Standard addresses are
+created after verification, and the alias form shows the record it needs.

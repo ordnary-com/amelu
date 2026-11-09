@@ -208,3 +208,29 @@ func AllCheckedMatch(checks []RecordCheck) bool {
 	}
 	return true
 }
+
+// OwnershipRecordName is where a customer proves they control a domain's DNS.
+func OwnershipRecordName(domain string) string {
+	return "_amelu." + strings.TrimSuffix(domain, ".")
+}
+
+// OwnershipRecordValue is the TXT value that proves it, for a domain's token.
+func OwnershipRecordValue(token string) string {
+	return "amelu-verify=" + token
+}
+
+// HasOwnershipRecord reports whether domain publishes the ownership TXT record
+// for token. A failed lookup counts as not found: the customer can retry.
+func HasOwnershipRecord(ctx context.Context, domain, token string) bool {
+	txts, err := resolver.LookupTXT(ctx, OwnershipRecordName(domain))
+	if err != nil {
+		return false
+	}
+	want := OwnershipRecordValue(token)
+	for _, txt := range txts {
+		if strings.TrimSpace(txt) == want {
+			return true
+		}
+	}
+	return false
+}

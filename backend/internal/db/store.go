@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -74,7 +76,15 @@ type Domain struct {
 	DefaultMayDAV         bool
 	DefaultMaxEmails      int64
 	DefaultMaxDiskQuota   int64
+	// The value a TXT record at _amelu.<name> must hold to prove ownership,
+	// for the domain itself and for any domain alias added to it.
+	VerificationToken   string
+	OwnershipVerifiedAt sql.NullTime
+	WantsAmeluDNS       bool
 }
+
+// ErrDomainTaken is returned when another customer verified the same name first.
+var ErrDomainTaken = errors.New("domain already verified by another customer")
 
 type Mailbox struct {
 	ID                   string
@@ -351,7 +361,7 @@ func (s *Store) DeleteSession(ctx context.Context, tokenHash string) error {
 const domainColumns = `id, customer_id, name, status, dkim_selector, last_error, created_at, verified_at, notes, publicly_listed,
 	spam_sender_denylist, spam_sender_junklist, spam_recipient_denylist, spam_subject_rewrite, spam_junk_if_subject_spam,
 	default_may_send, default_may_receive, default_may_imap, default_may_pop3, default_may_sieve, default_may_dav,
-	default_max_emails, default_max_disk_quota_bytes`
+	default_max_emails, default_max_disk_quota_bytes, verification_token, ownership_verified_at, wants_amelu_dns`
 
 func scanDomain(row interface {
 	Scan(dest ...any) error
@@ -361,17 +371,56 @@ func scanDomain(row interface {
 		&d.ID, &d.CustomerID, &d.Name, &d.Status, &d.DKIMSelector, &d.LastError, &d.CreatedAt, &d.VerifiedAt, &d.Notes, &d.PubliclyListed,
 		&d.SpamSenderDenylist, &d.SpamSenderJunklist, &d.SpamRecipientDenylist, &d.SpamSubjectRewrite, &d.SpamJunkIfSubjectSpam,
 		&d.DefaultMaySend, &d.DefaultMayReceive, &d.DefaultMayIMAP, &d.DefaultMayPOP3, &d.DefaultMaySieve, &d.DefaultMayDAV,
-		&d.DefaultMaxEmails, &d.DefaultMaxDiskQuota,
+		&d.DefaultMaxEmails, &d.DefaultMaxDiskQuota, &d.VerificationToken, &d.OwnershipVerifiedAt, &d.WantsAmeluDNS,
 	)
 	return d, err
 }
 
-func (s *Store) CreateDomain(ctx context.Context, customerID, name string) (*Domain, error) {
+// CreateDomain records a claim on a domain, unverified: it only goes to
+// Stalwart once MarkDomainOwnershipVerified succeeds.
+func (s *Store) CreateDomain(ctx context.Context, customerID, name string, wantsAmeluDNS bool) (*Domain, error) {
+	token, err := newVerificationToken()
+	if err != nil {
+		return nil, err
+	}
 	row := s.conn.QueryRowContext(ctx, `
-		INSERT INTO domains (customer_id, name, status)
-		VALUES ($1, $2, 'provisioning')
-		RETURNING `+domainColumns, customerID, name)
+		INSERT INTO domains (customer_id, name, status, verification_token, wants_amelu_dns)
+		VALUES ($1, $2, 'unverified', $3, $4)
+		RETURNING `+domainColumns, customerID, name, token, wantsAmeluDNS)
 	return scanDomain(row)
+}
+
+// MarkDomainOwnershipVerified moves an unverified domain on to provisioning.
+// The partial unique index on verified names makes the first customer to
+// verify a name win; anyone else gets ErrDomainTaken.
+func (s *Store) MarkDomainOwnershipVerified(ctx context.Context, domainID string) error {
+	_, err := s.conn.ExecContext(ctx, `
+		UPDATE domains SET ownership_verified_at = now(), status = 'provisioning'
+		WHERE id = $1 AND ownership_verified_at IS NULL
+	`, domainID)
+	if isUniqueViolation(err) {
+		return ErrDomainTaken
+	}
+	return err
+}
+
+// DomainStatus is the status of a domain by id alone, for the guard that keeps
+// unverified domains out of every endpoint that touches Stalwart.
+func (s *Store) DomainStatus(ctx context.Context, domainID string) (string, error) {
+	var status string
+	err := s.conn.QueryRowContext(ctx, `SELECT status FROM domains WHERE id = $1`, domainID).Scan(&status)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return status, err
+}
+
+func newVerificationToken() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func (s *Store) ListDomains(ctx context.Context, customerID string) ([]Domain, error) {
@@ -428,9 +477,12 @@ func (s *Store) GetDomainByID(ctx context.Context, domainID string) (*Domain, er
 	return d, nil
 }
 
+// UpdateDomainStatus leaves an unverified domain alone: only
+// MarkDomainOwnershipVerified moves it out of 'unverified'.
 func (s *Store) UpdateDomainStatus(ctx context.Context, domainID, status, lastError string) error {
 	_, err := s.conn.ExecContext(ctx, `
-		UPDATE domains SET status = $1, last_error = NULLIF($2, '') WHERE id = $3
+		UPDATE domains SET status = $1, last_error = NULLIF($2, '')
+		WHERE id = $3 AND ownership_verified_at IS NOT NULL
 	`, status, lastError, domainID)
 	return err
 }
@@ -493,7 +545,8 @@ func (s *Store) UpdateDomainDKIMSelector(ctx context.Context, domainID, dkimSele
 // a live DNS check confirms its records match what Stalwart expects.
 func (s *Store) MarkDomainVerified(ctx context.Context, domainID string) error {
 	_, err := s.conn.ExecContext(ctx, `
-		UPDATE domains SET status = 'active', last_error = NULL, verified_at = now() WHERE id = $1
+		UPDATE domains SET status = 'active', last_error = NULL, verified_at = now()
+		WHERE id = $1 AND ownership_verified_at IS NOT NULL
 	`, domainID)
 	return err
 }

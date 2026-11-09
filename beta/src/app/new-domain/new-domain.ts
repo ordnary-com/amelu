@@ -11,6 +11,7 @@ import { STANDARD_ADDRESSES } from '../standard-addresses';
 import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
 import { NameserversCard } from '../dns-spam/nameservers-card';
 import { DitherShader } from '../login/dither-shader';
+import { VerifyOwnership } from '../verify-ownership/verify-ownership';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
 const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
@@ -31,7 +32,7 @@ interface CreatedAddress {
 /** The current dashboard's /domains/new: add a domain, optionally with its default addresses. */
 @Component({
   selector: 'amelu-new-domain',
-  imports: [RouterLink, Alert, Icon, NameserversCard, DitherShader],
+  imports: [RouterLink, Alert, Icon, NameserversCard, DitherShader, VerifyOwnership],
   templateUrl: './new-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -50,6 +51,8 @@ export class NewDomain {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly result = signal<{ domain: Domain; addresses: CreatedAddress[] } | null>(null);
+  // Added but not verified yet: the page shows the TXT record to add.
+  protected readonly pending = signal<Domain | null>(null);
   protected readonly copied = signal<string | null>(null);
   // Looked up once the domain exists; null until then or when it fails.
   protected readonly connect = signal<DomainConnectStatus | null>(null);
@@ -119,7 +122,7 @@ export class NewDomain {
   });
 
   protected readonly steps = computed(() => [
-    { title: 'Add the domain', text: 'We set it up on our mail servers.' },
+    { title: "Verify it's yours", text: 'One TXT record. Then we set it up on our mail servers.' },
     this.nameservers() === 'amelu'
       ? { title: 'Change the nameservers', text: 'At your registrar, to the two Amelu nameservers. We set every record.' }
       : { title: 'Set the DNS records', text: 'At your domain registrar or DNS host. We check them live.' },
@@ -135,33 +138,56 @@ export class NewDomain {
       const mode = this.ameluNs()?.available ? this.nameservers() : 'external';
       const domain = await firstValueFrom(this.api.createDomain(this.name(), mode));
       this.addedWith.set(mode);
-      this.connect.set(null);
-      if (mode === 'external') {
-        this.dnsApi
-          .domainConnect(domain.id)
-          .pipe(catchError(() => of(null)))
-          .subscribe((status) => this.connect.set(status));
+      if (domain.status === 'unverified') {
+        // The rest (standard addresses, DNS help) waits until ownership is proven.
+        this.pending.set(domain);
+        return;
       }
-      const addresses: CreatedAddress[] = [];
-      if (this.createDefaults()) {
-        // One by one, and a failure doesn't stop the rest: the domain exists either way.
-        for (const localPart of DEFAULT_ADDRESSES) {
-          try {
-            const mailbox = await firstValueFrom(this.api.createMailbox(domain.id, localPart));
-            addresses.push({ address: mailbox.address, password: mailbox.password });
-          } catch (err) {
-            addresses.push({ address: `${localPart}@${domain.name}`, error: errorMessage(err, 'Could not be created') });
-          }
-        }
-      }
-      this.result.set({ domain, addresses });
+      await this.finishSetup(domain);
     } catch (err) {
       this.error.set(errorMessage(err, 'The domain could not be added.'));
     } finally {
-      // Also after a failure, in case the API couldn't clean up and kept the domain marked failed.
       this.domains.reload();
       this.busy.set(false);
     }
+  }
+
+  /** Ownership is proven: carry on with what was asked for when adding it. */
+  protected async onVerified(domain: Domain): Promise<void> {
+    this.busy.set(true);
+    this.error.set(null);
+    try {
+      await this.finishSetup(domain);
+      this.pending.set(null);
+    } catch (err) {
+      this.error.set(errorMessage(err, 'The domain is verified, but setting it up failed.'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private async finishSetup(domain: Domain): Promise<void> {
+    const mode = this.addedWith();
+    this.connect.set(null);
+    if (mode === 'external') {
+      this.dnsApi
+        .domainConnect(domain.id)
+        .pipe(catchError(() => of(null)))
+        .subscribe((status) => this.connect.set(status));
+    }
+    const addresses: CreatedAddress[] = [];
+    if (this.createDefaults()) {
+      // One by one, and a failure doesn't stop the rest: the domain exists either way.
+      for (const localPart of DEFAULT_ADDRESSES) {
+        try {
+          const mailbox = await firstValueFrom(this.api.createMailbox(domain.id, localPart));
+          addresses.push({ address: mailbox.address, password: mailbox.password });
+        } catch (err) {
+          addresses.push({ address: `${localPart}@${domain.name}`, error: errorMessage(err, 'Could not be created') });
+        }
+      }
+    }
+    this.result.set({ domain, addresses });
   }
 
   protected async copy(address: CreatedAddress): Promise<void> {

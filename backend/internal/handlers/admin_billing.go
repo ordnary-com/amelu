@@ -24,6 +24,7 @@ type adminPlanTierResponse struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Purchasable bool   `json:"purchasable"`
+	Custom      bool   `json:"custom,omitempty"`
 }
 
 // AdminListPlanTiers -> GET /internal/admin/plan-tiers. Feeds the "change
@@ -44,6 +45,7 @@ func (a *App) AdminListPlanTiers(w http.ResponseWriter, r *http.Request, operato
 			Name: t.Name,
 			Purchasable: t.BillingProvider.String == "stripe" &&
 				t.StripePriceIDMonthly.Valid && t.StripePriceIDAnnual.Valid,
+			Custom: t.Custom,
 		})
 	}
 	writeJSON(w, http.StatusOK, out)

@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-11  Mailbox forwarding works for more than one destination
+            2026-11-11-forwards-past-the-first.txt
+
 2026-11-11  Support can move a new domain off the newdomains IPs
             2026-11-11-vetted-domains.txt
 

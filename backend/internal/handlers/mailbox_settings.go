@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -267,6 +268,9 @@ func (a *App) ListMailboxForwards(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
+// Matches maxRedirects in Stalwart's x:SieveUserInterpreter.
+const maxForwardsPerMailbox = 5
+
 type createForwardRequest struct {
 	Destination string `json:"destination"`
 }
@@ -289,6 +293,17 @@ func (a *App) CreateMailboxForward(w http.ResponseWriter, r *http.Request) {
 	destination := strings.ToLower(strings.TrimSpace(req.Destination))
 	if !strings.Contains(destination, "@") {
 		writeError(w, http.StatusBadRequest, "a valid destination address is required")
+		return
+	}
+
+	// Stalwart drops every redirect past its limit without an error.
+	existing, err := a.Store.ListMailboxForwards(r.Context(), mailbox.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load forwards")
+		return
+	}
+	if len(existing) >= maxForwardsPerMailbox {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("a mailbox can have at most %d forwards", maxForwardsPerMailbox))
 		return
 	}
 

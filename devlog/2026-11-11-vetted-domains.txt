@@ -1,0 +1,13 @@
+Support can move a new domain off the newdomains IPs
+2026-11-11
+
+amelu-ip-pools sends every domain created in the last 7 days from the
+newdomains IPs, so a fresh spam account can only hurt those. A legitimate
+new customer (hubertstudio.work) asked why their mail scored as spam; the
+score came from the domain's age and its .work TLD, plus UCEPROTECT Level 3,
+which lists all of OVH (none of our IPs is on Level 1). To give such a
+customer the established IPs right away, the script now reads
+/etc/amelu-ip-pools/vetted.txt (one domain per line, # for comments) and
+leaves those domains out of the newdomains rule. The file only exists on
+marduk; hubertstudio.work is the first entry. Backup of the previous script:
+/root/amelu-ip-pools.backup-2026-11-11.

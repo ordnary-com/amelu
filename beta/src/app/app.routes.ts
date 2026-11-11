@@ -81,6 +81,7 @@ export const routes: Routes = [
           { path: 'overview', component: BillingOverview, title: 'Billing · Amelu' },
           { path: 'plans', loadComponent: () => import('./billing-plans/billing-plans').then((m) => m.BillingPlans), title: 'Plans · Billing · Amelu' },
           { path: 'invoices', component: BillingInvoices, title: 'Invoices · Billing · Amelu' },
+          { path: 'offer/:offerId', loadComponent: () => import('./billing-offer/billing-offer').then((m) => m.BillingOffer), title: 'Your offer · Billing · Amelu' },
         ],
       },
       { path: 'network', loadComponent: () => import('./network-page/network-page').then((m) => m.NetworkPage), title: 'Sending IPs · Amelu' },

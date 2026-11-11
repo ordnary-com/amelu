@@ -70,11 +70,19 @@ export class BillingPlans {
   protected readonly error = signal<string | null>(null);
 
   protected perks(plan: Plan): string[] {
+    // Its sending limit is agreed per customer, so only the shared features.
+    if (plan.custom) return PERKS_BY_PLAN['pro'].slice(2);
     return PERKS_BY_PLAN[plan.id] ?? [];
   }
 
+  /** A custom plan only has the period it was made with, whatever the toggle says. */
+  protected period(plan: Plan): BillingInterval {
+    if (plan.custom) return plan.priceCentsAnnual != null ? 'annual' : 'monthly';
+    return this.interval();
+  }
+
   protected price(plan: Plan): number {
-    return this.interval() === 'monthly' ? plan.priceCentsMonthly! : plan.priceCentsAnnual!;
+    return this.period(plan) === 'monthly' ? plan.priceCentsMonthly! : plan.priceCentsAnnual!;
   }
 
   protected savings(plan: Plan): number {

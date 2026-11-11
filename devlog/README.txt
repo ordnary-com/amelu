@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-11  Custom plans that a customer accepts and pays for themselves
+            2026-11-11-custom-plan-offers.txt
+
 2026-11-11  Mailbox forwarding works for more than one destination
             2026-11-11-forwards-past-the-first.txt
 

@@ -1,0 +1,15 @@
+Custom plans that a customer accepts and pays for themselves
+2026-11-11
+
+Support can now make a plan for one organization in Airplane (Amelu
+customer page, Custom plans, New custom plan): name, domains, mailboxes per
+domain, outgoing per day, branded webmail, price and yearly or monthly.
+POST /internal/admin/customers/{id}/plan-offers creates a plan_tiers row
+with custom = true, a Stripe product and price (lookup key
+amelu_custom-xxxx_annual) and a plan_offers row (migration 0044). The link
+is app.amelu.org/billing/offer/<id>; it only opens for someone who manages
+billing in that organization, and billing/overview shows a banner while an
+offer is open. Accepting opens Stripe Checkout with offerId in the metadata;
+checkout.session.completed sets the plan and closes the offer. With an
+existing subscription the price is swapped instead (always_invoice). Other
+organizations never see a custom tier in /api/billing/plans.

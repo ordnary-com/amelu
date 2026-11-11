@@ -16,10 +16,14 @@ type PlanTier struct {
 	PriceCentsAnnual      sql.NullInt64
 	StripePriceIDMonthly  sql.NullString
 	StripePriceIDAnnual   sql.NullString
+	MaxOutgoingPerDay     int
+	WebmailBranding       bool
+	Custom                bool
 }
 
 const planTierColumns = `id, name, max_domains, max_mailboxes_per_domain, billing_provider,
-	price_cents_monthly, price_cents_annual, stripe_price_id_monthly, stripe_price_id_annual`
+	price_cents_monthly, price_cents_annual, stripe_price_id_monthly, stripe_price_id_annual,
+	max_outgoing_per_day, webmail_branding, custom`
 
 func scanPlanTier(row interface {
 	Scan(dest ...any) error
@@ -28,6 +32,7 @@ func scanPlanTier(row interface {
 	err := row.Scan(
 		&p.ID, &p.Name, &p.MaxDomains, &p.MaxMailboxesPerDomain, &p.BillingProvider,
 		&p.PriceCentsMonthly, &p.PriceCentsAnnual, &p.StripePriceIDMonthly, &p.StripePriceIDAnnual,
+		&p.MaxOutgoingPerDay, &p.WebmailBranding, &p.Custom,
 	)
 	return p, err
 }

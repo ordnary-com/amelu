@@ -196,6 +196,9 @@ func main() {
 	mux.HandleFunc("POST /internal/admin/customers/{id}/subscription/cancel", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminCancelSubscription))
 	mux.HandleFunc("POST /internal/admin/customers/{id}/subscription/reactivate", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminReactivateSubscription))
 	mux.HandleFunc("GET /internal/admin/customers/{id}/invoices", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListInvoices))
+	mux.HandleFunc("GET /internal/admin/customers/{id}/plan-offers", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListPlanOffers))
+	mux.HandleFunc("POST /internal/admin/customers/{id}/plan-offers", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminCreatePlanOffer))
+	mux.HandleFunc("POST /internal/admin/plan-offers/{id}/revoke", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminRevokePlanOffer))
 	mux.HandleFunc("GET /internal/admin/changelog", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListChangelog))
 	mux.HandleFunc("POST /internal/admin/changelog", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminCreateChangelog))
 	mux.HandleFunc("PATCH /internal/admin/changelog/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateChangelog))
@@ -376,6 +379,8 @@ func main() {
 	mux.HandleFunc("POST /api/billing/checkout", auth.Require(app.Store, app.CreateCheckoutSession))
 	mux.HandleFunc("POST /api/billing/portal", auth.Require(app.Store, app.CreateBillingPortalSession))
 	mux.HandleFunc("GET /api/billing/invoices", auth.Require(app.Store, app.ListInvoices))
+	mux.HandleFunc("GET /api/billing/offers/{id}", auth.Require(app.Store, app.GetPlanOffer))
+	mux.HandleFunc("POST /api/billing/offers/{id}/accept", auth.Require(app.Store, app.AcceptPlanOffer))
 
 	// "Open in webmail" from the dashboard: a plain link, so the browser
 	// follows the redirect into Roundcube (docs/WEBMAIL.md).

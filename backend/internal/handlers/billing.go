@@ -60,6 +60,7 @@ type planResponse struct {
 	MaxMailboxesPerDomain int    `json:"maxMailboxesPerDomain"`
 	Purchasable           bool   `json:"purchasable"`
 	Current               bool   `json:"current"`
+	Custom                bool   `json:"custom,omitempty"`
 }
 
 func toPlanResponse(p *db.PlanTier, currentPlanID string) planResponse {
@@ -70,6 +71,7 @@ func toPlanResponse(p *db.PlanTier, currentPlanID string) planResponse {
 		MaxMailboxesPerDomain: p.MaxMailboxesPerDomain,
 		Purchasable:           p.BillingProvider.String == "stripe" && p.StripePriceIDMonthly.Valid && p.StripePriceIDAnnual.Valid,
 		Current:               p.ID == currentPlanID,
+		Custom:                p.Custom,
 	}
 	if p.PriceCentsMonthly.Valid {
 		resp.PriceCentsMonthly = &p.PriceCentsMonthly.Int64
@@ -94,6 +96,10 @@ func (a *App) ListPlans(w http.ResponseWriter, r *http.Request) {
 
 	out := make([]planResponse, 0, len(plans))
 	for i := range plans {
+		// Another organization's custom plan is none of this one's business.
+		if plans[i].Custom && plans[i].ID != cust.PlanTierID {
+			continue
+		}
 		out = append(out, toPlanResponse(&plans[i], cust.PlanTierID))
 	}
 	writeJSON(w, http.StatusOK, out)
@@ -104,6 +110,8 @@ type billingOverviewResponse struct {
 	SubscriptionStatus string       `json:"subscriptionStatus,omitempty"`
 	BillingInterval    string       `json:"billingInterval,omitempty"`
 	HasPaymentMethod   bool         `json:"hasPaymentMethod"`
+	// OpenOfferID points at a custom plan offer waiting to be accepted.
+	OpenOfferID string `json:"openOfferId,omitempty"`
 }
 
 func (a *App) GetBillingOverview(w http.ResponseWriter, r *http.Request) {
@@ -123,12 +131,25 @@ func (a *App) GetBillingOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, billingOverviewResponse{
+	resp := billingOverviewResponse{
 		Plan:               toPlanResponse(plan, cust.PlanTierID),
 		SubscriptionStatus: billing.SubscriptionStatus.String,
 		BillingInterval:    billing.BillingInterval.String,
 		HasPaymentMethod:   billing.StripeCustomerID.Valid,
-	})
+	}
+	offers, err := a.Store.ListPlanOffers(r.Context(), cust.OrganizationID.String)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load plan offers")
+		return
+	}
+	now := time.Now()
+	for i := range offers {
+		if offers[i].Status(now) == "open" {
+			resp.OpenOfferID = offers[i].ID
+			break
+		}
+	}
+	writeJSON(w, http.StatusOK, resp)
 }
 
 type invoiceResponse struct {
@@ -274,16 +295,29 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	if req.Interval == "monthly" {
 		priceRef = plan.StripePriceIDMonthly.String
 	}
+	url, ok := a.startCheckout(w, r, cust, plan, req.Interval, priceRef, "/billing/plans?checkout=cancelled", "")
+	if !ok {
+		return
+	}
+	a.Store.LogOrganizationAudit(r.Context(), actor.OrganizationID.String, &actor.ID, actor.Email,
+		"billing.checkout_started", "billing", plan.ID, plan.Name, map[string]any{"interval": req.Interval}, requestIP(r))
+	writeJSON(w, http.StatusOK, map[string]string{"url": url})
+}
+
+// startCheckout opens a Stripe Checkout session for a subscription to plan
+// at priceRef (a lookup key or price ID). offerID is set when it accepts a
+// custom plan offer, so the webhook can close that offer.
+func (a *App) startCheckout(w http.ResponseWriter, r *http.Request, cust *db.Customer, plan *db.PlanTier, interval, priceRef, cancelPath, offerID string) (string, bool) {
 	stripePriceID, err := resolveStripePrice(priceRef)
 	if err != nil {
 		log.Printf("stripe: resolve price %s: %v", priceRef, err)
 		writeStripeError(w, "could not start checkout", err)
-		return
+		return "", false
 	}
 
 	stripeCustomerID, ok := a.getOrCreateStripeCustomer(w, r, cust)
 	if !ok {
-		return
+		return "", false
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -293,10 +327,11 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 			{Price: stripe.String(stripePriceID), Quantity: stripe.Int64(1)},
 		},
 		SuccessURL: stripe.String(a.FrontendOrigin + "/billing/overview?checkout=success"),
-		CancelURL:  stripe.String(a.FrontendOrigin + "/billing/plans?checkout=cancelled"),
+		CancelURL:  stripe.String(a.FrontendOrigin + cancelPath),
 		// A "Add promotion code" field on the Checkout page, for campaign codes
-		// such as Black Friday's (Stripe promotion codes, amelu-landing).
-		AllowPromotionCodes: stripe.Bool(true),
+		// such as Black Friday's (Stripe promotion codes, amelu-landing). Not
+		// on a custom plan: its price was already agreed.
+		AllowPromotionCodes: stripe.Bool(offerID == ""),
 		// An optional "I'm purchasing as a business" tax ID field. Stripe
 		// refuses tax ID collection on an existing Customer unless Checkout may
 		// write the business name and address back onto it.
@@ -309,18 +344,20 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 			Address: stripe.String("auto"),
 		},
 	}
-	params.AddMetadata("customerId", cust.ID)
-	params.AddMetadata("planTierId", plan.ID)
-	params.AddMetadata("interval", req.Interval)
 	// stripe-go v81 doesn't have a typed field for this yet - branding_settings
 	// is newer than the SDK's struct coverage - so it goes through AddExtra.
 	// Only overrides the name shown at the top of the Checkout page itself;
 	// receipts/invoices/terms still use the account's actual business name.
 	params.AddExtra("branding_settings[display_name]", "Amelu Internet Services")
 	params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{}
-	params.SubscriptionData.AddMetadata("customerId", cust.ID)
-	params.SubscriptionData.AddMetadata("planTierId", plan.ID)
-	params.SubscriptionData.AddMetadata("interval", req.Interval)
+	for _, m := range []interface{ AddMetadata(string, string) }{params, params.SubscriptionData} {
+		m.AddMetadata("customerId", cust.ID)
+		m.AddMetadata("planTierId", plan.ID)
+		m.AddMetadata("interval", interval)
+		if offerID != "" {
+			m.AddMetadata("offerId", offerID)
+		}
+	}
 
 	session, err := checkoutsession.New(params)
 	// A stored Stripe Customer that Stripe doesn't know was made with another
@@ -329,7 +366,7 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	if errors.As(err, &stripeErr) && stripeErr.Code == stripe.ErrorCodeResourceMissing && stripeErr.Param == "customer" {
 		log.Printf("stripe: customer %s for %s no longer exists, creating a new one", stripeCustomerID, cust.ID)
 		if stripeCustomerID, ok = a.createStripeCustomer(w, r, cust); !ok {
-			return
+			return "", false
 		}
 		params.Customer = stripe.String(stripeCustomerID)
 		session, err = checkoutsession.New(params)
@@ -337,11 +374,9 @@ func (a *App) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("stripe: create checkout session: %v", err)
 		writeStripeError(w, "could not start checkout", err)
-		return
+		return "", false
 	}
-	a.Store.LogOrganizationAudit(r.Context(), actor.OrganizationID.String, &actor.ID, actor.Email,
-		"billing.checkout_started", "billing", plan.ID, plan.Name, map[string]any{"interval": req.Interval}, requestIP(r))
-	writeJSON(w, http.StatusOK, map[string]string{"url": session.URL})
+	return session.URL, true
 }
 
 type createBillingPortalSessionRequest struct {
@@ -463,7 +498,14 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := a.Store.UpdateCustomerSubscriptionByCustomerID(ctx, customerID, planTierID, billingInterval, session.Customer.ID, session.Subscription.ID, "active"); err != nil {
 			log.Printf("stripe webhook: update subscription for customer %s: %v", customerID, err)
-		} else if billed, err := a.Store.GetCustomerByID(ctx, customerID); err == nil && billed.OrganizationID.Valid {
+			break
+		}
+		if offerID := session.Metadata["offerId"]; offerID != "" {
+			if err := a.Store.MarkPlanOfferAccepted(ctx, offerID); err != nil {
+				log.Printf("stripe webhook: mark plan offer %s accepted: %v", offerID, err)
+			}
+		}
+		if billed, err := a.Store.GetCustomerByID(ctx, customerID); err == nil && billed.OrganizationID.Valid {
 			a.Store.LogOrganizationAudit(ctx, billed.OrganizationID.String, nil, "stripe",
 				"billing.subscription_started", "billing", planTierID, planTierID, map[string]any{"interval": billingInterval}, "")
 		}

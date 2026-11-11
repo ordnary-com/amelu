@@ -3,6 +3,11 @@
 } @else if (checkout() === 'cancelled') {
   <amelu-alert class="mb-5" kind="warning" title="Checkout was cancelled">Your plan hasn't changed.</amelu-alert>
 }
+@if (overview()?.openOfferId; as offerId) {
+  <amelu-alert class="mb-5" kind="success" title="A custom plan is waiting for you">
+    We've put together a plan for your organization. <a [routerLink]="['/billing/offer', offerId]" class="font-bold underline">View the offer</a>
+  </amelu-alert>
+}
 @if (error(); as message) {
   <amelu-alert class="mb-5" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
     {{ message }}

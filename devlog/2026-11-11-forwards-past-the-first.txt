@@ -1,0 +1,17 @@
+Mailbox forwarding works for more than one destination
+2026-11-11
+
+A mailbox with three forwards (autoforward@dedalosairpark.gr) only ever
+forwarded to the first one. The marduk log showed one sieve.send-message
+per incoming message, with no error. Stalwart's x:SieveUserInterpreter had
+maxRedirects 1 and maxOutMessages 3, and it drops every redirect past the
+limit without a word. The forwarding script puts one redirect :copy per
+destination in the same script, so the second and third never went out.
+The same limit broke a Roundcube filter with two redirects for
+triadesolucoes.com earlier today.
+
+Both limits are now 5 on marduk (JMAP x:SieveUserInterpreter/set). Backup
+of the old values: /root/sieve-user-interpreter.backup-2026-11-11.json.
+POST /api/mailboxes/{id}/forwards now refuses a sixth forward with "a mailbox
+can have at most 5 forwards", so the dashboard can't promise more than
+Stalwart sends.

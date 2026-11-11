@@ -15,6 +15,7 @@ export function planPriceLine(overview: BillingOverview): string {
   return `${formatPrice(plan.priceCentsAnnual! / 12)}/mo, billed annually (${formatPrice(plan.priceCentsAnnual!)}/yr)`;
 }
 
+// A custom plan has a price for one billing period only.
 export function isFree(plan: Plan): boolean {
-  return plan.priceCentsMonthly == null || plan.priceCentsAnnual == null;
+  return plan.priceCentsMonthly == null && plan.priceCentsAnnual == null;
 }

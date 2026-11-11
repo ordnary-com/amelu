@@ -214,6 +214,8 @@ export interface Plan {
   maxMailboxesPerDomain: number;
   purchasable: boolean;
   current: boolean;
+  /** Made for this organization only, with a single billing period. */
+  custom?: boolean;
 }
 
 export interface BillingOverview {
@@ -221,6 +223,20 @@ export interface BillingOverview {
   subscriptionStatus?: string;
   billingInterval?: BillingInterval;
   hasPaymentMethod: boolean;
+  openOfferId?: string;
+}
+
+export interface PlanOffer {
+  id: string;
+  status: 'open' | 'accepted' | 'revoked' | 'expired';
+  planName: string;
+  maxDomains: number;
+  maxMailboxesPerDomain: number;
+  maxOutgoingPerDay: number;
+  webmailBranding: boolean;
+  interval: BillingInterval;
+  priceCents: number;
+  expiresAt: string;
 }
 
 export interface Invoice {
@@ -341,6 +357,14 @@ export class Api {
 
   listInvoices() {
     return this.http.get<Invoice[]>('/api/billing/invoices');
+  }
+
+  planOffer(offerId: string) {
+    return this.http.get<PlanOffer>(`/api/billing/offers/${offerId}`);
+  }
+
+  acceptPlanOffer(offerId: string) {
+    return this.http.post<{ url: string }>(`/api/billing/offers/${offerId}/accept`, {});
   }
 
   listApiKeys() {

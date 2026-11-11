@@ -56,9 +56,11 @@
           } @else {
             <div>
               <span class="text-[32px] leading-none font-normal tracking-[-0.02em]">{{ money(price(plan)) }}</span>
-              <span class="text-[13px] text-muted">/{{ interval() === 'monthly' ? 'month' : 'year' }}</span>
+              <span class="text-[13px] text-muted">/{{ period(plan) === 'monthly' ? 'month' : 'year' }}</span>
             </div>
-            @if (interval() === 'annual') {
+            @if (plan.custom) {
+              <span class="mt-1.5 inline-flex rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-link">Custom plan</span>
+            } @else if (interval() === 'annual') {
               <span class="mt-1.5 inline-flex rounded-full bg-ok/15 px-2 py-0.5 text-[11px] font-medium text-ok">Save {{ money(savings(plan)) }} a year</span>
             }
           }

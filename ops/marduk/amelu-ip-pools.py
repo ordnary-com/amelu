@@ -67,6 +67,9 @@ DESCRIPTIONS = {
 }
 NEW_DAYS = 7
 OWN_DOMAINS = ["amelu.org"]
+# Domains support has vetted by hand, one per line: they skip newdomains
+# right away instead of waiting out NEW_DAYS (devlog 2026-11-11).
+VETTED_FILE = "/etc/amelu-ip-pools/vetted.txt"
 ROUTE = {"match": {"0": {"if": "is_local_domain(rcpt_domain)", "then": "'local'"}}, "else": "'mx'"}
 NOT_LOCAL = {"if": "is_local_domain(rcpt_domain)", "then": "false"}
 TUNNEL_CAP = "noez tunnel cap"
@@ -109,7 +112,16 @@ def jmap(calls):
     return json.load(urllib.request.urlopen(req, timeout=60))["methodResponses"]
 
 
+def vetted_domains():
+    try:
+        with open(VETTED_FILE) as f:
+            return {l.strip().lower() for l in f if l.strip() and not l.startswith("#")}
+    except OSError:
+        return set()
+
+
 def new_domains():
+    vetted = vetted_domains()
     ids = jmap([["x:Domain/query", {}, "0"]])[0][1].get("ids", [])
     doms = []
     for i in range(0, len(ids), 200):
@@ -119,7 +131,7 @@ def new_domains():
     for d in doms:
         name, created = (d.get("name") or "").lower(), d.get("createdAt")
         # Names go into the expression in quotes; only plain hostnames.
-        if not created or not name or name in OWN_DOMAINS or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789.-" for c in name):
+        if not created or not name or name in OWN_DOMAINS or name in vetted or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789.-" for c in name):
             continue
         if datetime.datetime.fromisoformat(created.replace("Z", "+00:00")) >= cutoff:
             out.append(name)

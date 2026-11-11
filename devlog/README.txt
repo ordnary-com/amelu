@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-11  Support can move a new domain off the newdomains IPs
+            2026-11-11-vetted-domains.txt
+
 2026-11-09  Domains need a TXT record to prove ownership before they go live
             2026-11-09-domain-ownership.txt
 

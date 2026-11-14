@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-14  Domain Connect template v2: one group per TXT record
+            2026-11-14-domain-connect-template-v2.txt
+
 2026-11-11  Custom plans that a customer accepts and pays for themselves
             2026-11-11-custom-plan-offers.txt
 

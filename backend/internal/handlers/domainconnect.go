@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"amelu/backend/internal/db"
+	"amelu/backend/internal/dnscheck"
 	"amelu/backend/internal/domainconnect"
 	"amelu/backend/internal/stalwart"
 )
@@ -21,7 +23,8 @@ type domainConnectResponse struct {
 // Connect and, if so, returns a signed apply URL the frontend redirects the
 // browser to. Returns supported:false (not an error) for any domain whose
 // provider doesn't support it, hasn't published discovery records, or where
-// Amelu's own template isn't configured yet.
+// Amelu's own template isn't configured yet. supported:true without an
+// applyUrl means every record the template writes is already in place.
 func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 	customer, ok := requireCustomer(w, r)
 	if !ok {
@@ -57,8 +60,9 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 		writeUpstreamError(w, "could not fetch DNS records from mail cluster", err)
 		return
 	}
-	zoneFile := stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile)
-	vars, ok := recordVarsFromZoneFile(stalwart.ParseZoneFile(zoneFile), domain.Name)
+	zoneFile := stalwart.UseAmeluSPF(stalwart.FilterTLSIncompatibleRecords(stalwartDomain.DNSZoneFile))
+	records := stalwart.ParseZoneFile(zoneFile)
+	vars, ok := recordVarsFromZoneFile(records, domain.Name)
 	if !ok {
 		// The template's fixed parts no longer match what Stalwart wants;
 		// applying it would write records the DNS check then flags.
@@ -66,8 +70,14 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	groups := groupsToApply(dnscheck.Check(r.Context(), records), domain.Name)
+	if len(groups) == 0 {
+		writeJSON(w, http.StatusOK, domainConnectResponse{Supported: true, Provider: provider})
+		return
+	}
+
 	redirectURI := a.FrontendOrigin + "/domains/" + url.PathEscape(domain.ID) + "/dns"
-	applyURL, err := a.DomainConnect.BuildApplyURL(settings.URLSyncUX, domain.Name, redirectURI, vars)
+	applyURL, err := a.DomainConnect.BuildApplyURL(settings.URLSyncUX, domain.Name, redirectURI, vars, groups)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not build domain connect url: "+err.Error())
 		return
@@ -79,7 +89,7 @@ func (a *App) GetDomainConnect(w http.ResponseWriter, r *http.Request) {
 // templateTXT are the TXT records template.json fixes; the zone file must
 // contain them unchanged for the template to stand in for it.
 var templateTXT = map[string]string{
-	"@":          "v=spf1 mx -all",
+	"@":          stalwart.AmeluSPF,
 	"_dmarc":     "v=DMARC1; p=reject; rua=mailto:postmaster@%s",
 	"_smtp._tls": "v=TLSRPTv1; rua=mailto:postmaster@%s",
 }
@@ -135,4 +145,40 @@ func relativeHost(recordName, domainName string) string {
 		return "@"
 	}
 	return strings.TrimSuffix(name, "."+domainName)
+}
+
+// groupsToApply picks the template groups with a record that isn't in place
+// yet. A TXT group only goes along while its name has no TXT record at all:
+// Cloudflare adds ours next to an existing DMARC policy or DKIM key instead
+// of replacing it (and two DMARC policies count as none), and re-adding an
+// identical RSA DKIM record fails there.
+func groupsToApply(checks []dnscheck.RecordCheck, domainName string) []string {
+	var groups []string
+	add := func(group string) {
+		if !slices.Contains(groups, group) {
+			groups = append(groups, group)
+		}
+	}
+	for _, check := range checks {
+		if check.Status == dnscheck.StatusMatched {
+			continue
+		}
+		host := relativeHost(check.Name, domainName)
+		switch {
+		case check.Type == "MX", check.Type == "TXT" && host == "@":
+			add(domainconnect.GroupMail)
+		case check.Type == "SRV":
+			add(domainconnect.GroupDiscovery)
+		case check.Type != "TXT" || check.Status != dnscheck.StatusMissing:
+		case strings.HasSuffix(host, "._domainkey") && strings.HasPrefix(check.Expected, dkimEd25519Prefix):
+			add(domainconnect.GroupDKIMEd25519)
+		case strings.HasSuffix(host, "._domainkey") && strings.HasPrefix(check.Expected, dkimRSAPrefix):
+			add(domainconnect.GroupDKIMRSA)
+		case host == "_dmarc":
+			add(domainconnect.GroupDMARC)
+		case host == "_smtp._tls":
+			add(domainconnect.GroupTLSRPT)
+		}
+	}
+	return groups
 }

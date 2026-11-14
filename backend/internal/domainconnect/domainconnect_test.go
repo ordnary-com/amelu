@@ -40,7 +40,7 @@ func TestBuildApplyURL(t *testing.T) {
 		RSAKey:          "verylong+base64/key==",
 	}
 
-	applyURL, err := client.BuildApplyURL("https://dash.cloudflare.com/domainconnect", "example.com", "https://app.amelu.org/domains/123/dns", vars)
+	applyURL, err := client.BuildApplyURL("https://dash.cloudflare.com/domainconnect", "example.com", "https://app.amelu.org/domains/123/dns", vars, []string{GroupMail, GroupDMARC})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,6 +60,9 @@ func TestBuildApplyURL(t *testing.T) {
 	}
 	if q.Get("key") != "_dcpubkeyv1" {
 		t.Errorf("key = %q, want _dcpubkeyv1", q.Get("key"))
+	}
+	if q.Get("groupId") != "mail,dmarc" {
+		t.Errorf("groupId = %q, want mail,dmarc", q.Get("groupId"))
 	}
 	if q.Get("rsakey") != vars.RSAKey {
 		t.Errorf("rsakey not round-tripped correctly")

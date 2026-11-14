@@ -90,10 +90,24 @@ type RecordVars struct {
 	RSAKey          string
 }
 
+// Template groups. Cloudflare ignores txtConflictMatchingMode, so a TXT
+// record only replaces one with identical content: each TXT record has its
+// own group, applied only while its name has no TXT record yet, so a
+// customer's existing DMARC policy never ends up next to a second one.
+const (
+	GroupMail        = "mail" // MX and the SPF merge
+	GroupDKIMEd25519 = "dkimed25519"
+	GroupDKIMRSA     = "dkimrsa"
+	GroupDMARC       = "dmarc"
+	GroupTLSRPT      = "tlsrpt"
+	GroupDiscovery   = "discovery" // client autodiscovery SRV records
+)
+
 // BuildApplyURL constructs the signed synchronous "apply" redirect URL for
 // domain, given the sync UX host from discovery (settings.urlSyncUX), the
-// domain's current record values, and where to send the browser afterwards.
-func (c *Client) BuildApplyURL(syncUX, domain, redirectURI string, vars RecordVars) (string, error) {
+// domain's current record values, where to send the browser afterwards and
+// the template groups to apply (all of them when groups is empty).
+func (c *Client) BuildApplyURL(syncUX, domain, redirectURI string, vars RecordVars, groups []string) (string, error) {
 	base := fmt.Sprintf("%s/v2/domainTemplates/providers/%s/services/%s/apply", strings.TrimRight(syncUX, "/"), ProviderID, ServiceID)
 
 	params := url.Values{}
@@ -103,6 +117,9 @@ func (c *Client) BuildApplyURL(syncUX, domain, redirectURI string, vars RecordVa
 	params.Set("ed25519key", vars.Ed25519Key)
 	params.Set("rsaselector", vars.RSASelector)
 	params.Set("rsakey", vars.RSAKey)
+	if len(groups) > 0 {
+		params.Set("groupId", strings.Join(groups, ","))
+	}
 
 	// The signature covers the query string without key and sig; Cloudflare
 	// additionally requires sig to be the very last parameter.

@@ -24,6 +24,12 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-16  Own sending block 89.106.70.0/24 on AS218905
+            2026-11-16-own-ip-block.txt
+
+2026-11-16  Pause notice points at abuse@amelu.org instead of "reply"
+            2026-11-16-pause-notice-reply.txt
+
 2026-11-14  Domain Connect template v2: one group per TXT record
             2026-11-14-domain-connect-template-v2.txt
 

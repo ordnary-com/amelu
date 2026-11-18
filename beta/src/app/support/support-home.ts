@@ -5,12 +5,13 @@ import { Api, SupportTicket, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { UI } from '../ui';
+import { SupportTips } from './support-tips';
 import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
 
 /** /support: the organization's tickets, newest activity first. */
 @Component({
   selector: 'amelu-support-home',
-  imports: [RouterLink, Alert, Icon],
+  imports: [RouterLink, Alert, Icon, SupportTips],
   template: `
     <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
       <div class="min-w-0">
@@ -105,14 +106,7 @@ import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
       </section>
 
       <aside class="space-y-5">
-        <section [class]="ui.setCard">
-          <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Get a Faster Answer</h2></div>
-          <ul class="space-y-1.5 px-5 py-4 text-[14px] leading-relaxed text-muted">
-            <li>Name the domain and the address involved.</li>
-            <li>Say roughly when it happened.</li>
-            <li>Paste the full error or bounce message.</li>
-          </ul>
-        </section>
+        <amelu-support-tips [showStatus]="false" />
         <section [class]="ui.setCard">
           <div [class]="ui.setHeader">
             <h2 [class]="ui.setTitle">Service Status</h2>

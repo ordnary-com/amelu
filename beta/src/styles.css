@@ -43,6 +43,8 @@
   /* spartan/ui (helm components, src/app/ui): its hover and selected
      background, which shadcn calls muted/accent (see spartan.css). */
   --color-subtle: var(--subtle);
+  /* The faint grey body of a panel, under white tables and figures. */
+  --color-well: color-mix(in srgb, var(--surface), var(--ink) 2%);
 
   --breakpoint-mobile: 45rem;
 }

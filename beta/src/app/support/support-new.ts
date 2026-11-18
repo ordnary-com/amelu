@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, SupportCategory, errorMessage } from '../api';
@@ -22,7 +23,7 @@ const BODY_MAX = 20000;
 /** /support/new: open a ticket. */
 @Component({
   selector: 'amelu-support-new',
-  imports: [Alert, Combobox, Icon, RouterLink],
+  imports: [Alert, Combobox, Icon, RouterLink, DecimalPipe],
   template: `
     <h1 class="flex items-center gap-2 text-[22px] leading-tight font-normal">
       <a routerLink="/support" class="text-link hover:underline">Support</a>
@@ -79,15 +80,20 @@ const BODY_MAX = 20000;
           </div>
 
           <div>
-            <label for="ticket-body" [class]="fieldLabel">Message</label>
+            <div class="flex items-baseline justify-between gap-3">
+              <label for="ticket-body" [class]="fieldLabel">Message</label>
+              <span class="text-[12px] text-muted tabular-nums">{{ body().length | number }} / {{ bodyMax | number }}</span>
+            </div>
             <textarea
               id="ticket-body"
               rows="8"
-              [class]="ui.input + ' h-auto min-h-40 py-2 leading-relaxed'"
+              [class]="ui.input + ' h-auto min-h-44 py-2 text-[14px] leading-relaxed [field-sizing:content]'"
               [maxLength]="bodyMax"
               placeholder="What happened, when, and which address was involved? Paste any error or bounce message."
               [value]="body()"
               (input)="body.set($any($event.target).value)"
+              (keydown.meta.enter)="submit($event)"
+              (keydown.control.enter)="submit($event)"
               required
             ></textarea>
           </div>
@@ -98,6 +104,9 @@ const BODY_MAX = 20000;
         </p>
         <div class="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
           <button type="button" [class]="ui.outline + ' h-9'" (click)="cancel()">Cancel</button>
+          @if (missing(); as what) {
+            <span class="mr-auto text-[13px] text-muted">Add {{ what }} to open the ticket.</span>
+          }
           <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!canSubmit()">{{ sending() ? 'Sending...' : 'Open ticket' }}</button>
         </div>
       </form>
@@ -137,6 +146,11 @@ export class SupportNew {
   protected readonly error = signal<string | null>(null);
 
   protected readonly canSubmit = computed(() => !this.sending() && this.subject().trim() !== '' && this.body().trim() !== '');
+  /** What's still empty, said next to the button. */
+  protected readonly missing = computed(() => {
+    const parts = [this.subject().trim() ? '' : 'a subject', this.body().trim() ? '' : 'a message'].filter(Boolean);
+    return parts.join(' and ');
+  });
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();

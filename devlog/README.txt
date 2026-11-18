@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-18  License 1.2: self-hosting left out
+            2026-11-18-license-no-self-hosting.txt
+
 2026-11-18  README rewritten to match the current setup
             2026-11-18-readme.txt
 

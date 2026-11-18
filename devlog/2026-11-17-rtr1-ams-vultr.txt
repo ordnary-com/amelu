@@ -1,0 +1,14 @@
+89.106.70.0/24 works through Vultr (rtr1-ams)
+2026-11-17
+
+Lagrange still filters our IPv4 /24 after a day, and Melbicom drops packets
+with a 89.106.70.x source, so the block had no working outbound path. We
+added Vultr: BGP request with the LOA from noez, the validation mail went to
+abuse@ghostnet.de and was forwarded to us, approved the same evening. New
+router rtr1-ams (Vultr vc2-1c-1gb Amsterdam, 95.179.130.20) runs BIRD to
+Vultr's route server 169.254.169.254 AS64515 (multihop, MD5) and announces
+only the /24; WireGuard 172.31.73.0/30 to marduk, where wg-quick@vultr now
+owns table 30's default route (Melbicom metric 100, Lagrange 200 as
+fallbacks). curl --interface 89.106.70.2 from marduk works and the block
+answers pings. Outbound port 25 is still blocked by Vultr. Configs in
+ops/rtr1-ams/ and ops/marduk/wg-vultr.conf.

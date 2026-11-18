@@ -89,10 +89,24 @@
     <div class="flex flex-wrap items-center justify-between gap-3 bg-accent px-4 py-3 text-white" role="note">
       <div class="flex min-w-0 items-start gap-2.5 text-[13px]">
         <amelu-icon name="star" [size]="16" class="mt-px flex-none" />
-        <div class="min-w-0">
-          <p class="font-medium">Go, from {{ up.perMonth }}/mo <span class="font-normal text-white/75">billed yearly</span></p>
-          <p class="mt-0.5 text-[12px] text-white/75">{{ up.lines.join(' · ') }}</p>
-        </div>
+        <p class="min-w-0">
+          Need more room? Go starts at {{ up.perMonth }} a month, billed yearly.
+          <button
+            type="button"
+            class="ml-1 inline-flex cursor-help items-center gap-1 font-medium underline decoration-white/50 underline-offset-2 hover:decoration-white"
+            [hlmTooltip]="goFeatures"
+            position="bottom"
+          >
+            What's included
+          </button>
+        </p>
+        <ng-template #goFeatures>
+          <ul class="space-y-1 py-0.5 text-[12px]">
+            @for (line of up.lines; track line) {
+              <li class="flex gap-1.5"><amelu-icon name="check" [size]="13" class="mt-px flex-none" />{{ line }}</li>
+            }
+          </ul>
+        </ng-template>
       </div>
       <a routerLink="/billing/plans" class="inline-flex h-8 cursor-pointer items-center rounded-md bg-white px-3 text-[13px] font-medium text-link hover:bg-white/90">Upgrade to Go</a>
     </div>

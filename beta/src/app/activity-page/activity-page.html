@@ -1,10 +1,4 @@
-<amelu-page-header
-  title="Activity Log"
-  [crumbs]="[{ label: 'My Organization', link: '/organization' }, { label: 'Activity Log' }]"
->
-  Recent team, invitation, domain, mailbox, and billing changes across your organization. What you can see here
-  depends on your role.
-</amelu-page-header>
+<p class="mb-5 max-w-3xl text-[14px] text-muted">Recent team, invitation, domain, mailbox, and billing changes across your organization. What you can see here depends on your role.</p>
 
 @if (error(); as message) {
   <amelu-alert class="mb-6" kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">

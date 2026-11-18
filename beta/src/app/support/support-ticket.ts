@@ -47,13 +47,7 @@ const BODY_MAX = 20000;
               @for (m of t.messages ?? []; track m.id) {
                 <li class="px-4 py-3" [class.bg-bg/40]="m.authorKind === 'staff'">
                   <div class="flex items-center gap-2">
-                    @if (m.authorKind === 'staff') {
-                      <span class="flex size-6 flex-none items-center justify-center rounded-full bg-accent" aria-hidden="true">
-                        <img src="/ordnary-mark-blue.png" alt="" class="size-3.5 brightness-0 invert" />
-                      </span>
-                    } @else {
-                      <amelu-avatar class="size-6" [size]="24" [src]="m.authorAvatarUrl" [name]="m.authorName" [email]="m.authorEmail" [gravatar]="true" />
-                    }
+                    <amelu-avatar class="size-6" [size]="24" [src]="m.authorAvatarUrl" [name]="m.authorName" [email]="m.authorEmail" [gravatar]="true" />
                     <span class="truncate text-[13px] font-medium">{{ m.authorName }}</span>
                     @if (m.authorKind === 'staff') {
                       <img src="/ordnary-mark-blue.png" alt="Ordnary staff" title="Ordnary staff" class="size-3.5 flex-none" />

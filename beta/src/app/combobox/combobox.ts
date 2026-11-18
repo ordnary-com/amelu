@@ -20,7 +20,7 @@ let nextId = 0;
   imports: [HlmComboboxImports],
   template: `
     <hlm-combobox [value]="selected()" (valueChange)="value.set($event?.value ?? '')" [itemToString]="toLabel" [disabled]="disabled()">
-      <hlm-combobox-trigger class="w-full justify-between font-normal" [buttonId]="inputId()">
+      <hlm-combobox-trigger class="h-9 w-full justify-between rounded-md border-line font-normal" [buttonId]="inputId()">
         <span hlmComboboxValue class="truncate" [placeholder]="placeholder()"></span>
       </hlm-combobox-trigger>
       <hlm-combobox-content *hlmComboboxPortal>

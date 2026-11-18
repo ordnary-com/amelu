@@ -1,12 +1,12 @@
 import type { IconName } from '../icon';
 import { SupportCategory, SupportStatus } from '../api';
 
-export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string }[] = [
-  { id: 'delivery', label: 'Sending or receiving mail' },
-  { id: 'domains', label: 'Domains and DNS' },
-  { id: 'account', label: 'Account and mailboxes' },
-  { id: 'billing', label: 'Billing and plans' },
-  { id: 'other', label: 'Something else' },
+export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string; hint: string; icon: IconName }[] = [
+  { id: 'delivery', label: 'Sending or receiving mail', hint: 'Bounces, spam folders, missing mail', icon: 'mail' },
+  { id: 'domains', label: 'Domains and DNS', hint: 'Records, verification, nameservers', icon: 'globe' },
+  { id: 'account', label: 'Account and mailboxes', hint: 'Mailboxes, passwords, your team', icon: 'user' },
+  { id: 'billing', label: 'Billing and plans', hint: 'Plans, invoices, payment', icon: 'card' },
+  { id: 'other', label: 'Something else', hint: 'Anything that fits nowhere else', icon: 'dots' },
 ];
 
 export const CATEGORY_LABEL = Object.fromEntries(SUPPORT_CATEGORIES.map((c) => [c.id, c.label])) as Record<SupportCategory, string>;

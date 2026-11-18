@@ -242,7 +242,13 @@
                 <td colspan="4" class="px-4 py-8 text-center">
                   <amelu-icon name="receipt" [size]="18" class="mx-auto block" />
                   <p class="mt-2">No invoices yet</p>
-                  <p class="mt-0.5 text-[13px] text-muted">They show up here once you're billed.</p>
+                  <p class="mx-auto mt-0.5 max-w-[360px] text-[13px] text-muted">
+                    Your invoices show up here once you're billed, ready to download for your own records.
+                  </p>
+                  <div class="mt-4 flex items-center justify-center gap-3">
+                    <a routerLink="/billing/plans" [class]="ui.outline">View plans</a>
+                    <a routerLink="/billing" class="text-[13px] text-link hover:underline">Billing settings</a>
+                  </div>
                 </td>
               </tr>
             }

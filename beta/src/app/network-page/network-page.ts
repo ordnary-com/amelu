@@ -31,13 +31,13 @@ const CURRENT_IPS: SendingIp[] = [
   { name: 'out11.mx.amelu.org', ip: '51.89.76.0', pool: 'spare', network: 'current' },
 ];
 
-// Our own block 89.106.70.0/24 (AS218905), routed through rtr1-ams and
-// rtr1-par. Listed early so customers can allowlist them; not sending yet.
+// Our own block 89.106.70.0/24 (AS218905), routed through rtr1-ams, rtr1-par
+// and rtr2-ams. Listed early so customers can allowlist them; not sending yet.
 // At most 64 of them on the page. One cluster name per /24 (mta0) and the
-// last octet as the host, so out-10.mta0 is .10.
+// last octet as the host, so out-1.mta0 is .1.
 const OWN_BLOCK_IPS: SendingIp[] = Array.from({ length: 64 }, (_, i) => ({
-  name: `out-${10 + i}.mta0.amelu.org`,
-  ip: `89.106.70.${10 + i}`,
+  name: `out-${i + 1}.mta0.amelu.org`,
+  ip: `89.106.70.${i + 1}`,
   pool: 'warming' as Pool,
   network: 'own' as Network,
   pending: true,

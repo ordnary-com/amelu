@@ -1,19 +1,20 @@
 [Unit]
-Description=Policy routing for our own block 89.106.70.0/24 (exits via the Vultr routers)
-Before=wg-quick@vultr.service wg-quick@par.service bgp-exit-check.service
+Description=Policy routing for our own block 89.106.70.0/24 (exits via rtr2-ams, rtr1-ams, rtr1-par)
+Before=wg-quick@ifog.service wg-quick@vultr.service wg-quick@par.service bgp-exit-check.service
 After=network-online.target
 Wants=network-online.target
 
 # Traffic from 89.106.70.0/24 uses table 30, whose default routes point at
-# rtr1-ams (wg-quick@vultr) and rtr1-par (wg-quick@par); bgp-exit-check keeps
-# them in line. 89.106.70.2 is the test address.
+# rtr2-ams (wg-quick@ifog), rtr1-ams (wg-quick@vultr) and rtr1-par
+# (wg-quick@par); bgp-exit-check keeps them in line. The bound addresses are
+# the sending IPs out-N.mta0.amelu.org that amelu-ip-pools may use.
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/bin/sh -c "ip rule show | grep -q \"from 89.106.70.0/24 lookup 30\" || ip rule add from 89.106.70.0/24 lookup 30 priority 100"
-ExecStart=/bin/sh -c "ip addr show dev lo | grep -q 89.106.70.2/32 || ip addr add 89.106.70.2/32 dev lo"
+ExecStart=/bin/sh -c "for n in 1 2 3; do ip addr show dev lo | grep -q 89.106.70.$n/32 || ip addr add 89.106.70.$n/32 dev lo; done"
 ExecStop=/sbin/ip rule del from 89.106.70.0/24 lookup 30 priority 100
-ExecStop=/sbin/ip addr del 89.106.70.2/32 dev lo
+ExecStop=/bin/sh -c "for n in 1 2 3; do ip addr del 89.106.70.$n/32 dev lo; done"
 
 [Install]
 WantedBy=multi-user.target

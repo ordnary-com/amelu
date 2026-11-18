@@ -25,8 +25,13 @@
     {{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}
   </h1>
   <p class="relative mt-2 text-[16px] text-hero-ink/80">
-    Here's how your mail is doing.
-    <a routerLink="/organization/activity" class="font-medium text-link hover:underline">View all activity</a>
+    @let about = summary();
+    {{ about.text }}
+    @if (about.link) {
+      <a [routerLink]="about.link" class="font-medium text-link hover:underline">{{ about.linkLabel }}</a>
+    }
+    <span class="text-hero-ink/40" aria-hidden="true">·</span>
+    <a routerLink="/organization/activity" class="text-hero-ink/80 hover:text-ink hover:underline">Recent activity</a>
   </p>
 </section>
 

@@ -1,24 +1,29 @@
-<!-- Same shape as ordnary-console's account menu: a badge hanging from the top
-     edge with who you are underneath, opening a panel flush below the bar. -->
+<!-- The organization and who you're signed in as, both opening the one panel. -->
 <button
   type="button"
-  class="group flex h-full cursor-pointer flex-col items-end justify-start"
+  class="group flex h-9 cursor-pointer items-center gap-4 rounded-md px-2 text-[13px] font-medium text-ink hover:bg-bg aria-expanded:bg-bg"
   (click)="toggle()"
   [attr.aria-expanded]="open()"
   aria-haspopup="menu"
 >
-  <span class="flex max-w-[240px] items-center gap-1.5 rounded-b-md bg-badge max-mobile:max-w-[160px] px-3 py-1 text-[12px] font-bold text-white">
-    <span class="truncate">{{ customer()?.organizationName }}</span>
-    <amelu-icon name="chevronDown" [size]="12" class="transition-transform duration-150 group-aria-expanded:rotate-180" />
+  <span class="flex min-w-0 items-center gap-1.5 max-mobile:hidden">
+    <amelu-icon name="users" [size]="16" class="flex-none text-muted" />
+    <span class="max-w-[200px] truncate">{{ customer()?.organizationName }}</span>
   </span>
-  <span class="max-w-[240px] truncate pt-1 text-[13px] max-mobile:max-w-[160px] text-chrome-ink/75 group-hover:text-chrome-ink group-hover:underline">
-    {{ customer()?.name }}
+  <span class="flex min-w-0 items-center gap-1.5">
+    @if (showAvatar()) {
+      <img [src]="customer()!.avatarUrl" alt="" class="size-6 flex-none rounded-full object-cover" (error)="avatarFailed.set(true)" referrerpolicy="no-referrer" />
+    } @else {
+      <span class="flex size-6 flex-none items-center justify-center rounded-full bg-accent/15 text-[10px] font-semibold text-link">{{ initials() }}</span>
+    }
+    <span class="max-w-[180px] truncate max-mobile:hidden">{{ customer()?.name }}</span>
+    <amelu-icon name="chevronDown" [size]="14" class="flex-none text-muted transition-transform duration-150 group-aria-expanded:rotate-180" />
   </span>
 </button>
 
 @if (open()) {
   <div
-    class="absolute top-full right-0 z-20 max-h-[calc(100vh-6rem)] w-[420px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-b-lg border border-line bg-popover p-5 text-ink shadow-md"
+    class="absolute top-full right-0 z-20 mt-2 max-h-[calc(100vh-6rem)] w-[420px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line bg-popover p-5 text-ink shadow-md"
     role="menu"
     aria-label="Your account"
   >

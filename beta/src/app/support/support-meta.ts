@@ -1,5 +1,5 @@
 import type { IconName } from '../icon';
-import { SupportCategory, SupportStatus } from '../api';
+import { DedicatedIpRequest, DedicatedIpUseCase, DedicatedIpVolume, SupportCategory, SupportStatus } from '../api';
 
 export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string; hint: string; icon: IconName }[] = [
   { id: 'delivery', label: 'Sending or receiving mail', hint: 'Bounces, spam folders, missing mail', icon: 'mail' },
@@ -9,7 +9,32 @@ export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string; hint: str
   { id: 'other', label: 'Something else', hint: 'Anything that fits nowhere else', icon: 'dots' },
 ];
 
-export const CATEGORY_LABEL = Object.fromEntries(SUPPORT_CATEGORIES.map((c) => [c.id, c.label])) as Record<SupportCategory, string>;
+// Dedicated IP requests come from their own form, not the topic list.
+export const CATEGORY_LABEL = {
+  ...Object.fromEntries(SUPPORT_CATEGORIES.map((c) => [c.id, c.label])),
+  dedicated_ip: 'Dedicated IP',
+} as Record<SupportCategory, string>;
+
+export const DEDICATED_IP_VOLUMES: { id: DedicatedIpVolume; label: string }[] = [
+  { id: 'lt10k', label: 'Fewer than 10,000' },
+  { id: '10k-100k', label: '10,000 to 100,000' },
+  { id: '100k-1m', label: '100,000 to 1 million' },
+  { id: 'gt1m', label: 'More than 1 million' },
+];
+
+export const DEDICATED_IP_USE_CASES: { id: DedicatedIpUseCase; label: string; hint: string; icon: IconName }[] = [
+  { id: 'transactional', label: 'Transactional', hint: 'Receipts, notifications, password resets', icon: 'mail' },
+  { id: 'marketing', label: 'Newsletters', hint: 'Newsletters and marketing campaigns', icon: 'users' },
+  { id: 'both', label: 'Both', hint: 'Transactional mail and newsletters', icon: 'inbox' },
+];
+
+/** Where a dedicated IP request stands, as steps for the ticket's sidebar. */
+export const DEDICATED_IP_STEPS: { status: DedicatedIpRequest['status']; label: string }[] = [
+  { status: 'requested', label: 'Requested' },
+  { status: 'approved', label: 'Approved' },
+  { status: 'paid', label: 'Paid' },
+  { status: 'active', label: 'Assigned' },
+];
 
 /** Label, badge, dot, and icon with text colour (tables) per status, from the customer's side. */
 export const STATUS: Record<SupportStatus, { label: string; badge: string; dot: string; icon: IconName; text: string }> = {

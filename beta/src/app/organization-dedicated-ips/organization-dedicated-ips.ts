@@ -81,10 +81,17 @@ import { UI } from '../ui';
           <h2 [class]="ui.setTitle">Request a Dedicated IP</h2>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <p class="max-w-xl text-[14px] text-muted">
-            A dedicated IP is €10 a month per address, on every plan. Tell us how much mail you send and we'll set one up for you.
-          </p>
-          <a routerLink="/support/new" [class]="ui.primary + ' h-9'">Contact our team</a>
+          @if (openRequest(); as req) {
+            <p class="max-w-xl text-[14px] text-muted">
+              Your request is {{ requestState[req.status] }}. Follow it in its ticket{{ req.status === 'approved' ? ', where you can activate it' : '' }}.
+            </p>
+            <a [routerLink]="['/support/tickets', req.ticketId]" [class]="ui.primary + ' h-9'">Open the request</a>
+          } @else {
+            <p class="max-w-xl text-[14px] text-muted">
+              A dedicated IP is €10 a month per address, on every plan. Tell us how much mail you send and we'll set one up for you.
+            </p>
+            <a routerLink="/organization/dedicated-ips/request" [class]="ui.primary + ' h-9'">Request a dedicated IP</a>
+          }
         </div>
       </section>
 
@@ -115,7 +122,14 @@ export class OrganizationDedicatedIps {
   protected readonly toneText = TONE_TEXT;
   protected readonly toneIcon = TONE_ICON;
   // undefined while loading; an empty list when there are none or it can't load.
-  protected readonly ips = toSignal(inject(Api).organizationDedicatedIps().pipe(catchError(() => of([]))));
+  private readonly api = inject(Api);
+  protected readonly ips = toSignal(this.api.organizationDedicatedIps().pipe(catchError(() => of([]))));
+  protected readonly openRequest = toSignal(this.api.openDedicatedIpRequest().pipe(catchError(() => of(null))));
+  protected readonly requestState: Record<string, string> = {
+    requested: 'waiting for our review',
+    approved: 'approved',
+    paid: 'paid, and we are assigning an address',
+  };
   protected readonly howItWorks = [
     { icon: 'mail' as const, title: 'Only your mail', text: "Every domain in your organization sends from your own address. Nobody else's mail touches its reputation." },
     { icon: 'shield' as const, title: 'Covered by your SPF', text: 'Domains whose SPF record includes _spf.amelu.org, as the DNS page asks, send from it. The address has its own hostname with matching reverse DNS.' },

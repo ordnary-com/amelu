@@ -236,7 +236,7 @@ func (a *App) AdminDeleteDedicatedIP(w http.ResponseWriter, r *http.Request, ope
 		return
 	}
 	a.Store.LogAdminAction(r.Context(), "dedicated_ip", ip, operator, "dedicated_ip.deleted", "")
-	w.WriteHeader(http.StatusNoContent)
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
 // DedicatedIPRoutesJob -> GET /internal/jobs/dedicated-ips: for marduk's

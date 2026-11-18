@@ -20,13 +20,13 @@ const MAILBOX_DOMAINS = 25;
   template: `
     <button
       type="button"
-      class="flex h-9 w-full max-w-[420px] cursor-pointer items-center gap-2 rounded-lg bg-chrome-ink/10 px-3 text-[13px] text-chrome-ink/70 hover:bg-chrome-ink/15 max-mobile:w-9 max-mobile:justify-center max-mobile:px-0"
+      class="flex h-9 w-full max-w-[420px] cursor-pointer items-center gap-2 rounded-lg border border-line bg-bg px-3 text-[13px] text-muted hover:border-ink/20 hover:text-ink max-mobile:w-9 max-mobile:justify-center max-mobile:px-0"
       aria-label="Search"
       (click)="openSearch()"
     >
       <amelu-icon name="search" [size]="15" />
       <span class="flex-1 text-left max-mobile:hidden">Search pages, domains, mailboxes</span>
-      <kbd class="rounded border border-chrome-ink/25 px-1.5 font-sans text-[11px] max-mobile:hidden">{{ shortcut }}</kbd>
+      <kbd class="rounded border border-line bg-page px-1.5 font-sans text-[11px] max-mobile:hidden">{{ shortcut }}</kbd>
     </button>
 
     @if (open()) {

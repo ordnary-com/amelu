@@ -16,7 +16,7 @@ import { Notifications } from './notifications';
   template: `
     <button
       type="button"
-      class="relative inline-flex size-9 cursor-pointer items-center justify-center rounded-md hover:bg-white/10"
+      class="relative inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink"
       [attr.aria-label]="'Notifications' + (notices.unread().length ? ', ' + notices.unread().length + ' unread' : '')"
       [attr.aria-expanded]="open()"
       (click)="open.set(!open())"

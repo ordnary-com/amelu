@@ -1,0 +1,13 @@
+89.106.70.0/24 announced through Melbicom (rtr2-ams)
+2026-11-17
+
+A third router for our sending block: Melbicom Cloud Server KVM-1-EU in
+Amsterdam, 213.183.59.146, rtr2.ams.net.ordnary.com. Melbicom accepted the
+BGP session after we confirmed by mail; the aut-num of AS218905 got
+import/export lines for AS56630. BIRD 2.14 announces only the /24 to
+213.183.59.1, and 19 RIS collectors saw it within minutes (Lagrange still
+doesn't carry the v4 prefix). WireGuard wg-quick@marduk (172.31.72.0/30)
+routes the block on to marduk, where wg-quick@ams now owns table 30's
+default route; Lagrange stays as a metric 200 fallback. Inbound works;
+outbound doesn't yet, because Melbicom drops packets with a 89.106.70.x
+source on our port. Configs in ops/rtr2-ams/ and ops/marduk/wg-ams.conf.

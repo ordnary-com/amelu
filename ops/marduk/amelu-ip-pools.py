@@ -29,20 +29,25 @@ Runs every 10 minutes from cron.
   amelu-ip-pools.py --dry-run   print the decision, change nothing
   amelu-ip-pools.py --off       send everything from marduk's own IP again
 """
-import base64, datetime, json, os, re, socket, subprocess, sys, urllib.request
+import base64, datetime, ipaddress, json, os, re, socket, subprocess, sys, urllib.request
 
 JMAP = "http://127.0.0.1:8080/jmap"
 MX_HOST = "marduk.mx.amelu.org"
 # No group holds two IPs from the same /24: a receiver that blocks a whole
 # range (Outlook's S3140 did) then takes out one IP per group, never a group.
 # out9 and out10 joined on 2026-11-08 as the cold ones, one per group, so each
-# warms up on a quarter of its group's mail.
+# warms up on a quarter of its group's mail. out-1..3.mta0 (our own block
+# 89.106.70.0/24, AS218905) joined on 2026-11-18 the same way; the OVH IPs go
+# once the block has warmed up.
 GROUPS = {
-    "system": {"out4.mx.amelu.org": "51.89.39.34", "out2.mx.amelu.org": "51.89.60.49"},
+    "system": {"out4.mx.amelu.org": "51.89.39.34", "out2.mx.amelu.org": "51.89.60.49",
+               "out-1.mta0.amelu.org": "89.106.70.1"},
     "trusted": {"out1.mx.amelu.org": "51.89.60.60", "out5.mx.amelu.org": "51.89.2.193",
-                "out8.mx.amelu.org": "51.89.76.15", "out9.mx.amelu.org": "51.89.85.197"},
+                "out8.mx.amelu.org": "51.89.76.15", "out9.mx.amelu.org": "51.89.85.197",
+                "out-2.mta0.amelu.org": "89.106.70.2"},
     "newdomains": {"out3.mx.amelu.org": "51.89.76.2", "out6.mx.amelu.org": "51.89.1.228",
-                   "out7.mx.amelu.org": "51.89.102.29", "out10.mx.amelu.org": "51.89.85.192"},
+                   "out7.mx.amelu.org": "51.89.102.29", "out10.mx.amelu.org": "51.89.85.192",
+                   "out-3.mta0.amelu.org": "89.106.70.3"},
 }
 # Not in any group: a .0 address, which some receivers refuse, so it's the last to use.
 SPARES = {"out11.mx.amelu.org": "51.89.76.0"}
@@ -295,7 +300,9 @@ def spf_ips():
     except (OSError, subprocess.TimeoutExpired):
         return None
     txt = "".join(part.strip('"') for part in out.split())
-    return set(re.findall(r"ip4:([0-9.]+)", txt)) if "v=spf1" in txt else None
+    if "v=spf1" not in txt:
+        return None
+    return [ipaddress.ip_network(n) for n in re.findall(r"ip4:([0-9.]+(?:/[0-9]+)?)", txt)]
 
 
 def main():
@@ -304,8 +311,9 @@ def main():
     mx = mx_ips()
     spf = spf_ips()
     sending = {ip for g in GROUPS.values() for ip in g.values()}
-    if spf is not None and not sending <= spf:
-        print(f"warning: {SPF_HOST} misses {sorted(sending - spf)}", flush=True)
+    missing = sorted(ip for ip in sending if spf is not None and not any(ipaddress.ip_address(ip) in n for n in spf))
+    if missing:
+        print(f"warning: {SPF_HOST} misses {missing}", flush=True)
     out, news = watch_reputation(dry)
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)

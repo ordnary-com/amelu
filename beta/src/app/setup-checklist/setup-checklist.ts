@@ -20,8 +20,9 @@ interface Step {
 }
 
 /**
- * The first things to do with a new account, as one line in the Overview
- * banner until they're done or hidden: progress and a link to the next step.
+ * The first things to do with a new account, in the Overview banner until
+ * they're done or hidden: every step as a segment, and the next one with what
+ * it's for and a button to do it.
  */
 @Component({
   selector: 'amelu-setup-checklist',
@@ -31,21 +32,45 @@ interface Step {
   host: { class: 'block', '[class.hidden]': '!visible()' },
   template: `
     @if (visible() && steps(); as list) {
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-surface/60 px-4 py-2.5" aria-label="Get Amelu ready">
-        <span class="text-[13px] font-semibold text-ink">Get Amelu ready</span>
-        <span class="flex items-center gap-2">
-          <span class="h-1.5 w-24 overflow-hidden rounded-full bg-hero-ink/15">
-            <span class="block h-full rounded-full bg-accent transition-[width]" [style.width.%]="(doneCount() / list.length) * 100"></span>
-          </span>
-          <span class="text-[12px] tabular-nums text-hero-ink/75">{{ doneCount() }} of {{ list.length }} done</span>
-        </span>
+      <section class="w-full max-w-[760px] rounded-lg border border-line/60 bg-surface/80 p-4 backdrop-blur-sm" aria-labelledby="setup-title">
+        <div class="flex items-center gap-3">
+          <h2 id="setup-title" class="text-[14px] font-medium text-ink">Get Amelu ready</h2>
+          <span class="text-[12px] tabular-nums text-muted">{{ doneCount() }} of {{ list.length }} done</span>
+          <button type="button" class="ml-auto cursor-pointer text-[12px] text-muted hover:text-ink hover:underline" (click)="hide()">Hide</button>
+        </div>
+
+        <!-- Every step as a segment: a bar that fills when done, the next one half-lit. -->
+        <ol class="mt-3 grid gap-3" [style.grid-template-columns]="'repeat(' + list.length + ', minmax(0, 1fr))'">
+          @for (step of list; track step.title; let i = $index) {
+            <li>
+              <a [routerLink]="step.link" [fragment]="step.fragment" class="group block" [attr.aria-current]="step === next() ? 'step' : null">
+                <span class="block h-1 rounded-full" [class]="step.done ? 'bg-accent' : step === next() ? 'bg-accent/40' : 'bg-hero-ink/15'"></span>
+                <span class="mt-2 flex items-start gap-1.5 text-[12px] leading-snug max-mobile:hidden" [class]="step.done ? 'text-muted' : step === next() ? 'font-medium text-ink' : 'text-muted'">
+                  @if (step.done) {
+                    <amelu-icon name="check" [size]="13" class="mt-px flex-none text-link" />
+                  } @else {
+                    <span class="flex-none tabular-nums">{{ i + 1 }}.</span>
+                  }
+                  <span class="group-hover:underline">{{ step.title }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ol>
+
         @if (next(); as step) {
-          <a [routerLink]="step.link" [fragment]="step.fragment" class="inline-flex items-center gap-1 text-[13px] font-medium text-link hover:underline">
-            Next: {{ step.title }} <amelu-icon name="arrowRight" [size]="13" />
-          </a>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line/60 pt-3">
+            <p class="min-w-0 text-[13px]">
+              <span class="font-medium text-ink">Next: {{ step.title }}.</span>
+              <span class="text-muted"> {{ step.text }}</span>
+            </p>
+            <a [routerLink]="step.link" [fragment]="step.fragment" class="inline-flex h-8 flex-none items-center gap-1.5 rounded-md bg-accent px-3 text-[13px] font-medium text-white hover:bg-accent/85">
+              {{ step.action }}
+              <amelu-icon name="arrowRight" [size]="14" />
+            </a>
+          </div>
         }
-        <button type="button" class="cursor-pointer text-[12px] text-hero-ink/60 hover:text-ink hover:underline" (click)="hide()">Hide</button>
-      </div>
+      </section>
     }
   `,
 })

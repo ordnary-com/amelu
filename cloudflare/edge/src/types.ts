@@ -60,6 +60,7 @@ export interface Env {
   // ops/marduk/amelu-sending-stats.py -> POST /internal/jobs/sending-stats
   SENDING_STATS_SECRET?: string;
   WEBMAIL_SSO_SECRET?: string;
+  SUPPORT_NOTIFY_EMAIL?: string;
   // White-label webmail: own hostnames as Cloudflare custom hostnames (backend/internal/cfsaas).
   CLOUDFLARE_SAAS_API_TOKEN?: string;
   CLOUDFLARE_SAAS_ZONE_ID?: string;

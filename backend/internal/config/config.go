@@ -37,6 +37,9 @@ type Config struct {
 	MailRelayURL  string
 	MailFromEmail string
 	MailFromName  string
+	// Where new support tickets and customer replies are announced; empty
+	// means nobody gets an email and support works from Airplane alone.
+	SupportNotifyEmail string
 
 	// Stripe billing is optional in the same vein: absent, /api/billing/*
 	// reports the feature unavailable instead of failing startup. Both must
@@ -145,9 +148,10 @@ func Load() (*Config, error) {
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),
 
-		MailRelayURL:  os.Getenv("MAIL_RELAY_URL"),
-		MailFromEmail: getEnv("MAIL_FROM_EMAIL", "onboarding@ordnary.com"),
-		MailFromName:  getEnv("MAIL_FROM_NAME", "Amelu"),
+		MailRelayURL:       os.Getenv("MAIL_RELAY_URL"),
+		MailFromEmail:      getEnv("MAIL_FROM_EMAIL", "onboarding@ordnary.com"),
+		MailFromName:       getEnv("MAIL_FROM_NAME", "Amelu"),
+		SupportNotifyEmail: getEnv("SUPPORT_NOTIFY_EMAIL", ""),
 
 		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),

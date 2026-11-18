@@ -127,8 +127,8 @@
 </div>
 
 <div class="flex min-w-0 flex-1 flex-col">
-  <!-- Top bar: white, above the page only. -->
-  <header class="flex h-16 flex-none items-stretch justify-between gap-3 border-b border-line bg-page px-5 text-ink max-lg:px-3">
+  <!-- No top bar on lg and up; below lg a slim one holds the menu button and the logo. -->
+  <header class="flex h-16 flex-none items-stretch gap-3 border-b border-line bg-page px-3 text-ink lg:hidden">
     <!-- Below lg the menus become a full-screen drawer behind this button. -->
     <button
       type="button"
@@ -140,18 +140,20 @@
     >
       <ng-icon [name]="navOpen() ? 'lucideX' : 'lucideMenu'" size="22px" strokeWidth="2.25" />
     </button>
-    <a routerLink="/" class="flex items-center max-lg:mr-auto lg:hidden">
+    <a routerLink="/" class="flex items-center">
       <img src="/amelu-logo.png" alt="Amelu" class="h-[22px]" />
     </a>
-    <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
-    <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2 lg:pl-0" />
-    <amelu-notification-bell data-tour="notifications" class="self-center" />
-    <amelu-account-menu data-tour="account" />
   </header>
 
   <main class="min-w-0 flex-1 overflow-y-auto bg-page max-mobile:px-4! in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
     <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->
     <div class="flex min-h-full flex-col">
+      <!-- Search (Cmd/Ctrl+K), notifications and account, loose in the top right. -->
+      <div class="-mt-3 mb-3 flex items-center justify-end gap-1 lg:-mt-5">
+        <amelu-search data-tour="search" />
+        <amelu-notification-bell data-tour="notifications" />
+        <amelu-account-menu data-tour="account" />
+      </div>
       <div class="flex-1">
         <router-outlet />
       </div>

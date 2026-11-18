@@ -113,7 +113,7 @@ export class NewDomain {
       },
       {
         value: 'amelu' as const,
-        title: 'Use Amelu nameservers',
+        title: 'Use our nameservers',
         text: `Point your domain at ${amelu?.nameservers?.join(' and ') ?? 'us'} and every record is set for you. We copy the records you have now, so your website keeps working.`,
         badge: amelu?.available ? 'Easiest' : 'Soon',
         disabled: !amelu?.available,

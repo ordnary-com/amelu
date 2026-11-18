@@ -79,6 +79,11 @@ export const routes: Routes = [
             title: 'Dedicated IPs · Amelu',
           },
           {
+            path: 'dedicated-ips/request',
+            loadComponent: () => import('./organization-dedicated-ips/dedicated-ip-request').then((m) => m.DedicatedIpRequestPage),
+            title: 'Request a dedicated IP · Amelu',
+          },
+          {
             path: 'webmail',
             loadComponent: () => import('./organization-webmail/organization-webmail').then((m) => m.OrganizationWebmail),
             title: 'Webmail · Amelu',

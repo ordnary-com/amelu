@@ -1,0 +1,11 @@
+Webmail logo upload is a drop zone with previews
+2026-11-18
+
+The logo field on the 2.0 dashboard's /organization/webmail page was a
+small box with Upload/Replace and Remove buttons. It is now a drop zone:
+drag a file onto it or "choose a file", and it shows the logo side by side
+on a white and a dark background, so you can see whether it works on both.
+Type (PNG, JPEG, WebP) and size (256 KB, the API's limit) are checked in the
+browser first, with a clear message instead of a failed upload. Remove sits
+next to it. New "image" icon in icon.ts. API unchanged
+(PUT/DELETE /api/organization/webmail/logo).

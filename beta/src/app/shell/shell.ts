@@ -181,7 +181,7 @@ export class Shell {
   /** The category the current page belongs to, if any. */
   private readonly pageCategory = computed((): SidebarCategory | null => {
     const url = this.url();
-    return url.startsWith('/organization') ? 'organization' : url === '/domains' || url === '/domains/new' ? 'domains' : null;
+    return url === '/domains' || url === '/domains/new' ? 'domains' : null;
   });
 
   private readonly unfoldForPage = effect(() => {

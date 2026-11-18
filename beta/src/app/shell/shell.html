@@ -42,23 +42,9 @@
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/account" [class]="link"><ng-icon name="lucideUser" size="15px" strokeWidth="2.5" /><span class="truncate">My Account</span></a>
       </li>
-      <li class="ml-2 max-lg:mr-2">
-        <ul>
-          <li [class]="groupedCategory">
-            <button type="button" data-tour="organization" [class]="link + ' w-full cursor-pointer text-left'" [attr.aria-expanded]="open('organization')" (click)="toggle('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></button>
-          </li>
-          @if (open('organization')) {
-          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization" [class]="link"><ng-icon name="lucideUsers" size="15px" strokeWidth="2.5" /><span class="truncate">Members</span></a>
-          </li>
-          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
-          </li>
-          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization/webmail" [class]="link"><ng-icon name="lucideMail" size="15px" strokeWidth="2.5" /><span class="truncate">Webmail</span></a>
-          </li>
-          }
-        </ul>
+      <!-- Its pages (Members, Activity Log, Webmail) are in the page's own side menu. -->
+      <li [class]="item" routerLinkActive="active">
+        <a routerLink="/organization" data-tour="organization" [class]="link"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span></a>
       </li>
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/billing" data-tour="billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>

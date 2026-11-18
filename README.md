@@ -64,7 +64,7 @@ around it.
 
 ```
 app.amelu.org  ─┐
-                ├─> api.amelu.org (edge Worker) ─> Go API (Cloudflare Container) ─┬─> Neon Postgres
+                ├─> api.amelu.org (edge Worker) ─> Go API (Cloudflare Container) ─┬─> Postgres (pg1-nbg)
 webmail.amelu.org ─> Roundcube on marduk                                         └─> Stalwart on marduk
 ```
 

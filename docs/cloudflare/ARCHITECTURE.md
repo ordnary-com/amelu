@@ -21,8 +21,8 @@ flowchart LR
         R2["R2 (EU jurisdiction)\nexports/reports only"]
     end
 
-    subgraph "Managed, off-Cloudflare"
-        PG[("Neon Postgres")]
+    subgraph "Self-hosted, off-Cloudflare"
+        PG[("Postgres on pg1-nbg\n(via Cloudflare Tunnel)")]
         Stalwart["Stalwart mail server\n(admin API private, self-hosted)"]
     end
 
@@ -41,7 +41,7 @@ flowchart LR
 The Go API previously ran on a Hetzner VPS, reached via a private Cloudflare
 Tunnel hostname, with Postgres self-hosted alongside it. Both moved onto
 Cloudflare-adjacent managed platforms: the API is now a Cloudflare Container
-bound directly to the edge Worker (no Tunnel hop), and Postgres is Neon.
+bound directly to the edge Worker (no Tunnel hop), and Postgres was Neon.
 Verified healthy in production on 2026-07-18, after which the Hetzner VPS
 was decommissioned - see `TUNNEL.md` for a historical record of that setup
 and `ROLLBACK.md` for what rollback options exist now that it's gone.
@@ -103,7 +103,7 @@ No Cloudflare product sits between a mail client and Stalwart. See
 |---|---|---|
 | React dashboard | served by Vite/whatever static host | Cloudflare Pages |
 | Go API | public HTTP listener, then Hetzner VPS behind a Cloudflare Tunnel | Cloudflare Container, bound directly to the edge Worker (no VPS, no Tunnel) |
-| Postgres | self-hosted alongside the Go API | Neon (managed) |
+| Postgres | self-hosted alongside the Go API | Neon until 2026-11-18, now Ordnary's own PostgreSQL server pg1-nbg (Hetzner), reached through its Cloudflare Tunnel |
 | Stalwart mail server | public mail protocols, private admin API | unchanged - still self-hosted, admin API stays private |
 | Mailbox expiration ticker | in-process Go goroutine | in-process by default; optional Worker Cron Trigger + Workflow via feature flag |
 | Domain verification | synchronous live DNS check in a request handler | existing synchronous check unchanged; new async Queue-based path scaffolded for future adoption |
@@ -122,7 +122,13 @@ No Cloudflare product sits between a mail client and Stalwart. See
   listener to firewall or patch against internet scanning. Replaces the
   earlier Tunnel+VPS approach, which achieved the same goal at the cost of
   operating a separate VPS and `cloudflared` fleet.
-- **Neon instead of self-hosted Postgres**: same reasoning - one less piece
+- **pg1-nbg instead of Neon (since 2026-11-18)**: all Ordnary Postgres now
+  runs on one server with pgBackRest backups and monitoring, documented in
+  ordnary-infra/pg1-nbg. It has no public port: `backend/entrypoint.sh` opens
+  a `cloudflared access tcp` tunnel with an Access service token
+  (`PG_TUNNEL_HOSTNAME`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`) and
+  `DATABASE_URL` points at `127.0.0.1:5432` inside the container.
+- **Neon instead of self-hosted Postgres** (2026-07 to 2026-11): same reasoning - one less piece
   of infra to operate directly, managed backups/scaling. `backend/internal/
   db/db.go`'s `Open()` sets conservative pool limits (`SetMaxOpenConns`
   etc.) since Neon enforces a connection cap shared across every Container

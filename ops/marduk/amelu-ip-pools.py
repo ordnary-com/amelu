@@ -24,6 +24,11 @@ with IP wording three times in an hour) and takes that IP out of its group
 for DEGRADE_HOURS, longer each time it happens again, unless that would
 empty the group.
 
+Mail to Microsoft (Outlook.com, Microsoft 365) goes out from the group's
+own-block IPs only (89.106.70.0/24), since Outlook refuses most of the OVH
+range; recipient domains count as Microsoft when the logs show their MX on
+*.outlook.com.
+
 Runs every 10 minutes from cron.
 
   amelu-ip-pools.py --dry-run   print the decision, change nothing
@@ -108,6 +113,14 @@ IP_WORDS = ["your ip", "ip address", "sending ip", "the ip", "listed", "reputati
 # A listing of the sender's domain (Spamhaus DBL, Outlook S8002) says nothing about our IP.
 DOMAIN_WORDS = ["domain is listed", "domain listed", "dbl", "(s8002)"]
 REJECTION = re.compile(r"\((delivery\.[a-z-]*(?:rejected|failed))\)")
+# Microsoft (Outlook.com and Microsoft 365) refuses most of the OVH range
+# (S3150), so mail to it leaves from our own block right away while the rest
+# warms up. Recipient domains count as Microsoft when their MX was an
+# *.outlook.com host in the last MICROSOFT_DAYS days of delivery logs.
+OWN_BLOCK = ipaddress.ip_network("89.106.70.0/24")
+MICROSOFT_MX = ".outlook.com"
+MICROSOFT_DAYS = 30
+CONNECT = re.compile(r'domain = "([a-z0-9.-]+)", hostname = "([^"]+)"')
 
 
 def jmap(calls):
@@ -217,6 +230,17 @@ def watch_reputation(dry):
     files = sorted(f for f in os.listdir(LOG_DIR) if f.startswith("stalwart."))
     start = st.get("file") if st.get("file") in files else files[-1]
     offset = st.get("offset", 0) if start == st.get("file") else 0
+    microsoft = st.get("microsoft")
+    if microsoft is None:
+        # First run with Microsoft routing: learn from the logs we already have.
+        microsoft = {}
+        for name in files:
+            with open(os.path.join(LOG_DIR, name), "rb") as f:
+                for raw in f:
+                    line = raw.decode("utf-8", "replace")
+                    m = "(delivery.connect)" in line and CONNECT.search(line)
+                    if m and m.group(2).lower().rstrip(".").endswith(MICROSOFT_MX):
+                        microsoft[m.group(1).lower()] = line[:20]
     news, sources = [], {ip for g in GROUPS.values() for ip in g.values()}
     for name in files[files.index(start):]:
         with open(os.path.join(LOG_DIR, name), "rb") as f:
@@ -227,6 +251,9 @@ def watch_reputation(dry):
                 local = re.search(r"localIp = ([0-9.]+)", line)
                 if "(delivery.connect)" in line and qid and local:
                     conn[qid.group(1)] = local.group(1)
+                    m = CONNECT.search(line)
+                    if m and m.group(2).lower().rstrip(".").endswith(MICROSOFT_MX):
+                        microsoft[m.group(1).lower()] = line[:20]
                     continue
                 if not REJECTION.search(line):
                     continue
@@ -256,13 +283,16 @@ def watch_reputation(dry):
     # Kept a week past the end, so a repeat block lasts longer.
     forget = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
     degraded = {ip: d for ip, d in degraded.items() if d["until"] > forget}
+    since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=MICROSOFT_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    microsoft = {d: t for d, t in microsoft.items() if t > since}
     if not dry:
         # Stalwart retries a queue id from another connect, so only the recent ones matter.
-        st = {"file": last, "offset": offset, "conn": dict(list(conn.items())[-5000:]), "strikes": strikes, "degraded": degraded}
+        st = {"file": last, "offset": offset, "conn": dict(list(conn.items())[-5000:]), "strikes": strikes, "degraded": degraded,
+              "microsoft": microsoft}
         os.makedirs(os.path.dirname(REPUTATION_FILE), exist_ok=True)
         json.dump(st, open(REPUTATION_FILE + ".tmp", "w"))
         os.replace(REPUTATION_FILE + ".tmp", REPUTATION_FILE)
-    return {ip for ip, d in degraded.items() if d["until"] > now}, news
+    return {ip for ip, d in degraded.items() if d["until"] > now}, news, sorted(microsoft)
 
 
 def either(field, values):
@@ -314,7 +344,7 @@ def main():
     missing = sorted(ip for ip in sending if spf is not None and not any(ipaddress.ip_address(ip) in n for n in spf))
     if missing:
         print(f"warning: {SPF_HOST} misses {missing}", flush=True)
-    out, news = watch_reputation(dry)
+    out, news, microsoft = watch_reputation(dry)
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)
 
@@ -345,19 +375,36 @@ def main():
         os.makedirs(os.path.dirname(SEEN_FILE), exist_ok=True)
         json.dump(seen, open(SEEN_FILE, "w"), indent=1)
 
+    # Per group, a "<group>-microsoft" strategy with only its own-block IPs.
+    extra = {}
+    for g, ips in pools.items():
+        own = {n: ip for n, ip in ips.items() if ipaddress.ip_address(ip) in OWN_BLOCK}
+        if own and microsoft:
+            extra[f"{g}-microsoft"] = own
+    to_ms = f"({either('rcpt_domain', microsoft)})"
     if "trusted" in pools:
         doms = new_domains()
-        match = {"0": {"if": either("sender_domain", OWN_DOMAINS), "then": "'system'" if "system" in pools else "'trusted'"}}
+        rules = [(either("sender_domain", OWN_DOMAINS), "system" if "system" in pools else "trusted")]
         if doms and "newdomains" in pools:
-            match["1"] = {"if": either("sender_domain", doms), "then": "'newdomains'"}
+            rules.append((either("sender_domain", doms), "newdomains"))
+        steps = []
+        for cond, g in rules:
+            if f"{g}-microsoft" in extra:
+                steps.append((f"({cond}) && {to_ms}", f"{g}-microsoft"))
+            steps.append((cond, g))
+        if "trusted-microsoft" in extra:
+            steps.append((to_ms, "trusted-microsoft"))
+        match = {str(i): {"if": cond, "then": f"'{g}'"} for i, (cond, g) in enumerate(steps)}
         connection = {"match": match, "else": "'trusted'"}
         state = "; ".join(f"{g}: {', '.join(n.split('.')[0] for n in sorted(pools[g]))}" for g in GROUPS if g in pools)
         state += f"; {len(doms)} new domains" + ("" if "newdomains" in pools else " (on trusted, no newdomains IP)")
+        if extra:
+            state += f"; Microsoft ({len(microsoft)} domains) via " + ", ".join(sorted({n.split('.')[0] for ips in extra.values() for n in ips}))
         state += f"; {rate}/h" + "".join(f"; {n}" for n in notes)
     else:
         connection = {"match": {}, "else": "'default'"}
         state = "marduk's own IP" + ("" if off else " (no usable trusted IP)")
-        pools = {}
+        pools, extra = {}, {}
     # The tunnel is gone; its cap stays disabled so nothing counts against it.
     tunnel_cap = {"match": {}, "else": "false"}
     send_cap = {"match": {"0": NOT_LOCAL}, "else": "true"}
@@ -376,9 +423,10 @@ def main():
         calls.append(["x:MtaOutboundStrategy/set", {"update": {"singleton": {"connection": connection, "route": ROUTE}}}, "s"])
     if tcap and (tcap["match"] != tunnel_cap or tcap["enable"]):
         calls.append(["x:MtaOutboundThrottle/set", {"update": {tcap["id"]: {"match": tunnel_cap, "enable": False}}}, "t"])
-    for group, ips in pools.items():
+    for group, ips in {**pools, **extra}.items():
         source = {str(i): {"ehloHostname": n, "sourceIp": ip} for i, (n, ip) in enumerate(sorted(ips.items()))}
-        fields = {"description": DESCRIPTIONS[group], "ehloHostname": sorted(ips)[0], "sourceIps": source}
+        desc = DESCRIPTIONS.get(group) or f"{DESCRIPTIONS[group.removesuffix('-microsoft')].split(' (')[0]}, to Microsoft: own block only (amelu-ip-pools)"
+        fields = {"description": desc, "ehloHostname": sorted(ips)[0], "sourceIps": source}
         if group not in existing:
             calls.append(["x:MtaConnectionStrategy/set", {"create": {group: {"name": group, **fields}}}, "o" + group])
         elif existing[group]["sourceIps"] != source or existing[group]["ehloHostname"] != fields["ehloHostname"]:

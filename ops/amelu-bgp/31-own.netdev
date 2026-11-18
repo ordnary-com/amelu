@@ -1,4 +1,0 @@
-# Holds the addresses we use from our own prefixes.
-[NetDev]
-Name=own0
-Kind=dummy

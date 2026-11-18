@@ -22,6 +22,18 @@ export const UI = {
   panelTitle: 'text-[15px] font-medium',
   well: 'bg-well p-4',
 
+  // Settings cards (account pages): a title bar with an action icon, label-over-value
+  // fields and grey notes with an info icon.
+  setCard: 'overflow-hidden rounded border border-line bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.05)]',
+  setHeader: 'flex h-14 items-center justify-between gap-3 border-b border-line px-5',
+  setTitle: 'text-[16px] font-medium',
+  setAction: '-mr-1.5 inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink',
+  setNote: 'flex gap-2.5 bg-well px-5 py-4 text-[14px] leading-relaxed',
+  // A choice as a card: tinted with a light accent border when picked.
+  choice: 'relative cursor-pointer rounded border shadow-[0_1px_3px_rgb(0_0_0/0.06)] transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40',
+  choiceOn: 'border-accent/40 bg-accent/10',
+  choiceOff: 'border-line bg-surface hover:border-accent/30',
+
   // Tables: a white bordered box on a panel's grey body, medium headers (sortable
   // ones as a button with arrows), rows split by lines.
   tableWrap: 'overflow-x-auto rounded-md border border-line bg-surface',

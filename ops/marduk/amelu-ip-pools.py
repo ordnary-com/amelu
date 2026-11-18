@@ -34,10 +34,13 @@ organization in Airplane. The API lists them with the organization's domains
 (GET /internal/jobs/dedicated-ips, signed with SENDING_STATS_SECRET from
 /etc/amelu-sending-stats/env); each gets its own "dedicated-N" strategy and
 the organization's domains send only from it, to Microsoft too. They leave
-the shared groups, are bound on lo here, and need the same DNS as any other
-IP (an A record of marduk.mx.amelu.org, forward and reverse DNS) before they
-send; until then the domains keep their usual group. The last list is cached,
-so an API outage doesn't move anyone.
+the shared groups and are bound on lo here. They come from 89.106.70.100-149
+and are not A records of marduk.mx.amelu.org (fifty more would bloat the MX
+answer), so only domains whose SPF includes _spf.amelu.org (the whole /24) go
+out from them; domains still on "mx -all" keep their usual group. An IP sends
+once its forward and reverse DNS point at each other; until then the domains
+keep their usual group too. The last list is cached, so an API outage doesn't
+move anyone.
 
 Runs every 10 minutes from cron.
 
@@ -68,6 +71,8 @@ DEDICATED_URL = "https://api.amelu.org/internal/jobs/dedicated-ips"
 DEDICATED_PATH = "/internal/jobs/dedicated-ips"
 DEDICATED_CACHE = "/var/lib/amelu-ip-pools/dedicated.json"
 SECRET_FILE = "/etc/amelu-sending-stats/env"
+SPF_CACHE = "/var/lib/amelu-ip-pools/spf-include.json"
+SPF_CACHE_HOURS = 6
 # Every IP that may send, for customers on "v=spf1 include:_spf.amelu.org -all".
 # Kept by hand in DNS; main() warns when it drifts.
 SPF_HOST = "_spf.amelu.org"
@@ -217,6 +222,46 @@ def bind(ip, dry):
     if bound(ip) or dry:
         return
     subprocess.run(["ip", "addr", "add", f"{ip}/32", "dev", "lo"], check=False)
+
+
+def dedicated_ready(name, ip, spf):
+    """A dedicated IP may send: bound here, forward and reverse DNS agree, and _spf.amelu.org covers it."""
+    if spf is not None and not any(ipaddress.ip_address(ip) in n for n in spf):
+        return False
+    try:
+        ptr = socket.gethostbyaddr(ip)[0].rstrip(".").lower()
+        forward = set(socket.gethostbyname_ex(name)[2])
+    except OSError:
+        return False
+    return ptr == name and forward == {ip} and bound(ip)
+
+
+def spf_includes_amelu(domains, dry):
+    """The domains whose SPF record includes _spf.amelu.org, looked up at most every SPF_CACHE_HOURS."""
+    try:
+        cache = json.load(open(SPF_CACHE))
+    except (OSError, ValueError):
+        cache = {}
+    now = time.time()
+    out = set()
+    for d in domains:
+        hit = cache.get(d)
+        if not hit or now - hit[1] > SPF_CACHE_HOURS * 3600:
+            try:
+                txt = subprocess.run(["dig", "+short", "TXT", d], capture_output=True, text=True, timeout=10).stdout
+            except (OSError, subprocess.TimeoutExpired):
+                txt = None
+            if txt is None:
+                continue
+            spf = " ".join(part.strip('"') for part in txt.split() if part)
+            hit = cache[d] = ["include:_spf.amelu.org" in spf.lower(), now]
+        if hit[0]:
+            out.add(d)
+    if not dry:
+        os.makedirs(os.path.dirname(SPF_CACHE), exist_ok=True)
+        json.dump({d: v for d, v in cache.items() if d in domains}, open(SPF_CACHE + ".tmp", "w"))
+        os.replace(SPF_CACHE + ".tmp", SPF_CACHE)
+    return out
 
 
 def mx_ips():
@@ -384,7 +429,7 @@ def write_status(pools, out, dedicated):
     for name, ip in sorted(dedicated.items(), key=lambda kv: ipaddress.ip_address(kv[1])):
         live = any(ip in members.values() for g, members in pools.items() if g.startswith("dedicated-"))
         ips.append({"name": name, "ip": ip, "group": "dedicated", "state": "active" if live else "pending",
-                    "reason": "" if live else "Waiting for DNS (marduk.mx, PTR) before it sends", "pausedUntil": None})
+                    "reason": "" if live else "Waiting for forward and reverse DNS before it sends", "pausedUntil": None})
     os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)
     json.dump({"updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "ips": ips},
               open(STATUS_FILE + ".tmp", "w"))
@@ -434,7 +479,7 @@ def main():
         for r in routes:
             bind(r["ip"], dry)
             # A dedicated IP never falls back to the shared ones while blocked: it's the organization's own.
-            if usable({r["hostname"]: r["ip"]}, mx, seen):
+            if dedicated_ready(r["hostname"], r["ip"], spf):
                 pools[f"dedicated-{r['ip'].split('.')[-1]}"] = {r["hostname"]: r["ip"]}
         for group, ips in groups.items():
             ready = usable(ips, mx, seen)
@@ -472,6 +517,8 @@ def main():
         for r in routes:
             g = f"dedicated-{r['ip'].split('.')[-1]}"
             doms = [d for d in r.get("domains", []) if plain(d) and d not in OWN_DOMAINS]
+            covered = spf_includes_amelu(doms, dry) if g in pools else set()
+            doms = [d for d in doms if d in covered]
             if g in pools and doms:
                 rules.append((either("sender_domain", doms), g))
                 live_dedicated.append(f"{g} ({len(doms)} domains)")

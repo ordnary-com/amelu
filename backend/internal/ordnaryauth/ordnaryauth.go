@@ -65,6 +65,7 @@ type loginState struct {
 	CodeVerifier string `json:"codeVerifier"`
 	ReturnTo     string `json:"returnTo"`
 	Origin       string `json:"origin,omitempty"`
+	Purpose      string `json:"purpose,omitempty"`
 }
 
 type tokenResponse struct {
@@ -91,24 +92,34 @@ func (e *APIError) Error() string {
 	return e.Body.Error
 }
 
+// LoginOptions shape one Ordnary round trip.
+type LoginOptions struct {
+	// Origin is the dashboard that started it (already checked by the
+	// caller); it comes back unchanged in CallbackResult, as do ReturnTo and
+	// Purpose.
+	Origin   string
+	ReturnTo string
+	// SwitchAccount sends the browser through Ordnary's sign-in form first,
+	// so someone already signed in there signs in again (or picks another
+	// account) instead of being let straight through.
+	SwitchAccount bool
+	// Purpose is empty for a sign-in; "reauth" asks the callback only to
+	// confirm the current session's owner.
+	Purpose string
+}
+
 // Login redirects the browser to Ordnary identity's authorize endpoint.
-// origin is the dashboard that started the login (already checked by the
-// caller); it comes back unchanged in CallbackResult. With switchAccount the
-// browser first goes through Ordnary's sign-in form, so someone already
-// signed in to Ordnary can pick a different account instead of being let
-// straight through as the current one.
-func (c *Config) Login(w http.ResponseWriter, r *http.Request, origin string, switchAccount bool) {
+func (c *Config) Login(w http.ResponseWriter, r *http.Request, opts LoginOptions) {
 	state := createRandomString(16)
 	verifier, challenge := createPKCEPair()
-	returnTo := r.URL.Query().Get("returnTo")
 
-	ls := loginState{State: state, CodeVerifier: verifier, ReturnTo: returnTo, Origin: origin}
+	ls := loginState{State: state, CodeVerifier: verifier, ReturnTo: opts.ReturnTo, Origin: opts.Origin, Purpose: opts.Purpose}
 	w.Header().Set("Set-Cookie", serializeCookie(cookieName, c.codec().encodeSigned(ls), cookieOpts{
 		maxAge: 600, httpOnly: true, production: c.Production,
 	}))
 
 	target := c.authorizationURL(state, challenge)
-	if switchAccount {
+	if opts.SwitchAccount {
 		target = c.signInURL(target)
 	}
 	http.Redirect(w, r, target, http.StatusFound)
@@ -146,6 +157,7 @@ type CallbackResult struct {
 	User     User
 	ReturnTo string
 	Origin   string
+	Purpose  string
 }
 
 // Callback validates the OAuth state, exchanges the code, and fetches the
@@ -176,7 +188,7 @@ func (c *Config) Callback(w http.ResponseWriter, r *http.Request) (*CallbackResu
 	if err != nil {
 		return nil, err
 	}
-	return &CallbackResult{User: *user, ReturnTo: ls.ReturnTo, Origin: ls.Origin}, nil
+	return &CallbackResult{User: *user, ReturnTo: ls.ReturnTo, Origin: ls.Origin, Purpose: ls.Purpose}, nil
 }
 
 func (c *Config) exchangeCode(ctx context.Context, code, codeVerifier string) (*tokenResponse, error) {

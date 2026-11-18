@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { errorMessage } from '../api';
 import { Session } from '../session';
@@ -7,6 +7,7 @@ import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { Icon } from '../icon';
 import { MiscApi } from './misc-api';
+import { terminateConfirmUrl } from '../config';
 
 /** The current dashboard's /account/terminate: password, then a confirm dialog, then DELETE /api/account. */
 @Component({
@@ -54,23 +55,28 @@ import { MiscApi } from './misc-api';
         <div [class]="ui.setHeader">
           <h2 [class]="ui.setTitle">Confirm It's You</h2>
         </div>
-        <form class="flex flex-wrap items-end gap-3 px-5 py-4" (submit)="startConfirm($event)">
-          <label class="w-full max-w-sm">
-            <span class="text-[13px] text-muted">Current password</span>
-            <input
-              type="password"
-              autocomplete="current-password"
-              [class]="ui.input"
-              [value]="password()"
-              (input)="password.set($any($event.target).value)"
-              required
-            />
-          </label>
+        <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          @if (confirmed()) {
+            <p class="flex items-center gap-2 text-[14px] text-ok">
+              <amelu-icon name="circleCheck" [size]="17" />
+              Confirmed with your Ordnary account
+            </p>
+          } @else {
+            <p class="text-[14px] text-muted">Sign in to your Ordnary account again to confirm it's you.</p>
+          }
           <div class="flex flex-wrap gap-2">
-            <button type="submit" [class]="ui.dangerOutline + ' h-9'" [disabled]="!password() || busy()">Terminate account</button>
+            @if (confirmed()) {
+              <button type="button" [class]="ui.dangerOutline + ' h-9'" [disabled]="busy()" (click)="confirming.set(true)">Terminate account</button>
+            } @else {
+              <a [href]="confirmUrl" [class]="ui.primary + ' h-9'">Confirm with Ordnary</a>
+            }
             <a routerLink="/account" [class]="ui.outline + ' h-9'">Cancel</a>
           </div>
-        </form>
+        </div>
+        <p [class]="ui.setNote">
+          <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+          <span>Amelu has no password of its own: you sign in with Ordnary. A confirmation counts for 10 minutes.</span>
+        </p>
       </section>
     </div>
 
@@ -109,15 +115,17 @@ export class TerminateAccount {
   private readonly session = inject(Session);
   protected readonly ui = UI;
 
-  protected readonly password = signal('');
+  protected readonly confirmUrl = terminateConfirmUrl();
+  /** Back from Ordnary's sign-in form; the API checks the confirmation itself. */
+  protected readonly confirmed = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('confirm') === 'ok');
   protected readonly confirming = signal(false);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
-  protected startConfirm(event: Event): void {
-    event.preventDefault();
-    if (!this.password()) return;
-    this.confirming.set(true);
+  constructor() {
+    const confirm = inject(ActivatedRoute).snapshot.queryParamMap.get('confirm');
+    if (confirm === 'mismatch') this.error.set('That Ordnary account isn\'t the one signed in here. Confirm with the account you use for Amelu.');
+    if (confirm === 'failed') this.error.set('The confirmation couldn\'t be saved. Try again.');
   }
 
   protected closeConfirm(): void {
@@ -128,10 +136,12 @@ export class TerminateAccount {
     this.error.set(null);
     this.busy.set(true);
     try {
-      await firstValueFrom(this.api.terminateAccount(this.password()));
+      await firstValueFrom(this.api.terminateAccount());
       await this.session.logout();
     } catch (err) {
       this.error.set(errorMessage(err, 'Could not terminate account'));
+      // Most likely the confirmation ran out: ask for a new one.
+      if ((err as { status?: number })?.status === 403) this.confirmed.set(false);
       this.confirming.set(false);
       this.busy.set(false);
     }

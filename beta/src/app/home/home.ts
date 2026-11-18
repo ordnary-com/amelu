@@ -105,6 +105,8 @@ export class Home {
     if (!current || !isFree(current) || !go?.priceCentsAnnual) return null;
     return {
       perMonth: formatPrice(go.priceCentsAnnual / 12),
+      domains: go.maxDomains,
+      mailboxes: go.maxMailboxesPerDomain,
       lines: [
         `${go.maxDomains} domains instead of ${current.maxDomains}`,
         `${go.maxMailboxesPerDomain} mailboxes per domain instead of ${current.maxMailboxesPerDomain}`,

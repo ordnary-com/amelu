@@ -31,24 +31,25 @@ const CLOSED: Record<Exclude<PlanOffer['status'], 'open'>, { title: string; text
     }
 
     @if (offer() === undefined) {
-      <div [class]="ui.card + ' h-80 max-w-xl animate-pulse'" aria-hidden="true"></div>
+      <div [class]="ui.setCard + ' h-80 max-w-xl animate-pulse'" aria-hidden="true"></div>
     } @else if (offer() === null) {
-      <amelu-empty-state [class]="ui.card + ' max-w-xl'" title="This offer couldn't be found">
+      <amelu-empty-state [class]="ui.setCard + ' max-w-xl'" title="This offer couldn't be found">
         It may belong to another organization. Sign in with the account the offer was made for.
       </amelu-empty-state>
     } @else if (offer(); as o) {
       @if (o.status !== 'open') {
-        <amelu-empty-state [class]="ui.card + ' max-w-xl'" [title]="closed[o.status].title">
+        <amelu-empty-state [class]="ui.setCard + ' max-w-xl'" [title]="closed[o.status].title">
           {{ closed[o.status].text }}
           <a routerLink="/billing/overview" class="font-bold underline">Go to billing</a>
         </amelu-empty-state>
       } @else {
-        <section class="max-w-xl rounded-lg border border-accent bg-surface p-5 ring-1 ring-accent">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="text-[16px] font-bold">{{ o.planName }}</h2>
-            <span class="inline-flex items-center rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-link">Custom plan</span>
+        <section [class]="ui.setCard + ' max-w-xl'">
+          <div [class]="ui.setHeader">
+            <h2 [class]="ui.setTitle">{{ o.planName }}</h2>
+            <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-link uppercase">Custom plan</span>
           </div>
-          <p class="mt-1 text-[13px] text-muted">Put together for your organization. Valid until {{ o.expiresAt | date: 'd MMMM y' }}.</p>
+          <div class="px-5 py-4">
+          <p class="text-[13px] text-muted">Put together for your organization. Valid until {{ o.expiresAt | date: 'd MMMM y' }}.</p>
 
           <div class="mt-4">
             <span class="text-[32px] leading-none font-normal tracking-[-0.02em]">{{ money(o.priceCents) }}</span>
@@ -89,9 +90,13 @@ const CLOSED: Record<Exclude<PlanOffer['status'], 'open'>, { title: string; text
           <button type="button" [class]="ui.primary + ' mt-5 h-9 w-full justify-center'" [disabled]="busy()" (click)="accept(o)">
             {{ busy() ? 'One moment...' : 'Accept and pay' }}
           </button>
-          <p class="mt-2.5 text-[12px] text-muted">
-            Renews automatically every {{ o.interval === 'monthly' ? 'month' : 'year' }} until you cancel. If you already
-            have a paid plan, it switches over and you only pay the difference.
+          </div>
+          <p [class]="ui.setNote">
+            <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+            <span>
+              Renews automatically every {{ o.interval === 'monthly' ? 'month' : 'year' }} until you cancel. If you already
+              have a paid plan, it switches over and you only pay the difference.
+            </span>
           </p>
         </section>
       }

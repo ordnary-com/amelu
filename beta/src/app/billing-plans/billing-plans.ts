@@ -9,7 +9,6 @@ import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 
 // Descriptive, not backend-enforced: every plan gets the same feature set
 // today, only the support tier and the two API-driven limits differ. The
@@ -45,7 +44,7 @@ const CUSTOM_DETAILS = {
 /** The current dashboard's /billing/plans: compare, switch or cancel. */
 @Component({
   selector: 'amelu-billing-plans',
-  imports: [EmptyState, Alert, PromoBanner, Icon, RouterLink, DitherShader],
+  imports: [EmptyState, Alert, PromoBanner, Icon, RouterLink],
   templateUrl: './billing-plans.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

@@ -41,18 +41,20 @@ MX_HOST = "marduk.mx.amelu.org"
 # No group holds two IPs from the same /24: a receiver that blocks a whole
 # range (Outlook's S3140 did) then takes out one IP per group, never a group.
 # out9 and out10 joined on 2026-11-08 as the cold ones, one per group, so each
-# warms up on a quarter of its group's mail. out-1..3.mta0 (our own block
-# 89.106.70.0/24, AS218905) joined on 2026-11-18 the same way; the OVH IPs go
-# once the block has warmed up.
+# warms up on a quarter of its group's mail. Our own block 89.106.70.0/24
+# (AS218905) replaces the OVH IPs: out-1..3.mta0 joined on 2026-11-18, out-4..8
+# the same afternoon; the OVH IPs leave once the block holds up.
 GROUPS = {
     "system": {"out4.mx.amelu.org": "51.89.39.34", "out2.mx.amelu.org": "51.89.60.49",
-               "out-1.mta0.amelu.org": "89.106.70.1"},
+               "out-1.mta0.amelu.org": "89.106.70.1", "out-4.mta0.amelu.org": "89.106.70.4"},
     "trusted": {"out1.mx.amelu.org": "51.89.60.60", "out5.mx.amelu.org": "51.89.2.193",
                 "out8.mx.amelu.org": "51.89.76.15", "out9.mx.amelu.org": "51.89.85.197",
-                "out-2.mta0.amelu.org": "89.106.70.2"},
+                "out-2.mta0.amelu.org": "89.106.70.2", "out-5.mta0.amelu.org": "89.106.70.5",
+                "out-7.mta0.amelu.org": "89.106.70.7"},
     "newdomains": {"out3.mx.amelu.org": "51.89.76.2", "out6.mx.amelu.org": "51.89.1.228",
                    "out7.mx.amelu.org": "51.89.102.29", "out10.mx.amelu.org": "51.89.85.192",
-                   "out-3.mta0.amelu.org": "89.106.70.3"},
+                   "out-3.mta0.amelu.org": "89.106.70.3", "out-6.mta0.amelu.org": "89.106.70.6",
+                   "out-8.mta0.amelu.org": "89.106.70.8"},
 }
 # Not in any group: a .0 address, which some receivers refuse, so it's the last to use.
 SPARES = {"out11.mx.amelu.org": "51.89.76.0"}
@@ -62,8 +64,9 @@ SPF_HOST = "_spf.amelu.org"
 
 
 def check_ranges():
+    # Our own block is one /24 by definition; the rule is about rented ranges.
     for group, ips in GROUPS.items():
-        nets = [ip.rsplit(".", 1)[0] for ip in ips.values()]
+        nets = [ip.rsplit(".", 1)[0] for ip in ips.values() if ipaddress.ip_address(ip) not in OWN_BLOCK]
         if len(nets) != len(set(nets)):
             raise SystemExit(f"{group} has two IPs in the same /24: {sorted(ips.values())}")
 

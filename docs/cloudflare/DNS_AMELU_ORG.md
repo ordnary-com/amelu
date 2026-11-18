@@ -12,6 +12,7 @@ managed by Cloudflare and can't carry comments. Last reviewed 2026-11-01.
 | `amelu.org` MX 10 | marduk.mx.amelu.org | The only MX. |
 | `marduk.mx.amelu.org` A | 89.106.70.1-8 (`out-N.mta0.amelu.org`) | Our own block (AS218905), carried to marduk (Hetzner) over WireGuard by the routers. They send and receive; here so customer SPF `mx` authorizes them. Since 2026-11-18 the only addresses (the OVH ones and marduk's old IPv6 were removed when marduk moved). |
 | `_spf.amelu.org` TXT | `v=spf1 ... ip4:89.106.70.0/24 -all` | Every IP that may send. The OVH entries go once their IPs are cancelled. |
+| `out-100` .. `out-149.mta0.amelu.org` A | 89.106.70.100-149 | Dedicated IPs (one organization each, assigned in Airplane). Not A records of `marduk.mx`; only domains whose SPF includes `_spf.amelu.org` send from them. Import file: `ops/dns/mta0-dedicated.bind`; the PTRs are set in the noez panel. |
 
 Customer domains point their MX at `marduk.mx.amelu.org`. Their SPF is
 `v=spf1 include:_spf.amelu.org -all` since 2026-11-08 (the dashboard asks for

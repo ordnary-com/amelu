@@ -12,9 +12,9 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/bin/sh -c "ip rule show | grep -q \"from 89.106.70.0/24 lookup 30\" || ip rule add from 89.106.70.0/24 lookup 30 priority 100"
-ExecStart=/bin/sh -c "ip addr show dev lo | grep -q 89.106.70.2/32 || ip addr add 89.106.70.2/32 dev lo"
+ExecStart=/bin/sh -c "for n in 1 2 3; do ip addr show dev lo | grep -q 89.106.70.$n/32 || ip addr add 89.106.70.$n/32 dev lo; done"
 ExecStop=/sbin/ip rule del from 89.106.70.0/24 lookup 30 priority 100
-ExecStop=/sbin/ip addr del 89.106.70.2/32 dev lo
+ExecStop=/bin/sh -c "for n in 1 2 3; do ip addr del 89.106.70.$n/32 dev lo; done"
 
 [Install]
 WantedBy=multi-user.target

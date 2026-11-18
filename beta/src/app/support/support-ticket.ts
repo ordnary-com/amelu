@@ -53,7 +53,7 @@ const BODY_MAX = 20000;
                     >{{ initial(m.authorName) }}</span>
                     <span class="truncate text-[13px] font-medium">{{ m.authorName }}</span>
                     @if (m.authorKind === 'staff') {
-                      <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[11px] font-medium text-link">Staff</span>
+                      <img src="/ordnary-mark-blue.png" alt="Ordnary staff" title="Ordnary staff" class="size-3.5 flex-none" />
                     }
                     <span class="ml-auto flex-none text-[12px] text-muted" [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
                   </div>

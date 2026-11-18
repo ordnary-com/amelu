@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { errorMessage } from '../api';
 import { Session } from '../session';
-import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
 import { Icon } from '../icon';
@@ -12,80 +11,73 @@ import { MiscApi } from './misc-api';
 /** The current dashboard's /account/terminate: password, then a confirm dialog, then DELETE /api/account. */
 @Component({
   selector: 'amelu-terminate-account',
-  imports: [PageHeader, Alert, RouterLink, Icon],
+  imports: [Alert, RouterLink, Icon],
   template: `
-    <amelu-page-header
-      title="Terminate account"
-      [crumbs]="[{ label: 'My Account', link: '/account' }, { label: 'Terminate account' }]"
-    >
-      This permanently deletes your account and organization, including every domain and mailbox under it, from the
-      mail cluster. This cannot be undone.
-    </amelu-page-header>
+    <div class="space-y-5">
+      @if (error(); as message) {
+        <amelu-alert kind="error" title="Could not terminate account" [dismissible]="true" (dismissed)="error.set(null)">
+          {{ message }}
+        </amelu-alert>
+      }
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="min-w-0 space-y-4">
-        @if (error(); as message) {
-          <amelu-alert kind="error" title="Could not terminate account" [dismissible]="true" (dismissed)="error.set(null)">
-            {{ message }}
-          </amelu-alert>
-        }
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle + ' text-bad'">Terminate Account</h2>
+        </div>
+        <div class="px-5 py-4">
+          <p class="text-[13px] text-muted">What gets deleted</p>
+          <ul class="mt-2 space-y-2 text-[14px] leading-relaxed">
+            <li class="flex items-start gap-2.5">
+              <amelu-icon name="circleX" [size]="16" class="mt-0.5 flex-none text-bad" />
+              Every domain and mailbox, including all mail stored in them.
+            </li>
+            <li class="flex items-start gap-2.5">
+              <amelu-icon name="circleX" [size]="16" class="mt-0.5 flex-none text-bad" />
+              Your account and organization, and their settings and API keys.
+            </li>
+            <li class="flex items-start gap-2.5 text-muted">
+              <amelu-icon name="logout" [size]="16" class="mt-0.5 flex-none" />
+              You're signed out right away. There is no way to recover this data afterwards.
+            </li>
+          </ul>
+        </div>
+        <p [class]="ui.setNote">
+          <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+          <span>
+            Part of a team? Have another owner or admin remove you, or transfer ownership, instead. Their domains and
+            mailboxes stay intact. <a routerLink="/organization" class="text-link hover:underline">View organization</a>
+          </span>
+        </p>
+      </section>
 
-        <section [class]="ui.card">
-          <div class="p-4">
-            <h2 class="text-[14px] font-bold">What gets deleted</h2>
-            <ul class="mt-3 space-y-2.5 text-[13px] leading-relaxed">
-              <li class="flex items-start gap-2.5">
-                <amelu-icon name="circleX" [size]="15" class="mt-0.5 flex-none text-bad" />
-                Every domain and mailbox, including all mail stored in them.
-              </li>
-              <li class="flex items-start gap-2.5">
-                <amelu-icon name="circleX" [size]="15" class="mt-0.5 flex-none text-bad" />
-                Your account and organization, and their settings and API keys.
-              </li>
-              <li class="flex items-start gap-2.5 text-muted">
-                <amelu-icon name="logout" [size]="15" class="mt-0.5 flex-none" />
-                You're signed out right away. There is no way to recover this data afterwards.
-              </li>
-            </ul>
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle">Confirm It's You</h2>
+        </div>
+        <form class="flex flex-wrap items-end gap-3 px-5 py-4" (submit)="startConfirm($event)">
+          <label class="w-full max-w-sm">
+            <span class="text-[13px] text-muted">Current password</span>
+            <input
+              type="password"
+              autocomplete="current-password"
+              [class]="ui.input"
+              [value]="password()"
+              (input)="password.set($any($event.target).value)"
+              required
+            />
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button type="submit" [class]="ui.dangerOutline + ' h-9'" [disabled]="!password() || busy()">Terminate account</button>
+            <a routerLink="/account" [class]="ui.outline + ' h-9'">Cancel</a>
           </div>
-          <form class="border-t border-line p-4" (submit)="startConfirm($event)">
-            <h2 class="text-[14px] font-bold">Confirm it's you</h2>
-            <label class="mt-3 block max-w-sm">
-              <span [class]="ui.label">Current password</span>
-              <input
-                type="password"
-                autocomplete="current-password"
-                [class]="ui.input"
-                [value]="password()"
-                (input)="password.set($any($event.target).value)"
-                required
-              />
-            </label>
-            <div class="mt-4 flex flex-wrap gap-2">
-              <button type="submit" [class]="ui.dangerOutline" [disabled]="!password() || busy()">Terminate account</button>
-              <a routerLink="/account" [class]="ui.outline">Cancel</a>
-            </div>
-          </form>
-        </section>
-      </div>
-
-      <aside class="space-y-6">
-        <section [class]="ui.card + ' p-4'">
-          <amelu-icon name="users" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">Part of a team?</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            If your organization has other members, have another owner or admin remove you, or transfer ownership,
-            instead. Their domains and mailboxes stay intact.
-          </p>
-          <a routerLink="/organization" [class]="ui.outline + ' mt-4'">View organization</a>
-        </section>
-      </aside>
+        </form>
+      </section>
     </div>
 
     @if (confirming()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeConfirm()">
         <div
-          class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+          class="w-full max-w-md rounded-md border border-line bg-popover p-5 shadow-xl"
           role="alertdialog"
           aria-modal="true"
           aria-label="Permanently terminate your account?"

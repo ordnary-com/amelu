@@ -46,9 +46,11 @@ MX_HOST = "marduk.mx.amelu.org"
 GROUPS = {
     "system": {"out-1.mta0.amelu.org": "89.106.70.1", "out-4.mta0.amelu.org": "89.106.70.4"},
     "trusted": {"out-2.mta0.amelu.org": "89.106.70.2", "out-5.mta0.amelu.org": "89.106.70.5",
-                "out-7.mta0.amelu.org": "89.106.70.7"},
+                "out-7.mta0.amelu.org": "89.106.70.7", "out-9.mta0.amelu.org": "89.106.70.9",
+                "out-11.mta0.amelu.org": "89.106.70.11"},
     "newdomains": {"out-3.mta0.amelu.org": "89.106.70.3", "out-6.mta0.amelu.org": "89.106.70.6",
-                   "out-8.mta0.amelu.org": "89.106.70.8"},
+                   "out-8.mta0.amelu.org": "89.106.70.8", "out-10.mta0.amelu.org": "89.106.70.10",
+                   "out-12.mta0.amelu.org": "89.106.70.12"},
 }
 # Addresses that may take over a group later; none right now.
 SPARES = {}

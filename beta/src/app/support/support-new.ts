@@ -96,18 +96,13 @@ const BODY_MAX = 20000;
               (keydown.control.enter)="submit($event)"
               required
             ></textarea>
+            <p class="mt-1.5 text-[12px] text-muted">Don't include passwords. We never need them.</p>
           </div>
-        </div>
-        <p [class]="ui.setNote">
-          <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
-          <span>Don't include passwords. We never need them.</span>
-        </p>
-        <div class="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
-          <button type="button" [class]="ui.outline + ' h-9'" (click)="cancel()">Cancel</button>
-          @if (missing(); as what) {
-            <span class="mr-auto text-[13px] text-muted">Add {{ what }} to open the ticket.</span>
-          }
-          <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!canSubmit()">{{ sending() ? 'Sending...' : 'Open ticket' }}</button>
+
+          <div class="flex items-center justify-end gap-2">
+            <button type="button" [class]="ui.outline + ' h-9'" (click)="cancel()">Cancel</button>
+            <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!canSubmit()">{{ sending() ? 'Sending...' : 'Open ticket' }}</button>
+          </div>
         </div>
       </form>
 
@@ -146,11 +141,7 @@ export class SupportNew {
   protected readonly error = signal<string | null>(null);
 
   protected readonly canSubmit = computed(() => !this.sending() && this.subject().trim() !== '' && this.body().trim() !== '');
-  /** What's still empty, said next to the button. */
-  protected readonly missing = computed(() => {
-    const parts = [this.subject().trim() ? '' : 'a subject', this.body().trim() ? '' : 'a message'].filter(Boolean);
-    return parts.join(' and ');
-  });
+
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();

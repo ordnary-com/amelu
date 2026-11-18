@@ -245,10 +245,6 @@
                   <p class="mx-auto mt-0.5 max-w-[360px] text-[13px] text-muted">
                     Your invoices show up here once you're billed, ready to download for your own records.
                   </p>
-                  <div class="mt-4 flex items-center justify-center gap-3">
-                    <a routerLink="/billing/plans" [class]="ui.outline">View plans</a>
-                    <a routerLink="/billing" class="text-[13px] text-link hover:underline">Billing settings</a>
-                  </div>
                 </td>
               </tr>
             }
@@ -264,6 +260,7 @@
         Dedicated IPs
         <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-link uppercase">Add-on</span>
       </h2>
+      <a routerLink="/support" class="text-[13px] text-link hover:underline">Contact us</a>
     </div>
     <div [class]="tableBody">
       <div [class]="ui.tableWrap">
@@ -285,10 +282,6 @@
                 <p class="mx-auto mt-0.5 max-w-[360px] text-[13px] text-muted">
                   Send from addresses used only by your organization, so your reputation depends on your mail alone.
                 </p>
-                <div class="mt-4 flex items-center justify-center gap-3">
-                  <a routerLink="/support" [class]="ui.outline">Contact us</a>
-                  <a routerLink="/billing/plans" class="text-[13px] text-link hover:underline">See plans</a>
-                </div>
               </td>
             </tr>
           </tbody>

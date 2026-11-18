@@ -9,7 +9,6 @@ import { MailboxApi } from '../mailbox/mailbox-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { Tour } from '../tour/tour';
 import { isFree } from '../billing';
-import { DOMAIN_STATUS, Tone } from '../status';
 import { AccountMenu } from '../account-menu/account-menu';
 import { Search } from '../search/search';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -28,6 +27,7 @@ import {
   lucideHistory,
   lucideMail,
   lucideHome,
+  lucideList,
   lucidePlus,
   lucideUser,
 } from '@ng-icons/lucide';
@@ -57,6 +57,7 @@ const LINK =
       lucideHistory,
       lucideMail,
       lucideHome,
+  lucideList,
       lucidePlus,
       lucideUser,
     }),
@@ -139,25 +140,6 @@ export class Shell {
       this.level.set(null);
     });
 
-  // The first few domains under Domains, plus the one you're on if it's further down.
-  protected readonly sidebarDomains = computed(() => {
-    const all = this.domains() ?? [];
-    const shown = all.slice(0, SIDEBAR_DOMAINS);
-    const current = all.find((d) => d.id === this.at().domainId);
-    return current && !shown.includes(current) ? [...shown, current] : shown;
-  });
-  /** A domain's status as a dot in the sidebar, in the tone of its badge elsewhere. */
-  protected dot(domain: Domain): string {
-    return DOT[DOMAIN_STATUS[domain.status].tone];
-  }
-
-  /** A column's heading: the domain's name or the mailbox's address, else the menu's own label. */
-  protected columnTitle(menu: { key: string; label: string }): string {
-    if (menu.key === 'domain') return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
-    return this.mailboxAddress() ?? menu.label;
-  }
-
-  protected readonly hiddenDomains = computed(() => (this.domains()?.length ?? 0) - SIDEBAR_DOMAINS);
 
   // Each menu column scrolls on its own, so a long domain menu doesn't drag the main one along.
   protected readonly column =
@@ -192,7 +174,19 @@ export class Shell {
    */
   protected open(key: SidebarCategory): boolean {
     if (this.url().startsWith('/organization/')) return key === 'organization';
+    if (this.url() === '/domains' || this.url() === '/domains/new') return key === 'domains';
     return !this.collapsed()[key];
+  }
+
+  /** A column's heading: the domain's name or the mailbox's address, else the menu's own label. */
+  protected columnTitle(menu: { key: string; label: string }): string {
+    if (menu.key === 'domain') return this.domains()?.find((d) => d.id === this.at().domainId)?.name ?? menu.label;
+    return this.mailboxAddress() ?? menu.label;
+  }
+
+  /** Domains just folds and unfolds; its pages are the items under it. */
+  protected toggle(key: SidebarCategory): void {
+    this.setCollapsed(key, this.open(key));
   }
 
   /** Clicking a category opens its page and unfolds it; clicking it again on that page folds it. */
@@ -227,15 +221,6 @@ function readCollapsed(): Record<SidebarCategory, boolean> {
     return { domains: false, organization: true };
   }
 }
-
-const SIDEBAR_DOMAINS = 3;
-
-const DOT: Record<Tone, string> = {
-  ok: 'bg-ok',
-  warn: 'bg-warn',
-  bad: 'bg-bad',
-  neutral: 'bg-chrome-ink/40',
-};
 
 interface MenuEntry {
   label: string;

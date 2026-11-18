@@ -43,8 +43,10 @@ export class AccountMenu {
     const sidebar = option.sidebar ?? (option.value === 'deep' ? `color-mix(in srgb, ${accent} 32%, #070b14)` : accent);
     return `linear-gradient(135deg,${sidebar} 50%,${option.pane} 50%)`;
   }
-  protected readonly link = 'text-[12px] font-medium text-link hover:underline';
-  protected readonly item = 'flex w-full py-1.5 text-[14px] hover:underline';
+  // Rows in the panel: a muted group heading, a label with something on the right, and menu links.
+  protected readonly heading = 'px-4 pt-1 pb-0.5 text-[13px] font-medium text-muted';
+  protected readonly row = 'flex items-center justify-between gap-3 px-4 py-1.5 text-[14px]';
+  protected readonly item = 'flex w-full items-center gap-2.5 px-4 py-2 text-[14px] hover:bg-bg/60 [&>amelu-icon]:flex-none [&>amelu-icon]:text-muted';
 
   protected readonly initials = computed(() => {
     const customer = this.customer();

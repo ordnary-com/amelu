@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"amelu/backend/internal/auth"
 	"amelu/backend/internal/db"
@@ -89,26 +90,28 @@ func (a *App) UpdateAccountProfile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toProfileResponse(profile))
 }
 
-type terminateAccountRequest struct {
-	CurrentPassword string `json:"currentPassword"`
-}
-
 // TerminateAccount permanently deletes the customer's account: every domain
 // and mailbox is torn down in Stalwart first (same cascade as DeleteDomain),
 // then the customer row is deleted, which cascades to their domains/
-// mailboxes/sessions in our own DB via foreign keys.
+// mailboxes/sessions in our own DB via foreign keys. The session must have
+// been confirmed through Ordnary in the last few minutes (ConfirmTerminate).
 func (a *App) TerminateAccount(w http.ResponseWriter, r *http.Request) {
 	customer, ok := requireCustomer(w, r)
 	if !ok {
 		return
 	}
-	var req terminateAccountRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+	token, err := auth.TokenFromRequest(r)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	if !auth.CheckPassword(customer.PasswordHash, req.CurrentPassword) {
-		writeError(w, http.StatusUnauthorized, "current password is incorrect")
+	confirmed, err := a.Store.SessionReauthenticatedSince(r.Context(), auth.HashToken(token), time.Now().Add(-reauthWindow))
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not check the confirmation")
+		return
+	}
+	if !confirmed {
+		writeError(w, http.StatusForbidden, "confirm it's you with your Ordnary account first")
 		return
 	}
 

@@ -46,9 +46,7 @@
       >
         <div class="flex items-center justify-between gap-2">
           <h2 class="text-[16px] font-medium" [class.text-link]="plan.current">{{ plan.name }}</h2>
-          @if (plan.current) {
-            <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-link uppercase">Current plan</span>
-          } @else if (plan.custom) {
+          @if (plan.custom && !plan.current) {
             <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-link uppercase">Custom plan</span>
           }
         </div>

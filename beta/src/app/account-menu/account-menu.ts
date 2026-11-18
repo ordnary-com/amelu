@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signa
 import { RouterLink } from '@angular/router';
 import { Icon } from '../icon';
 import { Session } from '../session';
+import { TourState } from '../tour/tour-state';
 import { ORDNARY_ACCOUNT_URL } from '../config';
 import { Theme } from '../theme';
 import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
@@ -32,6 +33,7 @@ export class AccountMenu {
   protected readonly ordnaryAccountUrl = ORDNARY_ACCOUNT_URL;
   protected readonly copied = signal(false);
   protected readonly theme = inject(Theme);
+  private readonly tour = inject(TourState);
   protected readonly themes = THEME_OPTIONS;
   protected readonly accents = ACCENT_OPTIONS;
 
@@ -74,5 +76,10 @@ export class AccountMenu {
 
   protected logout(): void {
     void this.session.logout();
+  }
+
+  protected startTour(): void {
+    this.open.set(false);
+    this.tour.start();
   }
 }

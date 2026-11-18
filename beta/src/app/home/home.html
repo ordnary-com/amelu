@@ -1,4 +1,4 @@
-<section class="relative flex min-w-0 flex-col overflow-hidden rounded-lg bg-hero px-7 pt-6 pb-6 text-hero-ink max-mobile:px-5 max-mobile:pt-5">
+<section class="relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-line bg-hero px-6 pt-5 pb-6 text-hero-ink shadow-[0_1px_3px_rgb(0_0_0/0.05)] max-mobile:px-4 max-mobile:pt-4">
   <!-- An animated dither in the accent colour across the whole banner, a smooth gradient from
        dark on the right to almost nothing behind the text, so there's no edge where it starts. -->
   <div class="pointer-events-none absolute inset-0 opacity-45 [mask-image:linear-gradient(to_left,black_0%,rgba(0,0,0,0.75)_25%,rgba(0,0,0,0.4)_55%,rgba(0,0,0,0.12)_85%,rgba(0,0,0,0.05)_100%)] max-mobile:opacity-25" aria-hidden="true">
@@ -7,7 +7,8 @@
 
   <div class="relative flex flex-wrap items-center justify-between gap-3">
     <p class="text-[13px] font-medium text-hero-ink/70">{{ today | date: 'EEEE d MMMM' }}</p>
-    <nav class="flex flex-wrap gap-5 max-mobile:gap-4" aria-label="Amelu links">
+    <!-- Small white buttons that stay readable over the dither on the right. -->
+    <nav class="flex flex-wrap gap-2" aria-label="Amelu links">
       <a routerLink="/changelog" [class]="heroLink" aria-label="What's new">
         <amelu-icon name="map" [size]="15" /><span class="max-mobile:hidden">What's new</span>
       </a>
@@ -25,15 +26,15 @@
     </nav>
   </div>
 
-  <h1 class="relative mt-8 text-[40px] leading-[1.1] font-normal tracking-[-0.02em] text-ink max-mobile:mt-6 max-mobile:text-[30px]">
+  <h1 class="relative mt-6 text-[32px] leading-[1.15] font-normal tracking-[-0.01em] text-ink max-mobile:mt-5 max-mobile:text-[26px]">
     {{ greeting() }}{{ firstName() ? ', ' + firstName() : '' }}
   </h1>
-  <p class="relative mt-2 text-[16px] text-hero-ink/80">
+  <p class="relative mt-1.5 text-[15px] text-hero-ink/80">
     Here's how your mail is doing.
     <a routerLink="/organization/activity" class="font-medium text-link hover:underline">View all activity</a>
   </p>
 
-  <amelu-setup-checklist class="relative mt-7 self-start" />
+  <amelu-setup-checklist class="relative mt-5 self-start" />
 </section>
 
 

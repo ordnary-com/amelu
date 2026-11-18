@@ -34,7 +34,8 @@ export class Home {
   protected readonly githubUrl = GITHUB_URL;
   protected readonly badge = badgeClass;
 
-  protected readonly heroLink = 'flex items-center gap-1.5 text-[13px] font-semibold hover:text-link';
+  protected readonly heroLink =
+    'inline-flex h-8 items-center gap-1.5 rounded-md border border-line/70 bg-surface/85 px-3 text-[13px] font-medium text-ink shadow-[0_1px_2px_rgb(0_0_0/0.05)] backdrop-blur-sm hover:bg-surface max-mobile:w-8 max-mobile:justify-center max-mobile:px-0';
   protected readonly today = new Date();
   protected readonly greeting = computed(() => {
     const hour = this.today.getHours();

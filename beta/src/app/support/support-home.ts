@@ -2,8 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, SupportTicket, errorMessage } from '../api';
-import { PageHeader } from '../page-header/page-header';
-import { EmptyState } from '../empty-state/empty-state';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { UI } from '../ui';
@@ -12,95 +10,116 @@ import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
 /** /support: the organization's tickets, newest activity first. */
 @Component({
   selector: 'amelu-support-home',
-  imports: [PageHeader, RouterLink, EmptyState, Alert, Icon],
+  imports: [RouterLink, Alert, Icon],
   template: `
-    <amelu-page-header title="Support">
-      Ask our team about your account, domains, DNS or mail delivery. Everyone in your organization can follow the tickets here.
-      <a actions routerLink="/support/new" [class]="ui.primary">
-        <amelu-icon name="plus" [size]="14" />
+    <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+      <div class="min-w-0">
+        <h1 class="text-[22px] leading-tight font-normal">Support</h1>
+        <p class="mt-1 text-[14px] text-muted">Ask our team about your account, domains, DNS or mail delivery. Everyone in your organization can follow the tickets here.</p>
+      </div>
+      <a routerLink="/support/new" class="inline-flex h-10 flex-none items-center gap-1.5 rounded-md bg-accent px-4 text-[14px] font-medium text-white hover:bg-accent/85">
         New ticket
+        <amelu-icon name="plus" [size]="16" />
       </a>
-    </amelu-page-header>
+    </div>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
-      <section class="min-w-0">
-        @if (error(); as message) {
-          <amelu-alert class="mb-4 block">{{ message }}</amelu-alert>
-        }
-
-        @if (tickets(); as list) {
-          @if (list.length) {
-            <div class="mb-3 flex gap-1" role="tablist" aria-label="Filter tickets">
+    <div class="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader + ' h-auto min-h-11 flex-wrap py-2'">
+          <h2 [class]="ui.panelTitle">
+            Tickets
+            @if (tickets(); as list) {
+              <span class="font-normal text-muted">({{ list.length }})</span>
+            }
+          </h2>
+          @if (tickets()?.length) {
+            <div class="flex gap-1" role="tablist" aria-label="Filter tickets">
               @for (f of filters; track f.id) {
                 <button
                   type="button"
                   role="tab"
                   [attr.aria-selected]="filter() === f.id"
-                  class="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-[13px]"
-                  [class]="filter() === f.id ? 'bg-accent/10 font-medium text-ink' : 'text-muted hover:bg-bg hover:text-ink'"
+                  class="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded px-2.5 text-[13px]"
+                  [class]="filter() === f.id ? 'bg-accent/10 font-medium text-link' : 'text-muted hover:bg-bg hover:text-ink'"
                   (click)="filter.set(f.id)"
                 >
                   {{ f.label }}
-                  <span class="rounded bg-bg px-1.5 text-[11px] tabular-nums text-muted">{{ count(f.id) }}</span>
+                  <span class="tabular-nums" [class.text-muted]="filter() !== f.id">{{ count(f.id) }}</span>
                 </button>
               }
             </div>
-
-            @if (visible().length) {
-              <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-                @for (t of visible(); track t.id) {
-                  <li>
-                    <a [routerLink]="['/support/tickets', t.id]" class="flex items-start gap-3 px-4 py-3 hover:bg-bg/60">
-                      <span class="mt-1.5 size-2 flex-none rounded-full" [class]="status[t.status].dot" aria-hidden="true"></span>
-                      <span class="min-w-0 flex-1">
-                        <span class="flex items-baseline gap-2">
-                          <span class="truncate text-[14px] font-medium">{{ t.subject }}</span>
-                          <span class="flex-none text-[12px] text-muted tabular-nums">#{{ t.number }}</span>
-                        </span>
-                        <span class="mt-0.5 block truncate text-[12px] text-muted">
-                          {{ categoryLabel[t.category] }}@if (t.domainName) { · {{ t.domainName }} } · opened by {{ t.openedByName }}
-                        </span>
-                      </span>
-                      <span class="flex flex-none flex-col items-end gap-1">
-                        <span class="rounded px-1.5 py-0.5 text-[11px] font-medium" [class]="status[t.status].badge">{{ status[t.status].label }}</span>
-                        <span class="text-[12px] text-muted">{{ ago(t.updatedAt) }}</span>
-                      </span>
-                    </a>
-                  </li>
-                }
-              </ul>
-            } @else {
-              <p [class]="ui.card + ' px-4 py-8 text-center text-[13px] text-muted'">No {{ filterLabel() }} tickets.</p>
-            }
-          } @else {
-            <div [class]="ui.card">
-              <amelu-empty-state title="No tickets yet" illustration="confidential-letter">
-                When something isn't working, open a ticket and we'll answer here and by email.
-              </amelu-empty-state>
-            </div>
           }
-        } @else {
-          <div [class]="ui.card + ' h-40 animate-pulse'"></div>
-        }
+        </div>
+        <div [class]="ui.well">
+          @if (error(); as message) {
+            <amelu-alert class="mb-3 block">{{ message }}</amelu-alert>
+          }
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr [class.text-muted]="!visible().length">
+                  <th [class]="ui.th">Subject</th>
+                  <th [class]="ui.th">Status</th>
+                  <th [class]="ui.th + ' max-lg:hidden'">Opened by</th>
+                  <th [class]="ui.th + ' max-sm:hidden'">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (tickets() === undefined) {
+                  @for (i of [1, 2]; track i) {
+                    <tr [class]="ui.tr" aria-hidden="true"><td [class]="ui.td" colspan="4"><span class="block h-3 w-full animate-pulse rounded bg-bg"></span></td></tr>
+                  }
+                } @else {
+                  @for (t of visible(); track t.id) {
+                    <tr [class]="ui.tr">
+                      <td [class]="ui.td + ' max-w-[380px]'">
+                        <a [routerLink]="['/support/tickets', t.id]" class="block truncate font-medium text-link hover:underline">{{ t.subject }}</a>
+                        <span [class]="ui.tdSub"><span class="truncate">#{{ t.number }} · {{ categoryLabel[t.category] }}@if (t.domainName) { · {{ t.domainName }} }</span></span>
+                      </td>
+                      <td [class]="ui.td">
+                        <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="status[t.status].text">
+                          <amelu-icon [name]="status[t.status].icon" [size]="16" />{{ status[t.status].label }}
+                        </span>
+                      </td>
+                      <td [class]="ui.td + ' max-w-[180px] truncate max-lg:hidden'">{{ t.openedByName }}</td>
+                      <td [class]="ui.td + ' whitespace-nowrap text-muted max-sm:hidden'">{{ ago(t.updatedAt) }}</td>
+                    </tr>
+                  } @empty {
+                    <tr [class]="ui.tr">
+                      <td colspan="4" class="px-4 py-10 text-center">
+                        <amelu-icon name="lifebuoy" [size]="18" class="mx-auto block" />
+                        @if (tickets()?.length) {
+                          <p class="mt-2">No {{ filterLabel() }} tickets</p>
+                        } @else {
+                          <p class="mt-2">No tickets yet</p>
+                          <p class="mt-0.5 text-[13px] text-muted">When something isn't working, open a ticket and we'll answer here and by email.</p>
+                        }
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
-      <aside class="space-y-3">
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Get a faster answer</h2>
-          <ul class="mt-2 space-y-1.5 text-[13px] leading-relaxed text-muted">
+      <aside class="space-y-5">
+        <section [class]="ui.setCard">
+          <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Get a Faster Answer</h2></div>
+          <ul class="space-y-1.5 px-5 py-4 text-[14px] leading-relaxed text-muted">
             <li>Name the domain and the address involved.</li>
             <li>Say roughly when it happened.</li>
             <li>Paste the full error or bounce message.</li>
           </ul>
         </section>
-        <a routerLink="/status" [class]="ui.card + ' group flex items-start gap-3 p-4 hover:border-ink/20'">
-          <amelu-icon name="pulse" [size]="16" class="mt-0.5 flex-none text-accent" />
-          <span class="min-w-0 flex-1">
-            <span class="block text-[14px] font-bold">Service status</span>
-            <span class="mt-0.5 block text-[13px] text-muted">Check for known incidents before opening a ticket.</span>
-          </span>
-          <amelu-icon name="chevronRight" [size]="14" class="mt-1 flex-none text-muted group-hover:text-ink" />
-        </a>
+        <section [class]="ui.setCard">
+          <div [class]="ui.setHeader">
+            <h2 [class]="ui.setTitle">Service Status</h2>
+            <a routerLink="/status" [class]="ui.setAction" aria-label="Service status" title="Service status"><amelu-icon name="arrowRight" [size]="17" /></a>
+          </div>
+          <p class="px-5 py-4 text-[14px] text-muted">Check for known incidents before opening a ticket.</p>
+        </section>
       </aside>
     </div>
   `,

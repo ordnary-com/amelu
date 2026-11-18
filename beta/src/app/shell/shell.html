@@ -25,19 +25,14 @@
       </li>
       <li class="ml-2 max-lg:mr-2">
         <ul>
-          <li [class]="groupedCategory" routerLinkActive="active">
-            <a routerLink="/domains" data-tour="domains" [class]="link" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span>@if (hiddenDomains() > 0) {<!-- Only the first few show below: the total says there are more. --><span class="rounded bg-chrome-ink/10 px-1 text-[10px] leading-[14px] text-chrome-ink/70" [attr.aria-label]="domains()!.length + ' domains'">{{ domains()!.length }}</span>}<ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></a>
+          <!-- Domains only folds open; its pages are the items under it. -->
+          <li [class]="groupedCategory">
+            <button type="button" data-tour="domains" [class]="link + ' w-full cursor-pointer text-left'" [attr.aria-expanded]="open('domains')" (click)="toggle('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></button>
           </li>
           @if (open('domains')) {
-          @for (domain of sidebarDomains(); track domain.id) {
-            <li [class]="groupedSubitem" routerLinkActive="active">
-              <a [routerLink]="'/domains/' + domain.id" [class]="link" [title]="domain.name">
-                <!-- Status dot, centred where the other items have their icon -->
-                <span class="flex w-[15px] flex-none justify-center" aria-hidden="true"><span class="size-[7px] rounded-full" [class]="dot(domain)"></span></span>
-                <span class="truncate">{{ domain.name }}</span>
-              </a>
-            </li>
-          }
+          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <a routerLink="/domains" [class]="link"><ng-icon name="lucideList" size="15px" strokeWidth="2.5" /><span class="truncate">My Domains</span></a>
+          </li>
           <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
             <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="15px" strokeWidth="2.5" /><span class="truncate">New Domain</span></a>
           </li>

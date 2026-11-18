@@ -18,6 +18,10 @@ export class AmeluOriginContainer extends Container<Env> {
 
   envVars = {
     DATABASE_URL: workerEnv.DATABASE_URL,
+    // Postgres on pg1-nbg is reached through its tunnel (backend/entrypoint.sh).
+    PG_TUNNEL_HOSTNAME: workerEnv.PG_TUNNEL_HOSTNAME ?? "",
+    CF_ACCESS_CLIENT_ID: workerEnv.CF_ACCESS_CLIENT_ID ?? "",
+    CF_ACCESS_CLIENT_SECRET: workerEnv.CF_ACCESS_CLIENT_SECRET ?? "",
     STALWART_BASE_URL: workerEnv.STALWART_BASE_URL,
     STALWART_ADMIN_USER: workerEnv.STALWART_ADMIN_USER,
     STALWART_ADMIN_PASSWORD: workerEnv.STALWART_ADMIN_PASSWORD,

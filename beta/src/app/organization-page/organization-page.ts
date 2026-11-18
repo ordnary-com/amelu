@@ -1,23 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, Invitation, Member, OrganizationRole, errorMessage } from '../api';
 import { Session } from '../session';
 import { Alert } from '../alert/alert';
 import { ROLE, badgeClass } from '../status';
 import { UI } from '../ui';
-import { EmptyState } from '../empty-state/empty-state';
 import { Avatar } from '../avatar';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 
 const ASSIGNABLE_ROLES: OrganizationRole[] = ['owner', 'admin', 'helpdesk', 'billing', 'read_only'];
 
-/** The current dashboard's /organization: a banner with its details, team members and invitations. */
+/** /organization: its details, team members, pending invitations and the invite form, as cards. */
 @Component({
   selector: 'amelu-organization-page',
-  imports: [EmptyState, DatePipe, RouterLink, Alert, Avatar, Icon, DitherShader],
+  imports: [DatePipe, Alert, Avatar, Icon],
   templateUrl: './organization-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -32,6 +29,20 @@ export class OrganizationPage {
   protected readonly roles = ROLE;
   protected readonly assignableRoles = ASSIGNABLE_ROLES;
   protected readonly badge = badgeClass;
+  // Label-over-value fields in the Organization card, as on My Account.
+  protected readonly field = 'min-w-0 px-5 py-4 max-sm:not-first:border-t max-sm:not-first:border-line';
+  protected readonly fieldLabel = 'text-[13px] text-muted';
+  protected readonly fieldValue = 'mt-1 truncate text-[16px]';
+
+  private readonly inviteInput = viewChild<ElementRef<HTMLInputElement>>('inviteInput');
+
+  /** The Team Members plus: straight to the invite form's email field. */
+  protected focusInvite(event: Event): void {
+    event.preventDefault();
+    const input = this.inviteInput()?.nativeElement;
+    input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input?.focus({ preventScroll: true });
+  }
 
   protected readonly canManage = computed(() => {
     const role = this.customer()?.role;

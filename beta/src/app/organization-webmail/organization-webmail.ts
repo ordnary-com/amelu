@@ -5,7 +5,6 @@ import { catchError, firstValueFrom, of } from 'rxjs';
 import { errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
-import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { Icon } from '../icon';
 import { DitherShader } from '../login/dither-shader';
@@ -30,7 +29,7 @@ const LOGO_MAX_BYTES = 256 * 1024;
  */
 @Component({
   selector: 'amelu-organization-webmail',
-  imports: [PageHeader, Alert, EmptyState, RouterLink, Icon, DitherShader],
+  imports: [Alert, EmptyState, RouterLink, Icon, DitherShader],
   templateUrl: './organization-webmail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

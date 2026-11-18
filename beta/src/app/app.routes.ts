@@ -64,6 +64,7 @@ export const routes: Routes = [
             loadComponent: () => import('./account-appearance/account-appearance').then((m) => m.AccountAppearance),
             title: 'Appearance · My Account · Amelu' },
           { path: 'api-keys', loadComponent: () => import('./account-api-keys/account-api-keys').then((m) => m.AccountApiKeys), title: 'API Keys · My Account · Amelu' },
+          { path: 'terminate', loadComponent: () => import('./misc/terminate-account').then((m) => m.TerminateAccount), title: 'Terminate account · My Account · Amelu' },
         ],
       },
       { path: 'organization', loadComponent: () => import('./organization-page/organization-page').then((m) => m.OrganizationPage), title: 'My Organization · Amelu' },

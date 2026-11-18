@@ -24,6 +24,30 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-18  Webmail logo upload is a drop zone with previews
+            2026-11-18-webmail-logo-upload.txt
+
+2026-11-18  Sidebar: only one category open at a time
+            2026-11-18-sidebar-groups.txt
+
+2026-11-18  First-time tour after onboarding
+            2026-11-18-first-time-tour.txt
+
+2026-11-18  Sending IPs page reworked with a filter sidebar
+            2026-11-18-sending-ips-page.txt
+
+2026-11-17  89.106.70.0/24 works through Vultr (rtr1-ams)
+            2026-11-17-rtr1-ams-vultr.txt
+
+2026-11-17  89.106.70.0/24 announced through Melbicom (rtr2-ams)
+            2026-11-17-rtr2-ams.txt
+
+2026-11-17  Black Week notice is a card with both codes
+            2026-11-17-black-week-card.txt
+
+2026-11-17  Plans page reworked, with a Dedicated IPs card
+            2026-11-17-dedicated-ips-card.txt
+
 2026-11-16  Own sending block 89.106.70.0/24 on AS218905
             2026-11-16-own-ip-block.txt
 

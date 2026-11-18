@@ -38,23 +38,39 @@ const BODY_MAX = 20000;
           @if (error(); as message) {
             <amelu-alert>{{ message }}</amelu-alert>
           }
-          <div>
-            <label for="ticket-subject" [class]="fieldLabel">Subject</label>
-            <input
-              id="ticket-subject"
-              [class]="ui.input"
-              [maxLength]="subjectMax"
-              placeholder="Mail to Outlook addresses bounces"
-              [value]="subject()"
-              (input)="subject.set($any($event.target).value)"
-              required
-            />
-          </div>
+          <fieldset>
+            <legend [class]="fieldLabel">Topic</legend>
+            <!-- Topics as choice cards, the picked one tinted like the DNS choice on Add domain. -->
+            <div class="mt-1.5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="Topic">
+              @for (c of categories; track c.id) {
+                @let on = category() === c.id;
+                <label [class]="ui.choice + ' flex items-center gap-3 px-3.5 py-3 ' + (on ? ui.choiceOn : ui.choiceOff)">
+                  <input type="radio" name="topic" class="sr-only" [value]="c.id" [checked]="on" (change)="category.set(c.id)" />
+                  <amelu-icon [name]="c.icon" [size]="20" class="flex-none" [class]="on ? 'text-link' : 'text-ink'" />
+                  <span class="min-w-0">
+                    <span class="block truncate text-[14px] font-medium" [class.text-link]="on">{{ c.label }}</span>
+                    <span class="block truncate text-[12px]" [class]="on ? 'text-link/85' : 'text-muted'">{{ c.hint }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          </fieldset>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_260px]">
             <div>
-              <label for="ticket-category" [class]="fieldLabel">Topic</label>
-              <amelu-combobox class="mt-1.5" inputId="ticket-category" [options]="categoryOptions" [(value)]="category" searchPlaceholder="Search topics" />
+              <div class="flex items-baseline justify-between gap-3">
+                <label for="ticket-subject" [class]="fieldLabel">Subject</label>
+                <span class="text-[12px] text-muted tabular-nums">{{ subject().length }} / {{ subjectMax }}</span>
+              </div>
+              <input
+                id="ticket-subject"
+                [class]="ui.input"
+                [maxLength]="subjectMax"
+                placeholder="Mail to Outlook addresses bounces"
+                [value]="subject()"
+                (input)="subject.set($any($event.target).value)"
+                required
+              />
             </div>
             <div>
               <label for="ticket-domain" [class]="fieldLabel">Domain <span class="text-muted/70">(optional)</span></label>
@@ -104,7 +120,7 @@ export class SupportNew {
   private readonly router = inject(Router);
   protected readonly ui = UI;
   protected readonly fieldLabel = 'block text-[13px] text-muted';
-  protected readonly categoryOptions: ComboboxOption[] = SUPPORT_CATEGORIES.map((c) => ({ value: c.id, label: c.label }));
+  protected readonly categories = SUPPORT_CATEGORIES;
   protected readonly subjectMax = SUBJECT_MAX;
   protected readonly bodyMax = BODY_MAX;
   private readonly domainList = inject(Domains);

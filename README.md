@@ -126,16 +126,7 @@ one. Contributing means you agree to the terms in
 
 ## License
 
-Amelu is source-available, not open source in the OSI sense. **You may
-self-host it for personal use, for free**: your own mailboxes, your own
-domains, your household. No permission needed, no email required.
-
-What Ordnary keeps is the commercial side. Running an instance for a company
-or a team, charging anyone for access, or offering Amelu as a service under
-another name all need a separate license. Full terms, including exactly what
-counts as personal use, are in [`LICENSE.md`](LICENSE.md).
-
-Self-hosting is unsupported: Amelu is a management layer over *your* Stalwart
-server and *your* Postgres, and mail deliverability, backups and security are
-yours to run. [`docs/cloudflare/`](docs/cloudflare/) is the closest thing to a
-deployment guide.
+Amelu is source-available, not open source in the OSI sense. The code is
+public so you can read it, see how Amelu works and contribute improvements
+back. The terms are in [`LICENSE.md`](LICENSE.md); for anything beyond them,
+email notices@ordnary.com.

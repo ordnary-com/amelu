@@ -1,3 +1,4 @@
+import type { IconName } from '../icon';
 import { SupportCategory, SupportStatus } from '../api';
 
 export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string }[] = [
@@ -10,11 +11,11 @@ export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string }[] = [
 
 export const CATEGORY_LABEL = Object.fromEntries(SUPPORT_CATEGORIES.map((c) => [c.id, c.label])) as Record<SupportCategory, string>;
 
-/** Label, badge and dot classes per status, from the customer's side. */
-export const STATUS: Record<SupportStatus, { label: string; badge: string; dot: string }> = {
-  open: { label: 'Waiting for support', badge: 'bg-bg text-muted', dot: 'bg-warn' },
-  answered: { label: 'Support replied', badge: 'bg-accent/12 text-link', dot: 'bg-accent' },
-  closed: { label: 'Closed', badge: 'bg-bg text-muted', dot: 'bg-line' },
+/** Label, badge, dot, and icon with text colour (tables) per status, from the customer's side. */
+export const STATUS: Record<SupportStatus, { label: string; badge: string; dot: string; icon: IconName; text: string }> = {
+  open: { label: 'Waiting for support', badge: 'bg-bg text-muted', dot: 'bg-warn', icon: 'clock', text: 'text-warn' },
+  answered: { label: 'Support replied', badge: 'bg-accent/12 text-link', dot: 'bg-accent', icon: 'mail', text: 'text-link' },
+  closed: { label: 'Closed', badge: 'bg-bg text-muted', dot: 'bg-line', icon: 'circleCheck', text: 'text-muted' },
 };
 
 /** "just now", "5 min ago", "3 h ago", "2 days ago", or the date. */

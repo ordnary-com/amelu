@@ -1,39 +1,19 @@
-<!-- Accent strip across the very top, as in ordnary-console; the account
-     badge hangs out of it in the same color. -->
-<div class="h-1 flex-none bg-badge"></div>
-
-<!-- Top bar: the logo's 14px left padding lines it up with the menu text below. -->
-<header class="flex h-16 flex-none items-stretch justify-between gap-3 border-b border-line bg-page pr-5 pl-3.5 text-ink max-lg:pr-3">
-  <!-- Below lg the menus become a full-screen drawer behind this button. -->
-  <button
-    type="button"
-    class="-ml-1.5 flex w-10 flex-none cursor-pointer items-center justify-center lg:hidden"
-    [attr.aria-expanded]="navOpen()"
-    aria-controls="main-nav"
-    [attr.aria-label]="navOpen() ? 'Close menu' : 'Open menu'"
-    (click)="navOpen.set(!navOpen())"
-  >
-    <ng-icon [name]="navOpen() ? 'lucideX' : 'lucideMenu'" size="22px" strokeWidth="2.25" />
-  </button>
-  <a routerLink="/" class="flex items-center max-lg:mr-auto">
-    <!-- The top bar is white: the logo in its own blue. -->
-    <img src="/amelu-logo.png" alt="Amelu" class="h-[22px]" />
-  </a>
-  <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
-  <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2" />
-  <amelu-notification-bell data-tour="notifications" class="self-center" />
-  <amelu-account-menu data-tour="account" />
-</header>
-
 <!-- First-time tour after onboarding (tour/tour.ts). -->
 <amelu-tour />
 
-<div class="flex min-h-0 flex-1">
+<!-- The sidebar runs the full height in the chrome colour, with the logo on top;
+     below lg it dissolves (contents) and the menus become a drawer. -->
+<div class="flex min-h-0 flex-none flex-col max-lg:contents">
+  <!-- The logo's 14px left padding lines it up with the menu text below. -->
+  <a routerLink="/" class="flex h-16 flex-none items-center pl-3.5 max-lg:hidden">
+    <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
+    <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
+  </a>
   <!-- Same menus as the current dashboard (frontend/src/components/Layout.tsx): the main
        one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
   <nav
     id="main-nav"
-    class="flex min-h-0 flex-none text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-[68px] max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
+    class="flex min-h-0 flex-1 text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
     [class.max-lg:hidden]="!navOpen()"
     aria-label="Main"
   >
@@ -144,6 +124,30 @@
       </ul>
     }
   </nav>
+</div>
+
+<div class="flex min-w-0 flex-1 flex-col">
+  <!-- Top bar: white, above the page only. -->
+  <header class="flex h-16 flex-none items-stretch justify-between gap-3 border-b border-line bg-page px-5 text-ink max-lg:px-3">
+    <!-- Below lg the menus become a full-screen drawer behind this button. -->
+    <button
+      type="button"
+      class="-ml-1.5 flex w-10 flex-none cursor-pointer items-center justify-center lg:hidden"
+      [attr.aria-expanded]="navOpen()"
+      aria-controls="main-nav"
+      [attr.aria-label]="navOpen() ? 'Close menu' : 'Open menu'"
+      (click)="navOpen.set(!navOpen())"
+    >
+      <ng-icon [name]="navOpen() ? 'lucideX' : 'lucideMenu'" size="22px" strokeWidth="2.25" />
+    </button>
+    <a routerLink="/" class="flex items-center max-lg:mr-auto lg:hidden">
+      <img src="/amelu-logo.png" alt="Amelu" class="h-[22px]" />
+    </a>
+    <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
+    <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2 lg:pl-0" />
+    <amelu-notification-bell data-tour="notifications" class="self-center" />
+    <amelu-account-menu data-tour="account" />
+  </header>
 
   <main class="min-w-0 flex-1 overflow-y-auto bg-page max-mobile:px-4! in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
     <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->

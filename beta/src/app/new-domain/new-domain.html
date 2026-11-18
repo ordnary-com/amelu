@@ -249,7 +249,7 @@
         <p class="text-[13px] text-muted">Domain</p>
         <p class="mt-1 truncate text-[16px] font-medium" [class.text-muted]="!valid()">{{ valid() ? name() : 'Not entered yet' }}</p>
         <dl class="mt-3 space-y-1.5 rounded-md border border-line px-3.5 py-3 text-[13px]">
-          <div class="flex justify-between gap-3"><dt>DNS</dt><dd class="text-right font-medium">{{ nameservers() === 'amelu' ? 'Amelu nameservers' : 'Your current DNS' }}</dd></div>
+          <div class="flex justify-between gap-3"><dt>DNS</dt><dd class="text-right font-medium">{{ nameservers() === 'amelu' ? 'Our nameservers' : 'Your current DNS' }}</dd></div>
           <div class="flex justify-between gap-3"><dt>Standard addresses</dt><dd class="font-medium">{{ createDefaults() ? defaultRows.length + ' addresses' : 'None' }}</dd></div>
           @if (usage(); as plan) {
             @if (used() !== null) {

@@ -256,16 +256,37 @@
     <div [class]="panelHeader">
       <h2 [class]="panelTitle + ' flex items-center gap-2'">
         Dedicated IPs
-        <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[11px] font-medium text-link">Add-on</span>
+        <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-link uppercase">Add-on</span>
       </h2>
     </div>
     <div [class]="tableBody">
-      <p class="text-[13px] leading-relaxed text-muted">
-        Send from IP addresses used only by your organization, so your sending reputation depends on your mail alone.
-      </p>
-      <div class="mt-4 flex flex-wrap items-center gap-3">
-        <a routerLink="/support" [class]="ui.outline">Contact us</a>
-        <a routerLink="/billing/plans" class="text-[13px] text-link hover:underline">See plans</a>
+      <div [class]="ui.tableWrap">
+        <table [class]="ui.table">
+          <thead>
+            <!-- Muted headers while there's nothing in the table. -->
+            <tr class="text-muted">
+              <th [class]="ui.th">Address</th>
+              <th [class]="ui.th + ' max-sm:hidden'">Reverse DNS</th>
+              <th [class]="ui.th">Location</th>
+              <th [class]="ui.th">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr [class]="ui.tr">
+              <td colspan="4" class="px-4 py-8 text-center">
+                <amelu-icon name="globe" [size]="18" class="mx-auto block" />
+                <p class="mt-2">No dedicated IPs</p>
+                <p class="mx-auto mt-0.5 max-w-[360px] text-[13px] text-muted">
+                  Send from addresses used only by your organization, so your reputation depends on your mail alone.
+                </p>
+                <div class="mt-4 flex items-center justify-center gap-3">
+                  <a routerLink="/support" [class]="ui.outline">Contact us</a>
+                  <a routerLink="/billing/plans" class="text-[13px] text-link hover:underline">See plans</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>

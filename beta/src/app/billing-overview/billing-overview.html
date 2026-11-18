@@ -14,129 +14,166 @@
   </amelu-alert>
 }
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="min-w-0 space-y-6">
-    @if (overview() === null) {
-      <div [class]="ui.card"><amelu-empty-state title="Your billing info couldn't be loaded" [error]="true" /></div>
-    } @else {
-      <!-- The plan's limits and payment state as tiles; the plan itself is in the banner above. -->
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
-          <span class="block text-[12px] text-muted">Domains</span>
-          @if (domainUsage(); as usage) {
-            <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]" [class.text-bad]="usage.over">
-              {{ usage.used }} <span class="text-[13px] tracking-normal text-muted">of {{ usage.limit }}</span>
-            </span>
-            <span class="mt-2 block h-1 overflow-hidden rounded-full bg-bg">
-              <span class="block h-full rounded-full" [class]="usage.over ? 'bg-bad' : 'bg-accent'" [style.width.%]="usage.percent"></span>
-            </span>
-          } @else {
-            <span class="mt-2.5 block h-6 w-12 animate-pulse rounded bg-bg"></span>
-          }
-        </div>
-        <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
-          <span class="block text-[12px] text-muted">Mailboxes per domain</span>
-          @if (overview(); as o) {
-            <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">
-              <span class="text-[13px] tracking-normal text-muted">up to</span> {{ o.plan.maxMailboxesPerDomain }}
-            </span>
-          } @else {
-            <span class="mt-2.5 block h-6 w-12 animate-pulse rounded bg-bg"></span>
-          }
-        </div>
-        <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
-          <span class="block text-[12px] text-muted">Payment method</span>
-          @if (overview(); as o) {
-            <span class="mt-1 flex items-center gap-2 text-[15px] leading-[32px] font-medium" [class.text-muted]="!o.hasPaymentMethod">
-              <amelu-icon name="card" [size]="16" />
-              {{ o.hasPaymentMethod ? 'On file' : 'None on file' }}
-            </span>
-          } @else {
-            <span class="mt-2.5 block h-6 w-20 animate-pulse rounded bg-bg"></span>
-          }
-        </div>
+<div class="space-y-5">
+  @if (overview() === null) {
+    <div [class]="ui.setCard"><amelu-empty-state title="Your billing info couldn't be loaded" [error]="true" /></div>
+  } @else {
+    <section [class]="ui.setCard">
+      <div [class]="ui.setHeader">
+        <h2 [class]="ui.setTitle">Subscription</h2>
+        <a routerLink="/billing/plans" class="text-[13px] text-link hover:underline">Change plan</a>
       </div>
-      @if (domainUsage()?.over) {
-        <amelu-alert kind="warning" title="You're over your plan's domain limit">
-          Remove a domain or <a routerLink="/billing/plans" class="font-bold underline">upgrade</a> to keep adding mailboxes.
-        </amelu-alert>
-      }
-    }
-
-    <section>
-      <div class="mb-3 flex items-center justify-between gap-3">
-        <h2 class="text-[14px] font-bold">Recent invoices</h2>
-        <a routerLink="/billing/invoices" class="text-[12px] text-muted hover:text-ink">View all</a>
-      </div>
-      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-        @if (invoices() === undefined) {
-          <div class="px-4 py-3" aria-hidden="true"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></div>
-        } @else {
-          @for (invoice of (invoices() ?? []).slice(0, 3); track invoice.id) {
-            <a
-              [href]="invoice.hostedInvoiceUrl"
-              target="_blank"
-              rel="noreferrer"
-              class="group flex items-center gap-3 px-4 py-3 hover:bg-bg/60"
-            >
-              <span class="inline-flex size-8 flex-none items-center justify-center rounded-full bg-bg text-muted" aria-hidden="true">
-                <amelu-icon name="receipt" [size]="15" />
-              </span>
-              <span class="min-w-0 flex-1">
-                <span class="block truncate text-[13px] font-medium">{{ invoice.number || invoice.id }}</span>
-                <span class="block text-[12px] text-muted">{{ invoice.createdAt | date: 'd MMM y' }}</span>
-              </span>
-              <span class="text-[13px] tabular-nums">{{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}</span>
-              <span [class]="badge(invoiceStatus[invoice.status].tone)">{{ invoiceStatus[invoice.status].label }}</span>
-              <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
-            </a>
-          } @empty {
-            <amelu-empty-state title="No invoices yet" [compact]="true">
-              They show up here once you're billed.
-            </amelu-empty-state>
-          }
-        }
-      </div>
-    </section>
-  </div>
-
-  <aside class="space-y-6">
-    @if (overview(); as o) {
-      <section>
-        <h2 [class]="ui.sectionTitle">Subscription</h2>
-        <dl [class]="ui.card + ' divide-y divide-line overflow-hidden text-[13px]'">
-          <div class="flex items-center justify-between gap-4 px-4 py-3">
-            <dt class="text-muted">Status</dt>
-            <dd>
+      <!-- Label over value, in columns split by thin lines. -->
+      <dl class="grid sm:grid-cols-3 sm:divide-x sm:divide-line">
+        <div [class]="field">
+          <dt [class]="fieldLabel">Plan</dt>
+          <dd [class]="fieldValue">
+            @if (overview(); as o) {
+              {{ o.plan.name }}
+            } @else {
+              <span class="mt-1.5 block h-4 w-20 animate-pulse rounded bg-bg"></span>
+            }
+          </dd>
+        </div>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Price</dt>
+          <dd [class]="fieldValue">
+            @if (overview(); as o) {
+              {{ priceLine(o) }}
+            } @else {
+              <span class="mt-1.5 block h-4 w-28 animate-pulse rounded bg-bg"></span>
+            }
+          </dd>
+        </div>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Status</dt>
+          <dd [class]="fieldValue">
+            @if (overview(); as o) {
               @if (o.subscriptionStatus; as status) {
-                <span [class]="badge(subscriptionStatus[status]?.tone ?? 'neutral')">{{ subscriptionStatus[status]?.label ?? status }}</span>
+                <span class="inline-flex items-center gap-1.5" [class]="toneText[subscriptionStatus[status]?.tone ?? 'neutral']">
+                  <amelu-icon [name]="toneIcon[subscriptionStatus[status]?.tone ?? 'neutral']" [size]="17" />{{ subscriptionStatus[status]?.label ?? status }}
+                </span>
               } @else {
                 <span class="text-muted">No active subscription</span>
               }
-            </dd>
-          </div>
-          <div class="flex items-center justify-between gap-4 px-4 py-3">
-            <dt class="text-muted">Price</dt>
-            <dd class="text-right">{{ priceLine(o) }}</dd>
-          </div>
-        </dl>
-      </section>
-    }
+            } @else {
+              <span class="mt-1.5 block h-4 w-16 animate-pulse rounded bg-bg"></span>
+            }
+          </dd>
+        </div>
+      </dl>
+    </section>
 
-    <!-- Same dither as the other help cards, rising from the bottom right. -->
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+    <section [class]="ui.setCard">
+      <div [class]="ui.setHeader">
+        <h2 [class]="ui.setTitle">Usage</h2>
       </div>
-      <amelu-icon name="card" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Manage subscription</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Update payment details, download invoices and cancel through Stripe's secure billing portal. Amelu never
-        handles your card details itself.
-      </p>
-      <button type="button" [class]="ui.primary + ' mt-4'" [disabled]="busy()" (click)="openPortal()">
+      <dl class="grid sm:grid-cols-3 sm:divide-x sm:divide-line">
+        <div [class]="field">
+          <dt [class]="fieldLabel">Domains</dt>
+          <dd [class]="fieldValue">
+            @if (domainUsage(); as usage) {
+              <span [class.text-bad]="usage.over">{{ usage.used }}</span> <span class="text-[14px] text-muted">of {{ usage.limit }}</span>
+              <span class="mt-2 block h-1 overflow-hidden rounded-full bg-bg">
+                <span class="block h-full rounded-full" [class]="usage.over ? 'bg-bad' : 'bg-accent'" [style.width.%]="usage.percent"></span>
+              </span>
+            } @else {
+              <span class="mt-1.5 block h-4 w-12 animate-pulse rounded bg-bg"></span>
+            }
+          </dd>
+        </div>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Mailboxes per domain</dt>
+          <dd [class]="fieldValue">
+            @if (overview(); as o) {
+              <span class="text-[14px] text-muted">up to</span> {{ o.plan.maxMailboxesPerDomain }}
+            } @else {
+              <span class="mt-1.5 block h-4 w-12 animate-pulse rounded bg-bg"></span>
+            }
+          </dd>
+        </div>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Payment method</dt>
+          <dd [class]="fieldValue">
+            @if (overview(); as o) {
+              <span class="inline-flex items-center gap-2" [class.text-muted]="!o.hasPaymentMethod">
+                <amelu-icon name="card" [size]="17" />{{ o.hasPaymentMethod ? 'On file' : 'None on file' }}
+              </span>
+            } @else {
+              <span class="mt-1.5 block h-4 w-20 animate-pulse rounded bg-bg"></span>
+            }
+          </dd>
+        </div>
+      </dl>
+      @if (domainUsage()?.over) {
+        <p [class]="ui.setNote + ' text-bad'">
+          <amelu-icon name="circleAlert" [size]="16" class="mt-0.5 flex-none" />
+          <span>You're over your plan's domain limit. Remove a domain or <a routerLink="/billing/plans" class="underline">upgrade</a> to keep adding mailboxes.</span>
+        </p>
+      }
+    </section>
+  }
+
+  <section [class]="ui.setCard">
+    <div [class]="ui.setHeader">
+      <h2 [class]="ui.setTitle">Recent Invoices</h2>
+      <a routerLink="/billing/invoices" [class]="ui.setAction" aria-label="All invoices" title="All invoices"><amelu-icon name="arrowRight" [size]="17" /></a>
+    </div>
+    <div [class]="ui.well">
+      <div [class]="ui.tableWrap">
+        <table [class]="ui.table">
+          <thead>
+            <tr [class.text-muted]="!invoices()?.length">
+              <th [class]="ui.th">Invoice</th>
+              <th [class]="ui.th + ' max-sm:hidden'">Date</th>
+              <th [class]="ui.th">Total</th>
+              <th [class]="ui.th">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (invoices() === undefined) {
+              <tr [class]="ui.tr" aria-hidden="true"><td [class]="ui.td" colspan="4"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></td></tr>
+            } @else {
+              @for (invoice of (invoices() ?? []).slice(0, 3); track invoice.id) {
+                <tr [class]="ui.tr">
+                  <td [class]="ui.td"><a [href]="invoice.hostedInvoiceUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">{{ invoice.number || invoice.id }}</a></td>
+                  <td [class]="ui.td + ' whitespace-nowrap max-sm:hidden'">{{ invoice.createdAt | date: 'd MMM y' }}</td>
+                  <td [class]="ui.td + ' whitespace-nowrap tabular-nums'">{{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}</td>
+                  <td [class]="ui.td">
+                    <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="toneText[invoiceStatus[invoice.status].tone]">
+                      <amelu-icon [name]="toneIcon[invoiceStatus[invoice.status].tone]" [size]="16" />{{ invoiceStatus[invoice.status].label }}
+                    </span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr [class]="ui.tr">
+                  <td colspan="4" class="px-4 py-8 text-center">
+                    <amelu-icon name="receipt" [size]="18" class="mx-auto block" />
+                    <p class="mt-2">No invoices yet</p>
+                    <p class="mt-0.5 text-[13px] text-muted">They show up here once you're billed.</p>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section [class]="ui.setCard">
+    <div [class]="ui.setHeader">
+      <h2 [class]="ui.setTitle">Payment Details</h2>
+    </div>
+    <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+      <p class="max-w-xl text-[14px] text-muted">Update your card, download invoices or cancel in the secure billing portal.</p>
+      <button type="button" [class]="ui.primary + ' h-9'" [disabled]="busy()" (click)="openPortal()">
         {{ busy() ? 'Opening...' : 'Manage billing' }}
       </button>
-    </section>
-  </aside>
+    </div>
+    <p [class]="ui.setNote">
+      <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+      <span>Payments run through Stripe. Amelu never handles your card details itself.</span>
+    </p>
+  </section>
 </div>

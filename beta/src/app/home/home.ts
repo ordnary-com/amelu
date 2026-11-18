@@ -131,6 +131,25 @@ export class Home {
 
   protected readonly latestInvoice = computed(() => this.invoices()?.[0] ?? null);
 
+  /** One line under the greeting on how the domains are doing, and where to go if one needs you. */
+  protected readonly summary = computed((): { text: string; link?: string; linkLabel?: string } => {
+    const list = this.domains();
+    if (!list) return { text: "Here's how your mail is doing." };
+    if (list.length === 0) return { text: 'Add a domain to start receiving mail with Amelu.', link: '/domains/new', linkLabel: 'Add a domain' };
+    const health = this.health();
+    const attention = list.filter((d) => {
+      const check = health?.[d.id];
+      return d.status !== 'active' || (!!check && check.total > 0 && check.matched < check.total);
+    });
+    if (attention.length === 0) {
+      return { text: list.length === 1 ? `${list[0].name} is set up and receiving mail.` : `All ${list.length} of your domains are set up and receiving mail.` };
+    }
+    if (attention.length === 1) {
+      return { text: `${attention[0].name} needs your attention.`, link: `/domains/${attention[0].id}`, linkLabel: 'Take a look' };
+    }
+    return { text: `${attention.length} of your ${list.length} domains need your attention.`, link: '/domains', linkLabel: 'See which' };
+  });
+
   /** "No charge", or how the subscription is billed. */
   protected readonly planBilling = computed(() => {
     const overview = this.billing();

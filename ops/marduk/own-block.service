@@ -1,12 +1,13 @@
 [Unit]
-Description=Policy routing for our own block 89.106.70.0/24 (exits via the Vultr routers)
-Before=wg-quick@vultr.service wg-quick@par.service bgp-exit-check.service
+Description=Policy routing for our own block 89.106.70.0/24 (exits via rtr2-ams, rtr1-ams, rtr1-par)
+Before=wg-quick@ifog.service wg-quick@vultr.service wg-quick@par.service bgp-exit-check.service
 After=network-online.target
 Wants=network-online.target
 
 # Traffic from 89.106.70.0/24 uses table 30, whose default routes point at
-# rtr1-ams (wg-quick@vultr) and rtr1-par (wg-quick@par); bgp-exit-check keeps
-# them in line. 89.106.70.2 is the test address.
+# rtr2-ams (wg-quick@ifog), rtr1-ams (wg-quick@vultr) and rtr1-par
+# (wg-quick@par); bgp-exit-check keeps them in line. The bound addresses are
+# the sending IPs out-N.mta0.amelu.org that amelu-ip-pools may use.
 [Service]
 Type=oneshot
 RemainAfterExit=yes

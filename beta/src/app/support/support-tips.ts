@@ -16,12 +16,11 @@ const TIPS: { icon: IconName; title: string; text: string }[] = [
   template: `
     <section [class]="ui.setCard">
       <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Get a Faster Answer</h2></div>
-      <ul class="space-y-3.5 px-5 py-4">
+      <!-- Plain rows split by lines, like the lists elsewhere. -->
+      <ul class="divide-y divide-line">
         @for (tip of tips; track tip.title) {
-          <li class="flex gap-3">
-            <span class="flex size-8 flex-none items-center justify-center rounded-full bg-accent/10 text-link" aria-hidden="true">
-              <amelu-icon [name]="tip.icon" [size]="15" />
-            </span>
+          <li class="flex items-start gap-3 px-5 py-3">
+            <amelu-icon [name]="tip.icon" [size]="17" class="mt-0.5 flex-none text-ink" />
             <span class="min-w-0">
               <span class="block text-[14px] font-medium">{{ tip.title }}</span>
               <span class="mt-0.5 block text-[13px] leading-snug text-muted">{{ tip.text }}</span>
@@ -30,8 +29,8 @@ const TIPS: { icon: IconName; title: string; text: string }[] = [
         }
       </ul>
       @if (showStatus()) {
-        <p [class]="ui.setNote + ' text-[13px]'">
-          <amelu-icon name="pulse" [size]="16" class="mt-0.5 flex-none" />
+        <p [class]="ui.setNote + ' border-t border-line text-[13px]'">
+          <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
           <span>Something down for everyone? Check <a routerLink="/status" class="text-link hover:underline">Service status</a> first.</span>
         </p>
       }

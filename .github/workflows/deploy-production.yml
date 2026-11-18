@@ -78,6 +78,9 @@ jobs:
           echo "${{ secrets.ORIGIN_SHARED_SECRET }}" | npx wrangler secret put ORIGIN_SHARED_SECRET --env production
           echo "${{ secrets.ALLOWED_ORIGIN }}" | npx wrangler secret put ALLOWED_ORIGIN --env production
           echo "${{ secrets.DATABASE_URL }}" | npx wrangler secret put DATABASE_URL --env production
+          echo "${{ secrets.PG_TUNNEL_HOSTNAME }}" | npx wrangler secret put PG_TUNNEL_HOSTNAME --env production
+          echo "${{ secrets.CF_ACCESS_CLIENT_ID }}" | npx wrangler secret put CF_ACCESS_CLIENT_ID --env production
+          echo "${{ secrets.CF_ACCESS_CLIENT_SECRET }}" | npx wrangler secret put CF_ACCESS_CLIENT_SECRET --env production
           echo "${{ secrets.STALWART_BASE_URL }}" | npx wrangler secret put STALWART_BASE_URL --env production
           echo "${{ secrets.STALWART_ADMIN_USER }}" | npx wrangler secret put STALWART_ADMIN_USER --env production
           echo "${{ secrets.STALWART_ADMIN_PASSWORD }}" | npx wrangler secret put STALWART_ADMIN_PASSWORD --env production

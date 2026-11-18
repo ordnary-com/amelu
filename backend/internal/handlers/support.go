@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"html"
@@ -99,17 +101,33 @@ func toSupportTicketResponse(t *db.SupportTicket, admin bool) supportTicketRespo
 func toSupportMessageResponses(msgs []db.SupportMessage, admin bool) []supportMessageResponse {
 	out := make([]supportMessageResponse, 0, len(msgs))
 	for _, m := range msgs {
-		name := m.AuthorName
-		if m.AuthorKind == "staff" && !admin {
-			name = supportStaffName
+		name, avatar := m.AuthorName, m.AuthorAvatarURL
+		if m.AuthorKind == "staff" {
+			// Staff are stored by their Ordnary email; customers get the
+			// Gravatar link, never the address itself.
+			avatar = gravatarURL(m.AuthorName)
+			if !admin {
+				name = supportStaffName
+			}
 		}
 		out = append(out, supportMessageResponse{
-			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, AuthorEmail: m.AuthorEmail, AuthorAvatarURL: m.AuthorAvatarURL,
+			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, AuthorEmail: m.AuthorEmail, AuthorAvatarURL: avatar,
 			Body: m.Body, Internal: m.Internal,
 			CreatedAt: m.CreatedAt.UTC().Format(time.RFC3339),
 		})
 	}
 	return out
+}
+
+// gravatarURL is the Gravatar picture for an email (SHA-256, as Gravatar
+// accepts); d=404 lets the dashboard fall back to initials.
+func gravatarURL(email string) string {
+	email = strings.ToLower(strings.TrimSpace(email))
+	if !strings.Contains(email, "@") {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(email))
+	return "https://gravatar.com/avatar/" + hex.EncodeToString(sum[:]) + "?s=96&d=404"
 }
 
 func supportAuthorName(c *db.Customer) string {

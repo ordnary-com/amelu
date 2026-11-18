@@ -17,7 +17,7 @@ import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
   templateUrl: './account-menu.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'relative flex self-stretch',
+    class: 'relative flex',
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'open.set(false)',
   },

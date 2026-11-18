@@ -20,13 +20,12 @@ const MAILBOX_DOMAINS = 25;
   template: `
     <button
       type="button"
-      class="flex h-9 w-full max-w-[420px] cursor-pointer items-center gap-2 rounded-lg border border-line bg-bg px-3 text-[13px] text-muted hover:border-ink/20 hover:text-ink max-mobile:w-9 max-mobile:justify-center max-mobile:px-0"
+      class="inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink"
       aria-label="Search"
+      [title]="'Search (' + shortcut + ')'"
       (click)="openSearch()"
     >
-      <amelu-icon name="search" [size]="15" />
-      <span class="flex-1 text-left max-mobile:hidden">Search pages, domains, mailboxes</span>
-      <kbd class="rounded border border-line bg-page px-1.5 font-sans text-[11px] max-mobile:hidden">{{ shortcut }}</kbd>
+      <amelu-icon name="search" [size]="18" />
     </button>
 
     @if (open()) {
@@ -94,7 +93,7 @@ const MAILBOX_DOMAINS = 25;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex min-w-0 flex-1 justify-center max-mobile:flex-none', '(document:keydown)': 'globalKey($event)' },
+  host: { class: 'flex', '(document:keydown)': 'globalKey($event)' },
 })
 export class Search {
   private readonly api = inject(Api);

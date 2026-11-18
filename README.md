@@ -3,11 +3,10 @@
 </p>
 
 <p align="center">
-  <sub>powered by</sub>&nbsp;
   <a href="https://ordnary.com">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/ordnary-mark-white.png" />
-      <img src=".github/assets/ordnary-mark-dark.png" alt="Ordnary" height="14" />
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/powered-by-ordnary-white.png" />
+      <img src=".github/assets/powered-by-ordnary-dark.png" alt="powered by Ordnary" height="16" />
     </picture>
   </a>
 </p>

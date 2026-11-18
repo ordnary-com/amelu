@@ -271,6 +271,7 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{id}/bind", auth.Require(app.Store, app.GetDomainBindFile))
 	mux.HandleFunc("GET /api/domains/{id}/sending", auth.Require(app.Store, app.GetDomainSending))
 	mux.HandleFunc("GET /api/domains/{id}/sending/history", auth.Require(app.Store, app.GetDomainSendingHistory))
+	mux.HandleFunc("GET /api/sending/network", auth.Require(app.Store, app.GetSendingNetwork))
 
 	mux.HandleFunc("GET /api/domains/{id}/activity", auth.Require(app.Store, app.GetActivity))
 	mux.HandleFunc("PATCH /api/domains/{id}/notes", auth.Require(app.Store, app.UpdateDomainNotes))

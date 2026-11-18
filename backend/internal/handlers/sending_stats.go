@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -32,6 +33,15 @@ type sendingStatsReport struct {
 		} `json:"domains"`
 		Senders map[string][]int `json:"senders"`
 	} `json:"history"`
+	// Per sending IP, from amelu-ip-pools' status file; absent from older scripts.
+	Network *struct {
+		IPs []struct {
+			Name  string `json:"name"`
+			IP    string `json:"ip"`
+			Group string `json:"group"`
+			State string `json:"state"`
+		} `json:"ips"`
+	} `json:"network"`
 }
 
 // SendingStatsJob -> POST /internal/jobs/sending-stats (auth.RequireInternal
@@ -74,7 +84,41 @@ func (a *App) SendingStatsJob(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	if n := req.Network; n != nil && len(n.IPs) > 0 {
+		// Only what the public page needs; rejection texts stay on marduk.
+		ips := make([]db.SendingIPStatus, 0, len(n.IPs))
+		for _, ip := range n.IPs {
+			if net.ParseIP(ip.IP) == nil {
+				writeError(w, http.StatusBadRequest, "invalid ip in network")
+				return
+			}
+			ips = append(ips, db.SendingIPStatus{Name: ip.Name, IP: ip.IP, Group: ip.Group, State: ip.State})
+		}
+		if err := a.Store.ReplaceSendingNetwork(r.Context(), ips, time.Now()); err != nil {
+			log.Printf("sending network: %v", err)
+			writeError(w, http.StatusInternalServerError, "could not store sending network")
+			return
+		}
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"status": "stored", "domains": len(req.Domains)})
+}
+
+// GetSendingNetwork -> GET /api/sending/network: the sending IPs' groups and
+// states for the Sending IPs page. ips is empty while no report has come in.
+func (a *App) GetSendingNetwork(w http.ResponseWriter, r *http.Request) {
+	ips, at, err := a.Store.GetSendingNetwork(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load sending network")
+		return
+	}
+	var updated *time.Time
+	if !at.IsZero() {
+		updated = &at
+	}
+	if ips == nil {
+		ips = []db.SendingIPStatus{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ips": ips, "updatedAt": updated})
 }
 
 type domainSendingResponse struct {

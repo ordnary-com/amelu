@@ -107,57 +107,73 @@
     </h2>
     <a routerLink="/domains" [class]="arrow" aria-label="All domains"><amelu-icon name="arrowRight" [size]="18" /></a>
   </div>
-  <div class="p-5">
+  <div [class]="tableBody">
     @if (domains() === null) {
       <amelu-empty-state title="Your domains couldn't be loaded" [error]="true" [compact]="true" />
     } @else {
-      <div class="overflow-x-auto rounded-md border border-line">
-        <table class="w-full text-left text-[14px]">
+      <div [class]="ui.tableWrap">
+        <table [class]="ui.table">
           <thead>
-            <tr class="border-b border-line">
-              <th [class]="th">Name</th>
-              <th [class]="th">Status</th>
-              <th [class]="th">DNS records</th>
-              <th [class]="th + ' max-sm:hidden'">Added</th>
+            <tr>
+              @for (col of domainColumns; track col.key) {
+                <th [class]="ui.th + (col.key === 'added' ? ' max-sm:hidden' : '')" [attr.aria-sort]="sort().key === col.key ? (sort().dir === 1 ? 'ascending' : 'descending') : null">
+                  <button type="button" [class]="ui.thSort" (click)="sortBy(col.key)">
+                    {{ col.label }}
+                    <amelu-icon name="arrowUpDown" [size]="16" [class]="sort().key === col.key ? 'text-ink' : 'text-ink/70'" />
+                  </button>
+                </th>
+              }
             </tr>
           </thead>
-          <tbody class="divide-y divide-line">
+          <tbody>
             @if (domains() === undefined) {
               @for (i of [1, 2]; track i) {
-                <tr aria-hidden="true">
-                  <td [class]="td"><span class="block h-3 w-40 animate-pulse rounded bg-bg"></span></td>
-                  <td [class]="td"><span class="block h-3 w-16 animate-pulse rounded bg-bg"></span></td>
-                  <td [class]="td"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
-                  <td [class]="td + ' max-sm:hidden'"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
+                <tr [class]="ui.tr" aria-hidden="true">
+                  <td [class]="ui.td"><span class="block h-3 w-40 animate-pulse rounded bg-bg"></span><span class="mt-2 block h-2.5 w-56 animate-pulse rounded bg-bg"></span></td>
+                  <td [class]="ui.td"><span class="block h-3 w-16 animate-pulse rounded bg-bg"></span></td>
+                  <td [class]="ui.td"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
+                  <td [class]="ui.td + ' max-sm:hidden'"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
                 </tr>
               }
             } @else {
-              @for (domain of domains()!; track domain.id) {
+              @for (domain of sortedDomains(); track domain.id) {
                 @let status = domainStatus[domain.status];
                 @let check = health()?.[domain.id];
-                <tr>
-                  <td [class]="td">
-                    <a [routerLink]="'/domains/' + domain.id" class="font-medium text-link hover:underline">{{ domain.name }}</a>
-                    @if (domain.favorite) {
-                      <amelu-icon name="star" [size]="13" class="ml-1 inline-block align-[-2px] text-warn [&_svg]:fill-current" aria-label="Favorite" />
-                    }
-                  </td>
-                  <td [class]="td">
-                    <span class="inline-flex items-center gap-1.5" [class]="toneText[status.tone]">
-                      <span class="size-2 rounded-full bg-current" aria-hidden="true"></span>{{ status.label }}
+                <tr [class]="ui.tr">
+                  <td [class]="ui.td + ' max-w-[320px]'">
+                    <span class="flex items-center gap-1">
+                      <a [routerLink]="'/domains/' + domain.id" class="truncate font-medium text-link hover:underline">{{ domain.name }}</a>
+                      @if (domain.favorite) {
+                        <amelu-icon name="star" [size]="13" class="flex-none text-warn [&_svg]:fill-current" aria-label="Favorite" />
+                      }
+                    </span>
+                    <span [class]="ui.tdSub">
+                      <span class="truncate">{{ domain.id }}</span>
+                      <button type="button" class="inline-flex flex-none cursor-pointer text-muted hover:text-ink" [attr.aria-label]="'Copy the id of ' + domain.name" [title]="copied() === domain.id ? 'Copied' : 'Copy id'" (click)="copy(domain.id)">
+                        <amelu-icon [name]="copied() === domain.id ? 'check' : 'copy'" [size]="13" />
+                      </button>
                     </span>
                   </td>
-                  <td [class]="td">
+                  <td [class]="ui.td">
+                    <span class="inline-flex items-center gap-2 whitespace-nowrap" [class]="toneText[status.tone]">
+                      <amelu-icon [name]="toneIcon[status.tone]" [size]="20" />{{ status.label }}
+                    </span>
+                  </td>
+                  <td [class]="ui.td + ' whitespace-nowrap'">
                     @if (check && check.total > 0) {
-                      <span [class.text-bad]="check.matched < check.total">{{ check.matched }} of {{ check.total }} verified</span>
+                      <span [class.text-bad]="check.matched < check.total">{{ check.matched }} of {{ check.total }}</span>
+                      <span class="text-muted"> verified</span>
                     } @else {
                       <span class="text-muted">Not checked</span>
                     }
                   </td>
-                  <td [class]="td + ' text-muted max-sm:hidden'">{{ domain.createdAt | date: 'd MMM y' }}</td>
+                  <td [class]="ui.td + ' whitespace-nowrap max-sm:hidden'">{{ domain.createdAt | date: 'd MMM y' }}</td>
                 </tr>
               } @empty {
-                <tr><td colspan="4" class="px-5 py-8 text-center text-muted">No domains yet</td></tr>
+                <tr [class]="ui.tr"><td colspan="4" class="px-7 py-10 text-center">
+                  <amelu-icon name="globe" [size]="22" class="mx-auto block" />
+                  <p class="mt-2">No domains yet</p>
+                </td></tr>
               }
             }
           </tbody>
@@ -177,31 +193,36 @@
       <h2 [class]="panelTitle">Latest invoice</h2>
       <a routerLink="/billing/invoices" [class]="arrow" aria-label="All invoices"><amelu-icon name="arrowRight" [size]="18" /></a>
     </div>
-    <div class="p-5">
-      <div class="overflow-x-auto rounded-md border border-line">
-        <table class="w-full text-left text-[14px]">
+    <div [class]="tableBody">
+      <div [class]="ui.tableWrap">
+        <table [class]="ui.table">
           <thead>
-            <tr class="border-b border-line">
-              <th [class]="th">Number</th>
-              <th [class]="th">Date</th>
-              <th [class]="th">Amount</th>
-              <th [class]="th">Status</th>
+            <!-- Nothing to sort with one row; muted headers when there's no row at all. -->
+            <tr [class.text-muted]="!latestInvoice()">
+              <th [class]="ui.th">Number</th>
+              <th [class]="ui.th">Date</th>
+              <th [class]="ui.th">Amount</th>
+              <th [class]="ui.th">Status</th>
             </tr>
           </thead>
           <tbody>
             @if (invoices() === undefined) {
-              <tr><td colspan="4" class="px-5 py-8 text-center text-muted">Loading...</td></tr>
+              <tr [class]="ui.tr"><td colspan="4" class="px-7 py-10 text-center text-muted">Loading...</td></tr>
             } @else if (latestInvoice(); as invoice) {
-              <tr>
-                <td [class]="td"><a [href]="invoice.hostedInvoiceUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">{{ invoice.number }}</a></td>
-                <td [class]="td">{{ invoice.createdAt | date: 'd MMM y' }}</td>
-                <td [class]="td">{{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}</td>
-                <td [class]="td"><span [class]="badge(invoiceStatus[invoice.status].tone)">{{ invoiceStatus[invoice.status].label }}</span></td>
+              <tr [class]="ui.tr">
+                <td [class]="ui.td"><a [href]="invoice.hostedInvoiceUrl" target="_blank" rel="noreferrer" class="font-medium text-link hover:underline">{{ invoice.number }}</a></td>
+                <td [class]="ui.td + ' whitespace-nowrap'">{{ invoice.createdAt | date: 'd MMM y' }}</td>
+                <td [class]="ui.td">{{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}</td>
+                <td [class]="ui.td">
+                  <span class="inline-flex items-center gap-2 whitespace-nowrap" [class]="toneText[invoiceStatus[invoice.status].tone]">
+                    <amelu-icon [name]="toneIcon[invoiceStatus[invoice.status].tone]" [size]="20" />{{ invoiceStatus[invoice.status].label }}
+                  </span>
+                </td>
               </tr>
             } @else {
-              <tr>
-                <td colspan="4" class="px-5 py-8 text-center">
-                  <amelu-icon name="receipt" [size]="20" class="mx-auto block text-ink" />
+              <tr [class]="ui.tr">
+                <td colspan="4" class="px-7 py-10 text-center">
+                  <amelu-icon name="receipt" [size]="22" class="mx-auto block" />
                   <p class="mt-2">No invoices yet</p>
                   <p class="mt-0.5 text-[13px] text-muted">They show up here once you're billed.</p>
                 </td>

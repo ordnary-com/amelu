@@ -15,4 +15,15 @@ export const UI = {
     'inline-flex h-8 cursor-pointer items-center rounded-md border border-bad/40 px-3 text-[13px] font-medium text-bad hover:bg-bad/5 disabled:cursor-default disabled:opacity-50',
   card: 'rounded-lg border border-line bg-surface',
   sectionTitle: 'mb-3 text-[14px] font-bold',
+
+  // Tables: a white bordered box on the panel's grey body, bold headers (sortable
+  // ones as a button with arrows), roomy rows split by lines.
+  tableWrap: 'overflow-x-auto rounded-lg border border-line bg-surface',
+  table: 'w-full text-left text-[15px]',
+  th: 'px-7 py-4 font-medium whitespace-nowrap',
+  thSort: 'inline-flex cursor-pointer items-center gap-2 font-medium hover:text-link',
+  tr: 'border-t border-line',
+  td: 'px-7 py-4 align-middle',
+  // A row's second line under its link, like an id.
+  tdSub: 'mt-0.5 flex items-center gap-1.5 text-[13px] text-muted',
 } as const;

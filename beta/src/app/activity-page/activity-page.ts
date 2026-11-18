@@ -8,7 +8,6 @@ import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
 import { Avatar } from '../avatar';
 import { Icon, IconName } from '../icon';
-import { PageHeader } from '../page-header/page-header';
 import { DitherShader } from '../login/dither-shader';
 import { ROLE, badgeClass } from '../status';
 
@@ -65,7 +64,7 @@ interface Row {
 /** The current dashboard's /organization/activity, grouped by day with a filter. */
 @Component({
   selector: 'amelu-activity-page',
-  imports: [PageHeader, EmptyState, DatePipe, Alert, Avatar, Icon, RouterLink, DitherShader],
+  imports: [EmptyState, DatePipe, Alert, Avatar, Icon, RouterLink, DitherShader],
   templateUrl: './activity-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

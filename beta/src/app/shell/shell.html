@@ -13,7 +13,7 @@
        one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
   <nav
     id="main-nav"
-    class="flex min-h-0 flex-1 text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
+    class="flex min-h-0 flex-1 text-[16px] font-normal max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
     [class.max-lg:hidden]="!navOpen()"
     aria-label="Main"
   >
@@ -87,7 +87,7 @@
         }
         <li class="mx-2 px-2 pt-1.5 pb-2" aria-hidden="true">
           <p class="text-[12px] text-chrome-ink/50">{{ menu.label }}</p>
-          <p class="truncate text-[15px] font-medium text-chrome-ink" [title]="columnTitle(menu)">{{ columnTitle(menu) }}</p>
+          <p class="truncate text-[16px] text-chrome-ink" [title]="columnTitle(menu)">{{ columnTitle(menu) }}</p>
         </li>
         @if (childMenu(); as child) {
           <li class="mx-2 mb-1">
@@ -98,7 +98,7 @@
         }
         @for (entry of menu.items; track entry.link) {
           @if (entry.group) {
-            <li class="mx-2 px-2 pt-4 pb-1 text-[12px] font-medium text-chrome-ink/45" aria-hidden="true">{{ entry.group }}</li>
+            <li class="mx-2 px-2 pt-4 pb-1 text-[12px] text-chrome-ink/45" aria-hidden="true">{{ entry.group }}</li>
           }
           <li
             [class]="entry.sub ? subitem : item"

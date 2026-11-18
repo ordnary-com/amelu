@@ -23,8 +23,6 @@ import {
   lucideCreditCard,
   lucideLifeBuoy,
   lucideMenu,
-  lucidePanelLeftClose,
-  lucidePanelLeftOpen,
   lucideX,
   lucideGlobe,
   lucideHistory,
@@ -34,11 +32,12 @@ import {
   lucideUser,
 } from '@ng-icons/lucide';
 
-// routerLinkActive puts "active" on the <li>, which the links read via group-[.active]:
-// the page you're on is a lighter pill, the one under the pointer a fainter one.
+// Mirrors the current dashboard's .sidemenu rules in frontend/public/app.css;
+// routerLinkActive puts "active" on the <li>, which the links read via group-[.active].
+// The page you're on, and the one under the pointer, in full-strength text; the others dimmed.
 const LINK =
-  'flex items-center gap-2.5 rounded-lg px-3 hover:bg-chrome-ink/10 hover:text-chrome-ink [&>ng-icon]:flex-none ' +
-  'group-[.active]:bg-chrome-ink/15 group-[.active]:text-chrome-ink in-[.rail]:justify-center in-[.rail]:px-0';
+  'flex items-center gap-2 rounded-md px-2 hover:text-chrome-ink [&>ng-icon]:flex-none [&>ng-icon]:opacity-80 ' +
+  'group-[.active]:text-chrome-ink group-[.active]:[&>ng-icon]:opacity-100';
 
 @Component({
   selector: 'amelu-shell',
@@ -53,8 +52,6 @@ const LINK =
       lucideCreditCard,
       lucideLifeBuoy,
       lucideMenu,
-  lucidePanelLeftClose,
-  lucidePanelLeftOpen,
       lucideX,
       lucideGlobe,
       lucideHistory,
@@ -65,7 +62,7 @@ const LINK =
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex h-screen bg-page' },
+  host: { class: 'flex h-screen flex-col bg-chrome' },
 })
 export class Shell {
   // The campaign deal is for the free plan; paid plans don't see it.
@@ -166,37 +163,24 @@ export class Shell {
   protected readonly column =
     'flex-none overflow-y-auto pb-4 max-lg:overflow-visible max-lg:pb-0 [scrollbar-color:color-mix(in_srgb,var(--chrome-ink)_30%,transparent)_transparent] [scrollbar-width:thin]';
 
-  protected readonly item = 'group truncate [&>a]:py-2';
-  // Pages under an item in the domain's or mailbox's column, indented past the icon.
-  protected readonly subitem = 'group truncate [&>a]:py-1.5 [&>a]:pl-6';
-  protected readonly link = `text-chrome-ink/75 ${LINK}`;
+  // Labels land where the old px-4 put them: 8px margin + 8px link padding.
+  protected readonly item = 'group mx-2 truncate [&>a]:py-2';
+  // A thin guide line under the parent's icon instead of the old 5px bar; the
+  // active child lights up its own stretch of it.
+  protected readonly subitem =
+    'group mr-2 ml-[22px] truncate border-l-2 border-chrome-ink/20 py-0.5 pl-1.5 [&>a]:py-1.5 [&.active]:border-chrome-ink/80';
+  protected readonly link = `text-chrome-ink/65 ${LINK}`;
   protected readonly dangerLink = `text-bad ${LINK}`;
-  protected readonly secondaryLink = `text-chrome-ink/55 ${LINK}`;
+  protected readonly secondaryLink = `text-chrome-ink/50 ${LINK}`;
   // New Domain, New Mailbox and the like: ordinary links, told apart by their plus.
-  protected readonly createLink = `text-chrome-ink/75 ${LINK}`;
-  // A main-menu label, read out but not shown on the rail.
-  protected readonly label = 'flex-1 truncate in-[.rail]:sr-only';
+  protected readonly createLink = `text-chrome-ink/65 ${LINK}`;
 
-  // A category and its pages. The padding is there folded too, so unfolding only adds
-  // the lighter panel behind them and nothing moves; the negative margin keeps the
-  // labels in line with the items around it.
-  protected readonly group = '-mx-1 rounded-xl p-1 in-[.rail]:mx-0 in-[.rail]:p-0';
-  protected readonly groupOpen = `${this.group} bg-accent/20 in-[.rail]:bg-transparent`;
-  protected readonly groupedSubitem = 'group truncate [&>a]:py-1.5';
-
-  /** The sidebar folded to a rail of icons (lg and up), remembered in this browser. */
-  protected readonly rail = signal(readFlag(RAIL_KEY));
-  /** The open drawer below lg always shows labels. */
-  protected readonly railed = computed(() => this.rail() && !this.navOpen());
-
-  protected toggleRail(): void {
-    this.rail.update((rail) => !rail);
-    try {
-      localStorage.setItem(RAIL_KEY, this.rail() ? '1' : '0');
-    } catch {
-      // Blocked storage: it just won't be remembered.
-    }
-  }
+  // A category with pages under it: its link ends in a chevron, and clicking it unfolds them.
+  protected readonly category = 'group mx-2 truncate [&>a]:py-2';
+  // A category and its pages share one list item, so they fold as a group.
+  protected readonly groupedCategory = 'group truncate [&>a]:py-2';
+  protected readonly groupedSubitem =
+    'group mr-2 ml-[14px] truncate border-l-2 border-chrome-ink/20 py-0.5 pl-1.5 [&>a]:py-1.5 [&.active]:border-chrome-ink/80';
 
   /** Folded categories, remembered in this browser. Domains starts open, the rest folded. */
   protected readonly collapsed = signal<Record<SidebarCategory, boolean>>(readCollapsed());
@@ -232,15 +216,6 @@ export class Shell {
 
 type SidebarCategory = 'domains' | 'organization';
 const COLLAPSED_KEY = 'amelu-sidebar-collapsed';
-const RAIL_KEY = 'amelu-sidebar-rail';
-
-function readFlag(key: string): boolean {
-  try {
-    return localStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
-}
 
 function readCollapsed(): Record<SidebarCategory, boolean> {
   try {

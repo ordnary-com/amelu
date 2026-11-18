@@ -20,14 +20,13 @@ const MAILBOX_DOMAINS = 25;
   template: `
     <button
       type="button"
-      class="flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-lg bg-chrome-ink/10 px-3 text-[14px] text-chrome-ink/80 hover:bg-chrome-ink/15 hover:text-chrome-ink in-[.rail]:justify-center in-[.rail]:px-0"
+      class="flex h-9 w-full max-w-[420px] cursor-pointer items-center gap-2 rounded-lg bg-chrome-ink/10 px-3 text-[13px] text-chrome-ink/70 hover:bg-chrome-ink/15 max-mobile:w-9 max-mobile:justify-center max-mobile:px-0"
       aria-label="Search"
-      title="Search"
       (click)="openSearch()"
     >
-      <amelu-icon name="search" [size]="17" class="flex-none" />
-      <span class="flex-1 text-left in-[.rail]:hidden">Search</span>
-      <kbd class="rounded border border-chrome-ink/25 px-1.5 font-sans text-[11px] text-chrome-ink/70 in-[.rail]:hidden">{{ shortcut }}</kbd>
+      <amelu-icon name="search" [size]="15" />
+      <span class="flex-1 text-left max-mobile:hidden">Search pages, domains, mailboxes</span>
+      <kbd class="rounded border border-chrome-ink/25 px-1.5 font-sans text-[11px] max-mobile:hidden">{{ shortcut }}</kbd>
     </button>
 
     @if (open()) {
@@ -95,7 +94,7 @@ const MAILBOX_DOMAINS = 25;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block', '(document:keydown)': 'globalKey($event)' },
+  host: { class: 'flex min-w-0 flex-1 justify-center max-mobile:flex-none', '(document:keydown)': 'globalKey($event)' },
 })
 export class Search {
   private readonly api = inject(Api);

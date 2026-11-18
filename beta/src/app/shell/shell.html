@@ -85,6 +85,9 @@
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/billing" data-tour="billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
       </li>
+      <li [class]="item" routerLinkActive="active">
+        <a routerLink="/support" [class]="link"><ng-icon name="lucideLifeBuoy" size="15px" strokeWidth="2.5" /><span class="truncate">Support</span></a>
+      </li>
       @if (showPromo()) {
         <!-- The campaign deal, at the bottom of the main menu on the free plan. -->
         <li class="mt-auto ml-4 pt-6 max-lg:mr-4"><amelu-promo-banner variant="sidebar" /></li>

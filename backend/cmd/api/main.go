@@ -54,6 +54,7 @@ func main() {
 		Stalwart:                 stalwart.NewClient(cfg.StalwartBaseURL, cfg.StalwartUser, cfg.StalwartPassword),
 		CookieSecure:             strings.HasPrefix(cfg.CORSOrigins[0], "https://"),
 		FrontendOrigin:           cfg.CORSOrigins[0],
+		SupportNotifyEmail:       cfg.SupportNotifyEmail,
 		FrontendOrigins:          cfg.CORSOrigins,
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
 		WebmailURL:               cfg.WebmailURL,
@@ -203,6 +204,10 @@ func main() {
 	mux.HandleFunc("POST /internal/admin/changelog", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminCreateChangelog))
 	mux.HandleFunc("PATCH /internal/admin/changelog/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateChangelog))
 	mux.HandleFunc("DELETE /internal/admin/changelog/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminDeleteChangelog))
+	mux.HandleFunc("GET /internal/admin/support/tickets", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListSupportTickets))
+	mux.HandleFunc("GET /internal/admin/support/tickets/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetSupportTicket))
+	mux.HandleFunc("POST /internal/admin/support/tickets/{id}/messages", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminReplySupportTicket))
+	mux.HandleFunc("PATCH /internal/admin/support/tickets/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateSupportTicket))
 
 	mux.HandleFunc("POST /api/signup", app.Signup)
 	mux.HandleFunc("POST /api/login", app.Login)
@@ -272,6 +277,11 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{id}/sending", auth.Require(app.Store, app.GetDomainSending))
 	mux.HandleFunc("GET /api/domains/{id}/sending/history", auth.Require(app.Store, app.GetDomainSendingHistory))
 	mux.HandleFunc("GET /api/sending/network", auth.Require(app.Store, app.GetSendingNetwork))
+	mux.HandleFunc("GET /api/support/tickets", auth.Require(app.Store, app.ListSupportTickets))
+	mux.HandleFunc("POST /api/support/tickets", auth.Require(app.Store, app.CreateSupportTicket))
+	mux.HandleFunc("GET /api/support/tickets/{id}", auth.Require(app.Store, app.GetSupportTicket))
+	mux.HandleFunc("POST /api/support/tickets/{id}/messages", auth.Require(app.Store, app.ReplySupportTicket))
+	mux.HandleFunc("POST /api/support/tickets/{id}/close", auth.Require(app.Store, app.CloseSupportTicket))
 
 	mux.HandleFunc("GET /api/domains/{id}/activity", auth.Require(app.Store, app.GetActivity))
 	mux.HandleFunc("PATCH /api/domains/{id}/notes", auth.Require(app.Store, app.UpdateDomainNotes))

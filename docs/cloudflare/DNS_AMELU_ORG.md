@@ -10,10 +10,8 @@ managed by Cloudflare and can't carry comments. Last reviewed 2026-11-01.
 | Record | Value | Notes |
 |---|---|---|
 | `amelu.org` MX 10 | marduk.mx.amelu.org | The only MX. |
-| `marduk.mx.amelu.org` A | 141.95.52.66 | marduk itself (OVH). Receives; no longer sends. |
-| `marduk.mx.amelu.org` A | out1-out10 (51.89.x, see below) | OVH additional IPs on marduk. Here so customer SPF `mx` authorizes them; they also receive. |
-| `marduk.mx.amelu.org` AAAA | 2001:41d0:701:1100::74d4 | marduk, IPv6. Outbound is v4 only. |
-| `_spf.amelu.org` TXT | `v=spf1 ip4:... -all` | Every IP that may send: marduk and out1-out11. |
+| `marduk.mx.amelu.org` A | 89.106.70.1-8 (`out-N.mta0.amelu.org`) | Our own block (AS218905), carried to marduk (Hetzner) over WireGuard by the routers. They send and receive; here so customer SPF `mx` authorizes them. Since 2026-11-18 the only addresses (the OVH ones and marduk's old IPv6 were removed when marduk moved). |
+| `_spf.amelu.org` TXT | `v=spf1 ... ip4:89.106.70.0/24 -all` | Every IP that may send. The OVH entries go once their IPs are cancelled. |
 
 Customer domains point their MX at `marduk.mx.amelu.org`. Their SPF is
 `v=spf1 include:_spf.amelu.org -all` since 2026-11-08 (the dashboard asks for

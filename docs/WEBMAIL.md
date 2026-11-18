@@ -6,7 +6,7 @@ Stalwart, so there is no Amelu session or account logic in between.
 
 ## Where it runs
 
-On the mail host marduk (141.95.52.66, root via `~/.ssh/amelu_fleet`), in
+On the mail host marduk (Hetzner, 167.233.111.186, root via `~/.ssh/amelu_fleet`), in
 `/opt/amelu-webmail`:
 
 | Piece | What |
@@ -26,13 +26,14 @@ the name on the certificate, so verification stays on.
 Since 2026-11-01 that name also has the outbound IPs 5.230.173.85-87 as A
 records (for customer SPF). Those are on the GRE tunnel and time out when
 reached from this host, so the roundcube service pins the name to marduk with
-`extra_hosts: ["marduk.mx.amelu.org:141.95.52.66"]` in `compose.yml`. Without
+`extra_hosts: ["marduk.mx.amelu.org:host-gateway"]` in `compose.yml` (Stalwart
+runs on the host itself). Without
 it, three of four IMAP connections hang for 10 seconds and Roundcube reports
 "Connection to storage server failed".
 
 `webmail.amelu.org` is the Worker `amelu-webmail` (`cloudflare/webmail`),
 a thin proxy to `https://webmail-origin.mx.amelu.org:8443`. That name is a
-DNS-only A record to 141.95.52.66 alone, with its own Let's Encrypt
+DNS-only A record to marduk's own Hetzner address (167.233.111.186) alone, with its own Let's Encrypt
 certificate (`certbot --cert-name webmail-origin.mx.amelu.org`, standalone;
 the `webmail-nginx.sh` deploy hook reloads nginx, the Stalwart hook ignores
 this lineage). It must not be `marduk.mx.amelu.org`: that name also has the
@@ -71,7 +72,7 @@ The secret lives in three places: the edge Worker secret `WEBMAIL_SSO_SECRET`
 ## Operating it
 
 ```bash
-ssh root@141.95.52.66 -i ~/.ssh/amelu_fleet -o IdentitiesOnly=yes -o IdentityAgent=none
+ssh root@167.233.111.186 -i ~/.ssh/amelu_fleet -o IdentitiesOnly=yes -o IdentityAgent=none
 cd /opt/amelu-webmail
 docker compose ps                 # state
 docker compose logs -f roundcube  # Roundcube logs to stdout

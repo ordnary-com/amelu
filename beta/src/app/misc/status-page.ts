@@ -249,7 +249,7 @@ const lastOctet = (ip: string) => Number(ip.split('.').pop());
               </table>
             </div>
             <p class="mt-3 text-[13px] text-muted">
-              All mail goes out from 89.106.70.0/24 (AS218905). The full list of 64 addresses, to allowlist ahead of time, is on
+              Want to allowlist Amelu? Every address we can send from is on
               <a routerLink="/network" class="text-link hover:underline">Sending IPs</a>.
             </p>
           </div>

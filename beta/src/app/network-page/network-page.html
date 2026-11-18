@@ -154,14 +154,32 @@
                   </span>
                 </td>
                 <td class="px-4 py-2.5 whitespace-nowrap">
-                  @if (row.pending) {
-                    <span class="inline-flex items-center gap-1.5 text-[12px] text-muted">
-                      <span class="size-1.5 rounded-full bg-warn"></span> Not sending yet
-                    </span>
-                  } @else {
-                    <span class="inline-flex items-center gap-1.5 text-[12px] text-ok">
-                      <span class="size-1.5 rounded-full bg-ok"></span> Sending
-                    </span>
+                  @switch (row.status) {
+                    @case ('sending') {
+                      <span class="inline-flex items-center gap-1.5 text-[12px] text-ok">
+                        <span class="size-1.5 rounded-full bg-ok"></span> Sending
+                      </span>
+                    }
+                    @case ('paused') {
+                      <span class="inline-flex items-center gap-1.5 text-[12px] text-warn" title="Taken out of rotation for a while after a receiver pushed back">
+                        <span class="size-1.5 rounded-full bg-warn"></span> Paused
+                      </span>
+                    }
+                    @case ('pending') {
+                      <span class="inline-flex items-center gap-1.5 text-[12px] text-muted" title="Waiting for DNS to be in place before it sends">
+                        <span class="size-1.5 rounded-full bg-warn"></span> Starting soon
+                      </span>
+                    }
+                    @case ('standby') {
+                      <span class="inline-flex items-center gap-1.5 text-[12px] text-muted">
+                        <span class="size-1.5 rounded-full bg-line"></span> Standby
+                      </span>
+                    }
+                    @default {
+                      <span class="inline-flex items-center gap-1.5 text-[12px] text-muted">
+                        <span class="size-1.5 rounded-full bg-line"></span> Not in use
+                      </span>
+                    }
                   }
                 </td>
               </tr>

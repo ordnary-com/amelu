@@ -124,6 +124,20 @@ export interface DomainAlias {
   name: string;
 }
 
+/** A sending IP as the mail server last reported it. */
+export interface SendingIpStatus {
+  name: string;
+  ip: string;
+  group: string;
+  state: 'active' | 'paused' | 'pending' | 'spare';
+}
+
+export interface SendingNetwork {
+  ips: SendingIpStatus[];
+  /** null while no report has come in. */
+  updatedAt: string | null;
+}
+
 /** One UTC day of a domain's sending; delivered, deferred and rejected count recipients. */
 export interface SendingDay {
   day: string;
@@ -329,6 +343,10 @@ export class Api {
   /** Messages sent from the domain over the last 24 hours, against the plan's daily limit. */
   domainSendingHistory(domainId: string) {
     return this.http.get<SendingHistory>(`/api/domains/${domainId}/sending/history`);
+  }
+
+  sendingNetwork() {
+    return this.http.get<SendingNetwork>('/api/sending/network');
   }
 
   domainSending(domainId: string) {

@@ -1,22 +1,31 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, of } from 'rxjs';
+import { Api, SendingIpStatus } from '../api';
 import { PageHeader } from '../page-header/page-header';
 import { Icon } from '../icon';
 import { UI } from '../ui';
 
-type Pool = 'system' | 'trusted' | 'newdomains' | 'spare' | 'warming';
+type Pool = 'system' | 'trusted' | 'newdomains' | 'spare' | 'unassigned';
 
 type Network = 'own' | 'current';
+
+/** sending, paused and pending come from the mail server's report; unused means it isn't in any pool. */
+type Status = 'sending' | 'paused' | 'pending' | 'standby' | 'unused';
 
 interface SendingIp {
   name: string;
   ip: string;
   pool: Pool;
   network: Network;
-  /** Not sending yet: warm-up still to come. */
-  pending?: boolean;
 }
 
-// Keep in sync with GROUPS and SPARES in ops/marduk/amelu-ip-pools.py.
+interface Row extends SendingIp {
+  status: Status;
+}
+
+// The addresses listed even before the mail server reports on them. Pools and
+// status come from GET /api/sending/network (amelu-ip-pools on marduk).
 const CURRENT_IPS: SendingIp[] = [
   { name: 'out2.mx.amelu.org', ip: '51.89.60.49', pool: 'system', network: 'current' },
   { name: 'out4.mx.amelu.org', ip: '51.89.39.34', pool: 'system', network: 'current' },
@@ -31,16 +40,15 @@ const CURRENT_IPS: SendingIp[] = [
   { name: 'out11.mx.amelu.org', ip: '51.89.76.0', pool: 'spare', network: 'current' },
 ];
 
-// Our own block 89.106.70.0/24 (AS218905), routed through rtr1-ams, rtr1-par
-// and rtr2-ams. Listed early so customers can allowlist them; not sending yet.
-// At most 64 of them on the page. One cluster name per /24 (mta0) and the
-// last octet as the host, so out-1.mta0 is .1.
+// Our own block 89.106.70.0/24 (AS218905), routed through rtr2-ams, rtr1-ams
+// and rtr1-par. All 64 are listed so customers can allowlist them before they
+// send. One cluster name per /24 (mta0) and the last octet as the host, so
+// out-1.mta0 is .1.
 const OWN_BLOCK_IPS: SendingIp[] = Array.from({ length: 64 }, (_, i) => ({
   name: `out-${i + 1}.mta0.amelu.org`,
   ip: `89.106.70.${i + 1}`,
-  pool: 'warming' as Pool,
+  pool: 'unassigned' as Pool,
   network: 'own' as Network,
-  pending: true,
 }));
 
 const SENDING_IPS: SendingIp[] = [...CURRENT_IPS, ...OWN_BLOCK_IPS];
@@ -56,8 +64,17 @@ const POOLS: { id: Pool; label: string; hint: string }[] = [
   { id: 'newdomains', label: 'New domains', hint: 'Recently added customer domains' },
   { id: 'system', label: 'Amelu notifications', hint: 'Account and billing email' },
   { id: 'spare', label: 'Reserve', hint: 'Ready to take over when needed' },
-  { id: 'warming', label: 'Warming up', hint: 'Not sending yet' },
+  { id: 'unassigned', label: 'Not assigned', hint: 'Not in use yet' },
 ];
+
+const STATE_STATUS: Record<SendingIpStatus['state'], Status> = {
+  active: 'sending',
+  paused: 'paused',
+  pending: 'pending',
+  spare: 'standby',
+};
+
+const isPool = (group: string): group is Pool => POOLS.some((p) => p.id === group);
 
 /** The addresses our mail server sends from, grouped by the pool that uses them. */
 @Component({
@@ -69,7 +86,42 @@ const POOLS: { id: Pool; label: string; hint: string }[] = [
 })
 export class NetworkPage {
   protected readonly ui = UI;
-  protected readonly ips = SENDING_IPS;
+
+  /** null until the report loads, or when it can't. */
+  private readonly report = toSignal(
+    inject(Api)
+      .sendingNetwork()
+      .pipe(catchError(() => of(null))),
+    { initialValue: null },
+  );
+
+  /** The listed addresses with the reported pool and status, plus any reported address not listed yet. */
+  protected readonly ips = computed<Row[]>(() => {
+    const reported = this.report()?.ips ?? [];
+    if (!reported.length) {
+      // No report: the old addresses are the ones in use.
+      return SENDING_IPS.map((row) => ({ ...row, status: row.network === 'current' ? 'sending' : 'unused' }));
+    }
+    const byIp = new Map(reported.map((r) => [r.ip, r]));
+    const rows: Row[] = SENDING_IPS.map((row) => {
+      const r = byIp.get(row.ip);
+      return r
+        ? { ...row, pool: isPool(r.group) ? r.group : row.pool, status: STATE_STATUS[r.state] ?? 'pending' }
+        : { ...row, pool: 'unassigned', status: 'unused' };
+    });
+    const listed = new Set(SENDING_IPS.map((row) => row.ip));
+    for (const r of reported) {
+      if (listed.has(r.ip)) continue;
+      rows.push({
+        name: r.name,
+        ip: r.ip,
+        pool: isPool(r.group) ? r.group : 'unassigned',
+        network: r.ip.startsWith('89.106.70.') ? 'own' : 'current',
+        status: STATE_STATUS[r.state] ?? 'pending',
+      });
+    }
+    return rows;
+  });
   protected readonly pools = POOLS;
   protected readonly networks = NETWORKS;
   protected readonly networkOf = Object.fromEntries(NETWORKS.map((n) => [n.id, n])) as Record<Network, (typeof NETWORKS)[number]>;
@@ -88,7 +140,7 @@ export class NetworkPage {
     const query = this.search().trim().toLowerCase();
     const pool = this.pool();
     const network = this.network();
-    return this.ips.filter(
+    return this.ips().filter(
       (row) =>
         (pool === 'all' || row.pool === pool) &&
         (network === 'all' || row.network === network) &&
@@ -105,11 +157,11 @@ export class NetworkPage {
   /** Addresses in a pool within the selected network, so the counts match the table. */
   protected count(pool: Pool | 'all'): number {
     const network = this.network();
-    return this.ips.filter((row) => (network === 'all' || row.network === network) && (pool === 'all' || row.pool === pool)).length;
+    return this.ips().filter((row) => (network === 'all' || row.network === network) && (pool === 'all' || row.pool === pool)).length;
   }
 
   protected networkCount(network: Network | 'all'): number {
-    return network === 'all' ? this.ips.length : this.ips.filter((row) => row.network === network).length;
+    return network === 'all' ? this.ips().length : this.ips().filter((row) => row.network === network).length;
   }
 
   protected clearFilters(): void {

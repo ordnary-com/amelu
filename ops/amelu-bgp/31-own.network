@@ -1,7 +1,0 @@
-[Match]
-Name=own0
-
-[Network]
-Address=89.106.70.1/32
-Address=2a06:9801:f90::1/128
-LinkLocalAddressing=no

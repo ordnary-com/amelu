@@ -9,7 +9,7 @@ WireGuard 172.31.74.0/30 to marduk (wg-quick@par there).
 
 Failover on marduk: `bgp-exit-check.service` pings both routers over their
 tunnels every 10 s and keeps table 30's default routes in line: rtr1-ams
-metric 50, rtr1-par metric 60, Lagrange (bgp) 200 as last resort. Tested
+metric 50, rtr1-par metric 60. Tested
 2026-11-17: with rtr1-ams's route removed, traffic from 89.106.70.2 left through
 Paris and HTTPS answered with 89.106.70.2. Inbound needs no failover: both
 routers announce the /24, so Vultr routes to whichever is up.

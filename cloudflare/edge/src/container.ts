@@ -42,6 +42,8 @@ export class AmeluOriginContainer extends Container<Env> {
     INTERNAL_JOBS_SHARED_SECRET: workerEnv.INTERNAL_JOBS_SHARED_SECRET ?? "",
     SENDING_STATS_SECRET: workerEnv.SENDING_STATS_SECRET ?? "",
     WEBMAIL_SSO_SECRET: workerEnv.WEBMAIL_SSO_SECRET ?? "",
+    // Gets an email for every new support ticket and customer reply (handlers/support.go); optional.
+    SUPPORT_NOTIFY_EMAIL: workerEnv.SUPPORT_NOTIFY_EMAIL ?? "",
     CLOUDFLARE_SAAS_API_TOKEN: workerEnv.CLOUDFLARE_SAAS_API_TOKEN ?? "",
     CLOUDFLARE_SAAS_ZONE_ID: workerEnv.CLOUDFLARE_SAAS_ZONE_ID ?? "",
     AMELU_DNS_API_TOKEN: workerEnv.AMELU_DNS_API_TOKEN ?? "",

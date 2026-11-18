@@ -124,6 +124,36 @@ export interface DomainAlias {
   name: string;
 }
 
+export type SupportCategory = 'account' | 'domains' | 'delivery' | 'billing' | 'other';
+/** open: waiting on Amelu, answered: waiting on the customer, closed: done. */
+export type SupportStatus = 'open' | 'answered' | 'closed';
+
+export interface SupportMessage {
+  id: string;
+  authorKind: 'customer' | 'staff';
+  authorName: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  number: number;
+  subject: string;
+  category: SupportCategory;
+  status: SupportStatus;
+  domainId: string | null;
+  domainName: string | null;
+  openedByName: string;
+  lastAuthorKind: 'customer' | 'staff';
+  messageCount: number;
+  createdAt: string;
+  updatedAt: string;
+  closedAt: string | null;
+  /** Only on a single ticket. */
+  messages?: SupportMessage[];
+}
+
 /** A sending IP as the mail server last reported it. */
 export interface SendingIpStatus {
   name: string;
@@ -343,6 +373,26 @@ export class Api {
   /** Messages sent from the domain over the last 24 hours, against the plan's daily limit. */
   domainSendingHistory(domainId: string) {
     return this.http.get<SendingHistory>(`/api/domains/${domainId}/sending/history`);
+  }
+
+  listSupportTickets() {
+    return this.http.get<SupportTicket[]>('/api/support/tickets');
+  }
+
+  createSupportTicket(ticket: { subject: string; category: SupportCategory; domainId: string; body: string }) {
+    return this.http.post<SupportTicket>('/api/support/tickets', ticket);
+  }
+
+  getSupportTicket(id: string) {
+    return this.http.get<SupportTicket>(`/api/support/tickets/${id}`);
+  }
+
+  replySupportTicket(id: string, body: string) {
+    return this.http.post<SupportMessage>(`/api/support/tickets/${id}/messages`, { body });
+  }
+
+  closeSupportTicket(id: string) {
+    return this.http.post<{ ok: boolean }>(`/api/support/tickets/${id}/close`, {});
   }
 
   sendingNetwork() {

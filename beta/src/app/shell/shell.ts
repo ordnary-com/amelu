@@ -308,6 +308,7 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
   domain.push(
     { label: 'DNS Configuration', link: `${d}/dns`, area: true, group: 'Delivery' },
     { label: 'Spam Filtering', link: `${d}/spam`, area: true },
+    { label: 'Dedicated IPs', link: `${d}/dedicated-ips` },
     { label: 'Transfer Ownership...', link: `${d}/transfer`, group: 'Manage' },
     { label: 'Deactivate Domain...', link: `${d}/deactivate` },
     { label: 'Delete Domain...', link: `${d}/delete`, kind: 'danger' },

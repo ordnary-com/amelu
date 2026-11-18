@@ -1,15 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragPlaceholder, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Domain } from '../api';
 import { RouterLink } from '@angular/router';
 import { Domains } from '../domains';
 import { DomainHealthChecks, needsAttention } from '../domain-health';
-import { DomainCard } from '../domain-card/domain-card';
 import { Icon } from '../icon';
 import { UI } from '../ui';
+import { DomainRow } from './domain-row';
 import { EmptyState } from '../empty-state/empty-state';
 import { Alert } from '../alert/alert';
-import { DitherShader } from '../login/dither-shader';
 
 export type DomainSort = 'custom' | 'name' | 'name-desc' | 'newest' | 'oldest' | 'status';
 
@@ -42,10 +41,10 @@ const SORTERS: Record<Exclude<DomainSort, 'custom'>, (a: Domain, b: Domain) => n
   status: (a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status] || a.name.localeCompare(b.name),
 };
 
-/** All domains as cards, with what still needs doing beside them. */
+/** All domains as a table, with what still needs doing beside them. */
 @Component({
   selector: 'amelu-domains-page',
-  imports: [EmptyState, RouterLink, DomainCard, Icon, Alert, CdkDropList, CdkDrag, CdkDragHandle, CdkDragPlaceholder, DitherShader],
+  imports: [EmptyState, RouterLink, DomainRow, Icon, Alert, CdkDropList, CdkDrag],
   templateUrl: './domains-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -74,6 +73,9 @@ export class DomainsPage {
   });
 
   protected readonly favorites = computed(() => this.filtered().filter((domain) => domain.favorite));
+  /** Every column, with the drag handle's while it's there, for full-width rows. */
+  protected readonly columns = computed(() => (this.canDrag() ? 6 : 5));
+  protected readonly groupRow = 'bg-bg/40 px-4 py-1.5 text-[12px] font-medium text-muted [&>amelu-icon]:mr-1.5 [&>amelu-icon]:inline-block [&>amelu-icon]:align-[-1px]';
   protected readonly others = computed(() => this.filtered().filter((domain) => !domain.favorite));
 
   constructor() {

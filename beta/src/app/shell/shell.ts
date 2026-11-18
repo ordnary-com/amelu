@@ -177,8 +177,11 @@ export class Shell {
   // A main-menu label, read out but not shown on the rail.
   protected readonly label = 'flex-1 truncate in-[.rail]:sr-only';
 
-  // An unfolded category and its pages sit together on a lighter panel.
-  protected readonly groupOpen = 'rounded-xl bg-chrome-ink/[0.07] p-1 in-[.rail]:bg-transparent in-[.rail]:p-0';
+  // A category and its pages. The padding is there folded too, so unfolding only adds
+  // the lighter panel behind them and nothing moves; the negative margin keeps the
+  // labels in line with the items around it.
+  protected readonly group = '-mx-1 rounded-xl p-1 in-[.rail]:mx-0 in-[.rail]:p-0';
+  protected readonly groupOpen = `${this.group} bg-accent/20 in-[.rail]:bg-transparent`;
   protected readonly groupedSubitem = 'group truncate [&>a]:py-1.5';
 
   /** The sidebar folded to a rail of icons (lg and up), remembered in this browser. */

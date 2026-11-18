@@ -60,8 +60,8 @@
   --accent-soft: color-mix(in srgb, var(--accent) 13%, white);
   --link: color-mix(in srgb, var(--accent), black 12%);
 
-  /* Chrome in the accent, as Web Services does in Ordnary blue */
-  --chrome: var(--accent);
+  /* The sidebar in a deep shade of the accent: navy for Ordnary blue */
+  --chrome: color-mix(in srgb, var(--accent) 35%, black);
   --chrome-active: color-mix(in srgb, var(--accent), black 20%);
   --chrome-ink: #ffffff;
   /* 1 turns the flat blue logo on the chrome white, 0 black (.chrome-logo) */

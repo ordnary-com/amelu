@@ -47,7 +47,7 @@
           <a routerLink="/" [class]="link" title="Overview"><ng-icon name="lucideHome" size="17px" strokeWidth="2" /><span [class]="label">Overview</span></a>
         </li>
 
-        <li [class]="open('domains') ? groupOpen : ''">
+        <li [class]="open('domains') ? groupOpen : group">
           <ul class="space-y-0.5">
             <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
               <a routerLink="/domains" data-tour="domains" [class]="link" title="Domains" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')">
@@ -81,7 +81,7 @@
           <a routerLink="/account" [class]="link" title="My Account"><ng-icon name="lucideUser" size="17px" strokeWidth="2" /><span [class]="label">My Account</span></a>
         </li>
 
-        <li [class]="open('organization') ? groupOpen : ''">
+        <li [class]="open('organization') ? groupOpen : group">
           <ul class="space-y-0.5">
             <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
               <a routerLink="/organization" data-tour="organization" [class]="link" title="My Organization" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')">

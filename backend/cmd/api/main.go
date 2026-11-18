@@ -174,6 +174,8 @@ func main() {
 	mux.HandleFunc("POST /internal/jobs/expiration-sweep", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.RunExpirationSweepJob))
 	mux.HandleFunc("POST /internal/jobs/domain-verified", auth.RequireInternal(cfg.InternalJobsSharedSecret, app.DomainVerifiedJob))
 	mux.HandleFunc("POST /internal/jobs/sending-stats", auth.RequireInternal(cfg.SendingStatsSecret, app.SendingStatsJob))
+	// marduk's amelu-ip-pools, with the same secret as amelu-sending-stats.
+	mux.HandleFunc("GET /internal/jobs/dedicated-ips", auth.RequireInternal(cfg.SendingStatsSecret, app.DedicatedIPRoutesJob))
 
 	// Cross-customer admin surface for Helm (ordnary-identity/apps/helm, via
 	// services/helm-api) - see internal/handlers/admin.go and
@@ -204,6 +206,10 @@ func main() {
 	mux.HandleFunc("POST /internal/admin/changelog", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminCreateChangelog))
 	mux.HandleFunc("PATCH /internal/admin/changelog/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateChangelog))
 	mux.HandleFunc("DELETE /internal/admin/changelog/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminDeleteChangelog))
+	mux.HandleFunc("GET /internal/admin/dedicated-ips", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListDedicatedIPs))
+	mux.HandleFunc("POST /internal/admin/dedicated-ips", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminAddDedicatedIP))
+	mux.HandleFunc("PATCH /internal/admin/dedicated-ips/{ip}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateDedicatedIP))
+	mux.HandleFunc("DELETE /internal/admin/dedicated-ips/{ip}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminDeleteDedicatedIP))
 	mux.HandleFunc("GET /internal/admin/support/tickets", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListSupportTickets))
 	mux.HandleFunc("GET /internal/admin/support/tickets/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetSupportTicket))
 	mux.HandleFunc("POST /internal/admin/support/tickets/{id}/messages", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminReplySupportTicket))
@@ -279,6 +285,7 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{id}/sending", auth.Require(app.Store, app.GetDomainSending))
 	mux.HandleFunc("GET /api/domains/{id}/sending/history", auth.Require(app.Store, app.GetDomainSendingHistory))
 	mux.HandleFunc("GET /api/sending/network", auth.Require(app.Store, app.GetSendingNetwork))
+	mux.HandleFunc("GET /api/organization/dedicated-ips", auth.Require(app.Store, app.ListOrganizationDedicatedIPs))
 	mux.HandleFunc("GET /api/support/tickets", auth.Require(app.Store, app.ListSupportTickets))
 	mux.HandleFunc("POST /api/support/tickets", auth.Require(app.Store, app.CreateSupportTicket))
 	mux.HandleFunc("GET /api/support/tickets/{id}", auth.Require(app.Store, app.GetSupportTicket))

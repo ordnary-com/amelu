@@ -29,12 +29,22 @@ own-block IPs only (89.106.70.0/24), since Outlook refuses most of the OVH
 range; recipient domains count as Microsoft when the logs show their MX on
 *.outlook.com.
 
+Dedicated IPs: addresses from our own block that staff assigned to one
+organization in Airplane. The API lists them with the organization's domains
+(GET /internal/jobs/dedicated-ips, signed with SENDING_STATS_SECRET from
+/etc/amelu-sending-stats/env); each gets its own "dedicated-N" strategy and
+the organization's domains send only from it, to Microsoft too. They leave
+the shared groups, are bound on lo here, and need the same DNS as any other
+IP (an A record of marduk.mx.amelu.org, forward and reverse DNS) before they
+send; until then the domains keep their usual group. The last list is cached,
+so an API outage doesn't move anyone.
+
 Runs every 10 minutes from cron.
 
   amelu-ip-pools.py --dry-run   print the decision, change nothing
   amelu-ip-pools.py --off       send everything from marduk's own IP again
 """
-import base64, datetime, ipaddress, json, os, re, socket, subprocess, sys, urllib.request
+import base64, datetime, hashlib, hmac, ipaddress, json, os, re, socket, subprocess, sys, time, urllib.request
 
 JMAP = "http://127.0.0.1:8080/jmap"
 MX_HOST = "marduk.mx.amelu.org"
@@ -54,6 +64,10 @@ GROUPS = {
 }
 # Addresses that may take over a group later; none right now.
 SPARES = {}
+DEDICATED_URL = "https://api.amelu.org/internal/jobs/dedicated-ips"
+DEDICATED_PATH = "/internal/jobs/dedicated-ips"
+DEDICATED_CACHE = "/var/lib/amelu-ip-pools/dedicated.json"
+SECRET_FILE = "/etc/amelu-sending-stats/env"
 # Every IP that may send, for customers on "v=spf1 include:_spf.amelu.org -all".
 # Kept by hand in DNS; main() warns when it drifts.
 SPF_HOST = "_spf.amelu.org"
@@ -147,12 +161,62 @@ def new_domains():
     out = []
     for d in doms:
         name, created = (d.get("name") or "").lower(), d.get("createdAt")
-        # Names go into the expression in quotes; only plain hostnames.
-        if not created or not name or name in OWN_DOMAINS or name in vetted or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789.-" for c in name):
+        if not created or not plain(name) or name in OWN_DOMAINS or name in vetted:
             continue
         if datetime.datetime.fromisoformat(created.replace("Z", "+00:00")) >= cutoff:
             out.append(name)
     return sorted(out)
+
+
+def plain(name):
+    """Domain names go into the expression in quotes; only plain hostnames."""
+    return bool(name) and all(c in "abcdefghijklmnopqrstuvwxyz0123456789.-" for c in name)
+
+
+def secret():
+    value = os.environ.get("SENDING_STATS_SECRET")
+    if value:
+        return value
+    try:
+        for line in open(SECRET_FILE):
+            key, _, val = line.strip().partition("=")
+            if key == "SENDING_STATS_SECRET":
+                return val.strip().strip('"')
+    except OSError:
+        pass
+    return None
+
+
+def dedicated_routes(dry):
+    """[{ip, hostname, domains}] from the API, or the cached list when it can't be reached."""
+    key = secret()
+    try:
+        if not key:
+            raise OSError("no SENDING_STATS_SECRET")
+        ts = str(int(time.time()))
+        sig = hmac.new(key.encode(), f"GET {DEDICATED_PATH}.{ts}".encode(), hashlib.sha256).hexdigest()
+        req = urllib.request.Request(DEDICATED_URL, headers={"X-Amelu-Internal-Signature": f"{ts}.{sig}", "User-Agent": "amelu-ip-pools"})
+        routes = json.load(urllib.request.urlopen(req, timeout=20)).get("ips", [])
+    except (OSError, ValueError) as e:
+        try:
+            routes = json.load(open(DEDICATED_CACHE))
+        except (OSError, ValueError):
+            routes = []
+        print(f"warning: dedicated IPs from the API failed ({e}), using {len(routes)} cached", flush=True)
+        return routes
+    routes = [r for r in routes if ipaddress.ip_address(r["ip"]) in OWN_BLOCK and plain(r.get("hostname", ""))]
+    if not dry:
+        os.makedirs(os.path.dirname(DEDICATED_CACHE), exist_ok=True)
+        json.dump(routes, open(DEDICATED_CACHE + ".tmp", "w"))
+        os.replace(DEDICATED_CACHE + ".tmp", DEDICATED_CACHE)
+    return routes
+
+
+def bind(ip, dry):
+    """Dedicated IPs aren't in own-block.service's list: bind them on lo here."""
+    if bound(ip) or dry:
+        return
+    subprocess.run(["ip", "addr", "add", f"{ip}/32", "dev", "lo"], check=False)
 
 
 def mx_ips():
@@ -298,14 +362,14 @@ def either(field, values):
     return " || ".join(f"{field} == '{v}'" for v in values)
 
 
-def write_status(pools, out):
-    """Per IP: its group and whether it sends, for the dashboard."""
+def write_status(pools, out, dedicated):
+    """Per IP: its group and whether it sends, for the dashboard. dedicated: {hostname: ip} of assigned IPs."""
     try:
         degraded = json.load(open(REPUTATION_FILE)).get("degraded", {})
     except (OSError, ValueError):
         degraded = {}
     ips = []
-    for group, members in list(GROUPS.items()) + [("spare", SPARES)]:
+    for group, members in list(shared_groups(dedicated).items()) + [("spare", SPARES)]:
         for name, ip in sorted(members.items(), key=lambda kv: int(kv[0].split(".")[0][3:])):
             if group != "spare" and name in pools.get(group, {}):
                 state, reason = "active", ""
@@ -317,10 +381,20 @@ def write_status(pools, out):
                 state, reason = "pending", "Waiting for DNS (marduk.mx, PTR) before it sends"
             ips.append({"name": name, "ip": ip, "group": group, "state": state, "reason": reason,
                         "pausedUntil": degraded.get(ip, {}).get("until") if state == "paused" else None})
+    for name, ip in sorted(dedicated.items(), key=lambda kv: ipaddress.ip_address(kv[1])):
+        live = any(ip in members.values() for g, members in pools.items() if g.startswith("dedicated-"))
+        ips.append({"name": name, "ip": ip, "group": "dedicated", "state": "active" if live else "pending",
+                    "reason": "" if live else "Waiting for DNS (marduk.mx, PTR) before it sends", "pausedUntil": None})
     os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)
     json.dump({"updatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "ips": ips},
               open(STATUS_FILE + ".tmp", "w"))
     os.replace(STATUS_FILE + ".tmp", STATUS_FILE)
+
+
+def shared_groups(dedicated):
+    """GROUPS without the IPs assigned to an organization."""
+    taken = set(dedicated.values())
+    return {g: {n: ip for n, ip in members.items() if ip not in taken} for g, members in GROUPS.items()}
 
 
 def spf_ips():
@@ -343,6 +417,9 @@ def main():
     missing = sorted(ip for ip in sending if spf is not None and not any(ipaddress.ip_address(ip) in n for n in spf))
     if missing:
         print(f"warning: {SPF_HOST} misses {missing}", flush=True)
+    routes = dedicated_routes(dry)
+    dedicated = {r["hostname"]: r["ip"] for r in routes}
+    groups = shared_groups(dedicated)
     out, news, microsoft = watch_reputation(dry)
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)
@@ -354,7 +431,12 @@ def main():
     seen = {ip: t for ip, t in seen.items() if ip in mx}
     pools, notes = {}, []
     if not off:
-        for group, ips in GROUPS.items():
+        for r in routes:
+            bind(r["ip"], dry)
+            # A dedicated IP never falls back to the shared ones while blocked: it's the organization's own.
+            if usable({r["hostname"]: r["ip"]}, mx, seen):
+                pools[f"dedicated-{r['ip'].split('.')[-1]}"] = {r["hostname"]: r["ip"]}
+        for group, ips in groups.items():
             ready = usable(ips, mx, seen)
             ok = {n: ip for n, ip in ready.items() if ip not in out}
             # Dropping blocked IPs only helps while enough healthy ones stay: with
@@ -368,7 +450,7 @@ def main():
                 pools[group] = ok
     rate = warmup_rate(dry) if pools else None
     if not dry:
-        write_status(pools, out)
+        write_status(pools, out, dedicated)
     if not dry:
         os.makedirs(os.path.dirname(SEEN_FILE), exist_ok=True)
         json.dump(seen, open(SEEN_FILE, "w"), indent=1)
@@ -376,6 +458,8 @@ def main():
     # Per group, a "<group>-microsoft" strategy with only its own-block IPs.
     extra = {}
     for g, ips in pools.items():
+        if g.startswith("dedicated-"):
+            continue
         own = {n: ip for n, ip in ips.items() if ipaddress.ip_address(ip) in OWN_BLOCK}
         if own and microsoft:
             extra[f"{g}-microsoft"] = own
@@ -383,6 +467,14 @@ def main():
     if "trusted" in pools:
         doms = new_domains()
         rules = [(either("sender_domain", OWN_DOMAINS), "system" if "system" in pools else "trusted")]
+        # Dedicated IPs first after Amelu's own mail: an organization's domains send only from its IP.
+        live_dedicated = []
+        for r in routes:
+            g = f"dedicated-{r['ip'].split('.')[-1]}"
+            doms = [d for d in r.get("domains", []) if plain(d) and d not in OWN_DOMAINS]
+            if g in pools and doms:
+                rules.append((either("sender_domain", doms), g))
+                live_dedicated.append(f"{g} ({len(doms)} domains)")
         if doms and "newdomains" in pools:
             rules.append((either("sender_domain", doms), "newdomains"))
         steps = []
@@ -395,6 +487,10 @@ def main():
         match = {str(i): {"if": cond, "then": f"'{g}'"} for i, (cond, g) in enumerate(steps)}
         connection = {"match": match, "else": "'trusted'"}
         state = "; ".join(f"{g}: {', '.join(n.split('.')[0] for n in sorted(pools[g]))}" for g in GROUPS if g in pools)
+        if live_dedicated:
+            state += "; dedicated " + ", ".join(live_dedicated)
+        if len(live_dedicated) < len(routes):
+            state += f"; {len(routes) - len(live_dedicated)} dedicated IPs not sending yet"
         state += f"; {len(doms)} new domains" + ("" if "newdomains" in pools else " (on trusted, no newdomains IP)")
         if extra:
             state += f"; Microsoft ({len(microsoft)} domains) via " + ", ".join(sorted({n.split('.')[0] for ips in extra.values() for n in ips}))
@@ -423,7 +519,10 @@ def main():
         calls.append(["x:MtaOutboundThrottle/set", {"update": {tcap["id"]: {"match": tunnel_cap, "enable": False}}}, "t"])
     for group, ips in {**pools, **extra}.items():
         source = {str(i): {"ehloHostname": n, "sourceIp": ip} for i, (n, ip) in enumerate(sorted(ips.items()))}
-        desc = DESCRIPTIONS.get(group) or f"{DESCRIPTIONS[group.removesuffix('-microsoft')].split(' (')[0]}, to Microsoft: own block only (amelu-ip-pools)"
+        if group.startswith("dedicated-"):
+            desc = f"Dedicated IP {next(iter(ips.values()))}, one organization's domains only (amelu-ip-pools)"
+        else:
+            desc = DESCRIPTIONS.get(group) or f"{DESCRIPTIONS[group.removesuffix('-microsoft')].split(' (')[0]}, to Microsoft: own block only (amelu-ip-pools)"
         fields = {"description": desc, "ehloHostname": sorted(ips)[0], "sourceIps": source}
         if group not in existing:
             calls.append(["x:MtaConnectionStrategy/set", {"create": {group: {"name": group, **fields}}}, "o" + group])

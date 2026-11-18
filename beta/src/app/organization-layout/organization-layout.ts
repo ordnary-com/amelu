@@ -15,7 +15,7 @@ import { Session } from '../session';
           My Organization
         }
       </h1>
-      <p class="text-[15px] text-muted">Manage your team, its activity and your webmail.</p>
+      <p class="text-[15px] text-muted">Manage your team, its activity, sending and webmail.</p>
     </div>
 
     <div class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
@@ -49,6 +49,7 @@ export class OrganizationLayout {
   protected readonly navItem = 'flex h-10 items-center rounded px-4 text-[14px] font-medium bg-bg/60 hover:bg-bg';
   protected readonly groups = [
     { label: 'Your organization', items: [{ label: 'Members', link: '/organization' }, { label: 'Activity Log', link: '/organization/activity' }] },
+    { label: 'Sending', items: [{ label: 'Dedicated IPs', link: '/organization/dedicated-ips' }] },
     { label: 'Branding', items: [{ label: 'Webmail', link: '/organization/webmail' }] },
   ];
 }

@@ -141,6 +141,14 @@ export interface SupportMessage {
   attachments?: SupportAttachment[];
 }
 
+/** A sending IP reserved for your organization. */
+export interface DedicatedIp {
+  ip: string;
+  hostname: string;
+  assignedAt: string | null;
+  state: 'sending' | 'paused' | 'setting_up';
+}
+
 export interface SupportAttachment {
   id: string;
   filename: string;
@@ -398,6 +406,10 @@ export class Api {
 
   getSupportTicket(id: string) {
     return this.http.get<SupportTicket>(`/api/support/tickets/${id}`);
+  }
+
+  organizationDedicatedIps() {
+    return this.http.get<DedicatedIp[]>('/api/organization/dedicated-ips');
   }
 
   /** With files the reply goes as multipart/form-data (body plus "files"). */

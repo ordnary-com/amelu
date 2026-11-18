@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, SupportCategory, errorMessage } from '../api';
@@ -22,7 +23,7 @@ const BODY_MAX = 20000;
 /** /support/new: open a ticket. */
 @Component({
   selector: 'amelu-support-new',
-  imports: [Alert, Combobox, Icon, RouterLink],
+  imports: [Alert, Combobox, Icon, RouterLink, DecimalPipe],
   template: `
     <h1 class="flex items-center gap-2 text-[22px] leading-tight font-normal">
       <a routerLink="/support" class="text-link hover:underline">Support</a>
@@ -38,23 +39,39 @@ const BODY_MAX = 20000;
           @if (error(); as message) {
             <amelu-alert>{{ message }}</amelu-alert>
           }
-          <div>
-            <label for="ticket-subject" [class]="fieldLabel">Subject</label>
-            <input
-              id="ticket-subject"
-              [class]="ui.input"
-              [maxLength]="subjectMax"
-              placeholder="Mail to Outlook addresses bounces"
-              [value]="subject()"
-              (input)="subject.set($any($event.target).value)"
-              required
-            />
-          </div>
+          <fieldset>
+            <legend [class]="fieldLabel">Topic</legend>
+            <!-- Topics as choice cards, the picked one tinted like the DNS choice on Add domain. -->
+            <div class="mt-1.5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="Topic">
+              @for (c of categories; track c.id) {
+                @let on = category() === c.id;
+                <label [class]="ui.choice + ' flex items-center gap-3 px-3.5 py-3 ' + (on ? ui.choiceOn : ui.choiceOff)">
+                  <input type="radio" name="topic" class="sr-only" [value]="c.id" [checked]="on" (change)="category.set(c.id)" />
+                  <amelu-icon [name]="c.icon" [size]="20" class="flex-none" [class]="on ? 'text-link' : 'text-ink'" />
+                  <span class="min-w-0">
+                    <span class="block truncate text-[14px] font-medium" [class.text-link]="on">{{ c.label }}</span>
+                    <span class="block truncate text-[12px]" [class]="on ? 'text-link/85' : 'text-muted'">{{ c.hint }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+          </fieldset>
 
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_260px]">
             <div>
-              <label for="ticket-category" [class]="fieldLabel">Topic</label>
-              <amelu-combobox class="mt-1.5" inputId="ticket-category" [options]="categoryOptions" [(value)]="category" searchPlaceholder="Search topics" />
+              <div class="flex items-baseline justify-between gap-3">
+                <label for="ticket-subject" [class]="fieldLabel">Subject</label>
+                <span class="text-[12px] text-muted tabular-nums">{{ subject().length }} / {{ subjectMax }}</span>
+              </div>
+              <input
+                id="ticket-subject"
+                [class]="ui.input"
+                [maxLength]="subjectMax"
+                placeholder="Mail to Outlook addresses bounces"
+                [value]="subject()"
+                (input)="subject.set($any($event.target).value)"
+                required
+              />
             </div>
             <div>
               <label for="ticket-domain" [class]="fieldLabel">Domain <span class="text-muted/70">(optional)</span></label>
@@ -63,15 +80,20 @@ const BODY_MAX = 20000;
           </div>
 
           <div>
-            <label for="ticket-body" [class]="fieldLabel">Message</label>
+            <div class="flex items-baseline justify-between gap-3">
+              <label for="ticket-body" [class]="fieldLabel">Message</label>
+              <span class="text-[12px] text-muted tabular-nums">{{ body().length | number }} / {{ bodyMax | number }}</span>
+            </div>
             <textarea
               id="ticket-body"
               rows="8"
-              [class]="ui.input + ' h-auto min-h-40 py-2 leading-relaxed'"
+              [class]="ui.input + ' h-auto min-h-44 py-2 text-[14px] leading-relaxed [field-sizing:content]'"
               [maxLength]="bodyMax"
               placeholder="What happened, when, and which address was involved? Paste any error or bounce message."
               [value]="body()"
               (input)="body.set($any($event.target).value)"
+              (keydown.meta.enter)="submit($event)"
+              (keydown.control.enter)="submit($event)"
               required
             ></textarea>
           </div>
@@ -82,6 +104,9 @@ const BODY_MAX = 20000;
         </p>
         <div class="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
           <button type="button" [class]="ui.outline + ' h-9'" (click)="cancel()">Cancel</button>
+          @if (missing(); as what) {
+            <span class="mr-auto text-[13px] text-muted">Add {{ what }} to open the ticket.</span>
+          }
           <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!canSubmit()">{{ sending() ? 'Sending...' : 'Open ticket' }}</button>
         </div>
       </form>
@@ -104,7 +129,7 @@ export class SupportNew {
   private readonly router = inject(Router);
   protected readonly ui = UI;
   protected readonly fieldLabel = 'block text-[13px] text-muted';
-  protected readonly categoryOptions: ComboboxOption[] = SUPPORT_CATEGORIES.map((c) => ({ value: c.id, label: c.label }));
+  protected readonly categories = SUPPORT_CATEGORIES;
   protected readonly subjectMax = SUBJECT_MAX;
   protected readonly bodyMax = BODY_MAX;
   private readonly domainList = inject(Domains);
@@ -121,6 +146,11 @@ export class SupportNew {
   protected readonly error = signal<string | null>(null);
 
   protected readonly canSubmit = computed(() => !this.sending() && this.subject().trim() !== '' && this.body().trim() !== '');
+  /** What's still empty, said next to the button. */
+  protected readonly missing = computed(() => {
+    const parts = [this.subject().trim() ? '' : 'a subject', this.body().trim() ? '' : 'a message'].filter(Boolean);
+    return parts.join(' and ');
+  });
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();

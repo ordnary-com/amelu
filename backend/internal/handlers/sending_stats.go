@@ -115,10 +115,14 @@ func (a *App) GetSendingNetwork(w http.ResponseWriter, r *http.Request) {
 	if !at.IsZero() {
 		updated = &at
 	}
-	if ips == nil {
-		ips = []db.SendingIPStatus{}
+	// Dedicated IPs belong to one organization; each sees its own under My Organization.
+	shared := []db.SendingIPStatus{}
+	for _, ip := range ips {
+		if ip.Group != "dedicated" {
+			shared = append(shared, ip)
+		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ips": ips, "updatedAt": updated})
+	writeJSON(w, http.StatusOK, map[string]any{"ips": shared, "updatedAt": updated})
 }
 
 type domainSendingResponse struct {

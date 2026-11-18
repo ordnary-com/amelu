@@ -8,9 +8,9 @@ import { Theme } from '../theme';
 import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
 
 /**
- * Top-right account button: the organization and who you're signed in as,
- * opening a panel with plan, account details, appearance and where to manage
- * them.
+ * Top-right account button, modelled on ordnary-console's: organization badge
+ * and name, opening a panel with plan, who you're signed in as, and where to
+ * manage that.
  */
 @Component({
   selector: 'amelu-account-menu',
@@ -18,7 +18,7 @@ import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
   templateUrl: './account-menu.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: 'relative flex',
+    class: 'relative flex self-stretch',
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'open.set(false)',
   },

@@ -173,7 +173,7 @@
                 [checked]="nameservers() === option.value"
                 (change)="nameservers.set(option.value)"
               />
-              <amelu-icon [name]="option.value === 'amelu' ? 'globe' : 'doc'" [size]="26" class="mt-0.5 flex-none text-ink peer-focus-visible:text-link" />
+              <amelu-icon [name]="option.value === 'amelu' ? 'server' : 'listChecks'" [size]="26" class="mt-0.5 flex-none text-ink peer-focus-visible:text-link" />
               <span class="min-w-0">
                 <span class="flex items-center gap-2 text-[14px] font-medium" [class.text-link]="nameservers() === option.value && !option.disabled">
                   {{ option.title }}

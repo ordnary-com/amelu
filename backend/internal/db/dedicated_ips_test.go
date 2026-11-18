@@ -10,7 +10,7 @@ func TestDedicatedIPs(t *testing.T) {
 	s := testStore(t)
 	ctx := context.Background()
 	orgID, ownerID := newTestOrgWithOwner(t, s)
-	ip, host := "89.106.70.63", "out-63.mta0.amelu.org"
+	ip, host := "89.106.70.149", "out-149.mta0.amelu.org"
 	_, _ = s.conn.ExecContext(ctx, `DELETE FROM dedicated_ips WHERE ip = $1`, ip)
 	t.Cleanup(func() { _, _ = s.conn.ExecContext(ctx, `DELETE FROM dedicated_ips WHERE ip = $1`, ip) })
 

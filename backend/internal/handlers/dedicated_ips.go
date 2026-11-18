@@ -19,8 +19,13 @@ import (
 // domains from its IP; customers see theirs under My Organization. See
 // migration 0050.
 
-// ownBlock is where dedicated IPs come from: 89.106.70.0/24 (AS218905).
-var ownBlock = netip.MustParsePrefix("89.106.70.0/24")
+// Dedicated IPs come from 89.106.70.100-149 in our own block (AS218905):
+// .1-.99 are the shared sending addresses, .200/29 is ishtar.
+var (
+	ownBlock         = netip.MustParsePrefix("89.106.70.0/24")
+	dedicatedIPFirst = netip.MustParseAddr("89.106.70.100")
+	dedicatedIPLast  = netip.MustParseAddr("89.106.70.149")
+)
 
 var hostnamePattern = regexp.MustCompile(`^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$`)
 
@@ -125,7 +130,7 @@ type addDedicatedIPRequest struct {
 }
 
 // AdminAddDedicatedIP -> POST /internal/admin/dedicated-ips: an address from
-// our own block into the inventory. The hostname defaults to the block's
+// the dedicated range into the inventory. The hostname defaults to the block's
 // naming, out-N.mta0.amelu.org, which already has forward and reverse DNS.
 func (a *App) AdminAddDedicatedIP(w http.ResponseWriter, r *http.Request, operator string) {
 	var req addDedicatedIPRequest
@@ -134,8 +139,8 @@ func (a *App) AdminAddDedicatedIP(w http.ResponseWriter, r *http.Request, operat
 		return
 	}
 	addr, err := netip.ParseAddr(strings.TrimSpace(req.IP))
-	if err != nil || !addr.Is4() || !ownBlock.Contains(addr) {
-		writeError(w, http.StatusBadRequest, fmt.Sprintf("ip must be an address in %s", ownBlock))
+	if err != nil || !addr.Is4() || !ownBlock.Contains(addr) || addr.Less(dedicatedIPFirst) || dedicatedIPLast.Less(addr) {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("ip must be between %s and %s", dedicatedIPFirst, dedicatedIPLast))
 		return
 	}
 	hostname := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(req.Hostname), "."))

@@ -351,6 +351,26 @@ func (s *Store) GetCustomerBySessionToken(ctx context.Context, tokenHash string)
 	return c, nil
 }
 
+// MarkSessionReauthenticated records that the session's owner just confirmed
+// it's them through Ordnary's sign-in form.
+func (s *Store) MarkSessionReauthenticated(ctx context.Context, tokenHash string) error {
+	_, err := s.conn.ExecContext(ctx, `UPDATE sessions SET reauthenticated_at = now() WHERE token_hash = $1`, tokenHash)
+	return err
+}
+
+// SessionReauthenticatedSince reports whether the session was confirmed
+// through Ordnary at or after since.
+func (s *Store) SessionReauthenticatedSince(ctx context.Context, tokenHash string, since time.Time) (bool, error) {
+	var ok bool
+	err := s.conn.QueryRowContext(ctx, `
+		SELECT COALESCE(reauthenticated_at >= $2, false) FROM sessions WHERE token_hash = $1
+	`, tokenHash, since).Scan(&ok)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	return ok, err
+}
+
 func (s *Store) DeleteSession(ctx context.Context, tokenHash string) error {
 	_, err := s.conn.ExecContext(ctx, `DELETE FROM sessions WHERE token_hash = $1`, tokenHash)
 	return err

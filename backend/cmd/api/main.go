@@ -253,6 +253,7 @@ func main() {
 	mux.HandleFunc("PATCH /api/account/name", auth.RequireSession(app.Store, app.UpdateAccountName))
 	mux.HandleFunc("PATCH /api/account/profile", auth.RequireSession(app.Store, app.UpdateAccountProfile))
 	mux.HandleFunc("DELETE /api/account", auth.RequireSession(app.Store, app.TerminateAccount))
+	mux.HandleFunc("GET /api/account/terminate/confirm", auth.RequireSession(app.Store, app.ConfirmTerminate))
 
 	mux.HandleFunc("GET /api/account/api-keys", auth.RequireSession(app.Store, app.ListAPIKeys))
 	mux.HandleFunc("POST /api/account/api-keys", auth.RequireSession(app.Store, app.CreateAPIKey))

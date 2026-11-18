@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"amelu/backend/internal/auth"
 	"amelu/backend/internal/db"
@@ -33,7 +34,65 @@ func (a *App) OrdnaryLogin(w http.ResponseWriter, r *http.Request) {
 		}
 		origin = o
 	}
-	a.Ordnary.Login(w, r, origin, r.URL.Query().Get("switch") == "1")
+	a.Ordnary.Login(w, r, ordnaryauth.LoginOptions{
+		Origin:        origin,
+		ReturnTo:      r.URL.Query().Get("returnTo"),
+		SwitchAccount: r.URL.Query().Get("switch") == "1",
+	})
+}
+
+// reauthWindow is how long a confirmation through Ordnary counts for
+// TerminateAccount.
+const reauthWindow = 10 * time.Minute
+
+// ConfirmTerminate sends the signed-in customer through Ordnary's sign-in
+// form to confirm it's them before deleting the account: Amelu has no
+// passwords of its own to ask for. OrdnaryCallback marks the session and
+// returns to the terminate page.
+func (a *App) ConfirmTerminate(w http.ResponseWriter, r *http.Request) {
+	if a.Ordnary == nil {
+		writeError(w, http.StatusServiceUnavailable, "login with Ordnary account is not configured")
+		return
+	}
+	origin := a.FrontendOrigin
+	if o := r.URL.Query().Get("origin"); o != "" && slices.Contains(a.FrontendOrigins, o) {
+		origin = o
+	}
+	a.Ordnary.Login(w, r, ordnaryauth.LoginOptions{
+		Origin:        origin,
+		ReturnTo:      "/account/terminate",
+		SwitchAccount: true,
+		Purpose:       "reauth",
+	})
+}
+
+// finishReauth handles a confirmation round trip: the Ordnary user has to be
+// the one signed in to this session, which is then marked as just confirmed.
+// No new session is started.
+func (a *App) finishReauth(w http.ResponseWriter, r *http.Request, result *ordnaryauth.CallbackResult) {
+	back := a.loginOrigin(result) + safeReturnTo(result.ReturnTo)
+	token, err := auth.TokenFromRequest(r)
+	if err != nil {
+		http.Redirect(w, r, a.loginOrigin(result)+"/login", http.StatusFound)
+		return
+	}
+	hash := auth.HashToken(token)
+	current, err := a.Store.GetCustomerBySessionToken(r.Context(), hash)
+	if err != nil {
+		http.Redirect(w, r, a.loginOrigin(result)+"/login", http.StatusFound)
+		return
+	}
+	confirmed, err := a.Store.GetCustomerByOrdnarySubject(r.Context(), result.User.ID)
+	if err != nil || confirmed.ID != current.ID {
+		http.Redirect(w, r, back+"?confirm=mismatch", http.StatusFound)
+		return
+	}
+	if err := a.Store.MarkSessionReauthenticated(r.Context(), hash); err != nil {
+		log.Printf("ordnary auth: mark reauth for %s: %v", current.ID, err)
+		http.Redirect(w, r, back+"?confirm=failed", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, back+"?confirm=ok", http.StatusFound)
 }
 
 // loginOrigin is the dashboard to send the browser back to after the Ordnary
@@ -71,6 +130,10 @@ func (a *App) OrdnaryCallback(w http.ResponseWriter, r *http.Request) {
 		// a refused code exchange, userinfo) is only ever visible here.
 		log.Printf("ordnary auth: callback: %v", err)
 		http.Redirect(w, r, a.loginOrigin(result)+"/login?error=ordnary_auth_failed", http.StatusFound)
+		return
+	}
+	if result.Purpose == "reauth" {
+		a.finishReauth(w, r, result)
 		return
 	}
 	if !result.User.EmailVerified {

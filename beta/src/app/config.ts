@@ -25,6 +25,11 @@ export function ordnaryLoginUrl(returnTo: string, switchAccount = false): string
   return `${API_ORIGIN}/api/auth/ordnary/login?${query}`;
 }
 
+/** Ordnary's sign-in form to confirm it's you before terminating the account; it comes back to /account/terminate. */
+export function terminateConfirmUrl(): string {
+  return `${API_ORIGIN}/api/account/terminate/confirm?${new URLSearchParams({ origin: window.location.origin })}`;
+}
+
 /** The public repository, linked from the beta notice on the home page. */
 export const GITHUB_URL = 'https://github.com/ordnary-com/amelu';
 

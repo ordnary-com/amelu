@@ -207,6 +207,7 @@ func main() {
 	mux.HandleFunc("GET /internal/admin/support/tickets", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminListSupportTickets))
 	mux.HandleFunc("GET /internal/admin/support/tickets/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetSupportTicket))
 	mux.HandleFunc("POST /internal/admin/support/tickets/{id}/messages", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminReplySupportTicket))
+	mux.HandleFunc("GET /internal/admin/support/tickets/{id}/attachments/{attachmentId}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetSupportAttachment))
 	mux.HandleFunc("PATCH /internal/admin/support/tickets/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateSupportTicket))
 
 	mux.HandleFunc("POST /api/signup", app.Signup)
@@ -282,6 +283,7 @@ func main() {
 	mux.HandleFunc("POST /api/support/tickets", auth.Require(app.Store, app.CreateSupportTicket))
 	mux.HandleFunc("GET /api/support/tickets/{id}", auth.Require(app.Store, app.GetSupportTicket))
 	mux.HandleFunc("POST /api/support/tickets/{id}/messages", auth.Require(app.Store, app.ReplySupportTicket))
+	mux.HandleFunc("GET /api/support/tickets/{id}/attachments/{attachmentId}", auth.Require(app.Store, app.GetSupportAttachment))
 	mux.HandleFunc("POST /api/support/tickets/{id}/close", auth.Require(app.Store, app.CloseSupportTicket))
 
 	mux.HandleFunc("GET /api/domains/{id}/activity", auth.Require(app.Store, app.GetActivity))

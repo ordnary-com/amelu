@@ -34,7 +34,7 @@ import { Notifications } from './notifications';
             <button type="button" class="cursor-pointer text-[12px] text-link hover:underline" (click)="notices.markAllRead()">Mark all as read</button>
           }
         </div>
-        <ul class="max-h-[60vh] overflow-y-auto py-1">
+        <ul class="max-h-[60vh] overflow-y-auto pt-1 pb-2">
           @for (n of notices.all(); track n.id) {
             <li>
               <a [routerLink]="n.link" class="flex items-start gap-2.5 px-4 py-2 hover:bg-bg/60" (click)="open.set(false)">
@@ -55,7 +55,6 @@ import { Notifications } from './notifications';
             </li>
           }
         </ul>
-        <div class="mt-1 h-3 border-t border-line" aria-hidden="true"></div>
       </div>
     }
   `,

@@ -23,8 +23,8 @@ internet <-> Vultr (AS20473) <-> rtr1-ams (enp1s0) <-> WireGuard 172.31.73.0/30 
 | `90-router.conf` | `/etc/sysctl.d/` IP forwarding |
 
 marduk's side is `ops/marduk/wg-vultr.conf` (wg-quick@vultr): table 30
-default via rtr1-ams at metric 50, so the block leaves through Vultr; Melbicom
-was a fallback until it was cancelled the same night; Lagrange (bgp, metric 200) is the only fallback.
+default via rtr1-ams at metric 50, so the block leaves through Vultr; rtr1-par
+(metric 60) takes over when rtr1-ams stops answering.
 
 Status 2026-11-17 23:25 CET: session Established, 66 of 333 RIS peers see the
 /24 via AS20473 within minutes, HTTPS and ICMP from/to 89.106.70.2 work.

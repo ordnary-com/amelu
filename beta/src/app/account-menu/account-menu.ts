@@ -8,9 +8,8 @@ import { Theme } from '../theme';
 import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
 
 /**
- * Top-right account button, modelled on ordnary-console's: organization badge
- * and name, opening a panel with plan, who you're signed in as, and where to
- * manage that.
+ * Top-right account button: your picture and name, opening a panel with
+ * plan, who you're signed in as, and where to manage that.
  */
 @Component({
   selector: 'amelu-account-menu',

@@ -3,11 +3,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Session } from '../session';
 import { ROLE, badgeClass } from '../status';
 import { ORDNARY_ACCOUNT_URL } from '../config';
+import { Icon } from '../icon';
 
 /** Title and grouped side menu shared by every /account page. */
 @Component({
   selector: 'amelu-account-layout',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, Icon],
   template: `
     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
       <h1 class="text-[22px] leading-tight font-normal">
@@ -31,7 +32,7 @@ import { ORDNARY_ACCOUNT_URL } from '../config';
                 <li>
                   @if (item.href) {
                     <a [href]="item.href" target="_blank" rel="noreferrer" [class]="navItem">
-                      {{ item.label }}<span class="ml-auto text-muted" aria-hidden="true">↗</span>
+                      {{ item.label }}<amelu-icon name="external" [size]="15" class="ml-auto text-muted" />
                     </a>
                   } @else {
                     <a

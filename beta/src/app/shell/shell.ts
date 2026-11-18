@@ -160,7 +160,7 @@ export class Shell {
   // A category with pages under it: its link ends in a chevron, and clicking it unfolds them.
   protected readonly category = 'group mx-2 truncate [&>a]:py-2';
   // A category and its pages share one list item, so they fold as a group.
-  protected readonly groupedCategory = 'group truncate [&>a]:py-2';
+  protected readonly groupedCategory = 'group truncate [&>a]:py-2 [&>button]:py-2';
   protected readonly groupedSubitem =
     'group mr-2 ml-[14px] truncate border-l-2 border-chrome-ink/20 py-0.5 pl-1.5 [&>a]:py-1.5 [&.active]:border-chrome-ink/80';
 

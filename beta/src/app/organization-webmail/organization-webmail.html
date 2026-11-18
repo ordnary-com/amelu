@@ -1,9 +1,4 @@
-<amelu-page-header
-  title="Webmail"
-  [crumbs]="[{ label: 'My Organization', link: '/organization' }, { label: 'Webmail' }]"
->
-  Your own webmail address with your name, logo and colour. "Open in webmail" sends your mailboxes there.
-</amelu-page-header>
+<p class="mb-5 max-w-3xl text-[14px] text-muted">Your own webmail address with your name, logo and colour. "Open in webmail" sends your mailboxes there.</p>
 
 @if (branding() === undefined) {
   <div [class]="ui.card + ' space-y-3 p-4'" aria-hidden="true">

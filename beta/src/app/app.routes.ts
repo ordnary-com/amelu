@@ -67,12 +67,18 @@ export const routes: Routes = [
           { path: 'terminate', loadComponent: () => import('./misc/terminate-account').then((m) => m.TerminateAccount), title: 'Terminate account · My Account · Amelu' },
         ],
       },
-      { path: 'organization', loadComponent: () => import('./organization-page/organization-page').then((m) => m.OrganizationPage), title: 'My Organization · Amelu' },
-      { path: 'organization/activity', loadComponent: () => import('./activity-page/activity-page').then((m) => m.ActivityPage), title: 'Activity Log · Amelu' },
       {
-        path: 'organization/webmail',
-        loadComponent: () => import('./organization-webmail/organization-webmail').then((m) => m.OrganizationWebmail),
-        title: 'Webmail · Amelu',
+        path: 'organization',
+        loadComponent: () => import('./organization-layout/organization-layout').then((m) => m.OrganizationLayout),
+        children: [
+          { path: '', loadComponent: () => import('./organization-page/organization-page').then((m) => m.OrganizationPage), title: 'My Organization · Amelu' },
+          { path: 'activity', loadComponent: () => import('./activity-page/activity-page').then((m) => m.ActivityPage), title: 'Activity Log · Amelu' },
+          {
+            path: 'webmail',
+            loadComponent: () => import('./organization-webmail/organization-webmail').then((m) => m.OrganizationWebmail),
+            title: 'Webmail · Amelu',
+          },
+        ],
       },
       {
         path: 'billing',

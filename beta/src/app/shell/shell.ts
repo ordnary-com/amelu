@@ -62,7 +62,7 @@ const LINK =
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex h-screen flex-col bg-chrome' },
+  host: { class: 'flex h-screen bg-chrome' },
 })
 export class Shell {
   // The campaign deal is for the free plan; paid plans don't see it.

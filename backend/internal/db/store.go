@@ -340,7 +340,7 @@ func (s *Store) GetCustomerBySessionToken(ctx context.Context, tokenHash string)
 		SELECT c.id, c.email, c.name, c.password_hash, c.plan_tier_id, c.organization_id, c.last_sign_in_at, c.created_at
 		FROM sessions s
 		JOIN customers c ON c.id = s.customer_id
-		WHERE s.token_hash = $1 AND s.expires_at > now()
+		WHERE s.token_hash = $1 AND s.expires_at > now() AND c.suspended_at IS NULL
 	`, tokenHash).Scan(&c.ID, &c.Email, &c.Name, &c.PasswordHash, &c.PlanTierID, &c.OrganizationID, &c.LastSignInAt, &c.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound

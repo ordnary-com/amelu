@@ -16,6 +16,12 @@ export const UI = {
   card: 'rounded-lg border border-line bg-surface',
   sectionTitle: 'mb-3 text-[14px] font-bold',
 
+  // Panels: a bordered card with a title bar over a faint grey body (well).
+  panel: 'overflow-hidden rounded-lg border border-line bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.05)]',
+  panelHeader: 'flex h-11 items-center justify-between gap-3 border-b border-line px-4',
+  panelTitle: 'text-[15px] font-medium',
+  well: 'bg-well p-4',
+
   // Tables: a white bordered box on a panel's grey body, medium headers (sortable
   // ones as a button with arrows), rows split by lines.
   tableWrap: 'overflow-x-auto rounded-md border border-line bg-surface',

@@ -1,4 +1,1 @@
-<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-  <rect width="48" height="48" rx="8" fill="#2f4bd0"/>
-  <text x="24" y="33" text-anchor="middle" font-family="IBM Plex Sans, Arial, sans-serif" font-weight="700" font-size="26" fill="#ffffff">a</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" fill="#2f4bd0" rx="8"/><text x="24" y="33" fill="#fff" font-family="IBM Plex Sans, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">a</text></svg>

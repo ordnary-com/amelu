@@ -26,19 +26,9 @@ interface Row extends SendingIp {
 
 // The addresses listed even before the mail server reports on them. Pools and
 // status come from GET /api/sending/network (amelu-ip-pools on marduk).
-const CURRENT_IPS: SendingIp[] = [
-  { name: 'out2.mx.amelu.org', ip: '51.89.60.49', pool: 'system', network: 'current' },
-  { name: 'out4.mx.amelu.org', ip: '51.89.39.34', pool: 'system', network: 'current' },
-  { name: 'out1.mx.amelu.org', ip: '51.89.60.60', pool: 'trusted', network: 'current' },
-  { name: 'out5.mx.amelu.org', ip: '51.89.2.193', pool: 'trusted', network: 'current' },
-  { name: 'out8.mx.amelu.org', ip: '51.89.76.15', pool: 'trusted', network: 'current' },
-  { name: 'out9.mx.amelu.org', ip: '51.89.85.197', pool: 'trusted', network: 'current' },
-  { name: 'out3.mx.amelu.org', ip: '51.89.76.2', pool: 'newdomains', network: 'current' },
-  { name: 'out6.mx.amelu.org', ip: '51.89.1.228', pool: 'newdomains', network: 'current' },
-  { name: 'out7.mx.amelu.org', ip: '51.89.102.29', pool: 'newdomains', network: 'current' },
-  { name: 'out10.mx.amelu.org', ip: '51.89.85.192', pool: 'newdomains', network: 'current' },
-  { name: 'out11.mx.amelu.org', ip: '51.89.76.0', pool: 'spare', network: 'current' },
-];
+// The OVH addresses (51.89.0.0/16) were retired on 2026-11-18, when the mail
+// server moved and started sending only from our own block.
+const CURRENT_IPS: SendingIp[] = [];
 
 // Our own block 89.106.70.0/24 (AS218905), routed through rtr2-ams, rtr1-ams
 // and rtr1-par. All 64 are listed so customers can allowlist them before they
@@ -55,7 +45,6 @@ const SENDING_IPS: SendingIp[] = [...CURRENT_IPS, ...OWN_BLOCK_IPS];
 
 // provider: who runs the network the addresses are announced from (the ASN's holder).
 const NETWORKS: { id: Network; label: string; cidr: string; asn: string; provider: string }[] = [
-  { id: 'current', label: 'Current addresses', cidr: '51.89.0.0/16', asn: 'AS16276', provider: 'OVHcloud' },
   { id: 'own', label: 'Own network', cidr: '89.106.70.0/24', asn: 'AS218905', provider: 'Ordnary' },
 ];
 
@@ -99,8 +88,8 @@ export class NetworkPage {
   protected readonly ips = computed<Row[]>(() => {
     const reported = this.report()?.ips ?? [];
     if (!reported.length) {
-      // No report: the old addresses are the ones in use.
-      return SENDING_IPS.map((row) => ({ ...row, status: row.network === 'current' ? 'sending' : 'unused' }));
+      // No report yet: list the addresses without claiming a status.
+      return SENDING_IPS.map((row) => ({ ...row, status: 'unused' }));
     }
     const byIp = new Map(reported.map((r) => [r.ip, r]));
     const rows: Row[] = SENDING_IPS.map((row) => {
@@ -111,12 +100,13 @@ export class NetworkPage {
     });
     const listed = new Set(SENDING_IPS.map((row) => row.ip));
     for (const r of reported) {
-      if (listed.has(r.ip)) continue;
+      // Only our own block is listed; anything else would have no subnet row.
+      if (listed.has(r.ip) || !r.ip.startsWith('89.106.70.')) continue;
       rows.push({
         name: r.name,
         ip: r.ip,
         pool: isPool(r.group) ? r.group : 'unassigned',
-        network: r.ip.startsWith('89.106.70.') ? 'own' : 'current',
+        network: 'own',
         status: STATE_STATUS[r.state] ?? 'pending',
       });
     }

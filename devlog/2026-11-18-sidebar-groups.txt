@@ -1,9 +1,0 @@
-Sidebar: only one category open at a time
-2026-11-18
-
-In the 2.0 dashboard's main menu (beta/src/app/shell), unfolding Domains
-folds My Organization and the other way round; being on an /organization/
-page keeps My Organization open and Domains folded. Older stored state with
-both open falls back to Domains. Each category and its pages now share one
-list item (groupedCategory, groupedSubitem in shell.ts). A light container
-behind unfolded categories was tried and removed again the same night.

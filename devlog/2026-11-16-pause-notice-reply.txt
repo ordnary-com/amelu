@@ -1,9 +1,0 @@
-Pause notice points at abuse@amelu.org instead of "reply"
-2026-11-16
-
-The sender guard's sending-paused mail said "reply to this email", but it
-goes to the paused domain's own mailboxes, and those can't send while the
-pause is on. 120365.org's owner had to write in from Gmail to ask why. The
-text and HTML now say to email abuse@amelu.org from another address. The
-copies in /etc/amelu-sender-guard/ on marduk were updated the same day
-(commit f06e4b1).

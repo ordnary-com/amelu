@@ -6,17 +6,16 @@ import { catchError, firstValueFrom, map, of } from 'rxjs';
 import { Api, errorMessage } from '../api';
 import { Domains } from '../domains';
 import { Alert } from '../alert/alert';
-import { INVOICE_STATUS, SUBSCRIPTION_STATUS, badgeClass } from '../status';
+import { INVOICE_STATUS, SUBSCRIPTION_STATUS, Tone, badgeClass } from '../status';
 import { planPriceLine } from '../billing';
 import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
-import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
+import { Icon, IconName } from '../icon';
 
 /** The current dashboard's /billing/overview: plan, status, payment method and the Stripe portal. */
 @Component({
   selector: 'amelu-billing-overview',
-  imports: [EmptyState, CurrencyPipe, DatePipe, RouterLink, Alert, Icon, DitherShader],
+  imports: [EmptyState, CurrencyPipe, DatePipe, RouterLink, Alert, Icon],
   templateUrl: './billing-overview.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -28,6 +27,12 @@ export class BillingOverview {
   protected readonly subscriptionStatus = SUBSCRIPTION_STATUS;
   protected readonly invoiceStatus = INVOICE_STATUS;
   protected readonly priceLine = planPriceLine;
+  protected readonly toneText: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
+  protected readonly toneIcon: Record<Tone, IconName> = { ok: 'circleCheck', warn: 'circleAlert', bad: 'circleX', neutral: 'clock' };
+  // Label-over-value fields, as on My Account.
+  protected readonly field = 'min-w-0 px-5 py-4 max-sm:not-first:border-t max-sm:not-first:border-line';
+  protected readonly fieldLabel = 'text-[13px] text-muted';
+  protected readonly fieldValue = 'mt-1 truncate text-[16px]';
 
   // undefined while loading, null when the request failed
   protected readonly overview = toSignal(this.api.billingOverview().pipe(catchError(() => of(null))));

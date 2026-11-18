@@ -24,6 +24,9 @@ Start with a title line and the date, blank line, then the text.
 
 ENTRIES
 
+2026-11-18  README rewritten to match the current setup
+            2026-11-18-readme.txt
+
 2026-11-18  Webmail logo upload is a drop zone with previews
             2026-11-18-webmail-logo-upload.txt
 

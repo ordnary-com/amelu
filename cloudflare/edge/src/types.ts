@@ -38,6 +38,9 @@ export interface Env {
   // backend/internal/config/config.go for what each one does.
   // Required by the Go origin at startup:
   DATABASE_URL: string;
+  PG_TUNNEL_HOSTNAME?: string;
+  CF_ACCESS_CLIENT_ID?: string;
+  CF_ACCESS_CLIENT_SECRET?: string;
   STALWART_BASE_URL: string;
   STALWART_ADMIN_USER: string;
   STALWART_ADMIN_PASSWORD: string;

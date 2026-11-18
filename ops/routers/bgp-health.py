@@ -3,7 +3,7 @@
 GET /healthz on port 9180: 200 while at least one of the router's upstream
 BGP sessions is Established (the router still carries 89.106.70.0/24), 503
 otherwise. ordnary.com/status checks it every minute
-(Airplane, Status, Network group), so a dropped session shows there.
+(Airplane, Status, Service Health), so a dropped session shows there.
 
 The sessions to watch are BIRD protocol names in BGP_PROTOCOLS (space
 separated, /etc/default/bgp-health), e.g. "ifog4". It asks BIRD in restricted

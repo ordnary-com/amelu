@@ -5,9 +5,10 @@ answers 200 while at least one upstream session from `/etc/default/bgp-health`
 (`ops/<router>/bgp-health.env`) is Established, 503 otherwise. It reads BIRD
 through `birdc -r` as a DynamicUser in group `bird`.
 
-ordnary.com/status checks it every minute from the Network group in Airplane
-(Status > Structure): Amsterdam 1 = rtr1-ams, Amsterdam 2 = rtr2-ams,
-Paris = rtr1-par. Two failed checks in a row mark the router down.
+ordnary.com/status checks it every minute; the routers are components in
+Service Health with the Router badge (Airplane, Status > Structure):
+ams-edge-1 = rtr1-ams, ams-edge-2 = rtr2-ams, par-edge-1 = rtr1-par. Two
+failed checks in a row mark the router down.
 
 Install or update on a router:
 

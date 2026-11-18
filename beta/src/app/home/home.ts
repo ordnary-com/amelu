@@ -1,14 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, of } from 'rxjs';
-import { Api } from '../api';
-import { Icon } from '../icon';
+import { Api, Domain } from '../api';
+import { Icon, IconName } from '../icon';
 import { Session } from '../session';
 import { Domains } from '../domains';
 import { QuickActions } from '../quick-actions/quick-actions';
-import { DomainHealthChecks } from '../domain-health';
+import { DomainHealthChecks, healthScore } from '../domain-health';
 import { DOMAIN_STATUS, INVOICE_STATUS, Tone, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
@@ -44,14 +44,52 @@ export class Home {
   protected readonly toneText: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
 
   // Flat panels with a title bar, boxed figures and bordered tables.
-  protected readonly panel = 'overflow-hidden rounded-md border border-line bg-surface';
-  protected readonly panelHeader = 'flex min-h-14 items-center justify-between gap-3 border-b border-line px-5 py-3';
+  protected readonly panel = 'overflow-hidden rounded-lg border border-line bg-surface';
+  protected readonly panelHeader = 'flex min-h-16 items-center justify-between gap-3 border-b border-line px-7 py-3 max-mobile:px-4';
   protected readonly panelTitle = 'text-[17px] font-medium';
   protected readonly arrow = 'inline-flex size-8 flex-none items-center justify-center rounded-md text-ink hover:bg-bg';
   protected readonly stat = 'flex items-center justify-between gap-4 rounded-md border border-line px-5 py-4 text-[14px]';
   protected readonly statValue = 'flex-none text-[28px] leading-none font-normal tabular-nums';
-  protected readonly th = 'px-5 py-3 font-medium whitespace-nowrap';
-  protected readonly td = 'px-5 py-3.5 align-middle';
+  // A panel body holding a table: grey, so the white table stands out.
+  protected readonly tableBody = 'bg-bg/40 p-6 max-mobile:p-4';
+  protected readonly toneIcon: Record<Tone, IconName> = { ok: 'circleCheck', warn: 'circleAlert', bad: 'circleX', neutral: 'clock' };
+
+  protected readonly domainColumns: { key: DomainSort; label: string }[] = [
+    { key: 'name', label: 'Name / ID' },
+    { key: 'status', label: 'Status' },
+    { key: 'dns', label: 'DNS records' },
+    { key: 'added', label: 'Added' },
+  ];
+  /** null keeps the order from Domains (favorites first, then your listing settings). */
+  protected readonly sort = signal<{ key: DomainSort | null; dir: 1 | -1 }>({ key: null, dir: 1 });
+  protected readonly sortedDomains = computed(() => {
+    const list = [...(this.domains() ?? [])];
+    const { key, dir } = this.sort();
+    if (!key) return list;
+    const health = this.health();
+    const value = (d: Domain): string | number =>
+      key === 'name' ? d.name : key === 'status' ? DOMAIN_STATUS[d.status].label : key === 'added' ? d.createdAt : (healthScore(health?.[d.id]) ?? -1);
+    return list.sort((a, b) => {
+      const x = value(a);
+      const y = value(b);
+      return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y))) * dir;
+    });
+  });
+
+  protected sortBy(key: DomainSort): void {
+    this.sort.update((s) => (s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: 1 }));
+  }
+
+  protected readonly copied = signal<string | null>(null);
+  protected async copy(id: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(id);
+      this.copied.set(id);
+      setTimeout(() => this.copied.set(null), 1500);
+    } catch {
+      // No clipboard access (insecure origin or denied): nothing to show.
+    }
+  }
 
   // undefined while loading, null when the request failed
   protected readonly domains = inject(Domains).arranged;
@@ -106,3 +144,5 @@ export class Home {
     return id ? (this.sendingLimits[id] ?? null) : null;
   });
 }
+
+type DomainSort = 'name' | 'status' | 'dns' | 'added';

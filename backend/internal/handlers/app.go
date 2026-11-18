@@ -14,9 +14,12 @@ import (
 )
 
 type App struct {
-	Store        *db.Store
-	Stalwart     *stalwart.Client
-	CookieSecure bool
+	Store *db.Store
+	// SupportNotifyEmail gets a short email for every new ticket and customer
+	// reply; empty disables it.
+	SupportNotifyEmail string
+	Stalwart           *stalwart.Client
+	CookieSecure       bool
 
 	// DomainConnect is nil until Cloudflare has approved the template (see
 	// internal/domainconnect) — handlers must treat that as "unsupported",

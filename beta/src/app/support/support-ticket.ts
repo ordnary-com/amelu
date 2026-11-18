@@ -63,17 +63,16 @@ const BODY_MAX = 20000;
             </ol>
           </section>
 
-          <section>
-            <h2 [class]="ui.sectionTitle">Reply</h2>
-            <form [class]="ui.card + ' space-y-4 p-4'" (submit)="send($event)">
-              @if (t.status === 'closed') {
-                <p class="text-[13px] text-muted">This ticket is closed. Replying opens it again.</p>
-              }
-              <label class="block">
+          <form (submit)="send($event)">
+            @if (t.status === 'closed') {
+              <p class="mb-2 text-[13px] text-muted">This ticket is closed. Replying opens it again.</p>
+            }
+            <div [class]="ui.card + ' flex items-end gap-2 p-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30'">
+              <label class="min-w-0 flex-1">
                 <span class="sr-only">Reply</span>
                 <textarea
-                  rows="5"
-                  [class]="ui.input + ' mt-0 h-auto py-2 leading-relaxed'"
+                  rows="2"
+                  class="block max-h-60 w-full resize-none bg-transparent px-2 py-1.5 text-[13px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted"
                   [maxLength]="bodyMax"
                   placeholder="Write a reply"
                   [value]="reply()"
@@ -81,11 +80,10 @@ const BODY_MAX = 20000;
                   (keydown.meta.enter)="send($event)"
                   (keydown.control.enter)="send($event)"
                 ></textarea>
-                <span [class]="ui.hint">We email you when support replies. Cmd or Ctrl + Enter sends.</span>
               </label>
-              <button type="submit" [class]="ui.primary" [disabled]="busy() || !reply().trim()">{{ busy() ? 'Sending...' : 'Send reply' }}</button>
-            </form>
-          </section>
+              <button type="submit" [class]="ui.primary + ' flex-none'" [disabled]="busy() || !reply().trim()">{{ busy() ? 'Sending...' : 'Send' }}</button>
+            </div>
+          </form>
         </div>
 
         <aside class="space-y-6">

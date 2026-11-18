@@ -15,11 +15,12 @@ import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
 import { SetupChecklist } from '../setup-checklist/setup-checklist';
 import { DitherShader } from '../login/dither-shader';
+import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { UI } from '../ui';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, SetupChecklist, DitherShader],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, SetupChecklist, DitherShader, HlmTooltipImports],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-5' },

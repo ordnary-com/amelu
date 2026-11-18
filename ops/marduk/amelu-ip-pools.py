@@ -29,7 +29,7 @@ Runs every 10 minutes from cron.
   amelu-ip-pools.py --dry-run   print the decision, change nothing
   amelu-ip-pools.py --off       send everything from marduk's own IP again
 """
-import base64, datetime, json, os, re, socket, subprocess, sys, urllib.request
+import base64, datetime, ipaddress, json, os, re, socket, subprocess, sys, urllib.request
 
 JMAP = "http://127.0.0.1:8080/jmap"
 MX_HOST = "marduk.mx.amelu.org"
@@ -295,7 +295,9 @@ def spf_ips():
     except (OSError, subprocess.TimeoutExpired):
         return None
     txt = "".join(part.strip('"') for part in out.split())
-    return set(re.findall(r"ip4:([0-9.]+)", txt)) if "v=spf1" in txt else None
+    if "v=spf1" not in txt:
+        return None
+    return [ipaddress.ip_network(n) for n in re.findall(r"ip4:([0-9.]+(?:/[0-9]+)?)", txt)]
 
 
 def main():
@@ -304,8 +306,9 @@ def main():
     mx = mx_ips()
     spf = spf_ips()
     sending = {ip for g in GROUPS.values() for ip in g.values()}
-    if spf is not None and not sending <= spf:
-        print(f"warning: {SPF_HOST} misses {sorted(sending - spf)}", flush=True)
+    missing = sorted(ip for ip in sending if spf is not None and not any(ipaddress.ip_address(ip) in n for n in spf))
+    if missing:
+        print(f"warning: {SPF_HOST} misses {missing}", flush=True)
     out, news = watch_reputation(dry)
     for n in news:
         print(f"{datetime.datetime.now(datetime.timezone.utc).isoformat()} reputation: {n}", flush=True)

@@ -1,209 +1,209 @@
 <p class="mb-5 max-w-3xl text-[14px] text-muted">Your own webmail address with your name, logo and colour. "Open in webmail" sends your mailboxes there.</p>
 
 @if (branding() === undefined) {
-  <div [class]="ui.card + ' space-y-3 p-4'" aria-hidden="true">
+  <div [class]="ui.setCard + ' space-y-3 p-5'" aria-hidden="true">
     <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
     <span class="block h-9 w-full animate-pulse rounded bg-bg"></span>
   </div>
 } @else if (branding() === null) {
-  <amelu-empty-state [class]="ui.card" title="Webmail settings couldn't be loaded" [error]="true" />
+  <amelu-empty-state [class]="ui.setCard" title="Webmail settings couldn't be loaded" [error]="true" />
 } @else {
   @let b = branding()!;
-  <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-    <div class="min-w-0 space-y-6">
-      @if (!b.allowed) {
-        <amelu-alert kind="warning" title="Part of the Go and Pro plans">
-          Upgrade to give your organization its own branded webmail.
-          <a routerLink="/billing/plans" class="font-medium underline">See plans</a>
-        </amelu-alert>
-      } @else if (!b.canManage) {
-        <amelu-alert kind="warning" title="View only">Only owners and admins can change these settings.</amelu-alert>
-      }
-      @if (error(); as message) {
-        <amelu-alert kind="error" title="That didn't work" [dismissible]="true" (dismissed)="error.set(null)">{{ message }}</amelu-alert>
-      }
-      @if (notice(); as message) {
-        <amelu-alert kind="success" title="Done" [dismissible]="true" (dismissed)="notice.set(null)">{{ message }}</amelu-alert>
-      }
+  <div class="space-y-5">
+    @if (!b.allowed) {
+      <amelu-alert kind="warning" title="Part of the Go and Pro plans">
+        Upgrade to give your organization its own branded webmail.
+        <a routerLink="/billing/plans" class="font-medium underline">See plans</a>
+      </amelu-alert>
+    } @else if (!b.canManage) {
+      <amelu-alert kind="warning" title="View only">Only owners and admins can change these settings.</amelu-alert>
+    }
+    @if (error(); as message) {
+      <amelu-alert kind="error" title="That didn't work" [dismissible]="true" (dismissed)="error.set(null)">{{ message }}</amelu-alert>
+    }
+    @if (notice(); as message) {
+      <amelu-alert kind="success" title="Done" [dismissible]="true" (dismissed)="notice.set(null)">{{ message }}</amelu-alert>
+    }
 
-      <form class="space-y-6" (submit)="save($event)">
-        <section>
-          <h2 [class]="ui.sectionTitle">Address</h2>
-          <div [class]="ui.card + ' space-y-4 p-4'">
-            <div class="-mx-4 flex items-start gap-4 border-b border-line px-4 pb-4">
-              <div class="min-w-0 flex-1">
-                <p id="webmail-enabled-label" class="text-[14px] font-semibold">Use your own webmail</p>
-                <p class="mt-0.5 text-[13px] text-muted">
-                  @if (b.enabled) {
-                    Live at <a [href]="b.url" target="_blank" rel="noopener" class="text-link hover:underline">{{ b.url.replace('https://', '') }}</a>.
+    <form class="space-y-5" (submit)="save($event)">
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 id="webmail-enabled-label" [class]="ui.setTitle">Webmail Address</h2>
+          <button
+            type="button"
+            role="switch"
+            aria-labelledby="webmail-enabled-label"
+            [attr.aria-checked]="enabled()"
+            [disabled]="!editable()"
+            class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none disabled:cursor-default disabled:opacity-50"
+            [class]="enabled() ? 'bg-accent' : 'bg-line'"
+            (click)="enabled.set(!enabled())"
+          >
+            <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="enabled() ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
+          </button>
+        </div>
+        <div class="px-5 py-4">
+          <label for="webmail-subdomain" [class]="fieldLabel">Address</label>
+          <div class="mt-1.5 flex items-center overflow-hidden rounded border border-line hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
+            <input
+              id="webmail-subdomain"
+              class="h-9 min-w-0 flex-1 bg-transparent px-2.5 text-[14px] outline-none placeholder:text-muted"
+              placeholder="For example: yourcompany"
+              autocomplete="off"
+              spellcheck="false"
+              [disabled]="!editable()"
+              [value]="subdomain()"
+              (input)="subdomain.set($any($event.target).value)"
+            />
+            <span class="flex h-9 items-center border-l border-line bg-bg px-2.5 text-[14px] text-muted">.{{ b.subdomainSuffix }}</span>
+          </div>
+          <p [class]="ui.hint">Works right away, no DNS needed. Lowercase letters, digits and hyphens.</p>
+        </div>
+        <p [class]="ui.setNote">
+          <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+          <span>
+            @if (b.enabled) {
+              Live at <a [href]="b.url" target="_blank" rel="noopener" class="text-link hover:underline">{{ b.url.replace('https://', '') }}</a>.
+            } @else {
+              Off. Your mailboxes use the shared Amelu webmail.
+            }
+          </span>
+        </p>
+      </section>
+
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle">Branding</h2>
+        </div>
+        <div class="space-y-4 px-5 py-4">
+          <div>
+            <span [class]="fieldLabel">Logo</span>
+            <!-- Drop a file or pick one; the preview shows it on a light and a dark background. -->
+            <div
+              class="mt-1.5 overflow-hidden rounded border border-dashed transition-colors"
+              [class]="dragging() ? 'border-accent bg-accent/5' : 'border-line'"
+              (dragover)="onDragOver($event)"
+              (dragleave)="dragging.set(false)"
+              (drop)="onDrop($event)"
+            >
+              <div class="grid grid-cols-2">
+                <div class="flex h-24 items-center justify-center bg-white p-3">
+                  @if (logoUrl(); as src) {
+                    <img [src]="src" alt="Your logo on a light background" class="max-h-16 max-w-full object-contain" />
                   } @else {
-                    Off. Your mailboxes use the shared Amelu webmail.
+                    <amelu-icon name="image" [size]="22" class="text-black/25" />
+                  }
+                </div>
+                <div class="flex h-24 items-center justify-center bg-[#16181d] p-3">
+                  @if (logoUrl(); as src) {
+                    <img [src]="src" alt="Your logo on a dark background" class="max-h-16 max-w-full object-contain" />
+                  } @else {
+                    <amelu-icon name="image" [size]="22" class="text-white/25" />
+                  }
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-surface px-3 py-2.5">
+                <p class="text-[13px] text-muted">
+                  @if (busy() === 'logo') {
+                    Uploading...
+                  } @else if (dragging()) {
+                    Drop to upload
+                  } @else {
+                    Drag a logo here, or
+                    <label class="cursor-pointer font-medium text-link hover:underline" [class.pointer-events-none]="!editable()">
+                      choose a file
+                      <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" [disabled]="!editable()" (change)="uploadLogo($event)" />
+                    </label>
                   }
                 </p>
+                @if (b.hasLogo) {
+                  <button
+                    type="button"
+                    class="cursor-pointer text-[13px] text-muted hover:text-bad disabled:pointer-events-none disabled:opacity-50"
+                    [disabled]="!editable() || busy() === 'logo'"
+                    (click)="removeLogo()"
+                  >
+                    Remove
+                  </button>
+                }
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-labelledby="webmail-enabled-label"
-                [attr.aria-checked]="enabled()"
+            </div>
+            @if (logoError(); as message) {
+              <p class="mt-1.5 text-[12px] text-bad" role="alert">{{ message }}</p>
+            } @else {
+              <p [class]="ui.hint">PNG, JPEG or WebP, at most 256 KB. A wide logo on a transparent background works best. Also used as the browser tab icon.</p>
+            }
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="webmail-name" [class]="fieldLabel">Name</label>
+              <input
+                id="webmail-name"
+                [class]="ui.input"
+                maxlength="40"
+                placeholder="For example: Acme Mail"
                 [disabled]="!editable()"
-                class="relative mt-0.5 inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none disabled:cursor-default disabled:opacity-50"
-                [class]="enabled() ? 'bg-accent' : 'bg-line'"
-                (click)="enabled.set(!enabled())"
-              >
-                <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="enabled() ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
-              </button>
+                [value]="productName()"
+                (input)="productName.set($any($event.target).value)"
+              />
+              <p [class]="ui.hint">Shown in the browser tab and on the sign-in page.</p>
             </div>
             <div>
-              <label for="webmail-subdomain" [class]="ui.label">Webmail address</label>
-              <div class="mt-1.5 flex items-center overflow-hidden rounded-md border border-line hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
+              <label for="webmail-color" [class]="fieldLabel">Colour</label>
+              <div class="mt-1.5 flex items-center gap-2">
                 <input
-                  id="webmail-subdomain"
-                  class="h-9 min-w-0 flex-1 bg-transparent px-2.5 text-[13px] outline-none placeholder:text-muted"
-                  placeholder="For example: yourcompany"
-                  autocomplete="off"
+                  type="color"
+                  aria-label="Pick a colour"
+                  class="h-9 w-11 flex-none cursor-pointer rounded-md border border-line bg-transparent p-1 disabled:cursor-default"
+                  [disabled]="!editable()"
+                  [value]="colorPickerValue()"
+                  (input)="pickColor($event)"
+                />
+                <input
+                  id="webmail-color"
+                  class="h-9 w-full rounded-md border border-line bg-transparent px-2.5 font-mono text-[13px] outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
+                  placeholder="For example: #0043ce"
                   spellcheck="false"
                   [disabled]="!editable()"
-                  [value]="subdomain()"
-                  (input)="subdomain.set($any($event.target).value)"
+                  [value]="accentColor()"
+                  (input)="accentColor.set($any($event.target).value)"
                 />
-                <span class="flex h-9 items-center border-l border-line bg-bg px-2.5 text-[13px] text-muted">.{{ b.subdomainSuffix }}</span>
               </div>
-              <p [class]="ui.hint">Works right away, no DNS needed. Lowercase letters, digits and hyphens.</p>
+              <p [class]="ui.hint">Buttons, links and the side bar. Leave empty for the default blue.</p>
             </div>
           </div>
-        </section>
-
-        <section>
-          <h2 [class]="ui.sectionTitle">Branding</h2>
-          <div [class]="ui.card + ' space-y-4 p-4'">
-            <div>
-              <span [class]="ui.label">Logo</span>
-              <!-- Drop a file or pick one; the preview shows it on a light and a dark background. -->
-              <div
-                class="mt-1.5 overflow-hidden rounded-lg border border-dashed transition-colors"
-                [class]="dragging() ? 'border-accent bg-accent/5' : 'border-line'"
-                (dragover)="onDragOver($event)"
-                (dragleave)="dragging.set(false)"
-                (drop)="onDrop($event)"
-              >
-                <div class="grid grid-cols-2">
-                  <div class="flex h-24 items-center justify-center bg-white p-3">
-                    @if (logoUrl(); as src) {
-                      <img [src]="src" alt="Your logo on a light background" class="max-h-16 max-w-full object-contain" />
-                    } @else {
-                      <amelu-icon name="image" [size]="22" class="text-black/25" />
-                    }
-                  </div>
-                  <div class="flex h-24 items-center justify-center bg-[#16181d] p-3">
-                    @if (logoUrl(); as src) {
-                      <img [src]="src" alt="Your logo on a dark background" class="max-h-16 max-w-full object-contain" />
-                    } @else {
-                      <amelu-icon name="image" [size]="22" class="text-white/25" />
-                    }
-                  </div>
-                </div>
-                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-surface px-3 py-2.5">
-                  <p class="text-[13px] text-muted">
-                    @if (busy() === 'logo') {
-                      Uploading...
-                    } @else if (dragging()) {
-                      Drop to upload
-                    } @else {
-                      Drag a logo here, or
-                      <label class="cursor-pointer font-medium text-link hover:underline" [class.pointer-events-none]="!editable()">
-                        choose a file
-                        <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" [disabled]="!editable()" (change)="uploadLogo($event)" />
-                      </label>
-                    }
-                  </p>
-                  @if (b.hasLogo) {
-                    <button
-                      type="button"
-                      class="cursor-pointer text-[13px] text-muted hover:text-bad disabled:pointer-events-none disabled:opacity-50"
-                      [disabled]="!editable() || busy() === 'logo'"
-                      (click)="removeLogo()"
-                    >
-                      Remove
-                    </button>
-                  }
-                </div>
-              </div>
-              @if (logoError(); as message) {
-                <p class="mt-1.5 text-[12px] text-bad" role="alert">{{ message }}</p>
-              } @else {
-                <p [class]="ui.hint">PNG, JPEG or WebP, at most 256 KB. A wide logo on a transparent background works best. Also used as the browser tab icon.</p>
-              }
-            </div>
-            <div class="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label for="webmail-name" [class]="ui.label">Name</label>
-                <input
-                  id="webmail-name"
-                  [class]="ui.input"
-                  maxlength="40"
-                  placeholder="For example: Acme Mail"
-                  [disabled]="!editable()"
-                  [value]="productName()"
-                  (input)="productName.set($any($event.target).value)"
-                />
-                <p [class]="ui.hint">Shown in the browser tab and on the sign-in page.</p>
-              </div>
-              <div>
-                <label for="webmail-color" [class]="ui.label">Colour</label>
-                <div class="mt-1.5 flex items-center gap-2">
-                  <input
-                    type="color"
-                    aria-label="Pick a colour"
-                    class="h-9 w-11 flex-none cursor-pointer rounded-md border border-line bg-transparent p-1 disabled:cursor-default"
-                    [disabled]="!editable()"
-                    [value]="colorPickerValue()"
-                    (input)="pickColor($event)"
-                  />
-                  <input
-                    id="webmail-color"
-                    class="h-9 w-full rounded-md border border-line bg-transparent px-2.5 font-mono text-[13px] outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
-                    placeholder="For example: #0043ce"
-                    spellcheck="false"
-                    [disabled]="!editable()"
-                    [value]="accentColor()"
-                    (input)="accentColor.set($any($event.target).value)"
-                  />
-                </div>
-                <p [class]="ui.hint">Buttons, links and the side bar. Leave empty for the default blue.</p>
-              </div>
-            </div>
-            <div>
-              <label for="webmail-support" [class]="ui.label">Support link</label>
-              <input
-                id="webmail-support"
-                [class]="ui.input"
-                type="url"
-                placeholder="For example: https://yourcompany.com/help"
-                [disabled]="!editable()"
-                [value]="supportUrl()"
-                (input)="supportUrl.set($any($event.target).value)"
-              />
-              <p [class]="ui.hint">Optional. Where "Get support" on the sign-in page goes.</p>
-            </div>
+          <div>
+            <label for="webmail-support" [class]="fieldLabel">Support link</label>
+            <input
+              id="webmail-support"
+              [class]="ui.input"
+              type="url"
+              placeholder="For example: https://yourcompany.com/help"
+              [disabled]="!editable()"
+              [value]="supportUrl()"
+              (input)="supportUrl.set($any($event.target).value)"
+            />
+            <p [class]="ui.hint">Optional. Where "Get support" on the sign-in page goes.</p>
           </div>
-        </section>
-
-        <div class="flex justify-end">
-          <button type="submit" [class]="ui.primary" [disabled]="!editable() || busy() !== null || !changed()">
+        </div>
+        <div class="flex justify-end border-t border-line px-5 py-3">
+          <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!editable() || busy() !== null || !changed()">
             {{ busy() === 'save' ? 'Saving...' : 'Save' }}
           </button>
         </div>
-      </form>
+      </section>
+    </form>
 
-      @if (b.customHostnamesAvailable) {
-        <section>
-          <h2 [class]="ui.sectionTitle">Your own hostname</h2>
-          <div [class]="ui.card + ' space-y-4 p-4'">
+    @if (b.customHostnamesAvailable) {
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle">Your Own Hostname</h2>
+        </div>
+        <div class="space-y-4 px-5 py-4">
             @if (!b.customHostname) {
               <form class="space-y-3" (submit)="connectHostname($event)">
                 <div>
-                  <label for="webmail-hostname" [class]="ui.label">Hostname</label>
+                  <label for="webmail-hostname" [class]="fieldLabel">Hostname</label>
                   <input
                     id="webmail-hostname"
                     [class]="ui.input"
@@ -237,7 +237,7 @@
                 </span>
               </div>
               @if (b.customHostnameStatus !== 'active') {
-                <div class="-mx-4 border-t border-line px-4 pt-4">
+                <div class="-mx-5 border-t border-line px-5 pt-4">
                   <p class="text-[13px]">Add this record at your DNS provider:</p>
                   <div class="mt-2 overflow-x-auto rounded-md border border-line">
                     <table class="w-full text-left text-[13px]">
@@ -260,15 +260,19 @@
                 </div>
               }
             }
-          </div>
-        </section>
-      }
-    </div>
+        </div>
+      </section>
+    }
 
-    <aside class="space-y-6">
-      <section [class]="ui.card + ' overflow-hidden'">
-        <h2 class="px-4 pt-4 text-[14px] font-bold">Preview</h2>
-        <div class="m-4 rounded-md border border-line bg-white p-5 text-center text-[#1f2937]">
+    <section [class]="ui.setCard">
+      <div [class]="ui.setHeader">
+        <h2 [class]="ui.setTitle">Preview</h2>
+        @if (b.enabled) {
+          <a [href]="b.url" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-[13px] text-link hover:underline">Open your webmail <amelu-icon name="external" [size]="13" /></a>
+        }
+      </div>
+      <div class="bg-well p-5">
+        <div class="mx-auto max-w-[320px] rounded border border-line bg-white p-5 text-center text-[#1f2937]">
           @if (logoUrl(); as src) {
             <img [src]="src" alt="" class="mx-auto mb-3 max-h-10 max-w-32 object-contain" />
           }
@@ -282,23 +286,13 @@
           </div>
         </div>
         @if (subdomainAddress(); as address) {
-          <p class="px-4 pb-4 text-[12px] text-muted">{{ b.customHostnameStatus === 'active' ? b.customHostname : address }}</p>
+          <p class="mt-3 text-center text-[12px] text-muted">{{ b.customHostnameStatus === 'active' ? b.customHostname : address }}</p>
         }
-      </section>
-
-      <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-        <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
-        </div>
-        <amelu-icon name="mail" [size]="20" class="block text-ink" />
-        <h2 class="mt-3 text-[14px] font-bold">Fully yours</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          On your address the webmail shows only your name, logo and colour. Your mailboxes sign in with their usual email address and password.
-        </p>
-        @if (b.enabled) {
-          <a [href]="b.url" target="_blank" rel="noopener" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">Open your webmail</a>
-        }
-      </section>
-    </aside>
+      </div>
+      <p [class]="ui.setNote">
+        <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+        <span>On your address the webmail shows only your name, logo and colour. Your mailboxes sign in with their usual email address and password.</span>
+      </p>
+    </section>
   </div>
 }

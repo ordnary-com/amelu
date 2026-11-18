@@ -85,10 +85,14 @@
     }
   </div>
   @if (upgrade(); as up) {
-    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
-      <div class="min-w-0 text-[13px]">
-        <p class="font-medium">Go, from {{ up.perMonth }}/mo <span class="font-normal text-muted">billed yearly</span></p>
-        <p class="mt-0.5 text-[12px] text-muted">{{ up.lines.join(' · ') }}</p>
+    <!-- Same spot as before, coloured as an info alert in the accent. -->
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-accent/20 bg-accent/8 px-4 py-3" role="note">
+      <div class="flex min-w-0 items-start gap-2.5 text-[13px]">
+        <amelu-icon name="star" [size]="16" class="mt-px flex-none text-link" />
+        <div class="min-w-0">
+          <p class="font-medium">Go, from {{ up.perMonth }}/mo <span class="font-normal text-ink-soft">billed yearly</span></p>
+          <p class="mt-0.5 text-[12px] text-ink-soft">{{ up.lines.join(' · ') }}</p>
+        </div>
       </div>
       <a routerLink="/billing/plans" [class]="ui.primary">Upgrade to Go</a>
     </div>

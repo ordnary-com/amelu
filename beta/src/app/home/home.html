@@ -7,20 +7,16 @@
 
   <div class="relative flex flex-wrap items-center justify-between gap-3">
     <p class="text-[13px] font-medium text-hero-ink/70">{{ today | date: 'EEEE d MMMM' }}</p>
-    <nav class="flex flex-wrap gap-5 max-mobile:gap-4" aria-label="Amelu links">
-      <a routerLink="/changelog" [class]="heroLink" aria-label="What's new">
-        <amelu-icon name="map" [size]="15" /><span class="max-mobile:hidden">What's new</span>
-      </a>
-      <a routerLink="/support" [class]="heroLink" aria-label="Support">
-        <amelu-icon name="lifebuoy" [size]="15" /><span class="max-mobile:hidden">Support</span>
-      </a>
-      <a routerLink="/network" [class]="heroLink" aria-label="Sending IPs">
-        <amelu-icon name="pulse" [size]="15" /><span class="max-mobile:hidden">Sending IPs</span>
-      </a>
+    <!-- Plain text links split by thin lines; Discord leaves the dashboard, so it gets an arrow. -->
+    <nav class="flex flex-wrap items-center text-[13px] text-hero-ink/80" aria-label="Amelu links">
+      <a routerLink="/changelog" [class]="heroLink">What's new</a>
+      <span class="h-3.5 w-px bg-hero-ink/20" aria-hidden="true"></span>
+      <a routerLink="/support" [class]="heroLink">Support</a>
+      <span class="h-3.5 w-px bg-hero-ink/20" aria-hidden="true"></span>
+      <a routerLink="/network" [class]="heroLink">Sending IPs</a>
       @if (discordUrl) {
-        <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink" aria-label="Discord">
-          <amelu-icon name="discord" [size]="15" /><span class="max-mobile:hidden">Discord</span>
-        </a>
+        <span class="h-3.5 w-px bg-hero-ink/20" aria-hidden="true"></span>
+        <a [href]="discordUrl" target="_blank" rel="noreferrer" [class]="heroLink">Discord<amelu-icon name="external" [size]="12" /></a>
       }
     </nav>
   </div>

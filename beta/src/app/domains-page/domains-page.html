@@ -1,254 +1,201 @@
-<div class="flex flex-wrap items-start justify-between gap-4">
-  <div class="min-w-0">
-    <h1 class="text-[22px] font-bold tracking-[-0.4px]">Domains</h1>
-    <p class="mt-1.5 h-[18px] text-[13px] text-muted">
-      @if (headline(); as text) {
-        {{ text }}
-      } @else {
-        <span class="inline-block h-3 w-48 animate-pulse rounded bg-bg"></span>
+<div class="min-w-0">
+  <h1 class="text-[22px] leading-tight font-normal">Domains</h1>
+  <p class="mt-1 h-[18px] text-[13px] text-muted">
+    @if (headline(); as text) {
+      {{ text }}
+    } @else {
+      <span class="inline-block h-3 w-48 animate-pulse rounded bg-bg"></span>
+    }
+  </p>
+</div>
+
+<!-- Search across the page, sort beside it and the main action on the right. -->
+<div class="mt-5 flex flex-wrap gap-3">
+  <label class="group flex h-10 min-w-0 flex-1 basis-64 items-center gap-2.5 rounded-md border border-line bg-surface px-3 hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+    <amelu-icon name="search" [size]="16" class="flex-none text-muted group-focus-within:text-ink" />
+    <input
+      type="search"
+      class="w-full min-w-0 bg-transparent text-[14px] outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
+      placeholder="Search domains"
+      aria-label="Search domains"
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+      (keydown.escape)="search.set('')"
+    />
+    @if (search()) {
+      <button type="button" class="-mr-1 inline-flex size-6 flex-none cursor-pointer items-center justify-center rounded text-muted hover:bg-bg hover:text-ink" aria-label="Clear search" (click)="search.set('')">
+        <amelu-icon name="close" [size]="13" />
+      </button>
+    }
+  </label>
+  <!-- A native select for the keyboard and screen readers, with its own arrow swapped for ours. -->
+  <label class="relative flex h-10 flex-none items-center rounded-md border border-line bg-surface hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+    <span class="pointer-events-none pl-3 text-[14px] text-muted">Sort</span>
+    <select
+      class="h-full cursor-pointer appearance-none bg-transparent pr-8 pl-1.5 text-[14px] font-medium outline-none [&>option]:bg-surface"
+      aria-label="Sort domains"
+      [value]="sort()"
+      (change)="sort.set($any($event.target).value)"
+    >
+      @for (option of sorts; track option.value) {
+        <option [value]="option.value" [selected]="option.value === sort()">{{ option.label }}</option>
       }
-    </p>
-  </div>
-  <a
-    routerLink="/domains/new"
-    class="inline-flex h-8 items-center rounded-md bg-accent px-3 text-[13px] font-medium text-white hover:bg-accent/80"
-  >
+    </select>
+    <amelu-icon name="chevronDown" [size]="14" class="pointer-events-none absolute right-2.5 text-muted" />
+  </label>
+  <a routerLink="/domains/new" class="inline-flex h-10 flex-none items-center gap-1.5 rounded-md bg-accent px-4 text-[14px] font-medium text-white hover:bg-accent/85">
     Add domain
+    <amelu-icon name="plus" [size]="16" />
   </a>
 </div>
 
-<div class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <section>
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-      <h2 class="flex items-center gap-2 text-[14px] font-bold">
-        Your domains
-        @if (domains(); as list) {
-          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
-        }
-      </h2>
-      @if (domains()?.length) {
-        <div class="flex w-full items-center gap-2 sm:w-auto">
-          <label class="group flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-surface px-2.5 hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 sm:w-60 sm:flex-none">
-            <amelu-icon name="search" [size]="14" class="flex-none text-muted group-focus-within:text-ink" />
-            <input
-              type="search"
-              class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
-              placeholder="Filter domains"
-              aria-label="Filter domains"
-              [value]="search()"
-              (input)="search.set($any($event.target).value)"
-              (keydown.escape)="search.set('')"
-            />
-            @if (search()) {
-              <button type="button" class="-mr-1 inline-flex size-5 flex-none cursor-pointer items-center justify-center rounded text-muted hover:bg-bg hover:text-ink" aria-label="Clear filter" (click)="search.set('')">
-                <amelu-icon name="close" [size]="12" />
-              </button>
-            }
-          </label>
-          <!-- A native select for the keyboard and screen readers, with its own arrow swapped for ours. -->
-          <label class="relative flex h-8 flex-none items-center rounded-md border border-line bg-surface hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
-            <span class="pointer-events-none pl-2.5 text-[13px] text-muted">Sort</span>
-            <select
-              class="h-full cursor-pointer appearance-none bg-transparent pr-7 pl-1.5 text-[13px] font-medium outline-none [&>option]:bg-surface"
-              aria-label="Sort domains"
-              [value]="sort()"
-              (change)="sort.set($any($event.target).value)"
-            >
-              @for (option of sorts; track option.value) {
-                <option [value]="option.value" [selected]="option.value === sort()">{{ option.label }}</option>
-              }
-            </select>
-            <amelu-icon name="chevronDown" [size]="14" class="pointer-events-none absolute right-2 text-muted" />
-          </label>
-        </div>
+<div class="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <section [class]="ui.panel">
+    <div [class]="ui.panelHeader">
+      <h2 [class]="ui.panelTitle">Your domains</h2>
+      @if (domains(); as list) {
+        <span class="text-[13px] text-muted">{{ list.length }} {{ list.length === 1 ? 'domain' : 'domains' }}</span>
       }
     </div>
+    <div [class]="ui.well">
+      @if (error(); as message) {
+        <amelu-alert class="mb-3" [title]="message" [dismissible]="true" (dismissed)="error.set(null)" />
+      }
 
-    @if (error(); as message) {
-      <amelu-alert class="mb-3" [title]="message" [dismissible]="true" (dismissed)="error.set(null)" />
-    }
+      @if (domains() === null) {
+        <amelu-empty-state class="rounded-md border border-line bg-surface" title="Your domains couldn't be loaded" [error]="true" [compact]="true" />
+      } @else {
+        <div [class]="ui.tableWrap">
+          <table [class]="ui.table">
+            <thead>
+              <tr>
+                @if (canDrag()) {
+                  <th class="w-0 pl-2" aria-label="Order"></th>
+                }
+                <th [class]="ui.th">Name / ID</th>
+                <th [class]="ui.th">Status</th>
+                <th [class]="ui.th + ' max-md:hidden'">DNS records</th>
+                <th [class]="ui.th + ' max-lg:hidden'">Added</th>
+                <th class="w-0 pr-3" aria-label="Favorite"></th>
+              </tr>
+            </thead>
 
-    @if (domains() === null) {
-      <amelu-empty-state class="rounded-lg border border-line" title="Your domains couldn't be loaded" [error]="true" />
-    } @else if (domains() === undefined) {
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
-        @for (i of [1, 2, 3]; track i) {
-          <div class="flex min-h-[7.5rem] flex-col justify-center gap-2 rounded-lg border border-line p-4" aria-hidden="true">
-            <span class="h-3 w-32 animate-pulse rounded bg-bg"></span>
-            <span class="h-3 w-20 animate-pulse rounded bg-bg"></span>
-          </div>
-        }
-      </div>
-    } @else {
-      @if (favorites().length) {
-        <h3 class="mb-2 flex items-center gap-1.5 text-[12px] font-bold tracking-wide text-muted uppercase">
-          <amelu-icon name="star" [size]="13" class="text-warn [&_svg]:fill-current" />
-          Favorites
-        </h3>
-        <div
-          class="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3"
-          cdkDropList
-          cdkDropListOrientation="mixed"
-          [cdkDropListData]="favorites()"
-          [cdkDropListDisabled]="!canDrag()"
-          (cdkDropListDropped)="drop('favorites', $event)"
-        >
-          @for (domain of favorites(); track domain.id) {
-            <amelu-domain-card
-              cdkDrag
-              [cdkDragData]="domain"
-              [domain]="domain"
-              [health]="health()?.[domain.id]"
-            >
-              @if (canDrag()) {
-                <button
-                  cardAction
-                  type="button"
-                  cdkDragHandle
-                  class="inline-flex size-7 cursor-grab items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink active:cursor-grabbing"
-                  [attr.aria-label]="'Drag to move ' + domain.name"
-                  title="Drag to reorder"
-                >
-                  <amelu-icon name="grip" [size]="16" />
-                </button>
+            @if (domains() === undefined) {
+              <tbody>
+                @for (i of [1, 2, 3]; track i) {
+                  <tr [class]="ui.tr" aria-hidden="true">
+                    <td [class]="ui.td"><span class="block h-3 w-40 animate-pulse rounded bg-bg"></span><span class="mt-2 block h-2.5 w-56 animate-pulse rounded bg-bg"></span></td>
+                    <td [class]="ui.td"><span class="block h-3 w-16 animate-pulse rounded bg-bg"></span></td>
+                    <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-40 animate-pulse rounded bg-bg"></span></td>
+                    <td [class]="ui.td + ' max-lg:hidden'"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
+                    <td></td>
+                  </tr>
+                }
+              </tbody>
+            } @else {
+              @if (favorites().length) {
+                <tbody>
+                  <tr [class]="ui.tr"><td [attr.colspan]="columns()" [class]="groupRow"><amelu-icon name="star" [size]="12" class="text-warn [&_svg]:fill-current" />Favorites</td></tr>
+                </tbody>
+                <tbody cdkDropList [cdkDropListData]="favorites()" [cdkDropListDisabled]="!canDrag()" (cdkDropListDropped)="drop('favorites', $event)">
+                  @for (domain of favorites(); track domain.id) {
+                    <tr ameluDomainRow [domain]="domain" [health]="health()?.[domain.id]" [healthLoading]="health() === undefined" [draggable]="canDrag()" [class]="ui.tr + ' bg-surface'" cdkDrag [cdkDragData]="domain" [cdkDragDisabled]="!canDrag()" (failed)="error.set($event)"></tr>
+                  }
+                </tbody>
+                @if (others().length) {
+                  <tbody>
+                    <tr [class]="ui.tr"><td [attr.colspan]="columns()" [class]="groupRow">Other domains</td></tr>
+                  </tbody>
+                }
               }
-              <div *cdkDragPlaceholder class="min-h-[7.5rem] rounded-lg border-2 border-dashed border-accent/40 bg-accent-soft/40"></div>
-            </amelu-domain-card>
-          }
-        </div>
-        @if (others().length || !search()) {
-          <h3 class="mb-2 text-[12px] font-bold tracking-wide text-muted uppercase">Other domains</h3>
-        }
-      }
-
-      <div
-        class="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3"
-        cdkDropList
-        cdkDropListOrientation="mixed"
-        [cdkDropListData]="others()"
-        [cdkDropListDisabled]="!canDrag()"
-        (cdkDropListDropped)="drop('others', $event)"
-      >
-        @for (domain of others(); track domain.id) {
-          <amelu-domain-card
-            cdkDrag
-            [cdkDragData]="domain"
-            [domain]="domain"
-            [health]="health()?.[domain.id]"
-          >
-            @if (canDrag()) {
-              <button
-                cardAction
-                type="button"
-                cdkDragHandle
-                class="inline-flex size-7 cursor-grab items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink active:cursor-grabbing"
-                [attr.aria-label]="'Drag to move ' + domain.name"
-                title="Drag to reorder"
-              >
-                <amelu-icon name="grip" [size]="16" />
-              </button>
+              <tbody cdkDropList [cdkDropListData]="others()" [cdkDropListDisabled]="!canDrag()" (cdkDropListDropped)="drop('others', $event)">
+                @for (domain of others(); track domain.id) {
+                  <tr ameluDomainRow [domain]="domain" [health]="health()?.[domain.id]" [healthLoading]="health() === undefined" [draggable]="canDrag()" [class]="ui.tr + ' bg-surface'" cdkDrag [cdkDragData]="domain" [cdkDragDisabled]="!canDrag()" (failed)="error.set($event)"></tr>
+                } @empty {
+                  @if (!favorites().length) {
+                    <tr [class]="ui.tr">
+                      <td [attr.colspan]="columns()" class="px-4 py-10 text-center">
+                        <amelu-icon [name]="search() ? 'search' : 'globe'" [size]="18" class="mx-auto block" />
+                        @if (search()) {
+                          <p class="mt-2">Nothing matches "{{ search() }}"</p>
+                          <button type="button" class="mt-1 cursor-pointer text-[13px] text-link hover:underline" (click)="search.set('')">Clear search</button>
+                        } @else {
+                          <p class="mt-2">No domains yet</p>
+                          <p class="mt-0.5 text-[13px] text-muted">Bring a domain you already own and we show you every DNS record to set.</p>
+                        }
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
             }
-            <div *cdkDragPlaceholder class="min-h-[7.5rem] rounded-lg border-2 border-dashed border-accent/40 bg-accent-soft/40"></div>
-          </amelu-domain-card>
-        } @empty {
-          @if (search() && !favorites().length) {
-            <amelu-empty-state class="rounded-lg border border-line md:col-span-2 2xl:col-span-3" title="No matching domains" illustration="file-search">
-              Nothing matches "{{ search() }}".
-              <button actions type="button" [class]="ui.outline" (click)="search.set('')">Clear filter</button>
-            </amelu-empty-state>
-          }
-        }
-        @if (!search()) {
-          <a
-            routerLink="/domains/new"
-            class="flex min-h-[7.5rem] items-center justify-center gap-2 rounded-lg border border-dashed border-line text-[14px] font-medium text-link hover:bg-bg/60"
-          >
-            <amelu-icon name="plus" [size]="18" />
-            Add a domain
-          </a>
-        }
-      </div>
+          </table>
+        </div>
 
-      @if (canDrag() && filtered().length > 1) {
-        <p class="mt-3 text-[12px] text-muted">Drag a card by its handle to change the order. Starred domains stay on top.</p>
+        @if (canDrag() && filtered().length > 1) {
+          <p class="mt-3 text-[12px] text-muted">Drag a row by its handle to change the order. Starred domains stay on top.</p>
+        }
       }
-    }
+    </div>
   </section>
 
-  <aside class="space-y-6">
-    <section>
-      <h2 class="mb-3 text-[14px] font-bold">Overview</h2>
-      <div class="rounded-lg border border-line bg-surface p-4">
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Status</h2>
+      </div>
+      <div [class]="ui.well + ' space-y-3'">
         @if (summary(); as s) {
-          @if (s.total === 0) {
-            <ul class="space-y-2 text-[13px]">
-              <li>Bring a domain you already own.</li>
-              <li>We show you every DNS record to set.</li>
-            </ul>
-          } @else {
-            <div class="space-y-3">
-              @for (row of [{ label: 'Active', done: s.active }, { label: 'DNS set up', done: s.ready }]; track row.label) {
-                <div>
-                  <div class="flex items-baseline justify-between gap-3 text-[13px]">
-                    <span class="text-muted">{{ row.label }}</span>
-                    <span><span class="font-bold">{{ row.done }}</span> of {{ s.total }}</span>
-                  </div>
-                  <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
-                    <div
-                      class="h-full rounded-full"
-                      [class]="row.done === s.total ? 'bg-ok' : 'bg-warn'"
-                      [style.width.%]="(row.done / s.total) * 100"
-                    ></div>
-                  </div>
-                </div>
-              }
+          @for (row of [{ label: 'Active', done: s.active }, { label: 'DNS set up', done: s.ready }]; track row.label) {
+            <div class="flex items-center justify-between gap-4 rounded-md border border-line bg-surface px-4 py-3 text-[13px]">
+              <span>{{ row.label }}</span>
+              <span class="text-[22px] leading-none tabular-nums" [class.text-warn]="s.total > 0 && row.done < s.total">
+                {{ row.done }}<span class="text-[14px] text-muted"> / {{ s.total }}</span>
+              </span>
             </div>
           }
         } @else {
-          <div class="space-y-3" aria-hidden="true">
-            <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
-            <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
-          </div>
+          @for (i of [1, 2]; track i) {
+            <div class="h-[50px] animate-pulse rounded-md border border-line bg-surface" aria-hidden="true"></div>
+          }
         }
       </div>
     </section>
 
     @if (summary() && attention().length > 0) {
-      <section>
-        <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
-          Needs attention
-          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ attention().length }}</span>
-        </h2>
-        <ul class="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
-          @for (item of attentionItems(); track item.domain.id) {
-            <li>
-              <a [routerLink]="item.link" class="group flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
-                <span class="size-2 flex-none rounded-full" [class]="item.dot" aria-hidden="true"></span>
-                <span class="min-w-0 flex-1">
-                  <span class="block truncate text-[13px] font-medium">{{ item.domain.name }}</span>
-                  <span class="mt-0.5 block truncate text-[12px] text-muted">{{ item.reason }}</span>
-                </span>
-                <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
-              </a>
-            </li>
-          }
-        </ul>
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Needs attention <span class="font-normal text-muted">({{ attention().length }})</span></h2>
+        </div>
+        <div [class]="ui.well">
+          <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+            @for (item of attentionItems(); track item.domain.id) {
+              <li>
+                <a [routerLink]="item.link" class="group flex items-center gap-3 px-4 py-2.5 hover:bg-bg/50">
+                  <span class="size-2 flex-none rounded-full" [class]="item.dot" aria-hidden="true"></span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[13px] font-medium text-link group-hover:underline">{{ item.domain.name }}</span>
+                    <span class="mt-0.5 block truncate text-[12px] text-muted">{{ item.reason }}</span>
+                  </span>
+                  <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted group-hover:text-ink" />
+                </a>
+              </li>
+            }
+          </ul>
+        </div>
       </section>
     }
 
-    <!-- Same dither as the Overview banner and the upgrade box, rising from the bottom right behind the text. -->
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Need a hand with DNS?</h2>
       </div>
-      <amelu-icon name="lifebuoy" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Need a hand with DNS?</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        MX, SPF, DKIM and DMARC on each card show which DNS records we could verify. Our support team can help with the rest.
-      </p>
-      <a routerLink="/support" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">
-        Contact Support
-      </a>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          The DNS column shows which of MX, SPF, DKIM and DMARC we could verify for each domain.
+          <a routerLink="/support" class="text-link hover:underline">Our support team</a> can help with the rest.
+        </p>
+      </div>
     </section>
   </aside>
 </div>

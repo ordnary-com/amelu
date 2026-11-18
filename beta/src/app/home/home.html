@@ -212,6 +212,10 @@
       <a routerLink="/billing/invoices" [class]="arrow" aria-label="All invoices"><amelu-icon name="arrowRight" [size]="16" /></a>
     </div>
     <div [class]="tableBody">
+      <p class="mb-3 text-[13px] text-muted">
+        Your most recent invoice. Older ones are under
+        <a routerLink="/billing/invoices" class="text-link hover:underline">Invoices</a> in Billing.
+      </p>
       <div [class]="ui.tableWrap">
         <table [class]="ui.table">
           <thead>

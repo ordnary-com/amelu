@@ -1,93 +1,172 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { Api, SupportTicket, errorMessage } from '../api';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { UI } from '../ui';
-import { CATEGORY_LABEL, STATUS } from './support-meta';
+import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
 
 const BODY_MAX = 20000;
 
-/** /support/tickets/:id: the conversation, a reply box and closing the ticket. */
+/**
+ * /support/tickets/:id: the conversation and a reply box, with the ticket's
+ * details and the organization's other tickets in a sidebar on the right.
+ */
 @Component({
   selector: 'amelu-support-ticket',
   imports: [PageHeader, Alert, Icon, DatePipe, RouterLink],
   template: `
     @if (ticket(); as t) {
       <amelu-page-header [title]="t.subject" [crumbs]="[{ label: 'Support', link: '/support' }, { label: '#' + t.number }]">
-        <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span class="inline-flex items-center gap-2">
           <span class="rounded px-1.5 py-0.5 text-[11px] font-medium" [class]="status[t.status].badge">{{ status[t.status].label }}</span>
-          <span>{{ categoryLabel[t.category] }}</span>
-          @if (t.domainName) {
-            <span>· {{ t.domainName }}</span>
-          }
-          <span>· opened by {{ t.openedByName }} on {{ t.createdAt | date: 'd MMM y' }}</span>
+          <span>{{ hint(t) }}</span>
         </span>
-        @if (t.status !== 'closed') {
-          <button actions type="button" [class]="ui.outline" [disabled]="busy()" (click)="close()">
-            <amelu-icon name="check" [size]="14" />
-            Close ticket
-          </button>
-        }
       </amelu-page-header>
 
-      @if (error(); as message) {
-        <amelu-alert class="mb-4 block max-w-3xl">{{ message }}</amelu-alert>
-      }
+      <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
+        <section class="min-w-0">
+          @if (error(); as message) {
+            <amelu-alert class="mb-4 block">{{ message }}</amelu-alert>
+          }
 
-      <ol class="max-w-3xl space-y-3">
-        @for (m of t.messages ?? []; track m.id) {
-          <li [class]="ui.card + ' p-4'" [class.border-accent]="m.authorKind === 'staff'">
-            <div class="flex items-center gap-2">
-              <span
-                class="flex size-6 flex-none items-center justify-center rounded-full text-[11px] font-bold"
-                [class]="m.authorKind === 'staff' ? 'bg-accent text-white' : 'bg-bg text-muted'"
-                aria-hidden="true"
-              >{{ initial(m.authorName) }}</span>
-              <span class="text-[13px] font-medium">{{ m.authorName }}</span>
-              @if (m.authorKind === 'staff') {
-                <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[11px] font-medium text-link">Staff</span>
-              }
-              <span class="ml-auto text-[12px] text-muted" [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
+          <ol class="space-y-3">
+            @for (m of t.messages ?? []; track m.id) {
+              <li class="flex gap-3" [class.flex-row-reverse]="m.authorKind === 'customer'">
+                <span
+                  class="mt-1 flex size-7 flex-none items-center justify-center rounded-full text-[11px] font-bold"
+                  [class]="m.authorKind === 'staff' ? 'bg-accent text-white' : 'bg-bg text-muted'"
+                  aria-hidden="true"
+                >{{ initial(m.authorName) }}</span>
+                <div
+                  class="min-w-0 max-w-[85%] rounded-lg border px-4 py-3"
+                  [class]="m.authorKind === 'staff' ? 'border-accent/30 bg-accent/5' : 'border-line bg-surface'"
+                >
+                  <div class="flex flex-wrap items-baseline gap-x-2 text-[12px] text-muted">
+                    <span class="text-[13px] font-medium text-ink">{{ m.authorName }}</span>
+                    @if (m.authorKind === 'staff') {
+                      <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[11px] font-medium text-link">Staff</span>
+                    }
+                    <span [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
+                  </div>
+                  <div class="mt-1.5 text-[14px] leading-relaxed break-words whitespace-pre-wrap">{{ m.body }}</div>
+                </div>
+              </li>
+            }
+          </ol>
+
+          <form [class]="ui.card + ' mt-5 p-4'" (submit)="send($event)">
+            <label for="reply" class="sr-only">Reply</label>
+            @if (t.status === 'closed') {
+              <p class="mb-2 text-[13px] text-muted">This ticket is closed. Replying opens it again.</p>
+            }
+            <textarea
+              id="reply"
+              rows="5"
+              [class]="ui.input + ' mt-0 h-auto py-2 leading-relaxed'"
+              [maxLength]="bodyMax"
+              placeholder="Write a reply"
+              [value]="reply()"
+              (input)="reply.set($any($event.target).value)"
+              (keydown.meta.enter)="send($event)"
+              (keydown.control.enter)="send($event)"
+            ></textarea>
+            <div class="mt-3 flex items-center justify-between gap-2">
+              <span class="text-[12px] text-muted">We'll email you when support replies. Cmd or Ctrl + Enter sends.</span>
+              <button type="submit" [class]="ui.primary" [disabled]="busy() || !reply().trim()">{{ busy() ? 'Sending…' : 'Send reply' }}</button>
             </div>
-            <div class="mt-2 text-[14px] leading-relaxed break-words whitespace-pre-wrap">{{ m.body }}</div>
-          </li>
-        }
-      </ol>
+          </form>
+        </section>
 
-      <form [class]="ui.card + ' mt-4 max-w-3xl p-4'" (submit)="send($event)">
-        <label for="reply" class="sr-only">Reply</label>
-        @if (t.status === 'closed') {
-          <p class="mb-2 text-[13px] text-muted">This ticket is closed. Replying opens it again.</p>
-        }
-        <textarea
-          id="reply"
-          rows="5"
-          [class]="ui.input + ' mt-0 h-auto py-2 leading-relaxed'"
-          [maxLength]="bodyMax"
-          placeholder="Write a reply"
-          [value]="reply()"
-          (input)="reply.set($any($event.target).value)"
-          (keydown.meta.enter)="send($event)"
-          (keydown.control.enter)="send($event)"
-        ></textarea>
-        <div class="mt-3 flex items-center justify-between gap-2">
-          <span class="text-[12px] text-muted">We'll email you when support replies.</span>
-          <button type="submit" [class]="ui.primary" [disabled]="busy() || !reply().trim()">{{ busy() ? 'Sending…' : 'Send reply' }}</button>
-        </div>
-      </form>
+        <aside class="space-y-5 xl:sticky xl:top-6" aria-label="Ticket details">
+          <section [class]="ui.card + ' overflow-hidden'">
+            <dl class="divide-y divide-line text-[13px]">
+              <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                <dt class="text-muted">Ticket</dt>
+                <dd class="font-medium tabular-nums">#{{ t.number }}</dd>
+              </div>
+              <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                <dt class="text-muted">Status</dt>
+                <dd class="inline-flex items-center gap-1.5 font-medium">
+                  <span class="size-1.5 rounded-full" [class]="status[t.status].dot" aria-hidden="true"></span>{{ status[t.status].label }}
+                </dd>
+              </div>
+              <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                <dt class="text-muted">Topic</dt>
+                <dd class="truncate text-right">{{ categoryLabel[t.category] }}</dd>
+              </div>
+              @if (t.domainName && t.domainId) {
+                <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <dt class="text-muted">Domain</dt>
+                  <dd class="truncate"><a [routerLink]="['/domains', t.domainId]" class="text-link hover:underline">{{ t.domainName }}</a></dd>
+                </div>
+              }
+              <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                <dt class="text-muted">Opened by</dt>
+                <dd class="truncate text-right">{{ t.openedByName }}</dd>
+              </div>
+              <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                <dt class="text-muted">Opened</dt>
+                <dd [title]="t.createdAt | date: 'medium'">{{ t.createdAt | date: 'd MMM y' }}</dd>
+              </div>
+              <div class="flex items-center justify-between gap-3 px-4 py-2.5">
+                <dt class="text-muted">Last activity</dt>
+                <dd [title]="t.updatedAt | date: 'medium'">{{ ago(t.updatedAt) }}</dd>
+              </div>
+            </dl>
+            @if (t.status !== 'closed') {
+              <div class="border-t border-line p-3">
+                <button type="button" [class]="ui.outline + ' w-full justify-center'" [disabled]="busy()" (click)="close()">
+                  <amelu-icon name="check" [size]="14" />
+                  Close ticket
+                </button>
+              </div>
+            }
+          </section>
+
+          <section>
+            <div class="mb-2 flex items-center justify-between px-2">
+              <h2 class="text-[12px] font-medium text-muted">Your tickets</h2>
+              <a routerLink="/support/new" class="inline-flex items-center gap-1 text-[12px] font-medium text-link hover:underline">
+                <amelu-icon name="plus" [size]="12" />
+                New
+              </a>
+            </div>
+            <ul class="space-y-0.5">
+              @for (other of others(); track other.id) {
+                <li>
+                  <a
+                    [routerLink]="['/support/tickets', other.id]"
+                    class="flex items-start gap-2 rounded-md px-2 py-1.5 text-[13px] transition-colors"
+                    [class]="other.id === t.id ? 'bg-accent/10 text-ink' : 'text-muted hover:bg-bg hover:text-ink'"
+                    [attr.aria-current]="other.id === t.id ? 'page' : null"
+                  >
+                    <span class="mt-1.5 size-1.5 flex-none rounded-full" [class]="status[other.status].dot" aria-hidden="true"></span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate" [class.font-medium]="other.id === t.id">{{ other.subject }}</span>
+                      <span class="block text-[11px] text-muted tabular-nums">#{{ other.number }} · {{ ago(other.updatedAt) }}</span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          </section>
+        </aside>
+      </div>
     } @else if (notFound()) {
       <amelu-page-header title="Ticket not found" [crumbs]="[{ label: 'Support', link: '/support' }]">
         This ticket doesn't exist or belongs to another organization.
       </amelu-page-header>
       <a routerLink="/support" [class]="ui.outline">Back to support</a>
     } @else {
-      <div [class]="ui.card + ' h-48 max-w-3xl animate-pulse'"></div>
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div [class]="ui.card + ' h-48 animate-pulse'"></div>
+        <div [class]="ui.card + ' h-64 animate-pulse'"></div>
+      </div>
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -103,19 +182,33 @@ export class SupportTicketPage {
   private readonly id = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('id')!)), { requireSync: true });
 
   protected readonly ticket = signal<SupportTicket | null>(null);
+  protected readonly list = signal<SupportTicket[]>([]);
   protected readonly notFound = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly reply = signal('');
   protected readonly busy = signal(false);
 
+  /** Open tickets first, then closed ones; at most 12 in the sidebar. */
+  protected readonly others = computed(() => {
+    const open = this.list().filter((t) => t.status !== 'closed');
+    const closed = this.list().filter((t) => t.status === 'closed');
+    return [...open, ...closed].slice(0, 12);
+  });
+
   constructor() {
     effect(() => {
       const id = this.id();
-      untracked(() => void this.load(id));
+      untracked(() => {
+        this.ticket.set(null);
+        this.reply.set('');
+        void this.load(id);
+      });
     });
+    void this.loadList();
   }
 
   private async load(id: string): Promise<void> {
+    this.error.set(null);
     try {
       this.ticket.set(await firstValueFrom(this.api.getSupportTicket(id)));
       this.notFound.set(false);
@@ -123,6 +216,24 @@ export class SupportTicketPage {
       if ((err as { status?: number })?.status === 404) this.notFound.set(true);
       else this.error.set(errorMessage(err, 'Could not load the ticket'));
     }
+  }
+
+  private async loadList(): Promise<void> {
+    try {
+      this.list.set(await firstValueFrom(this.api.listSupportTickets()));
+    } catch {
+      // The sidebar list is a convenience; the ticket itself still shows.
+    }
+  }
+
+  protected hint(t: SupportTicket): string {
+    if (t.status === 'answered') return 'Support replied. Answer below, or close the ticket if you’re all set.';
+    if (t.status === 'open') return 'Our team will get back to you here and by email.';
+    return 'This ticket is closed.';
+  }
+
+  protected ago(iso: string): string {
+    return timeAgo(iso);
   }
 
   protected initial(name: string): string {
@@ -139,7 +250,7 @@ export class SupportTicketPage {
     try {
       await firstValueFrom(this.api.replySupportTicket(t.id, body));
       this.reply.set('');
-      await this.load(t.id);
+      await Promise.all([this.load(t.id), this.loadList()]);
     } catch (err) {
       this.error.set(errorMessage(err, 'Could not send your reply'));
     } finally {
@@ -154,7 +265,7 @@ export class SupportTicketPage {
     this.error.set(null);
     try {
       await firstValueFrom(this.api.closeSupportTicket(t.id));
-      await this.load(t.id);
+      await Promise.all([this.load(t.id), this.loadList()]);
     } catch (err) {
       this.error.set(errorMessage(err, 'Could not close the ticket'));
     } finally {

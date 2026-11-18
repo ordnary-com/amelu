@@ -97,7 +97,7 @@ See `devlog/README.txt` for the format.
 
 ## Licensing
 
-Amelu is source-available under `LICENSE.md`. Self-hosting for personal use
-is allowed and free; commercial or organizational use is not. If a change
-touches how that's described, `LICENSE.md`, `README.md` and `CONTRIBUTING.md`
-all say it and all three need to stay in sync.
+Amelu is source-available under `LICENSE.md`: the code can be read, studied
+and contributed to; anything beyond that needs a written license from
+Ordnary. If a change touches how that's described, `LICENSE.md`, `README.md`
+and `CONTRIBUTING.md` all say it and all three need to stay in sync.

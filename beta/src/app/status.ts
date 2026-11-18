@@ -3,6 +3,13 @@ import { Domain, Invoice, Mailbox, OrganizationRole } from './api';
 
 export type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 
+/** A dedicated IP's state, from marduk's last report. */
+export const DEDICATED_IP_STATE: Record<'sending' | 'paused' | 'setting_up', { label: string; tone: Tone }> = {
+  sending: { label: 'Sending', tone: 'ok' },
+  paused: { label: 'Paused', tone: 'warn' },
+  setting_up: { label: 'Setting up', tone: 'neutral' },
+};
+
 /** A status in tables: its icon and text colour for each tone. */
 export const TONE_TEXT: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
 export const TONE_ICON: Record<Tone, IconName> = { ok: 'circleCheck', warn: 'circleAlert', bad: 'circleX', neutral: 'clock' };

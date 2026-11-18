@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Api, errorMessage } from '../api';
 import { Session } from '../session';
+import { TourState } from '../tour/tour-state';
 import { Alert } from '../alert/alert';
 import { DitherShader } from '../login/dither-shader';
 
@@ -90,6 +91,7 @@ const TYPING_MS = 650;
 export class Onboarding {
   private readonly api = inject(Api);
   private readonly session = inject(Session);
+  private readonly tour = inject(TourState);
   private readonly router = inject(Router);
   protected readonly useCases = USE_CASES;
   protected readonly teamSizes = TEAM_SIZES;
@@ -328,6 +330,7 @@ export class Onboarding {
         ),
       );
       this.session.customer.set(customer);
+      this.tour.queue(customer.id);
       this.saved = true;
       return true;
     } catch (err) {

@@ -20,10 +20,13 @@
     <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
   </a>
   <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
-  <amelu-search class="self-center px-4 max-lg:px-2" />
-  <amelu-notification-bell class="self-center" />
-  <amelu-account-menu />
+  <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2" />
+  <amelu-notification-bell data-tour="notifications" class="self-center" />
+  <amelu-account-menu data-tour="account" />
 </header>
+
+<!-- First-time tour after onboarding (tour/tour.ts). -->
+<amelu-tour />
 
 <div class="flex min-h-0 flex-1">
   <!-- Same menus as the current dashboard (frontend/src/components/Layout.tsx): the main
@@ -40,39 +43,47 @@
       <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Overview</span></a>
       </li>
-      <li [class]="category" routerLinkActive="active">
-        <a routerLink="/domains" [class]="link" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span>@if (hiddenDomains() > 0) {<!-- Only the first few show below: the total says there are more. --><span class="rounded bg-chrome-ink/10 px-1 text-[10px] leading-[14px] text-chrome-ink/70" [attr.aria-label]="domains()!.length + ' domains'">{{ domains()!.length }}</span>}<ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></a>
+      <li class="ml-2 max-lg:mr-2">
+        <ul>
+          <li [class]="groupedCategory" routerLinkActive="active">
+            <a routerLink="/domains" data-tour="domains" [class]="link" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span>@if (hiddenDomains() > 0) {<!-- Only the first few show below: the total says there are more. --><span class="rounded bg-chrome-ink/10 px-1 text-[10px] leading-[14px] text-chrome-ink/70" [attr.aria-label]="domains()!.length + ' domains'">{{ domains()!.length }}</span>}<ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></a>
+          </li>
+          @if (open('domains')) {
+          @for (domain of sidebarDomains(); track domain.id) {
+            <li [class]="groupedSubitem" routerLinkActive="active">
+              <a [routerLink]="'/domains/' + domain.id" [class]="link" [title]="domain.name">
+                <!-- Status dot, centred where the other items have their icon -->
+                <span class="flex w-[15px] flex-none justify-center" aria-hidden="true"><span class="size-[7px] rounded-full" [class]="dot(domain)"></span></span>
+                <span class="truncate">{{ domain.name }}</span>
+              </a>
+            </li>
+          }
+          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="15px" strokeWidth="2.5" /><span class="truncate">New Domain</span></a>
+          </li>
+          }
+        </ul>
       </li>
-      @if (open('domains')) {
-      @for (domain of sidebarDomains(); track domain.id) {
-        <li [class]="subitem" routerLinkActive="active">
-          <a [routerLink]="'/domains/' + domain.id" [class]="link" [title]="domain.name">
-            <!-- Status dot, centred where the other items have their icon -->
-            <span class="flex w-[15px] flex-none justify-center" aria-hidden="true"><span class="size-[7px] rounded-full" [class]="dot(domain)"></span></span>
-            <span class="truncate">{{ domain.name }}</span>
-          </a>
-        </li>
-      }
-      <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="15px" strokeWidth="2.5" /><span class="truncate">New Domain</span></a>
-      </li>
-      }
       <li [class]="item" routerLinkActive="active">
         <a routerLink="/account" [class]="link"><ng-icon name="lucideUser" size="15px" strokeWidth="2.5" /><span class="truncate">My Account</span></a>
       </li>
-      <li [class]="category" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/organization" [class]="link" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></a>
+      <li class="ml-2 max-lg:mr-2">
+        <ul>
+          <li [class]="groupedCategory" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <a routerLink="/organization" data-tour="organization" [class]="link" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></a>
+          </li>
+          @if (open('organization')) {
+          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
+          </li>
+          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <a routerLink="/organization/webmail" [class]="link"><ng-icon name="lucideMail" size="15px" strokeWidth="2.5" /><span class="truncate">Webmail</span></a>
+          </li>
+          }
+        </ul>
       </li>
-      @if (open('organization')) {
-      <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
-      </li>
-      <li [class]="subitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/organization/webmail" [class]="link"><ng-icon name="lucideMail" size="15px" strokeWidth="2.5" /><span class="truncate">Webmail</span></a>
-      </li>
-      }
       <li [class]="item" routerLinkActive="active">
-        <a routerLink="/billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
+        <a routerLink="/billing" data-tour="billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
       </li>
       @if (showPromo()) {
         <!-- The campaign deal, at the bottom of the main menu on the free plan. -->
@@ -116,6 +127,7 @@
             } @else {
               <a
                 [routerLink]="entry.link"
+                [attr.data-tour]="'menu:' + entry.label"
                 [class]="entry.kind === 'create' ? createLink : entry.kind === 'danger' ? dangerLink : entry.secondary ? secondaryLink : link"
               >
                 @if (entry.kind === 'create') {

@@ -20,6 +20,9 @@ const HOSTNAME_STATUS: Record<'active' | 'failed' | 'waiting', { label: string; 
   waiting: { label: 'Waiting for DNS', tone: 'warn' },
 };
 
+
+const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const LOGO_MAX_BYTES = 256 * 1024;
 /**
  * White-label webmail: the organization's own webmail address, on
  * <name>.webmail.amelu.org and optionally its own hostname, with its own
@@ -120,11 +123,40 @@ export class OrganizationWebmail {
     this.accentColor.set((event.target as HTMLInputElement).value);
   }
 
+  protected readonly dragging = signal(false);
+  protected readonly logoError = signal<string | null>(null);
+
   protected uploadLogo(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
-    if (!file) return Promise.resolve();
+    return file ? this.sendLogo(file) : Promise.resolve();
+  }
+
+  protected onDragOver(event: DragEvent): void {
+    if (!this.editable()) return;
+    event.preventDefault();
+    this.dragging.set(true);
+  }
+
+  protected onDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    this.dragging.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    return file && this.editable() ? this.sendLogo(file) : Promise.resolve();
+  }
+
+  /** Checks type and size here first, so a wrong file gets a clear message instead of a failed upload. */
+  private sendLogo(file: File): Promise<void> {
+    this.logoError.set(null);
+    if (!LOGO_TYPES.includes(file.type)) {
+      this.logoError.set('Use a PNG, JPEG or WebP image.');
+      return Promise.resolve();
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      this.logoError.set(`That file is ${Math.ceil(file.size / 1024)} KB; the limit is 256 KB.`);
+      return Promise.resolve();
+    }
     return this.run('logo', 'Could not upload the logo', async () => {
       this.apply(await firstValueFrom(this.api.uploadLogo(file)), 'Logo updated.');
     });

@@ -7,6 +7,7 @@ import { Domains } from '../domains';
 import { Api, Domain } from '../api';
 import { MailboxApi } from '../mailbox/mailbox-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
+import { Tour } from '../tour/tour';
 import { isFree } from '../billing';
 import { DOMAIN_STATUS, Tone } from '../status';
 import { AccountMenu } from '../account-menu/account-menu';
@@ -39,7 +40,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner, Tour],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({
@@ -174,14 +175,22 @@ export class Shell {
 
   // A category with pages under it: its link ends in a chevron, and clicking it unfolds them.
   protected readonly category = 'group mx-2 truncate [&>a]:py-2';
+  // A category and its pages share one list item, so they fold as a group.
+  protected readonly groupedCategory = 'group truncate [&>a]:py-2';
+  protected readonly groupedSubitem =
+    'group mr-2 ml-[14px] truncate border-l-2 border-chrome-ink/20 py-0.5 pl-1.5 [&>a]:py-1.5 [&.active]:border-chrome-ink/80';
 
   /** Folded categories, remembered in this browser. Domains starts open, the rest folded. */
   protected readonly collapsed = signal<Record<SidebarCategory, boolean>>(readCollapsed());
 
-  /** A category's pages show when it's unfolded, or when you're on one of them. */
+  /**
+   * A category's pages show when it's unfolded, or when you're on one of them.
+   * Only one category is open at a time: being on a category's page keeps that
+   * one open and folds the rest.
+   */
   protected open(key: SidebarCategory): boolean {
-    if (!this.collapsed()[key]) return true;
-    return key === 'organization' && this.url().startsWith('/organization/');
+    if (this.url().startsWith('/organization/')) return key === 'organization';
+    return !this.collapsed()[key];
   }
 
   /** Clicking a category opens its page and unfolds it; clicking it again on that page folds it. */
@@ -190,8 +199,11 @@ export class Shell {
     this.setCollapsed(key, this.url() === page && this.open(key));
   }
 
+  /** Unfolding one category folds the others. */
   private setCollapsed(key: SidebarCategory, collapsed: boolean): void {
-    this.collapsed.update((state) => ({ ...state, [key]: collapsed }));
+    this.collapsed.update((state) =>
+      collapsed ? { ...state, [key]: true } : { domains: key !== 'domains', organization: key !== 'organization' },
+    );
     try {
       localStorage.setItem(COLLAPSED_KEY, JSON.stringify(this.collapsed()));
     } catch {
@@ -206,7 +218,9 @@ const COLLAPSED_KEY = 'amelu-sidebar-collapsed';
 function readCollapsed(): Record<SidebarCategory, boolean> {
   try {
     const stored = JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? '{}');
-    return { domains: stored.domains === true, organization: stored.organization !== false };
+    const domains = stored.domains === true;
+    // Older stored state could have both open; then Domains wins.
+    return { domains, organization: !domains || stored.organization !== false };
   } catch {
     return { domains: false, organization: true };
   }
@@ -294,6 +308,7 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
   domain.push(
     { label: 'DNS Configuration', link: `${d}/dns`, area: true, group: 'Delivery' },
     { label: 'Spam Filtering', link: `${d}/spam`, area: true },
+    { label: 'Dedicated IPs', link: `${d}/dedicated-ips` },
     { label: 'Transfer Ownership...', link: `${d}/transfer`, group: 'Manage' },
     { label: 'Deactivate Domain...', link: `${d}/deactivate` },
     { label: 'Delete Domain...', link: `${d}/delete`, kind: 'danger' },

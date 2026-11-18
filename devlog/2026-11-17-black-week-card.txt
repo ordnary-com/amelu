@@ -1,0 +1,10 @@
+Black Week notice is a card with both codes
+2026-11-17
+
+The inline promo banner in the 2.0 dashboard (beta/src/app/promo-banner,
+shown on /billing/plans and elsewhere) was one line of text with the codes
+inline. It is now a card with the accent dither from the right: a small
+square badge with the phase name, "Ends 26 November, 9 days left" (or "Last
+day today", in Amsterdam time like the phases in promo.ts), the yearly deal
+at 20px, and two copy buttons labelled Yearly and Monthly with their codes.
+The sidebar variant is unchanged. No change to the codes or dates.

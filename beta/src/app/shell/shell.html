@@ -1,124 +1,151 @@
-<!-- Accent strip across the very top, as in ordnary-console; the account
-     badge hangs out of it in the same color. -->
-<div class="h-1 flex-none bg-badge"></div>
-
-<!-- Top bar: the logo's 14px left padding lines it up with the menu text below. -->
-<header class="flex h-16 flex-none items-stretch justify-between gap-3 pr-5 pl-3.5 text-chrome-ink max-lg:pr-3">
-  <!-- Below lg the menus become a full-screen drawer behind this button. -->
-  <button
-    type="button"
-    class="-ml-1.5 flex w-10 flex-none cursor-pointer items-center justify-center lg:hidden"
-    [attr.aria-expanded]="navOpen()"
-    aria-controls="main-nav"
-    [attr.aria-label]="navOpen() ? 'Close menu' : 'Open menu'"
-    (click)="navOpen.set(!navOpen())"
-  >
-    <ng-icon [name]="navOpen() ? 'lucideX' : 'lucideMenu'" size="22px" strokeWidth="2.25" />
-  </button>
-  <a routerLink="/" class="flex items-center max-lg:mr-auto">
-    <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
-    <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
-  </a>
-  <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
-  <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2" />
-  <amelu-notification-bell data-tour="notifications" class="self-center" />
-  <amelu-account-menu data-tour="account" />
-</header>
-
 <!-- First-time tour after onboarding (tour/tour.ts). -->
 <amelu-tour />
 
-<div class="flex min-h-0 flex-1">
-  <!-- Same menus as the current dashboard (frontend/src/components/Layout.tsx): the main
-       one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
-  <nav
-    id="main-nav"
-    class="flex min-h-0 flex-none text-[14px] max-lg:fixed max-lg:inset-x-0 max-lg:top-[68px] max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
-    [class.max-lg:hidden]="!navOpen()"
-    aria-label="Main"
-  >
-    <!-- The main column carries its own right gutter, so it keeps the same width whether
-         or not a second column opens next to it. -->
-    <ul [class]="column + ' flex w-[226px] flex-col pr-4 max-lg:w-full max-lg:pr-0'">
-      <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Overview</span></a>
-      </li>
-      <li class="ml-2 max-lg:mr-2">
-        <ul>
-          <li [class]="groupedCategory" routerLinkActive="active">
-            <a routerLink="/domains" data-tour="domains" [class]="link" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span>@if (hiddenDomains() > 0) {<!-- Only the first few show below: the total says there are more. --><span class="rounded bg-chrome-ink/10 px-1 text-[10px] leading-[14px] text-chrome-ink/70" [attr.aria-label]="domains()!.length + ' domains'">{{ domains()!.length }}</span>}<ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></a>
-          </li>
-          @if (open('domains')) {
-          @for (domain of sidebarDomains(); track domain.id) {
-            <li [class]="groupedSubitem" routerLinkActive="active">
-              <a [routerLink]="'/domains/' + domain.id" [class]="link" [title]="domain.name">
-                <!-- Status dot, centred where the other items have their icon -->
-                <span class="flex w-[15px] flex-none justify-center" aria-hidden="true"><span class="size-[7px] rounded-full" [class]="dot(domain)"></span></span>
-                <span class="truncate">{{ domain.name }}</span>
+<!-- Below lg the sidebar is a drawer over the page. -->
+@if (navOpen()) {
+  <div class="fixed inset-0 z-40 bg-black/40 lg:hidden" aria-hidden="true" (click)="navOpen.set(false)"></div>
+}
+
+<!-- The sidebar runs the full height, on its own: logo on top, the menus, then
+     Support and search at the bottom. Folded to a rail of icons it hides every
+     label (in-[.rail]). -->
+<aside
+  id="main-nav"
+  class="flex flex-none flex-col bg-chrome text-chrome-ink max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-50 max-lg:w-[min(320px,88vw)] max-lg:shadow-xl"
+  [class.max-lg:hidden]="!navOpen()"
+  [class.rail]="railed()"
+  aria-label="Main"
+>
+  <div class="flex h-16 flex-none items-center justify-between gap-2 pr-3 pl-6 in-[.rail]:justify-center in-[.rail]:px-0">
+    <a routerLink="/" class="flex items-center in-[.rail]:hidden">
+      <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
+      <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
+    </a>
+    <button
+      type="button"
+      class="flex size-8 cursor-pointer items-center justify-center rounded-md text-chrome-ink/60 hover:bg-chrome-ink/10 hover:text-chrome-ink max-lg:hidden"
+      [attr.aria-label]="rail() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.aria-expanded]="!rail()"
+      (click)="toggleRail()"
+    >
+      <ng-icon [name]="rail() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'" size="17px" strokeWidth="2" />
+    </button>
+    <button
+      type="button"
+      class="flex size-8 cursor-pointer items-center justify-center rounded-md text-chrome-ink/70 hover:bg-chrome-ink/10 lg:hidden"
+      aria-label="Close menu"
+      (click)="navOpen.set(false)"
+    >
+      <ng-icon name="lucideX" size="18px" strokeWidth="2.25" />
+    </button>
+  </div>
+
+  <nav class="flex min-h-0 flex-1 text-[14px] max-lg:flex-col max-lg:overflow-y-auto">
+    <div class="flex w-[248px] flex-none flex-col in-[.rail]:w-16 max-lg:w-full">
+      <ul [class]="column + ' flex-1 space-y-1 px-3 in-[.rail]:px-2'">
+        <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <a routerLink="/" [class]="link" title="Overview"><ng-icon name="lucideHome" size="17px" strokeWidth="2" /><span [class]="label">Overview</span></a>
+        </li>
+
+        <li [class]="open('domains') ? groupOpen : ''">
+          <ul class="space-y-0.5">
+            <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+              <a routerLink="/domains" data-tour="domains" [class]="link" title="Domains" [attr.aria-expanded]="open('domains')" (click)="categoryClick('domains')">
+                <ng-icon name="lucideGlobe" size="17px" strokeWidth="2" />
+                <span [class]="label">Domains</span>
+                @if (hiddenDomains() > 0) {
+                  <!-- Only the first few show below: the total says there are more. -->
+                  <span class="rounded bg-chrome-ink/10 px-1 text-[10px] leading-[14px] text-chrome-ink/70 in-[.rail]:hidden" [attr.aria-label]="domains()!.length + ' domains'">{{ domains()!.length }}</span>
+                }
+                <ng-icon name="lucideChevronRight" size="14px" strokeWidth="2.25" class="opacity-70 transition-transform duration-150 in-[.rail]:hidden" [class.rotate-90]="open('domains')" />
               </a>
             </li>
-          }
-          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="15px" strokeWidth="2.5" /><span class="truncate">New Domain</span></a>
-          </li>
-          }
-        </ul>
-      </li>
-      <li [class]="item" routerLinkActive="active">
-        <a routerLink="/account" [class]="link"><ng-icon name="lucideUser" size="15px" strokeWidth="2.5" /><span class="truncate">My Account</span></a>
-      </li>
-      <li class="ml-2 max-lg:mr-2">
-        <ul>
-          <li [class]="groupedCategory" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization" data-tour="organization" [class]="link" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></a>
-          </li>
-          @if (open('organization')) {
-          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
-          </li>
-          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization/webmail" [class]="link"><ng-icon name="lucideMail" size="15px" strokeWidth="2.5" /><span class="truncate">Webmail</span></a>
-          </li>
-          }
-        </ul>
-      </li>
-      <li [class]="item" routerLinkActive="active">
-        <a routerLink="/billing" data-tour="billing" [class]="link"><ng-icon name="lucideCreditCard" size="15px" strokeWidth="2.5" /><span class="truncate">Billing</span></a>
-      </li>
-      <li [class]="item" routerLinkActive="active">
-        <a routerLink="/support" [class]="link"><ng-icon name="lucideLifeBuoy" size="15px" strokeWidth="2.5" /><span class="truncate">Support</span></a>
-      </li>
-      @if (showPromo()) {
-        <!-- The campaign deal, at the bottom of the main menu on the free plan. -->
-        <li class="mt-auto ml-4 pt-6 max-lg:mr-4"><amelu-promo-banner variant="sidebar" /></li>
-      }
-    </ul>
+            @if (open('domains') && !railed()) {
+              @for (domain of sidebarDomains(); track domain.id) {
+                <li [class]="groupedSubitem" routerLinkActive="active">
+                  <a [routerLink]="'/domains/' + domain.id" [class]="link" [title]="domain.name">
+                    <!-- Status dot, centred where the other items have their icon -->
+                    <span class="flex w-[17px] flex-none justify-center" aria-hidden="true"><span class="size-[7px] rounded-full" [class]="dot(domain)"></span></span>
+                    <span class="truncate">{{ domain.name }}</span>
+                  </a>
+                </li>
+              }
+              <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <a routerLink="/domains/new" [class]="createLink"><ng-icon name="lucidePlus" size="16px" strokeWidth="2" /><span class="truncate">New Domain</span></a>
+              </li>
+            }
+          </ul>
+        </li>
+
+        <li [class]="item" routerLinkActive="active">
+          <a routerLink="/account" [class]="link" title="My Account"><ng-icon name="lucideUser" size="17px" strokeWidth="2" /><span [class]="label">My Account</span></a>
+        </li>
+
+        <li [class]="open('organization') ? groupOpen : ''">
+          <ul class="space-y-0.5">
+            <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+              <a routerLink="/organization" data-tour="organization" [class]="link" title="My Organization" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')">
+                <ng-icon name="lucideBuilding2" size="17px" strokeWidth="2" />
+                <span [class]="label">My Organization</span>
+                <ng-icon name="lucideChevronRight" size="14px" strokeWidth="2.25" class="opacity-70 transition-transform duration-150 in-[.rail]:hidden" [class.rotate-90]="open('organization')" />
+              </a>
+            </li>
+            @if (open('organization') && !railed()) {
+              <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="16px" strokeWidth="2" /><span class="truncate">Activity Log</span></a>
+              </li>
+              <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                <a routerLink="/organization/webmail" [class]="link"><ng-icon name="lucideMail" size="16px" strokeWidth="2" /><span class="truncate">Webmail</span></a>
+              </li>
+            }
+          </ul>
+        </li>
+
+        <li [class]="item" routerLinkActive="active">
+          <a routerLink="/billing" data-tour="billing" [class]="link" title="Billing"><ng-icon name="lucideCreditCard" size="17px" strokeWidth="2" /><span [class]="label">Billing</span></a>
+        </li>
+      </ul>
+
+      <ul class="flex-none space-y-1 px-3 pt-3 pb-4 in-[.rail]:px-2">
+        @if (showPromo() && !railed()) {
+          <!-- The campaign deal, at the bottom of the sidebar on the free plan. -->
+          <li class="pb-3"><amelu-promo-banner variant="sidebar" /></li>
+        }
+        <li [class]="item" routerLinkActive="active">
+          <a routerLink="/support" [class]="link" title="Help and Support"><ng-icon name="lucideLifeBuoy" size="17px" strokeWidth="2" /><span [class]="label">Help and Support</span></a>
+        </li>
+        <li>
+          <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
+          <amelu-search data-tour="search" />
+        </li>
+      </ul>
+    </div>
 
     <!-- One menu column next to the main one: the domain's, or, inside a mailbox,
          the mailbox's with a way back up to the domain's (drill-down, see shell.ts). -->
     @if (shown(); as menu) {
-      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 px-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:px-0'" [attr.aria-label]="menu.label">
+      <ul [class]="column + ' w-52 space-y-0.5 border-l border-chrome-ink/10 px-3 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-3'" [attr.aria-label]="menu.label">
         @if (parentMenu(); as parent) {
-          <li class="mx-2">
+          <li>
             <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() - 1)">
-              <ng-icon name="lucideChevronLeft" size="15px" strokeWidth="2.5" /><span class="truncate">{{ columnTitle(parent) }}</span>
+              <ng-icon name="lucideChevronLeft" size="15px" strokeWidth="2.25" /><span class="truncate">{{ columnTitle(parent) }}</span>
             </button>
           </li>
         }
-        <li class="mx-2 px-2 pt-1.5 pb-2" aria-hidden="true">
+        <li class="px-3 pt-1.5 pb-2" aria-hidden="true">
           <p class="text-[12px] text-chrome-ink/50">{{ menu.label }}</p>
           <p class="truncate text-[15px] font-medium text-chrome-ink" [title]="columnTitle(menu)">{{ columnTitle(menu) }}</p>
         </li>
         @if (childMenu(); as child) {
-          <li class="mx-2 mb-1">
+          <li class="mb-1">
             <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() + 1)">
-              <span class="truncate">{{ columnTitle(child) }} menu</span><ng-icon name="lucideChevronRight" size="15px" strokeWidth="2.5" class="ml-auto" />
+              <span class="truncate">{{ columnTitle(child) }} menu</span><ng-icon name="lucideChevronRight" size="15px" strokeWidth="2.25" class="ml-auto" />
             </button>
           </li>
         }
         @for (entry of menu.items; track entry.link) {
           @if (entry.group) {
-            <li class="mx-2 px-2 pt-4 pb-1 text-[12px] font-medium text-chrome-ink/45" aria-hidden="true">{{ entry.group }}</li>
+            <li class="px-3 pt-4 pb-1 text-[12px] font-medium text-chrome-ink/45" aria-hidden="true">{{ entry.group }}</li>
           }
           <li
             [class]="entry.sub ? subitem : item"
@@ -134,7 +161,7 @@
                 [class]="entry.kind === 'create' ? createLink : entry.kind === 'danger' ? dangerLink : entry.secondary ? secondaryLink : link"
               >
                 @if (entry.kind === 'create') {
-                  <ng-icon name="lucidePlus" size="14px" strokeWidth="2.5" />
+                  <ng-icon name="lucidePlus" size="14px" strokeWidth="2.25" />
                 }
                 <span class="truncate">{{ entry.label }}</span>
               </a>
@@ -144,9 +171,33 @@
       </ul>
     }
   </nav>
+</aside>
 
-  <!-- The rounded corner sits against the blue where top bar and sidebar meet. -->
-  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-page max-lg:rounded-t-[20px] max-mobile:px-4! in-[.theme-white]:border-t in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-t in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
+<div class="flex min-w-0 flex-1 flex-col">
+  <!-- Top bar: flat, part of the page, with who you are and notifications on the right. -->
+  <header class="flex h-16 flex-none items-center gap-2 border-b border-line bg-page px-5 max-lg:px-3">
+    <button
+      type="button"
+      class="-ml-1 flex size-9 flex-none cursor-pointer items-center justify-center rounded-md hover:bg-bg lg:hidden"
+      [attr.aria-expanded]="navOpen()"
+      aria-controls="main-nav"
+      aria-label="Open menu"
+      (click)="navOpen.set(true)"
+    >
+      <ng-icon name="lucideMenu" size="20px" strokeWidth="2.25" />
+    </button>
+    <a routerLink="/" class="flex items-center lg:hidden">
+      <img src="/amelu-logo.png" alt="Amelu" class="h-[20px]" />
+    </a>
+
+    <div class="ml-auto flex items-center gap-1">
+      <amelu-account-menu data-tour="account" />
+      <span class="mx-2 h-6 w-px bg-line" aria-hidden="true"></span>
+      <amelu-notification-bell data-tour="notifications" />
+    </div>
+  </header>
+
+  <main class="min-w-0 flex-1 overflow-y-auto bg-page px-5 py-6 max-mobile:px-4! lg:px-8 lg:py-8">
     <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->
     <div class="flex min-h-full flex-col">
       <div class="flex-1">

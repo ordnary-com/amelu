@@ -1,5 +1,5 @@
 import { NotificationBell } from '../notifications/notification-bell';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { catchError, distinctUntilChanged, filter, map, of, startWith, switchMap } from 'rxjs';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -170,15 +170,19 @@ export class Shell {
   protected readonly collapsed = signal<Record<SidebarCategory, boolean>>(readCollapsed());
 
   /**
-   * A category's pages show when it's unfolded, or when you're on one of them.
-   * Only one category is open at a time: being on a category's page keeps that
-   * one open and folds the rest.
+   * Only one category is open at a time. Going to one of a category's pages
+   * unfolds it (and folds the other); after that both can be toggled freely,
+   * also while you stay on that page.
    */
   protected open(key: SidebarCategory): boolean {
-    if (this.url().startsWith('/organization')) return key === 'organization';
-    if (this.url() === '/domains' || this.url() === '/domains/new') return key === 'domains';
     return !this.collapsed()[key];
   }
+
+  private readonly unfoldForPage = effect(() => {
+    const url = this.url();
+    const key: SidebarCategory | null = url.startsWith('/organization') ? 'organization' : url === '/domains' || url === '/domains/new' ? 'domains' : null;
+    if (key) untracked(() => this.setCollapsed(key, false));
+  });
 
   /** A column's heading: the domain's name or the mailbox's address, else the menu's own label. */
   protected columnTitle(menu: { key: string; label: string }): string {

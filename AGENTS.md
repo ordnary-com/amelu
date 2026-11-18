@@ -81,8 +81,9 @@ Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
 
 ## Devlog
 
-Every change gets a devlog entry in `devlog/`, written before the session
-ends and listed in the index at the bottom of `devlog/README.txt`.
+Every change gets a short devlog entry in `devlog/`, listed in the index at
+the bottom of `devlog/README.txt`. The folder is local only: it is in
+`.gitignore` and never committed.
 
 - **One entry per change**, not one per session. Two unrelated things means
   two files.

@@ -1,6 +1,11 @@
+import type { IconName } from './icon';
 import { Domain, Invoice, Mailbox, OrganizationRole } from './api';
 
 export type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
+
+/** A status in tables: its icon and text colour for each tone. */
+export const TONE_TEXT: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
+export const TONE_ICON: Record<Tone, IconName> = { ok: 'circleCheck', warn: 'circleAlert', bad: 'circleX', neutral: 'clock' };
 
 export const BADGE = 'inline-flex flex-none items-center rounded-full px-2 py-0.5 text-[11px] font-medium';
 

@@ -23,145 +23,123 @@ const BODY_MAX = 20000;
     @if (ticket(); as t) {
       <amelu-page-header [title]="t.subject" [crumbs]="[{ label: 'Support', link: '/support' }, { label: '#' + t.number }]">
         <span class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-0.5 text-[12px] font-medium text-ink">
-            <span class="size-1.5 rounded-full" [class]="status[t.status].dot" aria-hidden="true"></span>{{ status[t.status].label }}
-          </span>
-          <span class="text-muted">#{{ t.number }} · opened {{ ago(t.createdAt) }} by {{ t.openedByName }}</span>
+          <span class="rounded px-1.5 py-0.5 text-[11px] font-medium" [class]="status[t.status].badge">{{ status[t.status].label }}</span>
+          <span>#{{ t.number }} · opened by {{ t.openedByName }} on {{ t.createdAt | date: 'd MMM y' }}</span>
         </span>
+        @if (t.status !== 'closed') {
+          <button actions type="button" [class]="ui.outline" [disabled]="busy()" (click)="close()">
+            <amelu-icon name="check" [size]="14" />
+            Close ticket
+          </button>
+        }
       </amelu-page-header>
 
-      <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
-        <section class="min-w-0">
+      <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+        <div class="min-w-0 space-y-6">
           @if (error(); as message) {
-            <amelu-alert class="mb-4 block">{{ message }}</amelu-alert>
+            <amelu-alert>{{ message }}</amelu-alert>
           }
 
-          <div class="overflow-hidden rounded-xl border border-line bg-surface shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <ol>
-              @for (m of t.messages ?? []; track m.id; let first = $first) {
-                <li
-                  class="relative flex gap-3.5 px-5 py-5"
-                  [class.border-t]="!first"
-                  [class.border-line]="!first"
-                  [class.bg-accent-soft/40]="m.authorKind === 'staff'"
-                >
-                  @if (m.authorKind === 'staff') {
-                    <span class="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden="true"></span>
-                  }
-                  <span
-                    class="flex size-8 flex-none items-center justify-center rounded-full text-[12px] font-semibold"
-                    [class]="m.authorKind === 'staff' ? 'bg-accent text-white' : 'bg-bg text-ink-soft ring-1 ring-line'"
-                    aria-hidden="true"
-                  >{{ m.authorKind === 'staff' ? 'A' : initial(m.authorName) }}</span>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span class="text-[13px] font-semibold text-ink">{{ m.authorName }}</span>
-                      @if (m.authorKind === 'staff') {
-                        <span class="rounded-full bg-accent/10 px-1.5 py-px text-[11px] font-medium text-link">Support</span>
-                      }
-                      <span class="text-[12px] text-muted" [title]="m.createdAt | date: 'medium'">{{ ago(m.createdAt) }}</span>
-                    </div>
-                    <div class="mt-1.5 text-[14px] leading-relaxed break-words whitespace-pre-wrap text-ink-soft">{{ m.body }}</div>
+          <section>
+            <h2 class="text-[14px] font-bold">Conversation</h2>
+            <p class="mt-1 mb-3 text-[13px] text-muted">{{ t.messageCount }} {{ t.messageCount === 1 ? 'message' : 'messages' }}, oldest first.</p>
+            <ol [class]="ui.card + ' divide-y divide-line overflow-hidden'">
+              @for (m of t.messages ?? []; track m.id) {
+                <li class="px-4 py-3" [class.bg-bg/40]="m.authorKind === 'staff'">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="flex size-6 flex-none items-center justify-center rounded-full text-[11px] font-bold"
+                      [class]="m.authorKind === 'staff' ? 'bg-accent text-white' : 'bg-bg text-muted'"
+                      aria-hidden="true"
+                    >{{ initial(m.authorName) }}</span>
+                    <span class="truncate text-[13px] font-medium">{{ m.authorName }}</span>
+                    @if (m.authorKind === 'staff') {
+                      <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[11px] font-medium text-link">Staff</span>
+                    }
+                    <span class="ml-auto flex-none text-[12px] text-muted" [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
                   </div>
+                  <div class="mt-2 pl-8 text-[13px] leading-relaxed break-words whitespace-pre-wrap">{{ m.body }}</div>
                 </li>
               }
             </ol>
+          </section>
 
-            <form class="border-t border-line bg-bg/40 p-4" (submit)="send($event)">
-              <label for="reply" class="sr-only">Reply</label>
+          <section>
+            <h2 [class]="ui.sectionTitle">Reply</h2>
+            <form [class]="ui.card + ' space-y-4 p-4'" (submit)="send($event)">
               @if (t.status === 'closed') {
-                <p class="mb-3 flex items-center gap-2 text-[13px] text-muted">
-                  <amelu-icon name="circleCheck" [size]="14" />
-                  This ticket is closed. Replying opens it again.
-                </p>
+                <p class="text-[13px] text-muted">This ticket is closed. Replying opens it again.</p>
               }
-              <div class="rounded-lg border border-line bg-surface transition-shadow focus-within:border-accent focus-within:ring-3 focus-within:ring-accent/15">
+              <label class="block">
+                <span class="sr-only">Reply</span>
                 <textarea
-                  id="reply"
-                  rows="4"
-                  class="block w-full resize-none rounded-lg bg-transparent px-3.5 py-3 text-[14px] leading-relaxed outline-none placeholder:text-muted"
+                  rows="5"
+                  [class]="ui.input + ' mt-0 h-auto py-2 leading-relaxed'"
                   [maxLength]="bodyMax"
-                  placeholder="Write a reply…"
+                  placeholder="Write a reply"
                   [value]="reply()"
                   (input)="reply.set($any($event.target).value)"
                   (keydown.meta.enter)="send($event)"
                   (keydown.control.enter)="send($event)"
                 ></textarea>
-                <div class="flex items-center justify-between gap-2 px-3 pb-3">
-                  <span class="text-[12px] text-muted"><kbd class="rounded border border-line px-1 font-sans text-[11px]">⌘</kbd> <kbd class="rounded border border-line px-1 font-sans text-[11px]">Enter</kbd> to send</span>
-                  <button type="submit" [class]="ui.primary + ' rounded-full px-3.5'" [disabled]="busy() || !reply().trim()">
-                    {{ busy() ? 'Sending…' : 'Send' }}
-                    <amelu-icon name="arrowRight" [size]="14" />
-                  </button>
-                </div>
-              </div>
-              <p class="mt-2 text-[12px] text-muted">We'll email {{ t.openedByName }} when support replies.</p>
+                <span [class]="ui.hint">We email you when support replies. Cmd or Ctrl + Enter sends.</span>
+              </label>
+              <button type="submit" [class]="ui.primary" [disabled]="busy() || !reply().trim()">{{ busy() ? 'Sending...' : 'Send reply' }}</button>
             </form>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <aside class="space-y-4 xl:sticky xl:top-6" aria-label="Ticket details">
-          <section class="rounded-xl border border-line bg-surface p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <h2 class="text-[12px] font-medium tracking-wide text-muted uppercase">Details</h2>
-            <dl class="mt-3 space-y-3 text-[13px]">
-              <div class="flex items-center justify-between gap-3">
-                <dt class="text-muted">Status</dt>
-                <dd class="inline-flex items-center gap-1.5 font-medium">
-                  <span class="size-1.5 rounded-full" [class]="status[t.status].dot" aria-hidden="true"></span>{{ status[t.status].label }}
-                </dd>
+        <aside class="space-y-6">
+          <section>
+            <h2 [class]="ui.sectionTitle">Details</h2>
+            <dl [class]="ui.card + ' divide-y divide-line overflow-hidden'">
+              <div class="flex items-center gap-4 px-4 py-2.5">
+                <dt class="w-28 flex-none text-[13px] text-muted">Status</dt>
+                <dd class="min-w-0 flex-1 text-[13px]"><span class="rounded px-1.5 py-0.5 text-[11px] font-medium" [class]="status[t.status].badge">{{ status[t.status].label }}</span></dd>
               </div>
-              <div class="flex items-center justify-between gap-3">
-                <dt class="text-muted">Topic</dt>
-                <dd class="truncate text-right font-medium">{{ categoryLabel[t.category] }}</dd>
+              <div class="flex items-center gap-4 px-4 py-2.5">
+                <dt class="w-28 flex-none text-[13px] text-muted">Topic</dt>
+                <dd class="min-w-0 flex-1 truncate text-[13px]">{{ categoryLabel[t.category] }}</dd>
               </div>
               @if (t.domainName && t.domainId) {
-                <div class="flex items-center justify-between gap-3">
-                  <dt class="text-muted">Domain</dt>
-                  <dd class="truncate"><a [routerLink]="['/domains', t.domainId]" class="font-medium text-link hover:underline">{{ t.domainName }}</a></dd>
+                <div class="flex items-center gap-4 px-4 py-2.5">
+                  <dt class="w-28 flex-none text-[13px] text-muted">Domain</dt>
+                  <dd class="min-w-0 flex-1 truncate text-[13px]"><a [routerLink]="['/domains', t.domainId]" class="text-link hover:underline">{{ t.domainName }}</a></dd>
                 </div>
               }
-              <div class="flex items-center justify-between gap-3">
-                <dt class="text-muted">Opened by</dt>
-                <dd class="truncate text-right font-medium">{{ t.openedByName }}</dd>
+              <div class="flex items-center gap-4 px-4 py-2.5">
+                <dt class="w-28 flex-none text-[13px] text-muted">Opened by</dt>
+                <dd class="min-w-0 flex-1 truncate text-[13px]">{{ t.openedByName }}</dd>
               </div>
-              <div class="flex items-center justify-between gap-3">
-                <dt class="text-muted">Opened</dt>
-                <dd class="font-medium" [title]="t.createdAt | date: 'medium'">{{ t.createdAt | date: 'd MMM y' }}</dd>
+              <div class="flex items-center gap-4 px-4 py-2.5">
+                <dt class="w-28 flex-none text-[13px] text-muted">Opened</dt>
+                <dd class="min-w-0 flex-1 text-[13px]" [title]="t.createdAt | date: 'medium'">{{ t.createdAt | date: 'd MMM y, HH:mm' }}</dd>
               </div>
-              <div class="flex items-center justify-between gap-3">
-                <dt class="text-muted">Last activity</dt>
-                <dd class="font-medium" [title]="t.updatedAt | date: 'medium'">{{ ago(t.updatedAt) }}</dd>
+              <div class="flex items-center gap-4 px-4 py-2.5">
+                <dt class="w-28 flex-none text-[13px] text-muted">Last activity</dt>
+                <dd class="min-w-0 flex-1 text-[13px]" [title]="t.updatedAt | date: 'medium'">{{ ago(t.updatedAt) }}</dd>
               </div>
             </dl>
-            @if (t.status !== 'closed') {
-              <button type="button" [class]="ui.outline + ' mt-4 w-full justify-center rounded-full'" [disabled]="busy()" (click)="close()">
-                <amelu-icon name="check" [size]="14" />
-                Close ticket
-              </button>
-            }
           </section>
 
-          <section class="rounded-xl border border-line bg-surface p-2 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <div class="flex items-center justify-between px-2 pt-1 pb-2">
-              <h2 class="text-[12px] font-medium tracking-wide text-muted uppercase">Your tickets</h2>
-              <a routerLink="/support/new" class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium text-link hover:bg-accent/10">
-                <amelu-icon name="plus" [size]="12" />
-                New
-              </a>
+          <section>
+            <div class="mb-3 flex items-center justify-between">
+              <h2 class="text-[14px] font-bold">Your tickets</h2>
+              <a routerLink="/support/new" class="text-[13px] font-medium text-link hover:underline">New ticket</a>
             </div>
-            <ul class="space-y-0.5">
+            <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
               @for (other of others(); track other.id) {
                 <li>
                   <a
                     [routerLink]="['/support/tickets', other.id]"
-                    class="flex items-start gap-2.5 rounded-lg px-2 py-2 text-[13px] transition-colors"
-                    [class]="other.id === t.id ? 'bg-accent/10 text-ink' : 'text-ink-soft hover:bg-bg'"
+                    class="flex items-start gap-2.5 px-4 py-2.5 text-[13px] hover:bg-bg/60"
+                    [class.bg-bg/60]="other.id === t.id"
                     [attr.aria-current]="other.id === t.id ? 'page' : null"
                   >
                     <span class="mt-1.5 size-1.5 flex-none rounded-full" [class]="status[other.status].dot" aria-hidden="true"></span>
                     <span class="min-w-0 flex-1">
                       <span class="block truncate" [class.font-medium]="other.id === t.id">{{ other.subject }}</span>
-                      <span class="block text-[11px] text-muted tabular-nums">#{{ other.number }} · {{ ago(other.updatedAt) }}</span>
+                      <span class="block text-[12px] text-muted tabular-nums">#{{ other.number }} · {{ ago(other.updatedAt) }}</span>
                     </span>
                   </a>
                 </li>
@@ -176,9 +154,9 @@ const BODY_MAX = 20000;
       </amelu-page-header>
       <a routerLink="/support" [class]="ui.outline">Back to support</a>
     } @else {
-      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <div class="h-64 animate-pulse rounded-xl border border-line bg-surface"></div>
-        <div class="h-56 animate-pulse rounded-xl border border-line bg-surface"></div>
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div [class]="ui.card + ' h-48 animate-pulse'"></div>
+        <div [class]="ui.card + ' h-56 animate-pulse'"></div>
       </div>
     }
   `,

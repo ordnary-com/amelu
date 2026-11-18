@@ -16,6 +16,7 @@ import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
 import { SetupChecklist } from '../setup-checklist/setup-checklist';
 import { DitherShader } from '../login/dither-shader';
+import { UI } from '../ui';
 
 @Component({
   selector: 'amelu-home',
@@ -40,6 +41,7 @@ export class Home {
     return hour < 5 ? 'Good evening' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   });
   protected readonly sectionHeader = 'mb-3 flex h-6 items-center justify-between gap-3';
+  protected readonly ui = UI;
   protected readonly panel = 'rounded-lg border border-line bg-surface p-4';
   protected readonly cardTitle = 'flex items-center gap-2 text-[14px] font-bold';
   protected readonly headerLink = 'text-[12px] text-muted hover:text-ink hover:underline';

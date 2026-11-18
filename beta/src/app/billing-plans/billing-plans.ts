@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { Api, BillingInterval, Plan, errorMessage } from '../api';
@@ -8,48 +9,43 @@ import { UI } from '../ui';
 import { EmptyState } from '../empty-state/empty-state';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { Icon } from '../icon';
+import { DitherShader } from '../login/dither-shader';
 
 // Descriptive, not backend-enforced: every plan gets the same feature set
-// today, only the support tier and the two API-driven limits differ.
-// Copied from frontend/src/pages/BillingPlansPage.tsx.
-const PERKS_BY_PLAN: Record<string, string[]> = {
-  free: [
-    '150 outgoing messages/day',
-    'Unlimited storage per mailbox',
-    'Forwarding & catch-all addresses',
-    'Unlimited address & domain aliases',
-    'Spam filtering & pattern rewrites',
-    'DNS configuration & live health checks',
-    'Community support',
-  ],
-  go: [
-    '10,000 incoming messages/day',
-    '1,000 outgoing messages/day per domain',
-    'Unlimited storage per mailbox',
-    'Forwarding & catch-all addresses',
-    'Unlimited address & domain aliases',
-    'Spam filtering & pattern rewrites',
-    'DNS configuration & live health checks',
-    'Branded webmail for your organization',
-    'Email support',
-  ],
-  pro: [
-    '50,000 incoming messages/day',
-    '3,000 outgoing messages/day per domain',
-    'Unlimited storage per mailbox',
-    'Forwarding & catch-all addresses',
-    'Unlimited address & domain aliases',
-    'Spam filtering & pattern rewrites',
-    'DNS configuration & live health checks',
-    'Branded webmail for your organization',
-    'Priority email support',
-  ],
+// today, only the support tier and the two API-driven limits differ. The
+// shared features are listed once under the cards instead of on each one.
+const SHARED = [
+  'Unlimited storage per mailbox',
+  'Forwarding & catch-all addresses',
+  'Unlimited address & domain aliases',
+  'Spam filtering & pattern rewrites',
+  'DNS configuration & live health checks',
+];
+
+const PLAN_DETAILS: Record<string, { tagline: string; perks: string[] }> = {
+  free: {
+    tagline: 'For trying Amelu on your own domain.',
+    perks: ['150 outgoing messages/day', 'Community support'],
+  },
+  go: {
+    tagline: 'For small teams and side projects.',
+    perks: ['10,000 incoming messages/day', '1,000 outgoing messages/day per domain', 'Branded webmail', 'Email support'],
+  },
+  pro: {
+    tagline: 'For businesses that send a lot.',
+    perks: ['50,000 incoming messages/day', '3,000 outgoing messages/day per domain', 'Branded webmail', 'Priority email support'],
+  },
+};
+
+const CUSTOM_DETAILS = {
+  tagline: 'Put together for your organization.',
+  perks: ['Sending limit agreed with you', 'Branded webmail', 'Priority email support'],
 };
 
 /** The current dashboard's /billing/plans: compare, switch or cancel. */
 @Component({
   selector: 'amelu-billing-plans',
-  imports: [EmptyState, Alert, PromoBanner, Icon],
+  imports: [EmptyState, Alert, PromoBanner, Icon, RouterLink, DitherShader],
   templateUrl: './billing-plans.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -69,10 +65,11 @@ export class BillingPlans {
   protected readonly busyKey = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
 
-  protected perks(plan: Plan): string[] {
-    // Its sending limit is agreed per customer, so only the shared features.
-    if (plan.custom) return PERKS_BY_PLAN['pro'].slice(2);
-    return PERKS_BY_PLAN[plan.id] ?? [];
+  protected readonly shared = SHARED;
+
+  protected details(plan: Plan): { tagline: string; perks: string[] } {
+    if (plan.custom) return CUSTOM_DETAILS;
+    return PLAN_DETAILS[plan.id] ?? { tagline: '', perks: [] };
   }
 
   /** A custom plan only has the period it was made with, whatever the toggle says. */

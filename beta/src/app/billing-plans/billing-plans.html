@@ -29,49 +29,71 @@
 </div>
 
 @if (plans() === undefined) {
-  <div class="grid gap-4 lg:grid-cols-3" aria-hidden="true">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
     @for (i of [1, 2, 3]; track i) {
-      <div [class]="ui.card + ' h-80 animate-pulse'"></div>
+      <div [class]="ui.card + ' h-64 animate-pulse'"></div>
     }
   </div>
 } @else if (plans() === null) {
   <amelu-empty-state [class]="ui.card" title="Plans couldn't be loaded" [error]="true" />
 } @else {
-  <div class="grid gap-4 lg:grid-cols-3">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     @for (plan of plans(); track plan.id) {
       <section
-        class="flex flex-col rounded-lg border bg-surface p-5"
+        class="relative flex flex-col overflow-hidden rounded-lg border bg-surface p-4 *:relative"
         [class]="plan.current ? 'border-accent ring-1 ring-accent' : 'border-line'"
       >
+        @if (plan.current) {
+          <!-- Same dither as the help cards, so the plan you're on stands out. -->
+          <div class="pointer-events-none !absolute inset-0 opacity-25 [mask-image:linear-gradient(to_bottom_left,black,rgba(0,0,0,0.4)_35%,transparent_70%)]" aria-hidden="true">
+            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+          </div>
+        }
         <div class="flex items-center justify-between gap-2">
-          <h2 class="text-[16px] font-bold">{{ plan.name }}</h2>
+          <h2 class="text-[14px] font-bold">{{ plan.name }}</h2>
           @if (plan.current) {
             <span class="inline-flex items-center rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-link">Current plan</span>
+          } @else if (plan.custom) {
+            <span class="inline-flex items-center rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-link">Custom plan</span>
           }
         </div>
+        <p class="mt-0.5 text-[12px] text-muted">{{ details(plan).tagline }}</p>
 
-        <div class="mt-3 h-14">
+        <div class="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
           @if (isFree(plan)) {
-            <div class="text-[32px] leading-none font-normal tracking-[-0.02em]">Free</div>
+            <span class="text-[26px] leading-none font-normal tracking-[-0.02em]">Free</span>
           } @else {
-            <div>
-              <span class="text-[32px] leading-none font-normal tracking-[-0.02em]">{{ money(price(plan)) }}</span>
-              <span class="text-[13px] text-muted">/{{ period(plan) === 'monthly' ? 'month' : 'year' }}</span>
-            </div>
-            @if (plan.custom) {
-              <span class="mt-1.5 inline-flex rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-medium text-link">Custom plan</span>
-            } @else if (interval() === 'annual') {
-              <span class="mt-1.5 inline-flex rounded-full bg-ok/15 px-2 py-0.5 text-[11px] font-medium text-ok">Save {{ money(savings(plan)) }} a year</span>
+            <span class="text-[26px] leading-none font-normal tracking-[-0.02em]">{{ money(price(plan)) }}</span>
+            <span class="text-[12px] text-muted">/{{ period(plan) === 'monthly' ? 'month' : 'year' }}</span>
+            @if (!plan.custom && interval() === 'annual') {
+              <span class="ml-auto rounded-full bg-ok/15 px-2 py-0.5 text-[11px] font-medium text-ok">Save {{ money(savings(plan)) }}</span>
             }
           }
         </div>
 
-        <div class="mt-4">
+        <ul class="mt-4 space-y-1.5 border-t border-line pt-3 text-[12.5px]">
+          <li class="flex gap-2">
+            <amelu-icon name="check" [size]="13" class="mt-[3px] flex-none text-link" />
+            <span><span class="font-semibold">{{ plan.maxDomains }}</span> email domain{{ plan.maxDomains === 1 ? '' : 's' }}</span>
+          </li>
+          <li class="flex gap-2">
+            <amelu-icon name="check" [size]="13" class="mt-[3px] flex-none text-link" />
+            <span><span class="font-semibold">{{ plan.maxMailboxesPerDomain }}</span> mailboxes per domain</span>
+          </li>
+          @for (perk of details(plan).perks; track perk) {
+            <li class="flex gap-2 text-muted">
+              <amelu-icon name="check" [size]="13" class="mt-[3px] flex-none" />
+              {{ perk }}
+            </li>
+          }
+        </ul>
+
+        <div class="mt-auto pt-4">
           @if (!isFree(plan)) {
             @if (plan.current) {
               <button
                 type="button"
-                [class]="ui.dangerOutline + ' h-9 w-full justify-center'"
+                [class]="ui.dangerOutline + ' h-8 w-full justify-center bg-surface'"
                 [disabled]="busyKey() === plan.id + ':cancel'"
                 (click)="cancel(plan)"
               >
@@ -80,7 +102,7 @@
             } @else {
               <button
                 type="button"
-                [class]="ui.primary + ' h-9 w-full justify-center'"
+                [class]="ui.primary + ' h-8 w-full justify-center'"
                 [disabled]="!plan.purchasable || busyKey() === plan.id + ':' + interval()"
                 (click)="switchTo(plan)"
               >
@@ -88,29 +110,43 @@
               </button>
             }
           } @else {
-            <div class="flex h-9 items-center justify-center rounded-md bg-bg text-[13px] text-muted">
+            <div class="flex h-8 items-center justify-center rounded-md bg-bg text-[12px] text-muted">
               {{ plan.current ? 'Your current plan' : 'Included' }}
             </div>
           }
         </div>
-
-        <ul class="-mx-5 mt-5 space-y-2 border-t border-line px-5 pt-4 text-[13px]">
-          <li class="flex gap-2.5">
-            <amelu-icon name="check" [size]="14" class="mt-[3px] flex-none text-link" />
-            <span><span class="font-semibold">{{ plan.maxDomains }}</span> email domain{{ plan.maxDomains === 1 ? '' : 's' }}</span>
-          </li>
-          <li class="flex gap-2.5">
-            <amelu-icon name="check" [size]="14" class="mt-[3px] flex-none text-link" />
-            <span><span class="font-semibold">{{ plan.maxMailboxesPerDomain }}</span> mailboxes per domain</span>
-          </li>
-          @for (perk of perks(plan); track perk) {
-            <li class="flex gap-2.5 text-muted">
-              <amelu-icon name="check" [size]="14" class="mt-[3px] flex-none" />
-              {{ perk }}
-            </li>
-          }
-        </ul>
       </section>
     }
   </div>
+
+  <section [class]="ui.card + ' mt-3 p-4'">
+    <h2 class="text-[13px] font-bold">Included on every plan</h2>
+    <ul class="mt-2.5 grid gap-x-6 gap-y-1.5 text-[12.5px] text-muted sm:grid-cols-2 lg:grid-cols-3">
+      @for (item of shared; track item) {
+        <li class="flex gap-2">
+          <amelu-icon name="check" [size]="13" class="mt-[3px] flex-none text-link" />
+          {{ item }}
+        </li>
+      }
+    </ul>
+  </section>
 }
+
+<section class="relative mt-3 flex flex-col gap-3 overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative sm:flex-row sm:items-center">
+  <!-- Same dither as the other help cards, rising from the bottom right. -->
+  <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
+    <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+  </div>
+  <amelu-icon name="globe" [size]="20" class="block flex-none text-ink" />
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-center gap-2">
+      <h2 class="text-[14px] font-bold">Dedicated IPs</h2>
+      <span class="rounded bg-accent/12 px-1.5 py-0.5 text-[11px] font-medium text-link">Add-on</span>
+    </div>
+    <p class="mt-1 text-[13px] leading-relaxed text-muted">
+      Send from IP addresses used only by your organization, with their own hostname and reverse DNS, so your sending
+      reputation depends on your mail alone. Available on any paid plan.
+    </p>
+  </div>
+  <a routerLink="/support" [class]="ui.outline + ' flex-none bg-surface'">Contact us</a>
+</section>

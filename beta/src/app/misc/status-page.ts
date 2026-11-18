@@ -249,8 +249,8 @@ const lastOctet = (ip: string) => Number(ip.split('.').pop());
               </table>
             </div>
             <p class="mt-3 text-[13px] text-muted">
-              Want to allowlist Amelu? Every address we can send from is on
-              <a routerLink="/network" class="text-link hover:underline">Sending IPs</a>.
+              Amelu sends all mail from its own network, 89.106.70.0/24 (AS218905). To allowlist us ahead of time, you'll find
+              every address on <a routerLink="/network" class="text-link hover:underline">Sending IPs</a>.
             </p>
           </div>
         </section>

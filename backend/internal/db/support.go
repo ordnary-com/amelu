@@ -43,9 +43,13 @@ type SupportMessage struct {
 	// The customer's email and Ordnary picture; empty for staff.
 	AuthorEmail     string
 	AuthorAvatarURL string
-	Body            string
-	Internal        bool
-	CreatedAt       time.Time
+	// For staff (stored by Ordnary email): the name and picture of the Amelu
+	// account with that email, if there is one.
+	StaffName      string
+	StaffAvatarURL string
+	Body           string
+	Internal       bool
+	CreatedAt      time.Time
 }
 
 const supportTicketSelect = `
@@ -190,8 +194,10 @@ func (s *Store) SupportTicketCounts(ctx context.Context) (map[string]int, error)
 func (s *Store) ListSupportMessages(ctx context.Context, ticketID string, includeInternal bool) ([]SupportMessage, error) {
 	rows, err := s.conn.QueryContext(ctx, `
 		SELECT m.id, m.ticket_id, m.author_kind, m.author_customer_id, m.author_name, COALESCE(c.email, ''), COALESCE(c.avatar_url, ''),
-		       m.body, m.internal, m.created_at
-		FROM support_messages m LEFT JOIN customers c ON c.id = m.author_customer_id
+		       COALESCE(sc.name, ''), COALESCE(sc.avatar_url, ''), m.body, m.internal, m.created_at
+		FROM support_messages m
+		LEFT JOIN customers c ON c.id = m.author_customer_id
+		LEFT JOIN customers sc ON m.author_kind = 'staff' AND lower(sc.email) = lower(m.author_name)
 		WHERE m.ticket_id = $1 AND (NOT m.internal OR $2) ORDER BY m.created_at`, ticketID, includeInternal)
 	if err != nil {
 		return nil, err
@@ -200,7 +206,7 @@ func (s *Store) ListSupportMessages(ctx context.Context, ticketID string, includ
 	var out []SupportMessage
 	for rows.Next() {
 		var m SupportMessage
-		if err := rows.Scan(&m.ID, &m.TicketID, &m.AuthorKind, &m.AuthorCustomerID, &m.AuthorName, &m.AuthorEmail, &m.AuthorAvatarURL, &m.Body, &m.Internal, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.TicketID, &m.AuthorKind, &m.AuthorCustomerID, &m.AuthorName, &m.AuthorEmail, &m.AuthorAvatarURL, &m.StaffName, &m.StaffAvatarURL, &m.Body, &m.Internal, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

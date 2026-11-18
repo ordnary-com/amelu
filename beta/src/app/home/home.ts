@@ -9,21 +9,19 @@ import { Session } from '../session';
 import { Domains } from '../domains';
 import { QuickActions } from '../quick-actions/quick-actions';
 import { DomainHealthChecks } from '../domain-health';
-import { DomainCard } from '../domain-card/domain-card';
-import { INVOICE_STATUS, badgeClass } from '../status';
+import { DOMAIN_STATUS, INVOICE_STATUS, Tone, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
 import { SetupChecklist } from '../setup-checklist/setup-checklist';
-import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, DomainCard, SetupChecklist, DitherShader],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, SetupChecklist],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'flex flex-col gap-4' },
+  host: { class: 'flex flex-col gap-5' },
 })
 export class Home {
   private readonly api = inject(Api);
@@ -34,17 +32,24 @@ export class Home {
   protected readonly githubUrl = GITHUB_URL;
   protected readonly badge = badgeClass;
 
-  protected readonly heroLink = 'flex items-center gap-1.5 text-[13px] font-semibold hover:text-link';
   protected readonly today = new Date();
   protected readonly greeting = computed(() => {
     const hour = this.today.getHours();
     return hour < 5 ? 'Good evening' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   });
-  protected readonly sectionHeader = 'mb-3 flex h-6 items-center justify-between gap-3';
   protected readonly ui = UI;
-  protected readonly panel = 'rounded-lg border border-line bg-surface p-4';
-  protected readonly cardTitle = 'flex items-center gap-2 text-[14px] font-bold';
-  protected readonly headerLink = 'text-[12px] text-muted hover:text-ink hover:underline';
+  protected readonly domainStatus = DOMAIN_STATUS;
+  protected readonly toneText: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
+
+  // Flat panels with a title bar, boxed figures and bordered tables.
+  protected readonly panel = 'overflow-hidden rounded-md border border-line bg-surface';
+  protected readonly panelHeader = 'flex min-h-14 items-center justify-between gap-3 border-b border-line px-5 py-3';
+  protected readonly panelTitle = 'text-[17px] font-medium';
+  protected readonly arrow = 'inline-flex size-8 flex-none items-center justify-center rounded-md text-ink hover:bg-bg';
+  protected readonly stat = 'flex items-center justify-between gap-4 rounded-md border border-line px-5 py-4 text-[14px]';
+  protected readonly statValue = 'flex-none text-[28px] leading-none font-normal tabular-nums';
+  protected readonly th = 'px-5 py-3 font-medium whitespace-nowrap';
+  protected readonly td = 'px-5 py-3.5 align-middle';
 
   // undefined while loading, null when the request failed
   protected readonly domains = inject(Domains).arranged;

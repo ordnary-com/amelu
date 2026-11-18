@@ -1,7 +1,7 @@
 <!-- Who you're signed in as, opening a panel below. -->
 <button
   type="button"
-  class="group flex cursor-pointer items-center gap-2 self-center rounded-md px-2 py-1.5 text-[13px] text-ink hover:bg-bg aria-expanded:bg-bg"
+  class="group flex cursor-pointer items-center gap-2 self-center rounded-md px-2 py-1.5 text-[13px] text-ink hover:bg-bg aria-expanded:bg-accent/10"
   (click)="toggle()"
   [attr.aria-expanded]="open()"
   aria-haspopup="menu"
@@ -17,121 +17,82 @@
 
 @if (open()) {
   <div
-    class="absolute top-full right-0 z-20 mt-1 max-h-[calc(100vh-6rem)] w-[420px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line bg-popover p-5 text-ink shadow-md"
+    class="absolute top-full right-0 z-20 mt-1.5 max-h-[calc(100vh-6rem)] w-[340px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border border-line bg-popover text-ink shadow-md"
     role="menu"
     aria-label="Your account"
   >
-    <div class="flex items-center justify-between">
-      <h3 class="text-[15px] font-bold">Your plan</h3>
-      <a routerLink="/billing/overview" [class]="link" (click)="open.set(false)">View billing</a>
-    </div>
-    <div class="mt-3 flex items-center justify-between">
-      <div>
-        <div class="text-[13px] font-bold">Current plan</div>
-        <div class="mt-1 text-[20px] font-bold">{{ customer()?.planTierName }}</div>
-      </div>
-      <a
-        routerLink="/billing/plans"
-        class="rounded-md border border-accent px-3 py-1.5 text-[12px] font-bold text-link hover:bg-accent/10"
-        (click)="open.set(false)"
-      >
-        View plans
-      </a>
-    </div>
-
-    <div class="my-4 h-px bg-line"></div>
-
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 px-4 py-3">
       @if (showAvatar()) {
-        <img
-          [src]="customer()!.avatarUrl"
-          alt=""
-          class="size-10 flex-none rounded-full object-cover"
-          (error)="avatarFailed.set(true)"
-          referrerpolicy="no-referrer"
-        />
+        <img [src]="customer()!.avatarUrl" alt="" class="size-9 flex-none rounded-full object-cover" (error)="avatarFailed.set(true)" referrerpolicy="no-referrer" />
       } @else {
-        <span class="flex size-10 flex-none items-center justify-center rounded-full bg-accent-soft text-[14px] font-semibold text-link">
-          {{ initials() }}
-        </span>
+        <span class="flex size-9 flex-none items-center justify-center rounded-full bg-accent-soft text-[13px] font-semibold text-link">{{ initials() }}</span>
       }
       <div class="min-w-0">
-        <div class="truncate text-[13px] font-bold">{{ customer()?.name }}</div>
-        <div class="mt-0.5 flex items-center gap-1.5">
+        <div class="truncate text-[14px] font-medium">{{ customer()?.name }}</div>
+        <div class="flex items-center gap-1.5 text-[12px] text-muted">
+          <span class="truncate">{{ customer()?.email }}</span>
+          <button type="button" class="flex-none cursor-pointer hover:text-ink" [attr.aria-label]="copied() ? 'Copied' : 'Copy email address'" [title]="copied() ? 'Copied' : 'Copy email address'" (click)="copyEmail()">
+            <amelu-icon [name]="copied() ? 'check' : 'copy'" [size]="12" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-line py-2">
+      <p [class]="heading">Plan</p>
+      <div [class]="row">
+        <span>{{ customer()?.planTierName }}</span>
+        <a routerLink="/billing/plans" class="text-[12px] text-link hover:underline" (click)="open.set(false)">View plans</a>
+      </div>
+      <p [class]="heading + ' mt-1'">Organization</p>
+      <div [class]="row">
+        <span class="truncate">{{ customer()?.organizationName }}</span>
+        <span class="flex-none text-[12px] text-muted capitalize">{{ customer()?.role }}</span>
+      </div>
+    </div>
+
+    <div class="border-t border-line py-2">
+      <p [class]="heading">Appearance</p>
+      <div class="flex flex-wrap gap-1.5 px-4 py-1.5" role="group" aria-label="Theme">
+        @for (option of themes; track option.value) {
           <button
             type="button"
-            class="cursor-pointer text-muted hover:text-ink"
-            [attr.aria-label]="copied() ? 'Copied' : 'Copy email address'"
-            (click)="copyEmail()"
-          >
-            <amelu-icon [name]="copied() ? 'check' : 'copy'" [size]="14" />
-          </button>
-          <span class="truncate text-[13px]">{{ customer()?.email }}</span>
-        </div>
+            class="size-6 cursor-pointer rounded-full border border-line"
+            [class]="theme.choice() === option.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-popover' : 'hover:scale-110'"
+            [style.background]="swatch(option)"
+            [attr.aria-pressed]="theme.choice() === option.value"
+            [attr.aria-label]="option.label"
+            [title]="option.label"
+            (click)="theme.set(option.value)"
+          ></button>
+        }
+      </div>
+      <div class="flex flex-wrap gap-1.5 px-4 py-1.5" role="group" aria-label="Accent colour">
+        @for (accent of accents; track accent.value) {
+          <button
+            type="button"
+            class="size-5 cursor-pointer rounded-full"
+            [class]="theme.accent() === accent.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-popover' : 'hover:scale-110'"
+            [style.background]="accent.color"
+            [attr.aria-pressed]="theme.accent() === accent.value"
+            [attr.aria-label]="accent.label"
+            [title]="accent.label"
+            (click)="theme.setAccent(accent.value)"
+          ></button>
+        }
       </div>
     </div>
 
-    <div class="mt-3 space-y-3">
-      <div>
-        <div class="text-[13px] font-bold">Organization</div>
-        <div class="mt-0.5 truncate text-[13px]">{{ customer()?.organizationName }}</div>
-      </div>
-      <div>
-        <div class="text-[13px] font-bold">Role</div>
-        <div class="mt-0.5 text-[13px] capitalize">{{ customer()?.role }}</div>
-      </div>
-      <div>
-        <div class="text-[13px] font-bold">Theme</div>
-        <div class="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Theme">
-          @for (option of themes; track option.value) {
-            <button
-              type="button"
-              class="size-6 cursor-pointer rounded-full border border-line"
-              [class]="theme.choice() === option.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-popover' : 'hover:scale-110'"
-              [style.background]="swatch(option)"
-              [attr.aria-pressed]="theme.choice() === option.value"
-              [attr.aria-label]="option.label"
-              [title]="option.label"
-              (click)="theme.set(option.value)"
-            ></button>
-          }
-        </div>
-        <div class="mt-2.5 text-[13px] font-bold">Accent</div>
-        <div class="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Accent colour">
-          @for (accent of accents; track accent.value) {
-            <button
-              type="button"
-              class="size-5 cursor-pointer rounded-full"
-              [class]="theme.accent() === accent.value ? 'ring-2 ring-accent ring-offset-2 ring-offset-popover' : 'hover:scale-110'"
-              [style.background]="accent.color"
-              [attr.aria-pressed]="theme.accent() === accent.value"
-              [attr.aria-label]="accent.label"
-              [title]="accent.label"
-              (click)="theme.setAccent(accent.value)"
-            ></button>
-          }
-        </div>
-      </div>
+    <div class="border-t border-line py-1.5">
+      <a routerLink="/account" [class]="item" role="menuitem" (click)="open.set(false)"><amelu-icon name="user" [size]="16" />Account settings</a>
+      <a routerLink="/organization" [class]="item" role="menuitem" (click)="open.set(false)"><amelu-icon name="users" [size]="16" />Organization</a>
+      <a routerLink="/billing/overview" [class]="item" role="menuitem" (click)="open.set(false)"><amelu-icon name="card" [size]="16" />Billing</a>
+      <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="item" role="menuitem"><amelu-icon name="external" [size]="16" />Ordnary account</a>
+      <button type="button" [class]="item + ' w-full cursor-pointer text-left'" role="menuitem" (click)="startTour()"><amelu-icon name="map" [size]="16" />Take the tour</button>
     </div>
 
-    <div class="my-4 h-px bg-line"></div>
-
-    <div class="space-y-1">
-      <a routerLink="/account" [class]="item" role="menuitem" (click)="open.set(false)">Account settings</a>
-      <a routerLink="/organization" [class]="item" role="menuitem" (click)="open.set(false)">Organization</a>
-      <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="item" role="menuitem">Ordnary account</a>
-      <button type="button" [class]="item + ' w-full cursor-pointer text-left'" role="menuitem" (click)="startTour()">Take the tour</button>
-    </div>
-
-    <div class="mt-5 flex justify-end">
-      <button
-        type="button"
-        class="cursor-pointer rounded-md bg-accent px-4 py-1.5 text-[13px] font-bold text-white hover:brightness-110"
-        role="menuitem"
-        (click)="logout()"
-      >
-        Sign out
-      </button>
+    <div class="border-t border-line py-1.5">
+      <button type="button" [class]="item + ' w-full cursor-pointer text-left'" role="menuitem" (click)="logout()"><amelu-icon name="logout" [size]="16" />Sign out</button>
     </div>
   </div>
 }

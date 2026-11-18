@@ -14,11 +14,12 @@ import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
 import { SetupChecklist } from '../setup-checklist/setup-checklist';
+import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, SetupChecklist],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, SetupChecklist, DitherShader],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-5' },
@@ -32,6 +33,7 @@ export class Home {
   protected readonly githubUrl = GITHUB_URL;
   protected readonly badge = badgeClass;
 
+  protected readonly heroLink = 'flex items-center gap-1.5 text-[13px] font-semibold hover:text-link';
   protected readonly today = new Date();
   protected readonly greeting = computed(() => {
     const hour = this.today.getHours();

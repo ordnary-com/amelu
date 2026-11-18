@@ -6,6 +6,7 @@ import { SpamOverview } from './spam-overview';
 import { SpamSubject } from './spam-subject';
 import { SpamSenderLists } from './spam-sender-lists';
 import { SpamRecipientDenylist } from './spam-recipient-denylist';
+import { DedicatedIps } from './dedicated-ips';
 
 export const ROUTES: Routes = [
   { path: 'dns', component: DnsOverview, title: 'DNS configuration · Amelu' },
@@ -15,4 +16,5 @@ export const ROUTES: Routes = [
   { path: 'spam/subject', component: SpamSubject, title: 'Aggressiveness · Amelu' },
   { path: 'spam/sender-lists', component: SpamSenderLists, title: 'Sender lists · Amelu' },
   { path: 'spam/recipient-denylist', component: SpamRecipientDenylist, title: 'Recipient denylist · Amelu' },
+  { path: 'dedicated-ips', component: DedicatedIps, title: 'Dedicated IPs · Amelu' },
 ];

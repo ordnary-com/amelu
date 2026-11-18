@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
-import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Icon } from '../icon';
 import { DitherShader } from '../login/dither-shader';
@@ -11,7 +11,7 @@ import { activePromo } from '../promo';
  */
 @Component({
   selector: 'amelu-promo-banner',
-  imports: [DatePipe, NgTemplateOutlet, RouterLink, Icon, DitherShader],
+  imports: [DatePipe, RouterLink, Icon, DitherShader],
   template: `
     @if (promo && variant() === 'sidebar') {
       <!-- Part of the menu: a dither in the menu's own ink, rising from the bottom and fading
@@ -40,34 +40,48 @@ import { activePromo } from '../promo';
         </div>
       </div>
     } @else if (promo) {
-      <div class="flex items-start gap-3 rounded-lg border border-line bg-surface px-4 py-3" role="note" [attr.aria-label]="promo.name + ' deal'">
-        <amelu-icon name="star" [size]="18" class="mt-0.5 flex-none text-link" />
-        <div class="min-w-0 flex-1 text-[13px] leading-relaxed">
-          <span class="font-semibold">{{ promo.name }}</span>
-          <span class="text-muted"> until {{ promo.lastDay | date: 'd MMMM' }}.</span>
-          {{ capital(promo.yearly.deal) }} on Go or Pro with
-          <ng-container *ngTemplateOutlet="code; context: { $implicit: promo.yearly.code }" />,
-          or {{ promo.monthly.deal }} paying monthly with
-          <ng-container *ngTemplateOutlet="code; context: { $implicit: promo.monthly.code }" />.
-          @if (showLink()) {
-            <a routerLink="/billing/plans" class="ml-1 font-medium whitespace-nowrap text-link hover:underline">See plans</a>
+      <!-- A dithered card like the Overview banner: the deal large on the left, both codes
+           on the right with what each one is for. -->
+      <section
+        class="relative flex flex-col gap-4 overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative md:flex-row md:items-center"
+        role="note"
+        [attr.aria-label]="promo.name + ' deal'"
+      >
+        <div class="pointer-events-none !absolute inset-0 opacity-35 [mask-image:linear-gradient(to_left,black,rgba(0,0,0,0.5)_35%,transparent_75%)]" aria-hidden="true">
+          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="flex flex-wrap items-center gap-2 text-[12px] text-muted">
+            <span class="rounded bg-accent/12 px-1.5 py-0.5 font-medium text-link">{{ promo.name }}</span>
+            {{ daysLeft() }}
+          </p>
+          <p class="mt-2 text-[20px] leading-tight font-normal tracking-[-0.01em]">{{ capital(promo.yearly.deal) }} on Go or Pro</p>
+          <p class="mt-1 text-[13px] text-muted">
+            Use the code at checkout. Paying monthly? You get {{ promo.monthly.deal }} instead.
+            @if (showLink()) {
+              <a routerLink="/billing/plans" class="ml-1 font-medium whitespace-nowrap text-link hover:underline">See plans</a>
+            }
+          </p>
+        </div>
+        <div class="flex flex-none gap-2">
+          @for (option of [{ label: 'Yearly', code: promo.yearly.code }, { label: 'Monthly', code: promo.monthly.code }]; track option.code) {
+            <button
+              type="button"
+              class="flex min-w-32 cursor-pointer flex-col items-start rounded-md border border-line bg-surface px-3 py-2 text-left hover:border-accent/50"
+              [attr.aria-label]="'Copy ' + option.code"
+              (click)="copy(option.code)"
+            >
+              <span class="text-[11px] text-muted">{{ option.label }}</span>
+              <span class="mt-0.5 flex w-full items-center justify-between gap-2 font-mono text-[13px] font-bold tracking-wide">
+                {{ option.code }}
+                <amelu-icon [name]="copied() === option.code ? 'check' : 'copy'" [size]="12" class="text-muted" />
+              </span>
+            </button>
           }
         </div>
-      </div>
+      </section>
     }
 
-    <ng-template #code let-value>
-      <button
-        type="button"
-        class="inline-flex cursor-pointer items-center gap-1 rounded bg-bg px-1.5 py-px align-baseline font-mono text-[12px] font-bold tracking-wide hover:bg-accent/10"
-        [attr.aria-label]="'Copy ' + value"
-        [title]="copied() === value ? 'Copied' : 'Copy'"
-        (click)="copy(value)"
-      >
-        {{ value }}
-        <amelu-icon [name]="copied() === value ? 'check' : 'copy'" [size]="11" class="text-muted" />
-      </button>
-    </ng-template>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block empty:hidden' },
@@ -79,6 +93,16 @@ export class PromoBanner {
   readonly variant = input<'inline' | 'sidebar'>('inline');
   protected readonly promo = activePromo();
   protected readonly copied = signal<string | null>(null);
+
+  /** "Last day today" or "Ends 26 November, 9 days left", in Amsterdam time like the phases. */
+  protected daysLeft(): string {
+    if (!this.promo) return '';
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam' }).format(new Date());
+    const days = Math.round((Date.parse(this.promo.lastDay) - Date.parse(today)) / 86_400_000);
+    if (days <= 0) return 'Last day today';
+    const end = new Date(this.promo.lastDay + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+    return `Ends ${end}, ${days} day${days === 1 ? '' : 's'} left`;
+  }
 
   protected capital(text: string): string {
     return text.charAt(0).toUpperCase() + text.slice(1);

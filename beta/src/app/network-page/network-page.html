@@ -1,49 +1,180 @@
 <amelu-page-header title="Sending IPs">
-  All addresses our mail server sends from. Each one has its own hostname, with matching reverse DNS.
-  <button actions type="button" [class]="ui.outline" (click)="copy('all')">
-    {{ copied() === 'all' ? 'Copied' : 'Copy all IPs' }}
+  The IP addresses Amelu uses to deliver outgoing email.
+  <button actions type="button" [class]="ui.outline" (click)="copy('list')">
+    <amelu-icon [name]="copied() === 'list' ? 'check' : 'copy'" [size]="14" />
+    {{ copied() === 'list' ? 'Copied' : filtering() ? 'Copy ' + filtered().length + ' IPs' : 'Copy all IPs' }}
   </button>
 </amelu-page-header>
 
-<div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-  <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
-    <span class="block text-[12px] text-muted">Addresses</span>
-    <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">{{ ips.length }}</span>
-  </div>
-  <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
-    <span class="block text-[12px] text-muted">Protocol</span>
-    <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">IPv4</span>
-  </div>
-  <div class="rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5">
-    <span class="block text-[12px] text-muted">Dedicated to</span>
-    <span class="mt-1 block text-[26px] leading-tight font-normal tracking-[-0.01em]">Amelu</span>
-  </div>
-</div>
 
-<section>
-  <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
-    Addresses
-    <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ ips.length }}</span>
-  </h2>
-  <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-    @for (row of ips; track row.ip) {
-      <li class="flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
-        <span class="flex size-8 flex-none items-center justify-center rounded-full bg-accent/10 text-accent" aria-hidden="true">
-          <amelu-icon name="globe" [size]="15" />
-        </span>
-        <span class="min-w-0 flex-1 truncate text-[14px] font-medium">{{ row.name }}</span>
-        <span class="inline-flex flex-none items-center gap-0.5 rounded-md border border-line bg-bg py-0.5 pr-0.5 pl-2 font-mono text-[12px]">
-          {{ row.ip }}
+<div class="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
+  <!-- Filters -->
+  <aside class="space-y-5 lg:sticky lg:top-6" aria-label="Filter sending IPs">
+    <label class="group flex h-9 items-center gap-2 rounded-md border border-line bg-surface px-2.5 hover:border-ink/20 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+      <amelu-icon name="search" [size]="14" class="flex-none text-muted group-focus-within:text-ink" />
+      <input
+        id="ip-search"
+        type="search"
+        class="w-full min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
+        placeholder="Hostname or IP"
+        aria-label="Search by hostname or IP"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+        (keydown.escape)="search.set('')"
+      />
+    </label>
+
+    <section>
+      <h2 class="mb-2 px-2 text-[12px] font-medium text-muted">Subnet</h2>
+      <ul class="space-y-0.5" role="radiogroup" aria-label="Subnet">
+        <li>
           <button
             type="button"
-            class="flex size-6 cursor-pointer items-center justify-center rounded text-muted hover:bg-surface hover:text-ink"
-            [attr.aria-label]="'Copy ' + row.ip"
-            (click)="copy(row.ip)"
+            role="radio"
+            [attr.aria-checked]="network() === 'all'"
+            class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors"
+            [class]="network() === 'all' ? 'bg-accent/10 font-medium text-ink' : 'text-muted hover:bg-bg hover:text-ink'"
+            (click)="network.set('all')"
           >
-            <amelu-icon [name]="copied() === row.ip ? 'check' : 'copy'" [size]="13" />
+            <span class="truncate">All subnets</span>
+            <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal tabular-nums text-muted">{{ networkCount('all') }}</span>
           </button>
-        </span>
-      </li>
+        </li>
+        @for (n of networks; track n.id) {
+          <li>
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="network() === n.id"
+              class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-colors"
+              [class]="network() === n.id ? 'bg-accent/10 text-ink' : 'text-muted hover:bg-bg hover:text-ink'"
+              (click)="network.set(n.id)"
+            >
+              <span class="min-w-0">
+                <span class="block truncate font-mono text-[12px]" [class.font-medium]="network() === n.id">{{ n.cidr }}</span>
+                <span class="mt-0.5 flex flex-wrap gap-1">
+                  <span class="rounded border border-line px-1 font-mono text-[10px] leading-[16px] text-muted">{{ n.asn }}</span>
+                  <span class="rounded border border-line px-1 font-mono text-[10px] leading-[16px] text-muted uppercase">{{ n.provider }}</span>
+                </span>
+              </span>
+              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] tabular-nums text-muted">{{ networkCount(n.id) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="mb-2 px-2 text-[12px] font-medium text-muted">Used for</h2>
+      <ul class="space-y-0.5" role="radiogroup" aria-label="Used for">
+        <li>
+          <button
+            type="button"
+            role="radio"
+            [attr.aria-checked]="pool() === 'all'"
+            class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors"
+            [class]="pool() === 'all' ? 'bg-accent/10 font-medium text-ink' : 'text-muted hover:bg-bg hover:text-ink'"
+            (click)="pool.set('all')"
+          >
+            <span class="truncate">Everything</span>
+            <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal tabular-nums text-muted">{{ count('all') }}</span>
+          </button>
+        </li>
+        @for (p of visiblePools(); track p.id) {
+          <li>
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="pool() === p.id"
+              class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors"
+              [class]="pool() === p.id ? 'bg-accent/10 font-medium text-ink' : 'text-muted hover:bg-bg hover:text-ink'"
+              [title]="p.hint"
+              (click)="pool.set(p.id)"
+            >
+              <span class="flex min-w-0 items-center gap-1.5">
+                <span class="truncate">{{ p.label }}</span>
+                <span class="flex-none rounded border border-line px-1 font-mono text-[10px] leading-[16px] font-normal text-muted">{{ p.id }}</span>
+              </span>
+              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal tabular-nums text-muted">{{ count(p.id) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  </aside>
+
+  <!-- Results -->
+  <section class="min-w-0">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <h2 class="flex items-center gap-2 text-[14px] font-bold">
+        {{ activePool()?.label ?? activeNetwork()?.cidr ?? 'All addresses' }}
+        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal tabular-nums text-muted">{{ filtered().length }}</span>
+      </h2>
+      @if (filtering()) {
+        <button type="button" class="cursor-pointer text-[13px] font-medium text-link hover:underline" (click)="clearFilters()">Clear filters</button>
+      }
+    </div>
+
+    @if (filtered().length) {
+      <div [class]="ui.card + ' overflow-x-auto'">
+        <table class="w-full min-w-[720px] text-left text-[13px]">
+          <thead>
+            <tr class="border-b border-line text-[12px] text-muted">
+              <th class="px-4 py-2.5 font-medium">Hostname</th>
+              <th class="px-4 py-2.5 font-medium">Address</th>
+              <th class="px-4 py-2.5 font-medium">Subnet</th>
+              <th class="px-4 py-2.5 font-medium">Used for</th>
+              <th class="px-4 py-2.5 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-line">
+            @for (row of filtered(); track row.ip) {
+              <tr class="hover:bg-bg/60">
+                <td class="px-4 py-2.5 font-medium whitespace-nowrap">{{ row.name }}</td>
+                <td class="px-4 py-2.5">
+                  <span class="inline-flex items-center gap-0.5 rounded-md border border-line bg-bg py-0.5 pr-0.5 pl-2 font-mono text-[12px] tabular-nums">
+                    {{ row.ip }}
+                    <button
+                      type="button"
+                      class="flex size-6 cursor-pointer items-center justify-center rounded text-muted hover:bg-surface hover:text-ink"
+                      [attr.aria-label]="'Copy ' + row.ip"
+                      (click)="copy(row.ip)"
+                    >
+                      <amelu-icon [name]="copied() === row.ip ? 'check' : 'copy'" [size]="13" />
+                    </button>
+                  </span>
+                </td>
+                <td class="px-4 py-2.5 font-mono text-[12px] whitespace-nowrap">
+                  {{ networkOf[row.network].cidr }} <span class="text-muted">{{ networkOf[row.network].asn }}</span>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 text-[12px] text-muted" [title]="poolHint[row.pool]">
+                    {{ poolLabel[row.pool] }}
+                    <span class="rounded border border-line px-1 font-mono text-[10px] leading-[16px]">{{ row.pool }}</span>
+                  </span>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  @if (row.pending) {
+                    <span class="inline-flex items-center gap-1.5 text-[12px] text-muted">
+                      <span class="size-1.5 rounded-full bg-warn"></span> Not sending yet
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1.5 text-[12px] text-ok">
+                      <span class="size-1.5 rounded-full bg-ok"></span> Sending
+                    </span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div [class]="ui.card + ' px-6 py-10 text-center'">
+        <p class="text-[14px] font-medium">No addresses match</p>
+        <p class="mt-1 text-[13px] text-muted">Try another hostname or IP, or clear the filters.</p>
+        <button type="button" [class]="ui.outline + ' mt-4'" (click)="clearFilters()">Clear filters</button>
+      </div>
     }
-  </ul>
-</section>
+  </section>
+</div>

@@ -217,7 +217,7 @@
     </section>
 
     <aside class="space-y-6">
-      <section>
+      <section data-tour="domain-dns">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-[14px] font-bold">DNS</h2>
           <a [routerLink]="'/domains/' + id() + '/dns'" class="text-[13px] font-medium text-link hover:underline">All records</a>
@@ -367,6 +367,7 @@
           </li>
         </ul>
       </section>
+
     </aside>
   </div>
   }

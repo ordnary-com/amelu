@@ -29,9 +29,9 @@ import { UI } from '../ui';
           <p class="mt-1 max-w-xl text-[13px] leading-relaxed text-muted">
             Today this domain sends from Amelu's shared addresses, together with other customers. With dedicated IPs,
             its mail goes out from addresses only your organization uses, so its sending reputation depends on your
-            mail alone. Available on any paid plan.
+            mail alone. Available on every plan, for €10 a month per address.
           </p>
-          <a routerLink="/support" [class]="ui.outline + ' mt-4 bg-surface'">Contact us</a>
+          <a routerLink="/organization/dedicated-ips" [class]="ui.outline + ' mt-4 bg-surface'">Get a dedicated IP</a>
         </section>
 
         <section>

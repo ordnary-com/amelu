@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
-import { Api, SupportTicket, errorMessage } from '../api';
+import { Api, SupportMessage, SupportTicket, errorMessage } from '../api';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
@@ -47,10 +47,11 @@ const BODY_MAX = 20000;
               @for (m of t.messages ?? []; track m.id) {
                 <li class="px-4 py-3" [class.bg-bg/40]="m.authorKind === 'staff'">
                   <div class="flex items-center gap-2">
-                    <amelu-avatar class="size-6" [size]="24" [src]="m.authorAvatarUrl" [name]="m.authorName" [email]="m.authorEmail" [gravatar]="true" />
-                    <span class="truncate text-[13px] font-medium">{{ m.authorName }}</span>
+                    <amelu-avatar class="size-6" [size]="24" [src]="m.authorAvatarUrl" [name]="m.authorName" [email]="m.authorEmail" [gravatar]="true" [title]="tooltip(m)" />
+                    <span class="truncate text-[13px] font-medium" [title]="tooltip(m)">{{ m.authorName }}</span>
                     @if (m.authorKind === 'staff') {
-                      <img src="/ordnary-mark-blue.png" alt="Ordnary staff" title="Ordnary staff" class="size-3.5 flex-none" />
+                      <img src="/ordnary-mark-blue.png" alt="Ordnary staff" [title]="tooltip(m)" class="size-3.5 flex-none" />
+                      <span class="truncate text-[12px] text-muted">{{ m.authorTitle }}</span>
                     }
                     <span class="ml-auto flex-none text-[12px] text-muted" [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
                   </div>
@@ -209,6 +210,13 @@ export class SupportTicketPage {
     } catch {
       // The sidebar list is a convenience; the ticket itself still shows.
     }
+  }
+
+  /** Name, role and email on hover. */
+  protected tooltip(m: SupportMessage): string {
+    return m.authorKind === 'staff'
+      ? [m.authorName, `${m.authorTitle ?? 'Amelu Support'}, Ordnary staff`, m.authorEmail].filter(Boolean).join('\n')
+      : [m.authorName, m.authorEmail].filter(Boolean).join('\n');
   }
 
   protected ago(iso: string): string {

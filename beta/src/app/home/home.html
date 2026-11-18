@@ -268,29 +268,40 @@
     <div [class]="tableBody">
       <p class="mb-3 text-[13px] text-muted">
         Dedicated IPs are added to your plan on request.
-        <a routerLink="/support" class="text-link hover:underline">Contact our team</a> to get started.
+        <a routerLink="/organization/dedicated-ips" class="text-link hover:underline">See Dedicated IPs</a> to get started.
       </p>
       <div [class]="ui.tableWrap">
         <table [class]="ui.table">
           <thead>
             <!-- Muted headers while there's nothing in the table. -->
-            <tr class="text-muted">
+            <tr [class.text-muted]="!dedicatedIps()?.length">
               <th [class]="ui.th">Address</th>
               <th [class]="ui.th + ' max-sm:hidden'">Reverse DNS</th>
-              <th [class]="ui.th">Location</th>
               <th [class]="ui.th">Status</th>
             </tr>
           </thead>
           <tbody>
-            <tr [class]="ui.tr">
-              <td colspan="4" class="px-4 py-8 text-center">
-                <amelu-icon name="globe" [size]="18" class="mx-auto block" />
-                <p class="mt-2">No dedicated IPs</p>
-                <p class="mx-auto mt-0.5 max-w-[360px] text-[13px] text-muted">
-                  Send from addresses used only by your organization, so your reputation depends on your mail alone.
-                </p>
-              </td>
-            </tr>
+            @for (ip of dedicatedIps() ?? []; track ip.ip) {
+              <tr [class]="ui.tr">
+                <td [class]="ui.td + ' font-mono text-[13px] font-medium'">{{ ip.ip }}</td>
+                <td [class]="ui.td + ' font-mono text-[13px] max-sm:hidden'">{{ ip.hostname }}</td>
+                <td [class]="ui.td">
+                  <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="toneText[ipState[ip.state].tone]">
+                    <amelu-icon [name]="toneIcon[ipState[ip.state].tone]" [size]="16" />{{ ipState[ip.state].label }}
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr [class]="ui.tr">
+                <td colspan="3" class="px-4 py-8 text-center">
+                  <amelu-icon name="globe" [size]="18" class="mx-auto block" />
+                  <p class="mt-2">No dedicated IPs</p>
+                  <p class="mx-auto mt-0.5 max-w-[360px] text-[13px] text-muted">
+                    Send from addresses used only by your organization, so your reputation depends on your mail alone.
+                  </p>
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>

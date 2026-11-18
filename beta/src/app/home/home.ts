@@ -9,7 +9,7 @@ import { Session } from '../session';
 import { Domains } from '../domains';
 import { QuickActions } from '../quick-actions/quick-actions';
 import { DomainHealthChecks, healthScore } from '../domain-health';
-import { DOMAIN_STATUS, INVOICE_STATUS, Tone, badgeClass } from '../status';
+import { DEDICATED_IP_STATE, DOMAIN_STATUS, INVOICE_STATUS, Tone, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
@@ -96,6 +96,8 @@ export class Home {
   protected readonly health = inject(DomainHealthChecks).byId;
   protected readonly billing = toSignal(this.api.billingOverview().pipe(catchError(() => of(null))));
   protected readonly invoices = toSignal(this.api.listInvoices().pipe(catchError(() => of(null))));
+  protected readonly dedicatedIps = toSignal(this.api.organizationDedicatedIps().pipe(catchError(() => of(null))));
+  protected readonly ipState = DEDICATED_IP_STATE;
   private readonly plans = toSignal(this.api.listPlans().pipe(catchError(() => of(null))));
   /** On the free plan: what Go adds, from the live plan limits. */
   protected readonly upgrade = computed(() => {

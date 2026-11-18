@@ -247,50 +247,66 @@
       </section>
     </form>
 
-    <!-- What you're about to add, with the button, like a checkout summary. -->
+    <!-- What you're about to add, with the button, like a checkout summary: muted labels
+         over values, key/value boxes, on the grey body. -->
     <aside [class]="ui.panel + ' xl:sticky xl:top-6'">
       <div [class]="ui.panelHeader">
         <h2 [class]="ui.panelTitle">Summary</h2>
       </div>
-      <div class="border-b border-line p-4">
-        <p class="text-[13px] text-muted">Domain</p>
-        <p class="mt-1 truncate text-[16px] font-medium" [class.text-muted]="!valid()">{{ valid() ? name() : 'Not entered yet' }}</p>
-        <dl class="mt-3 space-y-1.5 rounded-md border border-line px-3.5 py-3 text-[13px]">
-          <div class="flex justify-between gap-3"><dt>DNS</dt><dd class="text-right font-medium">{{ nameservers() === 'amelu' ? 'Our nameservers' : 'Your current DNS' }}</dd></div>
-          <div class="flex justify-between gap-3"><dt>Standard addresses</dt><dd class="font-medium">{{ createDefaults() ? defaultRows.length + ' addresses' : 'None' }}</dd></div>
-          @if (usage(); as plan) {
-            @if (used() !== null) {
-              <div class="flex justify-between gap-3"><dt>Domains on {{ plan.plan }}</dt><dd class="font-medium" [class.text-bad]="atLimit()">{{ used() }} of {{ plan.max }}</dd></div>
+      <div class="divide-y divide-line bg-well">
+        <div class="space-y-3 p-4">
+          <div>
+            <p [class]="label">Domain</p>
+            <p class="mt-1 truncate text-[15px] font-medium" [class.text-muted]="!valid()">{{ valid() ? name() : 'Not entered yet' }}</p>
+          </div>
+          <dl [class]="box">
+            <div [class]="pair"><dt>DNS</dt><dd class="font-medium">{{ nameservers() === 'amelu' ? 'Our nameservers' : 'Your current DNS' }}</dd></div>
+            <div [class]="pair"><dt>Standard addresses</dt><dd class="font-medium">{{ createDefaults() ? defaultRows.length + ' addresses' : 'None' }}</dd></div>
+            <div [class]="pair + ' text-link'"><dt>Mailboxes</dt><dd class="font-medium">Add them after</dd></div>
+          </dl>
+          <div>
+            <p [class]="label">What happens next</p>
+            <ol [class]="box + ' mt-1.5'">
+              @for (step of steps(); track step.title; let i = $index) {
+                <li [class]="pair + ' justify-start'"><span class="w-4 flex-none tabular-nums text-muted">{{ i + 1 }}</span><span class="font-medium">{{ step.title }}</span></li>
+              }
+            </ol>
+          </div>
+        </div>
+
+        @if (usage(); as plan) {
+          @if (used() !== null) {
+            <div class="p-4">
+              <p [class]="label">Availability</p>
+              @if (atLimit()) {
+                <p class="mt-1 flex items-center gap-1.5 text-[15px] text-bad">Plan is full <amelu-icon name="circleAlert" [size]="15" /></p>
+                <p class="mt-0.5 text-[12px] text-muted">{{ used() }} of {{ plan.max }} domains on {{ plan.plan }}. <a routerLink="/billing/plans" class="text-link hover:underline">See plans</a></p>
+              } @else {
+                <p class="mt-1 flex items-center gap-1.5 text-[15px] text-ok">Available <amelu-icon name="circleCheck" [size]="15" /></p>
+                <p class="mt-0.5 text-[12px] text-muted">{{ used() }} of {{ plan.max }} domains on {{ plan.plan }}</p>
+              }
+            </div>
+          }
+        }
+
+        <div class="p-4">
+          <p [class]="label">Cost</p>
+          <p class="mt-1 text-[15px] font-medium">Included in your plan</p>
+          <button
+            type="submit"
+            form="new-domain-form"
+            class="mt-4 inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-accent px-4 text-[14px] font-medium text-white hover:bg-accent/85 disabled:cursor-default disabled:opacity-50"
+            [disabled]="!valid() || busy() || atLimit()"
+          >
+            {{ busy() ? 'Adding...' : 'Add domain' }}
+            @if (!busy()) {
+              <amelu-icon name="arrowRight" [size]="16" />
             }
-          }
-        </dl>
-      </div>
-      <div class="border-b border-line p-4">
-        <p class="text-[13px] text-muted">What happens next</p>
-        <ol class="mt-2 space-y-2">
-          @for (step of steps(); track step.title; let i = $index) {
-            <li class="flex gap-2.5 text-[13px]">
-              <span class="flex size-5 flex-none items-center justify-center rounded-full border border-line text-[11px] text-muted tabular-nums">{{ i + 1 }}</span>
-              <span><span class="font-medium">{{ step.title }}.</span> <span class="text-muted">{{ step.text }}</span></span>
-            </li>
-          }
-        </ol>
-      </div>
-      <div class="p-4">
-        <button
-          type="submit"
-          form="new-domain-form"
-          class="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-accent px-4 text-[14px] font-medium text-white hover:bg-accent/85 disabled:cursor-default disabled:opacity-50"
-          [disabled]="!valid() || busy() || atLimit()"
-        >
-          {{ busy() ? 'Adding...' : 'Add domain' }}
-          @if (!busy()) {
-            <amelu-icon name="arrowRight" [size]="16" />
-          }
-        </button>
-        <p class="mt-3 text-[12px] leading-relaxed text-muted">
-          Already use this domain for email? Mail keeps going to your old provider until you change the MX records.
-        </p>
+          </button>
+          <p class="mt-3 text-[12px] leading-relaxed text-muted">
+            Already use this domain for email? Mail keeps going to your old provider until you change the MX records.
+          </p>
+        </div>
       </div>
     </aside>
   </div>

@@ -41,8 +41,7 @@ const BODY_MAX = 20000;
           }
 
           <section>
-            <h2 class="text-[14px] font-bold">Conversation</h2>
-            <p class="mt-1 mb-3 text-[13px] text-muted">{{ t.messageCount }} {{ t.messageCount === 1 ? 'message' : 'messages' }}, oldest first.</p>
+            <h2 [class]="ui.sectionTitle">Conversation</h2>
             <ol [class]="ui.card + ' divide-y divide-line overflow-hidden'">
               @for (m of t.messages ?? []; track m.id) {
                 <li class="px-4 py-3" [class.bg-bg/40]="m.authorKind === 'staff'">

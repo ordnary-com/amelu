@@ -3,12 +3,9 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { from } from 'rxjs';
 import { RouterLink } from '@angular/router';
-import { PageHeader } from '../page-header/page-header';
-import { Alert } from '../alert/alert';
-import { badgeClass, Tone } from '../status';
+import { TONE_ICON, TONE_TEXT, Tone, badgeClass } from '../status';
 import { UI } from '../ui';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 
 type ServiceState = 'operational' | 'degraded' | 'outage';
 
@@ -55,117 +52,163 @@ async function loadStatus(): Promise<Snapshot | null> {
 /** The current dashboard's /status. */
 @Component({
   selector: 'amelu-status-page',
-  imports: [PageHeader, Alert, RouterLink, DatePipe, DecimalPipe, Icon, DitherShader],
+  imports: [RouterLink, DatePipe, DecimalPipe, Icon],
   template: `
-    <amelu-page-header title="Service status">
-      Current status of Amelu's services. The full page with uptime and past incidents is on
-      <a href="https://status.amelu.org" class="font-medium text-link hover:underline">status.amelu.org</a>.
-    </amelu-page-header>
+    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+      <h1 class="text-[22px] leading-tight font-normal">Service Status</h1>
+      <a href="https://status.amelu.org" class="inline-flex items-center gap-1 text-[14px] text-link hover:underline">
+        Uptime and past incidents on status.amelu.org <amelu-icon name="external" [size]="13" />
+      </a>
+    </div>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="min-w-0 space-y-6">
-        @if (status() === null) {
-          <amelu-alert kind="warning" title="The current status couldn't be loaded">
-            See <a href="https://status.amelu.org" class="font-medium underline">status.amelu.org</a>.
-          </amelu-alert>
-        } @else if (status() !== undefined) {
-          @if (allOperational()) {
-            <amelu-alert kind="success" title="All systems operational" />
-          } @else {
-            <amelu-alert kind="warning" title="Some systems are experiencing issues" />
+    <div class="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+      <div class="min-w-0 space-y-5">
+        <section [class]="ui.setCard">
+          <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Overview</h2></div>
+          <!-- Label over value, in columns split by thin lines. -->
+          <dl class="grid sm:grid-cols-3 sm:divide-x sm:divide-line">
+            <div [class]="field">
+              <dt [class]="fieldLabel">Current status</dt>
+              <dd [class]="fieldValue">
+                @if (status() === undefined) {
+                  <span class="mt-1.5 block h-4 w-40 animate-pulse rounded bg-bg"></span>
+                } @else if (status() === null) {
+                  <span class="text-muted">Couldn't be loaded</span>
+                } @else if (allOperational()) {
+                  <span class="inline-flex items-center gap-1.5 text-ok"><amelu-icon name="circleCheck" [size]="17" />All systems operational</span>
+                } @else {
+                  <span class="inline-flex items-center gap-1.5 text-warn"><amelu-icon name="circleAlert" [size]="17" />Some issues</span>
+                }
+              </dd>
+            </div>
+            <div [class]="field">
+              <dt [class]="fieldLabel">Services</dt>
+              <dd [class]="fieldValue">{{ status() === undefined ? '...' : monitors().length }}</dd>
+            </div>
+            <div [class]="field">
+              <dt [class]="fieldLabel">Open incidents</dt>
+              <dd [class]="fieldValue" [class.text-bad]="openIncidents().length > 0">{{ status() === undefined ? '...' : openIncidents().length }}</dd>
+            </div>
+          </dl>
+          @if (status() === null) {
+            <p [class]="ui.setNote">
+              <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+              <span>The current status couldn't be loaded here. See <a href="https://status.amelu.org" class="text-link hover:underline">status.amelu.org</a>.</span>
+            </p>
           }
-        }
+        </section>
 
         @if (openIncidents().length) {
-          <section>
-            <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
-              Open incidents
-              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ openIncidents().length }}</span>
-            </h2>
-            <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-              @for (incident of openIncidents(); track incident.startedAt) {
-                <li class="px-4 py-3">
-                  <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                    <h3 class="flex items-center gap-2 text-[14px] font-medium">
-                      <span class="size-2 flex-none rounded-full" [class]="incident.impact === 'minor' ? 'bg-warn' : 'bg-bad'" aria-hidden="true"></span>
-                      {{ incident.title.en }}
-                    </h3>
-                    <span class="text-[12px] text-muted">Since {{ incident.startedAt | date: 'd MMM, HH:mm' }}</span>
-                  </div>
-                  @if (incident.updates[0]; as latest) {
-                    <p class="mt-1 pl-4 text-[13px] leading-relaxed text-muted">{{ latest.text.en }}</p>
-                  }
-                </li>
-              }
-            </ul>
+          <section [class]="ui.panel">
+            <div [class]="ui.panelHeader">
+              <h2 [class]="ui.panelTitle">Open Incidents <span class="font-normal text-muted">({{ openIncidents().length }})</span></h2>
+            </div>
+            <div [class]="ui.well">
+              <div [class]="ui.tableWrap">
+                <table [class]="ui.table">
+                  <thead>
+                    <tr>
+                      <th [class]="ui.th">Incident</th>
+                      <th [class]="ui.th">Impact</th>
+                      <th [class]="ui.th + ' max-sm:hidden'">Since</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (incident of openIncidents(); track incident.startedAt) {
+                      <tr [class]="ui.tr">
+                        <td [class]="ui.td">
+                          <span class="block font-medium">{{ incident.title.en }}</span>
+                          @if (incident.updates[0]; as latest) {
+                            <span class="mt-0.5 block text-[12px] leading-snug text-muted">{{ latest.text.en }}</span>
+                          }
+                        </td>
+                        <td [class]="ui.td">
+                          <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="incident.impact === 'minor' ? 'text-warn' : 'text-bad'">
+                            <amelu-icon [name]="incident.impact === 'minor' ? 'circleAlert' : 'circleX'" [size]="16" />{{ incident.impact === 'minor' ? 'Minor' : 'Major' }}
+                          </span>
+                        </td>
+                        <td [class]="ui.td + ' whitespace-nowrap max-sm:hidden'">{{ incident.startedAt | date: 'd MMM, HH:mm' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </section>
         }
 
-        <section>
-          <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
-            Services
-            @if (monitors().length) {
-              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ monitors().length }}</span>
-            }
-          </h2>
-          @if (status() === undefined) {
-            <div [class]="ui.card + ' divide-y divide-line overflow-hidden'" aria-hidden="true">
-              @for (i of [1, 2, 3]; track i) {
-                <div class="flex items-center gap-3 px-4 py-3">
-                  <span class="size-2 animate-pulse rounded-full bg-bg"></span>
-                  <span class="h-3.5 w-48 animate-pulse rounded bg-bg"></span>
-                </div>
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">
+              Services
+              @if (monitors().length) {
+                <span class="font-normal text-muted">({{ monitors().length }})</span>
               }
+            </h2>
+          </div>
+          <div [class]="ui.well">
+            <div [class]="ui.tableWrap">
+              <table [class]="ui.table">
+                <thead>
+                  <tr>
+                    <th [class]="ui.th">Service</th>
+                    <th [class]="ui.th + ' max-sm:hidden'">Uptime, 90 days</th>
+                    <th [class]="ui.th">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (status() === undefined) {
+                    @for (i of [1, 2, 3]; track i) {
+                      <tr [class]="ui.tr" aria-hidden="true"><td [class]="ui.td" colspan="3"><span class="block h-3 w-full animate-pulse rounded bg-bg"></span></td></tr>
+                    }
+                  } @else {
+                    @for (service of monitors(); track service.name) {
+                      <tr [class]="ui.tr">
+                        <td [class]="ui.td + ' max-w-[360px]'">
+                          <span class="block truncate font-medium">{{ service.name }}</span>
+                          <span [class]="ui.tdSub"><span class="truncate font-mono">{{ service.endpoint }}</span></span>
+                        </td>
+                        <td [class]="ui.td + ' whitespace-nowrap tabular-nums max-sm:hidden'">{{ service.uptime | number: '1.0-2' }}%</td>
+                        <td [class]="ui.td">
+                          <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="toneText[stateOf(service).tone]">
+                            <amelu-icon [name]="toneIcon[stateOf(service).tone]" [size]="16" />{{ stateOf(service).label }}
+                          </span>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr [class]="ui.tr"><td colspan="3" class="px-4 py-8 text-center text-muted">No services listed</td></tr>
+                    }
+                  }
+                </tbody>
+              </table>
             </div>
-          } @else {
-            <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-              @for (service of monitors(); track service.name) {
-                <li class="flex items-center gap-3 px-4 py-3">
-                  <span class="size-2 flex-none rounded-full" [class]="dot[stateOf(service).tone]" aria-hidden="true"></span>
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-[14px] font-medium">{{ service.name }}</div>
-                    <div class="mt-0.5 truncate text-[12px] text-muted">
-                      <span class="font-mono">{{ service.endpoint }}</span> · {{ service.uptime | number: '1.0-2' }}% uptime, 90 days
-                    </div>
-                  </div>
-                  <span [class]="badge(stateOf(service).tone)">{{ stateOf(service).label }}</span>
-                </li>
-              } @empty {
-                <li class="px-4 py-3 text-[13px] text-muted">No services listed.</li>
-              }
-            </ul>
-          }
+          </div>
         </section>
       </div>
 
-      <aside class="space-y-6">
-        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      <aside class="space-y-5">
+        <section [class]="ui.setCard">
+          <div [class]="ui.setHeader">
+            <h2 [class]="ui.setTitle">Having Trouble?</h2>
+            <a routerLink="/support" [class]="ui.setAction" aria-label="Contact support" title="Contact support"><amelu-icon name="arrowRight" [size]="17" /></a>
           </div>
-          <amelu-icon name="lifebuoy" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">Having trouble?</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            If something isn't working and it isn't listed here, let us know. Include the affected domain and any error
-            or bounce you received.
+          <p class="px-5 py-4 text-[14px] leading-relaxed text-muted">
+            If something isn't working and it isn't listed here,
+            <a routerLink="/support" class="text-link hover:underline">let us know</a>. Include the affected domain and any
+            error or bounce you received.
           </p>
-          <a routerLink="/support" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">Contact support</a>
         </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">What the states mean</h2>
-          <ul class="mt-3 space-y-2.5 text-[13px] leading-relaxed text-muted">
-            <li class="flex items-start gap-2.5">
-              <span [class]="badge('ok') + ' mt-px'">Operational</span>
-              Working normally.
-            </li>
-            <li class="flex items-start gap-2.5">
-              <span [class]="badge('warn') + ' mt-px'">Degraded</span>
-              Working, but slower or with some errors.
-            </li>
-            <li class="flex items-start gap-2.5">
-              <span [class]="badge('bad') + ' mt-px'">Outage</span>
-              Not available right now.
-            </li>
+        <section [class]="ui.setCard">
+          <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">What the States Mean</h2></div>
+          <ul class="divide-y divide-line">
+            @for (row of legend; track row.label) {
+              <li class="px-5 py-3">
+                <span class="inline-flex items-center gap-1.5 text-[14px] font-medium" [class]="toneText[row.tone]">
+                  <amelu-icon [name]="toneIcon[row.tone]" [size]="16" />{{ row.label }}
+                </span>
+                <span class="mt-0.5 block text-[13px] text-muted">{{ row.text }}</span>
+              </li>
+            }
           </ul>
         </section>
       </aside>
@@ -177,7 +220,17 @@ async function loadStatus(): Promise<Snapshot | null> {
 export class StatusPage {
   protected readonly ui = UI;
   protected readonly badge = badgeClass;
-  protected readonly dot: Record<Tone, string> = { ok: 'bg-ok', warn: 'bg-warn', bad: 'bg-bad', neutral: 'bg-muted' };
+  protected readonly toneText = TONE_TEXT;
+  protected readonly toneIcon = TONE_ICON;
+  protected readonly legend: { label: string; tone: Tone; text: string }[] = [
+    { label: 'Operational', tone: 'ok', text: 'Working normally.' },
+    { label: 'Degraded', tone: 'warn', text: 'Working, but slower or with some errors.' },
+    { label: 'Outage', tone: 'bad', text: 'Not available right now.' },
+  ];
+  // Label-over-value fields, as on My Account.
+  protected readonly field = 'min-w-0 px-5 py-4 max-sm:not-first:border-t max-sm:not-first:border-line';
+  protected readonly fieldLabel = 'text-[13px] text-muted';
+  protected readonly fieldValue = 'mt-1 truncate text-[16px]';
   // undefined while loading, null when it failed
   protected readonly status = toSignal(from(loadStatus()));
   protected readonly monitors = computed(() => this.status()?.groups.flatMap((g) => g.monitors) ?? []);

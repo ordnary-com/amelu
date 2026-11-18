@@ -10,7 +10,6 @@ import { UI } from '../ui';
 import { STANDARD_ADDRESSES } from '../standard-addresses';
 import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
 import { NameserversCard } from '../dns-spam/nameservers-card';
-import { DitherShader } from '../login/dither-shader';
 import { VerifyOwnership } from '../verify-ownership/verify-ownership';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
@@ -32,7 +31,7 @@ interface CreatedAddress {
 /** The current dashboard's /domains/new: add a domain, optionally with its default addresses. */
 @Component({
   selector: 'amelu-new-domain',
-  imports: [RouterLink, Alert, Icon, NameserversCard, DitherShader, VerifyOwnership],
+  imports: [RouterLink, Alert, Icon, NameserversCard, VerifyOwnership],
   templateUrl: './new-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -43,6 +42,7 @@ export class NewDomain {
   private readonly dnsApi = inject(DnsSpamApi);
   protected readonly ui = UI;
   protected readonly defaults = DEFAULT_ADDRESSES;
+  protected readonly sectionTitle = 'block text-[15px] font-medium';
   protected readonly defaultRows = ADDRESS_ROWS.filter((row) => DEFAULT_ADDRESSES.includes(row.localPart));
 
   // Prefilled when the welcome flow sends someone here with ?name=.

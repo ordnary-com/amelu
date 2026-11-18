@@ -1,7 +1,15 @@
 <p align="center">
-  <a href="https://ordnary.com"><img src=".github/assets/ordnary-mark.png" alt="Ordnary" height="48" /></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://amelu.org"><img src=".github/assets/amelu-logo.png" alt="Amelu" height="48" /></a>
+</p>
+
+<p align="center">
+  <sub>powered by</sub>&nbsp;
+  <a href="https://ordnary.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/ordnary-mark-white.png" />
+      <img src=".github/assets/ordnary-mark-dark.png" alt="Ordnary" height="14" />
+    </picture>
+  </a>
 </p>
 
 <p align="center">

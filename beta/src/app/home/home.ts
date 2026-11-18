@@ -13,14 +13,13 @@ import { DOMAIN_STATUS, INVOICE_STATUS, Tone, badgeClass } from '../status';
 import { EmptyState } from '../empty-state/empty-state';
 import { DISCORD_URL, GITHUB_URL } from '../config';
 import { formatPrice, isFree } from '../billing';
-import { SetupChecklist } from '../setup-checklist/setup-checklist';
 import { DitherShader } from '../login/dither-shader';
 import { HlmTooltipImports } from '@spartan-ng/helm/tooltip';
 import { UI } from '../ui';
 
 @Component({
   selector: 'amelu-home',
-  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, SetupChecklist, DitherShader, HlmTooltipImports],
+  imports: [EmptyState, Icon, DatePipe, CurrencyPipe, DecimalPipe, RouterLink, QuickActions, DitherShader, HlmTooltipImports],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-col gap-5' },

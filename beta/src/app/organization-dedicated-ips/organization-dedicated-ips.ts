@@ -118,6 +118,6 @@ export class OrganizationDedicatedIps {
   protected readonly ips = toSignal(inject(Api).organizationDedicatedIps().pipe(catchError(() => of([]))));
   protected readonly howItWorks = [
     { icon: 'mail' as const, title: 'Only your mail', text: "Every domain in your organization sends from your own address. Nobody else's mail touches its reputation." },
-    { icon: 'shield' as const, title: 'Nothing to change in DNS', text: 'Your SPF record already covers it, and the address has its own hostname with matching reverse DNS.' },
+    { icon: 'shield' as const, title: 'Covered by your SPF', text: 'Domains whose SPF record includes _spf.amelu.org, as the DNS page asks, send from it. The address has its own hostname with matching reverse DNS.' },
   ];
 }

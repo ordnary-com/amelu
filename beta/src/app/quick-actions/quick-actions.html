@@ -17,6 +17,7 @@
   <p class="bg-well px-4 pt-4 text-[12px] text-muted">Drag the cards into the order you like, or remove the ones you don't use.</p>
 }
 
+@if (editing()) {
 <!-- Widths match a grid of 1, 2, 3 and 6 columns with 0.75rem gaps; flex-wrap lets the drop list sort them. -->
 <div cdkDropList cdkDropListOrientation="mixed" class="flex flex-wrap gap-3 bg-well p-4" (cdkDropListDropped)="drop($event)">
   @for (action of actions(); track action.id) {
@@ -48,6 +49,24 @@
     </div>
   }
 </div>
+} @else {
+  <!-- One white box split into a grid of rows; the negative margins tuck the outer
+       cells' right and bottom lines under the box's own border. -->
+  <div class="bg-well p-4">
+    <div class="overflow-hidden rounded-md border border-line bg-surface">
+      <ul class="-mr-px -mb-px grid sm:grid-cols-2 xl:grid-cols-3">
+        @for (action of actions(); track action.id) {
+          <li class="border-r border-b border-line">
+            <a [routerLink]="action.href" class="group flex h-full items-center gap-3 px-4 py-3 hover:bg-bg/50">
+              <ng-container *ngTemplateOutlet="body; context: { $implicit: action }" />
+              <amelu-icon name="chevronRight" [size]="15" class="ml-auto flex-none text-muted group-hover:text-ink" />
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+}
 
 @if (editing() && available().length) {
   <div class="flex flex-wrap items-center gap-2 bg-well px-4 pb-4 text-[12px]">
@@ -62,10 +81,10 @@
 
 <ng-template #body let-action>
   @if (action.card) {
-    <amelu-action-icon [name]="action.card" class="text-ink" />
+    <amelu-action-icon [name]="action.card" class="flex-none text-ink" />
   } @else {
     <span class="inline-flex size-[26px] flex-none items-center justify-center text-ink">
-      <amelu-icon [name]="action.icon" [size]="22" />
+      <amelu-icon [name]="action.icon" [size]="20" />
     </span>
   }
   <span class="flex min-w-0 flex-col">

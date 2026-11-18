@@ -44,14 +44,14 @@ export class Home {
   protected readonly toneText: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
 
   // Flat panels with a title bar, boxed figures and bordered tables.
-  protected readonly panel = 'overflow-hidden rounded-lg border border-line bg-surface';
-  protected readonly panelHeader = 'flex min-h-16 items-center justify-between gap-3 border-b border-line px-7 py-3 max-mobile:px-4';
-  protected readonly panelTitle = 'text-[17px] font-medium';
-  protected readonly arrow = 'inline-flex size-8 flex-none items-center justify-center rounded-md text-ink hover:bg-bg';
-  protected readonly stat = 'flex items-center justify-between gap-4 rounded-md border border-line px-5 py-4 text-[14px]';
-  protected readonly statValue = 'flex-none text-[28px] leading-none font-normal tabular-nums';
-  // A panel body holding a table: grey, so the white table stands out.
-  protected readonly tableBody = 'bg-bg/40 p-6 max-mobile:p-4';
+  protected readonly panel = 'overflow-hidden rounded-lg border border-line bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.05)]';
+  protected readonly panelHeader = 'flex h-11 items-center justify-between gap-3 border-b border-line px-4';
+  protected readonly panelTitle = 'text-[15px] font-medium';
+  protected readonly arrow = '-mr-1.5 inline-flex size-7 flex-none items-center justify-center rounded-md text-ink hover:bg-bg';
+  protected readonly stat = 'flex items-center justify-between gap-4 rounded-md border border-line bg-surface px-4 py-3 text-[13px]';
+  protected readonly statValue = 'flex-none text-[24px] leading-none font-normal tabular-nums';
+  // A panel's grey body, under white tables and figures.
+  protected readonly tableBody = 'bg-well p-4';
   protected readonly toneIcon: Record<Tone, IconName> = { ok: 'circleCheck', warn: 'circleAlert', bad: 'circleX', neutral: 'clock' };
 
   protected readonly domainColumns: { key: DomainSort; label: string }[] = [

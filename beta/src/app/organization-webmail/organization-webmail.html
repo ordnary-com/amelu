@@ -84,23 +84,61 @@
           <div [class]="ui.card + ' space-y-4 p-4'">
             <div>
               <span [class]="ui.label">Logo</span>
-              <div class="mt-1.5 flex items-center gap-3">
-                <div class="flex h-14 w-28 items-center justify-center overflow-hidden rounded-md border border-line bg-bg">
-                  @if (logoUrl(); as src) {
-                    <img [src]="src" alt="Your logo" class="max-h-12 max-w-24 object-contain" />
-                  } @else {
-                    <span class="text-[12px] text-muted">No logo</span>
+              <!-- Drop a file or pick one; the preview shows it on a light and a dark background. -->
+              <div
+                class="mt-1.5 overflow-hidden rounded-lg border border-dashed transition-colors"
+                [class]="dragging() ? 'border-accent bg-accent/5' : 'border-line'"
+                (dragover)="onDragOver($event)"
+                (dragleave)="dragging.set(false)"
+                (drop)="onDrop($event)"
+              >
+                <div class="grid grid-cols-2">
+                  <div class="flex h-24 items-center justify-center bg-white p-3">
+                    @if (logoUrl(); as src) {
+                      <img [src]="src" alt="Your logo on a light background" class="max-h-16 max-w-full object-contain" />
+                    } @else {
+                      <amelu-icon name="image" [size]="22" class="text-black/25" />
+                    }
+                  </div>
+                  <div class="flex h-24 items-center justify-center bg-[#16181d] p-3">
+                    @if (logoUrl(); as src) {
+                      <img [src]="src" alt="Your logo on a dark background" class="max-h-16 max-w-full object-contain" />
+                    } @else {
+                      <amelu-icon name="image" [size]="22" class="text-white/25" />
+                    }
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-surface px-3 py-2.5">
+                  <p class="text-[13px] text-muted">
+                    @if (busy() === 'logo') {
+                      Uploading...
+                    } @else if (dragging()) {
+                      Drop to upload
+                    } @else {
+                      Drag a logo here, or
+                      <label class="cursor-pointer font-medium text-link hover:underline" [class.pointer-events-none]="!editable()">
+                        choose a file
+                        <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" [disabled]="!editable()" (change)="uploadLogo($event)" />
+                      </label>
+                    }
+                  </p>
+                  @if (b.hasLogo) {
+                    <button
+                      type="button"
+                      class="cursor-pointer text-[13px] text-muted hover:text-bad disabled:pointer-events-none disabled:opacity-50"
+                      [disabled]="!editable() || busy() === 'logo'"
+                      (click)="removeLogo()"
+                    >
+                      Remove
+                    </button>
                   }
                 </div>
-                <label [class]="ui.outline + ' relative'" [class.pointer-events-none]="!editable() || busy() === 'logo'" [class.opacity-50]="!editable() || busy() === 'logo'">
-                  {{ busy() === 'logo' ? 'Uploading...' : b.hasLogo ? 'Replace' : 'Upload' }}
-                  <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" [disabled]="!editable()" (change)="uploadLogo($event)" />
-                </label>
-                @if (b.hasLogo) {
-                  <button type="button" [class]="ui.outline" [disabled]="!editable() || busy() === 'logo'" (click)="removeLogo()">Remove</button>
-                }
               </div>
-              <p [class]="ui.hint">PNG, JPEG or WebP, at most 256 KB. Also used as the browser tab icon.</p>
+              @if (logoError(); as message) {
+                <p class="mt-1.5 text-[12px] text-bad" role="alert">{{ message }}</p>
+              } @else {
+                <p [class]="ui.hint">PNG, JPEG or WebP, at most 256 KB. A wide logo on a transparent background works best. Also used as the browser tab icon.</p>
+              }
             </div>
             <div class="grid gap-4 sm:grid-cols-2">
               <div>

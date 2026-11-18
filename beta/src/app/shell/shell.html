@@ -20,10 +20,13 @@
     <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
   </a>
   <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
-  <amelu-search class="self-center px-4 max-lg:px-2" />
-  <amelu-notification-bell class="self-center" />
-  <amelu-account-menu />
+  <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2" />
+  <amelu-notification-bell data-tour="notifications" class="self-center" />
+  <amelu-account-menu data-tour="account" />
 </header>
+
+<!-- First-time tour after onboarding (tour/tour.ts). -->
+<amelu-tour />
 
 <div class="flex min-h-0 flex-1">
   <!-- Same menus as the current dashboard (frontend/src/components/Layout.tsx): the main
@@ -116,6 +119,7 @@
             } @else {
               <a
                 [routerLink]="entry.link"
+                [attr.data-tour]="'menu:' + entry.label"
                 [class]="entry.kind === 'create' ? createLink : entry.kind === 'danger' ? dangerLink : entry.secondary ? secondaryLink : link"
               >
                 @if (entry.kind === 'create') {

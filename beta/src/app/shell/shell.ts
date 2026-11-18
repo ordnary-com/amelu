@@ -7,6 +7,7 @@ import { Domains } from '../domains';
 import { Api, Domain } from '../api';
 import { MailboxApi } from '../mailbox/mailbox-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
+import { Tour } from '../tour/tour';
 import { isFree } from '../billing';
 import { DOMAIN_STATUS, Tone } from '../status';
 import { AccountMenu } from '../account-menu/account-menu';
@@ -39,7 +40,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner, Tour],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({

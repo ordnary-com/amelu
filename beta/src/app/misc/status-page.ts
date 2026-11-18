@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { from } from 'rxjs';
+import { catchError, from, map, of } from 'rxjs';
+import { Api, SendingIpStatus } from '../api';
 import { RouterLink } from '@angular/router';
 import { TONE_ICON, TONE_TEXT, Tone, badgeClass } from '../status';
 import { UI } from '../ui';
@@ -50,6 +51,22 @@ async function loadStatus(): Promise<Snapshot | null> {
 }
 
 /** The current dashboard's /status. */
+const IP_STATE: Record<SendingIpStatus['state'], { label: string; tone: Tone }> = {
+  active: { label: 'Sending', tone: 'ok' },
+  paused: { label: 'Paused', tone: 'warn' },
+  pending: { label: 'Starting up', tone: 'neutral' },
+  spare: { label: 'Standby', tone: 'neutral' },
+};
+const IP_ORDER: Record<SendingIpStatus['state'], number> = { active: 0, paused: 1, pending: 2, spare: 3 };
+// Same pool names as the Sending IPs page.
+const POOL_LABEL: Record<string, string> = {
+  trusted: 'Customer mail',
+  newdomains: 'New domains',
+  system: 'Amelu notifications',
+  spare: 'Reserve',
+};
+const lastOctet = (ip: string) => Number(ip.split('.').pop());
+
 @Component({
   selector: 'amelu-status-page',
   imports: [RouterLink, DatePipe, DecimalPipe, Icon],
@@ -184,6 +201,59 @@ async function loadStatus(): Promise<Snapshot | null> {
             </div>
           </div>
         </section>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">
+              Sending IPs
+              @if (sendingIps(); as list) {
+                <span class="font-normal text-muted">({{ list.length }})</span>
+              }
+            </h2>
+            <a routerLink="/network" [class]="ui.setAction" aria-label="All sending IPs" title="All sending IPs"><amelu-icon name="arrowRight" [size]="17" /></a>
+          </div>
+          <div [class]="ui.well">
+            <div [class]="ui.tableWrap">
+              <table [class]="ui.table">
+                <thead>
+                  <tr [class.text-muted]="!sendingIps()?.length">
+                    <th [class]="ui.th">Address</th>
+                    <th [class]="ui.th + ' max-md:hidden'">Used for</th>
+                    <th [class]="ui.th">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @if (sendingIps() === undefined) {
+                    @for (i of [1, 2, 3]; track i) {
+                      <tr [class]="ui.tr" aria-hidden="true"><td [class]="ui.td" colspan="3"><span class="block h-3 w-full animate-pulse rounded bg-bg"></span></td></tr>
+                    }
+                  } @else {
+                    @for (ip of sendingIps(); track ip.ip) {
+                      <tr [class]="ui.tr">
+                        <td [class]="ui.td">
+                          <span class="block font-mono text-[13px] font-medium">{{ ip.ip }}</span>
+                          <span [class]="ui.tdSub"><span class="truncate font-mono">{{ ip.name }}</span></span>
+                        </td>
+                        <td [class]="ui.td + ' max-md:hidden'">{{ poolLabel[ip.group] ?? 'Not assigned' }}</td>
+                        <td [class]="ui.td">
+                          <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="toneText[ipState[ip.state].tone]">
+                            <amelu-icon [name]="toneIcon[ipState[ip.state].tone]" [size]="16" />{{ ipState[ip.state].label }}
+                          </span>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr [class]="ui.tr"><td colspan="3" class="px-4 py-8 text-center text-muted">No report from the mail server yet</td></tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-3 text-[13px] text-muted">
+              All mail goes out from 89.106.70.0/24 (AS218905). The full list of 64 addresses, to allowlist ahead of time, is on
+              <a routerLink="/network" class="text-link hover:underline">Sending IPs</a>.
+            </p>
+          </div>
+        </section>
       </div>
 
       <aside class="space-y-5">
@@ -221,6 +291,18 @@ export class StatusPage {
   protected readonly ui = UI;
   protected readonly badge = badgeClass;
   protected readonly toneText = TONE_TEXT;
+  // The addresses the mail server reports on (amelu-ip-pools on marduk), sending ones first.
+  // undefined while loading; an empty list when there's no report or it can't load.
+  protected readonly sendingIps = toSignal(
+    inject(Api)
+      .sendingNetwork()
+      .pipe(
+        map((n) => [...n.ips].sort((a, b) => IP_ORDER[a.state] - IP_ORDER[b.state] || lastOctet(a.ip) - lastOctet(b.ip))),
+        catchError(() => of([] as SendingIpStatus[])),
+      ),
+  );
+  protected readonly ipState = IP_STATE;
+  protected readonly poolLabel = POOL_LABEL;
   protected readonly toneIcon = TONE_ICON;
   protected readonly legend: { label: string; tone: Tone; text: string }[] = [
     { label: 'Operational', tone: 'ok', text: 'Working normally.' },

@@ -1,93 +1,78 @@
 @if (customer(); as me) {
-  <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
-    <div class="space-y-5">
-      <section [class]="ui.panel">
-        <div [class]="ui.panelHeader">
-          <h2 [class]="ui.panelTitle">Profile</h2>
-          <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="headerLink">Edit in Ordnary <amelu-icon name="external" [size]="13" /></a>
+  <div class="space-y-5">
+    <section [class]="card">
+      <div [class]="cardHeader">
+        <h2 [class]="cardTitle">Profile</h2>
+        <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="headerAction" aria-label="Edit your profile in your Ordnary account" title="Edit in your Ordnary account">
+          <amelu-icon name="pencil" [size]="17" />
+        </a>
+      </div>
+      <!-- Label over value, in columns split by thin lines. -->
+      <dl class="grid sm:grid-cols-3 sm:divide-x sm:divide-line">
+        <div [class]="field">
+          <dt [class]="fieldLabel">Name</dt>
+          <dd [class]="fieldValue">{{ me.name || 'Not set' }}</dd>
         </div>
-        <div [class]="ui.well">
-          <div [class]="ui.tableWrap">
-            <table [class]="ui.table">
-              <tbody>
-                <tr>
-                  <th scope="row" [class]="key">Name</th>
-                  <td [class]="ui.td">{{ me.name || 'Not set' }}</td>
-                  <td [class]="ui.td + ' text-right text-[12px] text-muted max-mobile:hidden'">Managed by Ordnary</td>
-                </tr>
-                <tr [class]="ui.tr">
-                  <th scope="row" [class]="key">Organization</th>
-                  <td [class]="ui.td" colspan="2">{{ me.organizationName }}</td>
-                </tr>
-                <tr [class]="ui.tr">
-                  <th scope="row" [class]="key">Permissions level</th>
-                  <td [class]="ui.td" colspan="2"><span [class]="badge(me.role)">{{ roles[me.role].label }}</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Organization</dt>
+          <dd [class]="fieldValue">{{ me.organizationName }}</dd>
         </div>
-      </section>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Permissions level</dt>
+          <dd [class]="fieldValue">{{ roles[me.role].label }}</dd>
+        </div>
+      </dl>
+    </section>
 
-      <section [class]="ui.panel">
-        <div [class]="ui.panelHeader">
-          <h2 [class]="ui.panelTitle">Sign-in</h2>
+    <section [class]="card">
+      <div [class]="cardHeader">
+        <h2 [class]="cardTitle">Email Address</h2>
+        <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="headerAction" aria-label="Change your email in your Ordnary account" title="Change in your Ordnary account">
+          <amelu-icon name="pencil" [size]="17" />
+        </a>
+      </div>
+      <dl class="grid sm:grid-cols-2 sm:divide-x sm:divide-line">
+        <div [class]="field">
+          <dt [class]="fieldLabel">Sign-in email address</dt>
+          <dd [class]="fieldValue">{{ me.email }}</dd>
         </div>
-        <div [class]="ui.well">
-          <div [class]="ui.tableWrap">
-            <table [class]="ui.table">
-              <tbody>
-                <tr>
-                  <th scope="row" [class]="key">Sign-in email</th>
-                  <td [class]="ui.td">{{ me.email }}</td>
-                  <td [class]="ui.td + ' text-right text-[12px] text-muted max-mobile:hidden'">Managed by Ordnary</td>
-                </tr>
-                <tr [class]="ui.tr">
-                  <th scope="row" [class]="key">Last sign-in</th>
-                  <td [class]="ui.td" colspan="2">
-                    @if (me.lastSignInAt) {
-                      {{ me.lastSignInAt | date: 'd MMM y, HH:mm' }}
-                    } @else {
-                      <span class="text-muted">Never</span>
-                    }
-                  </td>
-                </tr>
-                <tr [class]="ui.tr">
-                  <th scope="row" [class]="key">Two-step verification</th>
-                  <td [class]="ui.td + ' text-muted'">Set up in your Ordnary account</td>
-                  <td [class]="ui.td + ' text-right'">
-                    <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" class="text-[13px] text-link hover:underline">Manage</a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div [class]="field">
+          <dt [class]="fieldLabel">Last sign-in</dt>
+          <dd [class]="fieldValue" [class.text-muted]="!me.lastSignInAt">
+            {{ me.lastSignInAt ? (me.lastSignInAt | date: 'd MMM y, HH:mm') : 'Never' }}
+          </dd>
         </div>
-      </section>
-    </div>
+      </dl>
+    </section>
 
-    <aside class="space-y-5">
-      <section [class]="ui.panel">
-        <div [class]="ui.panelHeader">
-          <h2 [class]="ui.panelTitle">Ordnary account</h2>
-        </div>
-        <div [class]="ui.well">
-          <p class="text-[13px] leading-relaxed text-muted">
-            You sign in to Amelu with your Ordnary account. Change your name, email, password and two-step verification
-            <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" class="text-link hover:underline">in your Ordnary account</a>.
-          </p>
-        </div>
-      </section>
+    <section [class]="card">
+      <div [class]="cardHeader">
+        <h2 [class]="cardTitle">Two-Step Verification</h2>
+        <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="headerAction" aria-label="Set up two-step verification in your Ordnary account" title="Set up in your Ordnary account">
+          <amelu-icon name="plus" [size]="18" />
+        </a>
+      </div>
+      <p [class]="note">
+        <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+        <span>
+          You sign in to Amelu with your Ordnary account, so two-step verification is set up there. We recommend it: besides
+          your password you then confirm each sign-in with a second step. Set it up in
+          <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" class="text-link hover:underline">your Ordnary account</a>.
+        </span>
+      </p>
+    </section>
 
-      <section [class]="ui.panel">
-        <div [class]="ui.panelHeader">
-          <h2 [class]="ui.panelTitle">Terminate account</h2>
-        </div>
-        <div [class]="ui.well">
-          <p class="text-[13px] leading-relaxed text-muted">Permanently delete your Amelu account. This can't be undone.</p>
-          <a routerLink="/account/terminate" [class]="ui.dangerOutline + ' mt-3 bg-surface'">Terminate account</a>
-        </div>
-      </section>
-    </aside>
+    <section [class]="card">
+      <div [class]="cardHeader">
+        <h2 [class]="cardTitle">Password</h2>
+        <a [href]="ordnaryAccountUrl" target="_blank" rel="noreferrer" [class]="headerAction" aria-label="Change your password in your Ordnary account" title="Change in your Ordnary account">
+          <amelu-icon name="pencil" [size]="17" />
+        </a>
+      </div>
+      <p [class]="note">
+        <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+        <span>Your name, email and password are managed by Ordnary. Changes there show up here the next time you sign in.</span>
+      </p>
+    </section>
   </div>
 }

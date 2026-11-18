@@ -132,9 +132,10 @@ export interface SupportMessage {
   id: string;
   authorKind: 'customer' | 'staff';
   authorName: string;
-  /** Customer messages only. */
   authorEmail?: string;
   authorAvatarUrl?: string;
+  /** Staff replies: their role, e.g. "Amelu Support". */
+  authorTitle?: string;
   body: string;
   createdAt: string;
 }

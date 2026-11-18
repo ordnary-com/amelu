@@ -24,8 +24,8 @@ const (
 	supportSubjectMax     = 150
 	supportBodyMax        = 20000
 	supportOpenTicketsMax = 20
-	// What customers see as the author of a staff reply.
-	supportStaffName = "Amelu Support"
+	// Shown with a staff reply's author.
+	supportStaffTitle = "Amelu Support"
 )
 
 var (
@@ -37,12 +37,14 @@ type supportMessageResponse struct {
 	ID         string `json:"id"`
 	AuthorKind string `json:"authorKind"`
 	AuthorName string `json:"authorName"`
-	// Customer messages only: who wrote it, for the avatar.
+	// Who wrote it, for the avatar and the tooltip.
 	AuthorEmail     string `json:"authorEmail,omitempty"`
 	AuthorAvatarURL string `json:"authorAvatarUrl,omitempty"`
-	Body            string `json:"body"`
-	Internal        bool   `json:"internal,omitempty"`
-	CreatedAt       string `json:"createdAt"`
+	// Staff replies: their role, e.g. "Amelu Support".
+	AuthorTitle string `json:"authorTitle,omitempty"`
+	Body        string `json:"body"`
+	Internal    bool   `json:"internal,omitempty"`
+	CreatedAt   string `json:"createdAt"`
 }
 
 type supportTicketResponse struct {
@@ -101,17 +103,24 @@ func toSupportTicketResponse(t *db.SupportTicket, admin bool) supportTicketRespo
 func toSupportMessageResponses(msgs []db.SupportMessage, admin bool) []supportMessageResponse {
 	out := make([]supportMessageResponse, 0, len(msgs))
 	for _, m := range msgs {
-		name, avatar := m.AuthorName, m.AuthorAvatarURL
+		name, email, avatar, title := m.AuthorName, m.AuthorEmail, m.AuthorAvatarURL, ""
 		if m.AuthorKind == "staff" {
-			// Staff are stored by their Ordnary email; customers get the
-			// Gravatar link, never the address itself.
-			avatar = gravatarURL(m.AuthorName)
+			// Staff are stored by their Ordnary email. Airplane keeps the
+			// email as the name (it marks your own replies by it).
+			email, title = m.AuthorName, supportStaffTitle
+			avatar = m.StaffAvatarURL
+			if avatar == "" {
+				avatar = gravatarURL(email)
+			}
 			if !admin {
-				name = supportStaffName
+				name = m.StaffName
+				if name == "" {
+					name = nameFromEmail(email)
+				}
 			}
 		}
 		out = append(out, supportMessageResponse{
-			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, AuthorEmail: m.AuthorEmail, AuthorAvatarURL: avatar,
+			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, AuthorEmail: email, AuthorAvatarURL: avatar, AuthorTitle: title,
 			Body: m.Body, Internal: m.Internal,
 			CreatedAt: m.CreatedAt.UTC().Format(time.RFC3339),
 		})
@@ -128,6 +137,19 @@ func gravatarURL(email string) string {
 	}
 	sum := sha256.Sum256([]byte(email))
 	return "https://gravatar.com/avatar/" + hex.EncodeToString(sum[:]) + "?s=96&d=404"
+}
+
+// nameFromEmail turns "stijn.jakobs@ordnary.com" into "Stijn Jakobs".
+func nameFromEmail(email string) string {
+	local, _, _ := strings.Cut(email, "@")
+	parts := strings.FieldsFunc(local, func(r rune) bool { return r == '.' || r == '_' || r == '-' })
+	for i, p := range parts {
+		parts[i] = strings.ToUpper(p[:1]) + p[1:]
+	}
+	if len(parts) == 0 {
+		return supportStaffTitle
+	}
+	return strings.Join(parts, " ")
 }
 
 func supportAuthorName(c *db.Customer) string {

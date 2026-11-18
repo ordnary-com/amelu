@@ -1,8 +1,11 @@
+**Deleted 2026-11-17.** Lagrange never carried our IPv4 /24; the block now goes out through Vultr (../rtr1-ams/, ../rtr1-par/). The VM is gone and wg-quick@bgp on marduk is disabled; the routing rule moved to own-block.service there.
+
 # amelu-bgp
 
 Router for Amelu's own sending block, 89.106.70.0/24 (leased from noez,
 service #88486), announced from AS218905 together with 2a06:9801:f90::/48.
-Hetzner cx23 in nbg1, 49.13.196.113, root via `~/.ssh/amelu_fleet`.
+Hetzner cx23 in nbg1, 49.13.196.113, root via `~/.ssh/amelu_fleet`. Server
+name `rtr1-nbg`, DNS and rDNS `rtr1.nbg.net.ordnary.com` (was `amelu-bgp`).
 
 ```
 internet <-> Lagrange (AS209735) <-> GRE <-> amelu-bgp (89.106.70.1) <-> WireGuard <-> marduk (89.106.70.x)

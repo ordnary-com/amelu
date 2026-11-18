@@ -1,4 +1,4 @@
-<!-- Who you're signed in as, opening a panel flush below the bar. -->
+<!-- Who you're signed in as, opening a panel below. -->
 <button
   type="button"
   class="group flex cursor-pointer items-center gap-2 self-center rounded-md px-2 py-1.5 text-[13px] text-ink hover:bg-bg aria-expanded:bg-bg"
@@ -17,7 +17,7 @@
 
 @if (open()) {
   <div
-    class="absolute top-full right-0 z-20 max-h-[calc(100vh-6rem)] w-[420px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-b-lg border border-line bg-popover p-5 text-ink shadow-md"
+    class="absolute top-full right-0 z-20 mt-1 max-h-[calc(100vh-6rem)] w-[420px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line bg-popover p-5 text-ink shadow-md"
     role="menu"
     aria-label="Your account"
   >

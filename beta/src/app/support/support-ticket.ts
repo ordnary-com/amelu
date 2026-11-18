@@ -8,9 +8,14 @@ import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { Avatar } from '../avatar';
 import { UI } from '../ui';
+import { apiUrl } from '../config';
 import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
 
 const BODY_MAX = 20000;
+// The API's limits on files sent with one message (handlers/support.go).
+const MAX_FILES = 5;
+const MAX_FILE_BYTES = 10 << 20;
+const MAX_TOTAL_BYTES = 20 << 20;
 
 /**
  * /support/tickets/:id: the conversation and a reply box, with the ticket's
@@ -64,30 +69,80 @@ const BODY_MAX = 20000;
                     }
                     <span class="ml-auto flex-none text-[13px] text-muted" [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
                   </div>
-                  <div class="mt-2 pl-9 text-[14px] leading-relaxed break-words whitespace-pre-wrap">{{ m.body }}</div>
+                  @if (m.body) {
+                    <div class="mt-2 pl-9 text-[14px] leading-relaxed break-words whitespace-pre-wrap">{{ m.body }}</div>
+                  }
+                  @if (m.attachments?.length) {
+                    <ul class="mt-2.5 flex flex-wrap gap-2 pl-9">
+                      @for (a of m.attachments; track a.id) {
+                        <li>
+                          <a [href]="attachmentUrl(t.id, a.id)" download [class]="fileChip + ' hover:border-ink/20'" [title]="'Download ' + a.filename">
+                            <amelu-icon name="paperclip" [size]="14" class="flex-none text-muted" />
+                            <span class="max-w-56 truncate">{{ a.filename }}</span>
+                            <span class="flex-none text-muted">{{ size(a.size) }}</span>
+                          </a>
+                        </li>
+                      }
+                    </ul>
+                  }
                 </li>
               }
             </ol>
+            <!-- The composer: a box with the text, the files to send, and a toolbar. Files can be
+                 picked, dropped on it or pasted into it. -->
             <form class="border-t border-line px-5 py-4" (submit)="send($event)">
               @if (t.status === 'closed') {
                 <p class="mb-2 text-[13px] text-muted">This ticket is closed. Replying opens it again.</p>
               }
-              <div class="flex items-end gap-2 rounded border border-line bg-surface p-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30">
-                <label class="min-w-0 flex-1">
+              <div
+                class="rounded border bg-surface transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
+                [class]="dragging() ? 'border-accent bg-accent/5' : 'border-line'"
+                (dragover)="onDragOver($event)"
+                (dragleave)="dragging.set(false)"
+                (drop)="onDrop($event)"
+              >
+                <label class="block">
                   <span class="sr-only">Reply</span>
                   <textarea
-                    rows="2"
-                    class="block max-h-60 w-full resize-none bg-transparent px-2 py-1.5 text-[14px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted"
+                    rows="3"
+                    class="block max-h-72 min-h-20 w-full resize-none bg-transparent px-3.5 pt-3 pb-2 text-[14px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted"
                     [maxLength]="bodyMax"
-                    placeholder="Write a reply"
+                    [placeholder]="dragging() ? 'Drop files to attach them' : 'Write a reply'"
                     [value]="reply()"
                     (input)="reply.set($any($event.target).value)"
+                    (paste)="onPaste($event)"
                     (keydown.meta.enter)="send($event)"
                     (keydown.control.enter)="send($event)"
                   ></textarea>
                 </label>
-                <button type="submit" [class]="ui.primary + ' flex-none'" [disabled]="busy() || !reply().trim()">{{ busy() ? 'Sending...' : 'Send' }}</button>
+                @if (files().length) {
+                  <ul class="flex flex-wrap gap-2 px-3.5 pb-2.5" aria-label="Files to send">
+                    @for (file of files(); track $index; let i = $index) {
+                      <li [class]="fileChip + ' bg-well pr-1'">
+                        <amelu-icon name="paperclip" [size]="14" class="flex-none text-muted" />
+                        <span class="max-w-56 truncate">{{ file.name }}</span>
+                        <span class="flex-none text-muted">{{ size(file.size) }}</span>
+                        <button type="button" class="inline-flex size-6 flex-none cursor-pointer items-center justify-center rounded text-muted hover:bg-bg hover:text-bad" [attr.aria-label]="'Remove ' + file.name" (click)="removeFile(i)">
+                          <amelu-icon name="close" [size]="13" />
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+                <div class="flex items-center gap-2 border-t border-line px-2 py-1.5">
+                  <label class="inline-flex size-8 flex-none cursor-pointer items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink" title="Attach files">
+                    <amelu-icon name="paperclip" [size]="17" />
+                    <span class="sr-only">Attach files</span>
+                    <input type="file" multiple class="sr-only" (change)="onPick($event)" />
+                  </label>
+                  <span class="min-w-0 truncate text-[12px] text-muted">Up to {{ maxFiles }} files, {{ maxFileMb }} MB each</span>
+                  <span class="ml-auto flex-none text-[12px] text-muted max-sm:hidden">{{ sendShortcut }} to send</span>
+                  <button type="submit" [class]="ui.primary + ' flex-none'" [disabled]="!canSend()">{{ busy() ? 'Sending...' : 'Send' }}</button>
+                </div>
               </div>
+              @if (fileError(); as message) {
+                <p class="mt-1.5 text-[12px] text-bad" role="alert">{{ message }}</p>
+              }
             </form>
           </section>
         </div>
@@ -169,6 +224,14 @@ export class SupportTicketPage {
   protected readonly error = signal<string | null>(null);
   protected readonly reply = signal('');
   protected readonly busy = signal(false);
+  protected readonly files = signal<File[]>([]);
+  protected readonly fileError = signal<string | null>(null);
+  protected readonly dragging = signal(false);
+  protected readonly maxFiles = MAX_FILES;
+  protected readonly maxFileMb = MAX_FILE_BYTES >> 20;
+  protected readonly sendShortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ Enter' : 'Ctrl Enter';
+  protected readonly fileChip = 'inline-flex h-8 items-center gap-2 rounded border border-line bg-surface px-2.5 text-[13px]';
+  protected readonly canSend = computed(() => !this.busy() && (this.reply().trim() !== '' || this.files().length > 0));
 
   /** Open tickets first, then closed ones; at most 12 in the sidebar. */
   protected readonly others = computed(() => {
@@ -183,6 +246,7 @@ export class SupportTicketPage {
       untracked(() => {
         this.ticket.set(null);
         this.reply.set('');
+        this.files.set([]);
         void this.load(id);
       });
     });
@@ -215,6 +279,69 @@ export class SupportTicketPage {
       : [m.authorName, m.authorEmail].filter(Boolean).join('\n');
   }
 
+  protected attachmentUrl(ticketId: string, attachmentId: string): string {
+    return apiUrl(`/api/support/tickets/${ticketId}/attachments/${attachmentId}`);
+  }
+
+  protected size(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /** Adds files to the next reply, within the API's limits. */
+  private addFiles(list: Iterable<File>): void {
+    this.fileError.set(null);
+    const next = [...this.files()];
+    for (const file of list) {
+      if (next.length >= MAX_FILES) {
+        this.fileError.set(`At most ${MAX_FILES} files per message.`);
+        break;
+      }
+      if (file.size > MAX_FILE_BYTES) {
+        this.fileError.set(`${file.name} is larger than ${MAX_FILE_BYTES >> 20} MB.`);
+        continue;
+      }
+      if (next.reduce((sum, f) => sum + f.size, 0) + file.size > MAX_TOTAL_BYTES) {
+        this.fileError.set(`Files can be ${MAX_TOTAL_BYTES >> 20} MB together at most.`);
+        continue;
+      }
+      next.push(file);
+    }
+    this.files.set(next);
+  }
+
+  protected removeFile(index: number): void {
+    this.files.update((list) => list.filter((_, i) => i !== index));
+    this.fileError.set(null);
+  }
+
+  protected onPick(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files) this.addFiles(input.files);
+    input.value = '';
+  }
+
+  protected onDragOver(event: DragEvent): void {
+    if (!event.dataTransfer?.types.includes('Files')) return;
+    event.preventDefault();
+    this.dragging.set(true);
+  }
+
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragging.set(false);
+    if (event.dataTransfer?.files.length) this.addFiles(event.dataTransfer.files);
+  }
+
+  /** Pasted screenshots and files become attachments; pasted text stays text. */
+  protected onPaste(event: ClipboardEvent): void {
+    const pasted = event.clipboardData?.files;
+    if (!pasted?.length) return;
+    event.preventDefault();
+    this.addFiles(pasted);
+  }
+
   protected ago(iso: string): string {
     return timeAgo(iso);
   }
@@ -223,12 +350,14 @@ export class SupportTicketPage {
     event.preventDefault();
     const t = this.ticket();
     const body = this.reply().trim();
-    if (!t || !body || this.busy()) return;
+    if (!t || !this.canSend()) return;
     this.busy.set(true);
     this.error.set(null);
     try {
-      await firstValueFrom(this.api.replySupportTicket(t.id, body));
+      await firstValueFrom(this.api.replySupportTicket(t.id, body, this.files()));
       this.reply.set('');
+      this.files.set([]);
+      this.fileError.set(null);
       await Promise.all([this.load(t.id), this.loadList()]);
     } catch (err) {
       this.error.set(errorMessage(err, 'Could not send your reply'));

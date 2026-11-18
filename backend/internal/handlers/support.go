@@ -7,11 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"io"
 	"log"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"amelu/backend/internal/db"
 )
@@ -26,6 +31,10 @@ const (
 	supportOpenTicketsMax = 20
 	// Shown with a staff reply's author.
 	supportStaffTitle = "Amelu Support"
+	// Files sent with one message: how many, and how large each and together.
+	supportAttachmentsPerMessage = 5
+	supportAttachmentMax         = 10 << 20
+	supportAttachmentsMax        = 20 << 20
 )
 
 var (
@@ -41,10 +50,18 @@ type supportMessageResponse struct {
 	AuthorEmail     string `json:"authorEmail,omitempty"`
 	AuthorAvatarURL string `json:"authorAvatarUrl,omitempty"`
 	// Staff replies: their role, e.g. "Amelu Support".
-	AuthorTitle string `json:"authorTitle,omitempty"`
-	Body        string `json:"body"`
-	Internal    bool   `json:"internal,omitempty"`
-	CreatedAt   string `json:"createdAt"`
+	AuthorTitle string                      `json:"authorTitle,omitempty"`
+	Body        string                      `json:"body"`
+	Internal    bool                        `json:"internal,omitempty"`
+	CreatedAt   string                      `json:"createdAt"`
+	Attachments []supportAttachmentResponse `json:"attachments"`
+}
+
+type supportAttachmentResponse struct {
+	ID          string `json:"id"`
+	Filename    string `json:"filename"`
+	ContentType string `json:"contentType"`
+	Size        int    `json:"size"`
 }
 
 type supportTicketResponse struct {
@@ -119,9 +136,13 @@ func toSupportMessageResponses(msgs []db.SupportMessage, admin bool) []supportMe
 				}
 			}
 		}
+		files := make([]supportAttachmentResponse, 0, len(m.Attachments))
+		for _, f := range m.Attachments {
+			files = append(files, supportAttachmentResponse{ID: f.ID, Filename: f.Filename, ContentType: f.ContentType, Size: f.Size})
+		}
 		out = append(out, supportMessageResponse{
 			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, AuthorEmail: email, AuthorAvatarURL: avatar, AuthorTitle: title,
-			Body: m.Body, Internal: m.Internal,
+			Body: m.Body, Internal: m.Internal, Attachments: files,
 			CreatedAt: m.CreatedAt.UTC().Format(time.RFC3339),
 		})
 	}
@@ -159,11 +180,12 @@ func supportAuthorName(c *db.Customer) string {
 	return c.Email
 }
 
-// validSupportBody trims a message and checks its length.
-func validSupportBody(body string) (string, string) {
+// validSupportBody trims a message and checks its length. It may be empty
+// when files come with it.
+func validSupportBody(body string, hasFiles bool) (string, string) {
 	body = strings.TrimSpace(body)
 	switch {
-	case body == "":
+	case body == "" && !hasFiles:
 		return "", "message is required"
 	case len(body) > supportBodyMax:
 		return "", fmt.Sprintf("message is too long (at most %d characters)", supportBodyMax)
@@ -220,7 +242,7 @@ func (a *App) CreateSupportTicket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "choose a topic")
 		return
 	}
-	body, msg := validSupportBody(req.Body)
+	body, msg := validSupportBody(req.Body, false)
 	if msg != "" {
 		writeError(w, http.StatusBadRequest, msg)
 		return
@@ -296,8 +318,150 @@ func (a *App) GetSupportTicket(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
-type supportReplyRequest struct {
-	Body string `json:"body"`
+// supportMessageInput is a message as posted: JSON, or multipart/form-data
+// when files come with it (fields body, internal and status, files under
+// "files").
+type supportMessageInput struct {
+	Body     string `json:"body"`
+	Internal bool   `json:"internal"`
+	// Staff only: the status after the reply.
+	Status string                    `json:"status"`
+	Files  []db.NewSupportAttachment `json:"-"`
+}
+
+// readSupportMessage parses a posted message and its files, enforcing the
+// attachment limits. It writes the error response itself.
+func readSupportMessage(w http.ResponseWriter, r *http.Request) (*supportMessageInput, bool) {
+	in := &supportMessageInput{}
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+		if err := decodeJSON(r, in); err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return nil, false
+		}
+		return in, true
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, supportAttachmentsMax+1<<20)
+	if err := r.ParseMultipartForm(4 << 20); err != nil {
+		var tooBig *http.MaxBytesError
+		if errors.As(err, &tooBig) {
+			writeError(w, http.StatusRequestEntityTooLarge, fmt.Sprintf("attachments are too large (at most %d MB together)", supportAttachmentsMax>>20))
+			return nil, false
+		}
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return nil, false
+	}
+	defer r.MultipartForm.RemoveAll()
+	in.Body = r.FormValue("body")
+	in.Internal = r.FormValue("internal") == "true"
+	in.Status = r.FormValue("status")
+	headers := r.MultipartForm.File["files"]
+	if len(headers) > supportAttachmentsPerMessage {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("at most %d attachments per message", supportAttachmentsPerMessage))
+		return nil, false
+	}
+	total := 0
+	for _, h := range headers {
+		name := cleanAttachmentName(h.Filename)
+		if h.Size > supportAttachmentMax {
+			writeError(w, http.StatusRequestEntityTooLarge, fmt.Sprintf("%s is too large (at most %d MB)", name, supportAttachmentMax>>20))
+			return nil, false
+		}
+		f, err := h.Open()
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return nil, false
+		}
+		data, err := io.ReadAll(io.LimitReader(f, supportAttachmentMax+1))
+		f.Close()
+		if err != nil || len(data) > supportAttachmentMax {
+			writeError(w, http.StatusBadRequest, "invalid request body")
+			return nil, false
+		}
+		if total += len(data); total > supportAttachmentsMax {
+			writeError(w, http.StatusRequestEntityTooLarge, fmt.Sprintf("attachments are too large (at most %d MB together)", supportAttachmentsMax>>20))
+			return nil, false
+		}
+		// The type is sniffed rather than taken from the browser; downloads are
+		// always served as attachments anyway (serveSupportAttachment).
+		in.Files = append(in.Files, db.NewSupportAttachment{Filename: name, ContentType: http.DetectContentType(data), Data: data})
+	}
+	return in, true
+}
+
+// cleanAttachmentName keeps a filename's last path element without control
+// characters, at most 200 characters long.
+func cleanAttachmentName(name string) string {
+	name = filepath.Base(strings.ReplaceAll(name, "\\", "/"))
+	name = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, name)
+	name = strings.TrimSpace(name)
+	if runes := []rune(name); len(runes) > 200 {
+		name = string(runes[:200])
+	}
+	if name == "" || name == "." || name == "/" {
+		return "attachment"
+	}
+	return name
+}
+
+// withAttachmentNote adds "(2 attachments)" to a notification's text.
+func withAttachmentNote(body string, files int) string {
+	if files == 0 {
+		return body
+	}
+	note := fmt.Sprintf("(%d attachments)", files)
+	if files == 1 {
+		note = "(1 attachment)"
+	}
+	return strings.TrimSpace(body + "\n\n" + note)
+}
+
+// serveSupportAttachment sends a file as a download, never rendered by the
+// browser, so an uploaded page or script can't run on the API's origin.
+func serveSupportAttachment(w http.ResponseWriter, a *db.SupportAttachment, data []byte) {
+	h := w.Header()
+	h.Set("Content-Type", a.ContentType)
+	h.Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": a.Filename}))
+	h.Set("Content-Length", strconv.Itoa(len(data)))
+	h.Set("X-Content-Type-Options", "nosniff")
+	h.Set("Content-Security-Policy", "sandbox")
+	h.Set("Cache-Control", "private, max-age=3600")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data)
+}
+
+// GetSupportAttachment -> GET /api/support/tickets/{id}/attachments/{attachmentId}
+func (a *App) GetSupportAttachment(w http.ResponseWriter, r *http.Request) {
+	customer, _, ok := a.requireOrgActor(w, r)
+	if !ok {
+		return
+	}
+	t, ok := a.loadSupportTicket(w, r, customer.OrganizationID.String)
+	if !ok {
+		return
+	}
+	a.writeSupportAttachment(w, r, t.ID, false)
+}
+
+func (a *App) writeSupportAttachment(w http.ResponseWriter, r *http.Request, ticketID string, includeInternal bool) {
+	id := r.PathValue("attachmentId")
+	if !uuidPattern.MatchString(id) {
+		writeError(w, http.StatusNotFound, "attachment not found")
+		return
+	}
+	att, data, err := a.Store.GetSupportAttachment(r.Context(), ticketID, id, includeInternal)
+	if errors.Is(err, db.ErrNotFound) {
+		writeError(w, http.StatusNotFound, "attachment not found")
+		return
+	} else if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not load attachment")
+		return
+	}
+	serveSupportAttachment(w, att, data)
 }
 
 // ReplySupportTicket -> POST /api/support/tickets/{id}/messages. A reply on
@@ -311,23 +475,22 @@ func (a *App) ReplySupportTicket(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var req supportReplyRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+	in, ok := readSupportMessage(w, r)
+	if !ok {
 		return
 	}
-	body, msg := validSupportBody(req.Body)
+	body, msg := validSupportBody(in.Body, len(in.Files) > 0)
 	if msg != "" {
 		writeError(w, http.StatusBadRequest, msg)
 		return
 	}
-	m, err := a.Store.AddSupportMessage(r.Context(), t.ID, "customer", &customer.ID, supportAuthorName(customer), body, false, "open")
+	m, err := a.Store.AddSupportMessage(r.Context(), t.ID, "customer", &customer.ID, supportAuthorName(customer), body, false, "open", in.Files...)
 	if err != nil {
 		log.Printf("support: customer reply: %v", err)
 		writeError(w, http.StatusInternalServerError, "could not send reply")
 		return
 	}
-	a.notifySupport(t, "Customer replied", body)
+	a.notifySupport(t, "Customer replied", withAttachmentNote(body, len(in.Files)))
 	writeJSON(w, http.StatusCreated, toSupportMessageResponses([]db.SupportMessage{*m}, false)[0])
 }
 
@@ -413,13 +576,6 @@ func (a *App) AdminGetSupportTicket(w http.ResponseWriter, r *http.Request, oper
 	writeJSON(w, http.StatusOK, resp)
 }
 
-type adminSupportReplyRequest struct {
-	Body     string `json:"body"`
-	Internal bool   `json:"internal"`
-	// Status after the reply; defaults to "answered" (internal notes leave it).
-	Status string `json:"status"`
-}
-
 // AdminReplySupportTicket -> POST /internal/admin/support/tickets/{id}/messages.
 // A reply (not an internal note) emails the person who opened the ticket.
 func (a *App) AdminReplySupportTicket(w http.ResponseWriter, r *http.Request, operator string) {
@@ -427,12 +583,12 @@ func (a *App) AdminReplySupportTicket(w http.ResponseWriter, r *http.Request, op
 	if !ok {
 		return
 	}
-	var req adminSupportReplyRequest
-	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+	// Status after the reply defaults to "answered" (internal notes leave it).
+	req, ok := readSupportMessage(w, r)
+	if !ok {
 		return
 	}
-	body, msg := validSupportBody(req.Body)
+	body, msg := validSupportBody(req.Body, len(req.Files) > 0)
 	if msg != "" {
 		writeError(w, http.StatusBadRequest, msg)
 		return
@@ -445,7 +601,7 @@ func (a *App) AdminReplySupportTicket(w http.ResponseWriter, r *http.Request, op
 		writeError(w, http.StatusBadRequest, "status must be open, answered or closed")
 		return
 	}
-	m, err := a.Store.AddSupportMessage(r.Context(), t.ID, "staff", nil, operator, body, req.Internal, status)
+	m, err := a.Store.AddSupportMessage(r.Context(), t.ID, "staff", nil, operator, body, req.Internal, status, req.Files...)
 	if err != nil {
 		log.Printf("support: staff reply: %v", err)
 		writeError(w, http.StatusInternalServerError, "could not save reply")
@@ -455,10 +611,19 @@ func (a *App) AdminReplySupportTicket(w http.ResponseWriter, r *http.Request, op
 	if req.Internal {
 		action = "support.note_added"
 	} else {
-		a.notifyCustomerOfReply(t, body, status == "closed")
+		a.notifyCustomerOfReply(t, withAttachmentNote(body, len(req.Files)), status == "closed")
 	}
 	a.Store.LogAdminAction(r.Context(), "support_ticket", t.ID, operator, action, fmt.Sprintf("#%d", t.Number))
 	writeJSON(w, http.StatusCreated, toSupportMessageResponses([]db.SupportMessage{*m}, true)[0])
+}
+
+// AdminGetSupportAttachment -> GET /internal/admin/support/tickets/{id}/attachments/{attachmentId}
+func (a *App) AdminGetSupportAttachment(w http.ResponseWriter, r *http.Request, operator string) {
+	t, ok := a.adminLoadSupportTicket(w, r)
+	if !ok {
+		return
+	}
+	a.writeSupportAttachment(w, r, t.ID, true)
 }
 
 type adminUpdateSupportTicketRequest struct {

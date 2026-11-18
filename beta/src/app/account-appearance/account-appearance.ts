@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { Theme, ThemeChoice } from '../theme';
 import { ACCENT_OPTIONS, THEME_OPTIONS, ThemeOption } from '../theme-options';
 import { UI } from '../ui';
@@ -17,7 +16,7 @@ const DARK_PANES = ['dark', 'dim', 'black', 'deep', 'contrast-dark'];
 /** /account/appearance: the theme and the accent colour, with a live preview. */
 @Component({
   selector: 'amelu-account-appearance',
-  imports: [Icon, NgTemplateOutlet],
+  imports: [Icon],
   templateUrl: './account-appearance.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

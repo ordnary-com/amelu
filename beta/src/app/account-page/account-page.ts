@@ -20,14 +20,14 @@ export class AccountPage {
   protected readonly roles = ROLE;
   protected readonly ui = UI;
   // Cards with a title bar and an action icon, label-over-value fields and grey notes.
-  protected readonly card = 'overflow-hidden rounded border border-line bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.05)]';
-  protected readonly cardHeader = 'flex h-14 items-center justify-between gap-3 border-b border-line px-5';
-  protected readonly cardTitle = 'text-[16px] font-medium';
-  protected readonly headerAction = '-mr-1.5 inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink';
+  protected readonly card = UI.setCard;
+  protected readonly cardHeader = UI.setHeader;
+  protected readonly cardTitle = UI.setTitle;
+  protected readonly headerAction = UI.setAction;
   protected readonly field = 'min-w-0 px-5 py-4 max-sm:not-first:border-t max-sm:not-first:border-line';
   protected readonly fieldLabel = 'text-[13px] text-muted';
   protected readonly fieldValue = 'mt-1 truncate text-[16px]';
-  protected readonly note = 'flex gap-2.5 bg-well px-5 py-4 text-[14px] leading-relaxed';
+  protected readonly note = UI.setNote;
 
   protected badge(role: keyof typeof ROLE): string {
     return badgeClass(ROLE[role].tone);

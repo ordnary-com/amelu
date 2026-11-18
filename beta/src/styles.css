@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./spartan.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -38,6 +39,10 @@
   /* The top strip and the account badge hanging out of it */
   --color-badge: var(--badge);
   --color-create: #24a148;
+
+  /* spartan/ui (helm components, src/app/ui): its hover and selected
+     background, which shadcn calls muted/accent (see spartan.css). */
+  --color-subtle: var(--subtle);
 
   --breakpoint-mobile: 45rem;
 }
@@ -364,4 +369,38 @@
   h6 {
     font-weight: 500;
   }
+}
+
+/* spartan/ui's colour variables (src/spartan.css), mapped onto Amelu's palette.
+   Defined once: every theme above redefines the Amelu variables, so helm
+   components follow light, dark and the other themes on their own. */
+:root {
+  --background: var(--page, var(--surface));
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #fff;
+  --secondary: var(--bg);
+  --secondary-foreground: var(--ink);
+  --subtle: var(--bg);
+  --muted-foreground: var(--muted);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent);
+  --destructive: var(--bad);
+  --chart-1: var(--accent);
+  --chart-2: color-mix(in srgb, var(--accent) 70%, white);
+  --chart-3: color-mix(in srgb, var(--accent) 45%, white);
+  --chart-4: var(--ok);
+  --chart-5: var(--warn);
+  --sidebar: var(--chrome);
+  --sidebar-foreground: var(--chrome-ink);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: #fff;
+  --sidebar-accent: var(--chrome-active);
+  --sidebar-accent-foreground: var(--chrome-ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent);
 }

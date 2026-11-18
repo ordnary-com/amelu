@@ -1,0 +1,17 @@
+First-time tour after onboarding
+2026-11-18
+
+New owners of an organization now get a short tooltip tour of the 2.0
+dashboard right after the welcome flow (finished or skipped). Onboarding
+queues it (TourState.queue in onboarding.ts); it starts once they reach the
+Overview, so it never interrupts "Add domain". Each step opens its page and
+attaches a tooltip with an arrow to an element marked data-tour="..." (a
+ring around it, no dimmed page). If the organization already has a domain
+the tour goes into it: the DNS card on the domain page, then Mailboxes,
+Address Aliases, DNS Configuration and Spam Filtering in the domain menu
+(data-tour="menu:<label>" in shell.html). Without a domain it points at the
+"Add a domain" card instead. Then Organization, Billing and the account
+menu. Steps whose element isn't on screen (closed drawer on small screens)
+are skipped. Esc closes, arrow keys step. Done is remembered per browser and
+customer in localStorage; "Take the tour" in the account menu restarts it.
+Code in beta/src/app/tour/.

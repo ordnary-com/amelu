@@ -170,17 +170,22 @@ export class Shell {
   protected readonly collapsed = signal<Record<SidebarCategory, boolean>>(readCollapsed());
 
   /**
-   * Only one category is open at a time. Going to one of a category's pages
-   * unfolds it (and folds the other); after that both can be toggled freely,
-   * also while you stay on that page.
+   * Going to one of a category's pages unfolds it; after that both can be
+   * toggled freely. Unfolding one folds the other, unless you're on a page of
+   * that other one.
    */
   protected open(key: SidebarCategory): boolean {
     return !this.collapsed()[key];
   }
 
-  private readonly unfoldForPage = effect(() => {
+  /** The category the current page belongs to, if any. */
+  private readonly pageCategory = computed((): SidebarCategory | null => {
     const url = this.url();
-    const key: SidebarCategory | null = url.startsWith('/organization') ? 'organization' : url === '/domains' || url === '/domains/new' ? 'domains' : null;
+    return url.startsWith('/organization') ? 'organization' : url === '/domains' || url === '/domains/new' ? 'domains' : null;
+  });
+
+  private readonly unfoldForPage = effect(() => {
+    const key = this.pageCategory();
     if (key) untracked(() => this.setCollapsed(key, false));
   });
 
@@ -195,10 +200,16 @@ export class Shell {
     this.setCollapsed(key, this.open(key));
   }
 
-  /** Unfolding one category folds the others. */
+  /** Unfolding one category folds the others, except the one the current page is in. */
   private setCollapsed(key: SidebarCategory, collapsed: boolean): void {
+    const keep = this.pageCategory();
     this.collapsed.update((state) =>
-      collapsed ? { ...state, [key]: true } : { domains: key !== 'domains', organization: key !== 'organization' },
+      collapsed
+        ? { ...state, [key]: true }
+        : {
+            domains: key !== 'domains' && keep !== 'domains' ? true : key === 'domains' ? false : state.domains,
+            organization: key !== 'organization' && keep !== 'organization' ? true : key === 'organization' ? false : state.organization,
+          },
     );
     try {
       localStorage.setItem(COLLAPSED_KEY, JSON.stringify(this.collapsed()));

@@ -3,7 +3,7 @@
 <div class="h-1 flex-none bg-badge"></div>
 
 <!-- Top bar: the logo's 14px left padding lines it up with the menu text below. -->
-<header class="flex h-16 flex-none items-stretch justify-between gap-3 pr-5 pl-3.5 text-chrome-ink max-lg:pr-3">
+<header class="flex h-16 flex-none items-stretch justify-between gap-3 border-b border-line bg-page pr-5 pl-3.5 text-ink max-lg:pr-3">
   <!-- Below lg the menus become a full-screen drawer behind this button. -->
   <button
     type="button"
@@ -16,8 +16,8 @@
     <ng-icon [name]="navOpen() ? 'lucideX' : 'lucideMenu'" size="22px" strokeWidth="2.25" />
   </button>
   <a routerLink="/" class="flex items-center max-lg:mr-auto">
-    <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
-    <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
+    <!-- The top bar is white: the logo in its own blue. -->
+    <img src="/amelu-logo.png" alt="Amelu" class="h-[22px]" />
   </a>
   <!-- Search for any page, domain or mailbox (Cmd/Ctrl+K). -->
   <amelu-search data-tour="search" class="self-center px-4 max-lg:px-2" />
@@ -145,8 +145,7 @@
     }
   </nav>
 
-  <!-- The rounded corner sits against the blue where top bar and sidebar meet. -->
-  <main class="min-w-0 flex-1 overflow-y-auto rounded-tl-[28px] bg-page max-lg:rounded-t-[20px] max-mobile:px-4! in-[.theme-white]:border-t in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-t in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
+  <main class="min-w-0 flex-1 overflow-y-auto bg-page max-mobile:px-4! in-[.theme-white]:border-l in-[.theme-contrast-dark]:border-l border-line px-5 py-6 lg:px-8 lg:py-8">
     <!-- Footer at the end of the page, pushed to the bottom when the page is short. -->
     <div class="flex min-h-full flex-col">
       <div class="flex-1">

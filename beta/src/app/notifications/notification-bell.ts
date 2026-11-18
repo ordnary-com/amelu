@@ -16,7 +16,7 @@ import { Notifications } from './notifications';
   template: `
     <button
       type="button"
-      class="relative inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink"
+      class="relative inline-flex size-9 cursor-pointer items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink aria-expanded:bg-accent/10 aria-expanded:text-link"
       [attr.aria-label]="'Notifications' + (notices.unread().length ? ', ' + notices.unread().length + ' unread' : '')"
       [attr.aria-expanded]="open()"
       (click)="open.set(!open())"
@@ -27,27 +27,20 @@ import { Notifications } from './notifications';
       }
     </button>
     @if (open()) {
-      <div class="absolute top-full right-0 z-50 mt-2 w-[min(360px,calc(100vw-24px))] overflow-hidden rounded-lg border border-line bg-popover text-ink shadow-xl" role="dialog" aria-label="Notifications">
-        <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-          <span class="flex items-center gap-2 text-[14px] font-bold">
-            Notifications
-            @if (notices.unread().length) {
-              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ notices.unread().length }} unread</span>
-            }
-          </span>
+      <div class="absolute top-full right-0 z-50 mt-1.5 w-[min(380px,calc(100vw-24px))] overflow-hidden rounded-md border border-line bg-popover text-ink shadow-md" role="dialog" aria-label="Notifications">
+        <div class="flex items-center justify-between gap-3 px-4 pt-3 pb-1">
+          <span class="text-[14px] font-medium text-muted">Amelu Notifications</span>
           @if (notices.unread().length) {
-            <button type="button" class="cursor-pointer rounded px-1.5 py-0.5 text-[12px] font-medium text-muted hover:bg-bg hover:text-ink" (click)="notices.markAllRead()">Mark all as read</button>
+            <button type="button" class="cursor-pointer text-[12px] text-link hover:underline" (click)="notices.markAllRead()">Mark all as read</button>
           }
         </div>
-        <ul class="max-h-[60vh] divide-y divide-line overflow-y-auto">
+        <ul class="max-h-[60vh] overflow-y-auto py-1">
           @for (n of notices.all(); track n.id) {
             <li>
-              <a [routerLink]="n.link" class="group flex items-start gap-3 px-4 py-3 hover:bg-bg/60" (click)="open.set(false)">
-                <span class="inline-flex size-7 flex-none items-center justify-center rounded-full" [class]="n.tone === 'bad' ? 'bg-bad/15 text-bad' : 'bg-warn/15 text-warn'" aria-hidden="true">
-                  <amelu-icon name="circleAlert" [size]="14" />
-                </span>
+              <a [routerLink]="n.link" class="flex items-start gap-2.5 px-4 py-2 hover:bg-bg/60" (click)="open.set(false)">
+                <amelu-icon name="circleAlert" [size]="18" class="flex-none" [class]="n.tone === 'bad' ? 'text-bad' : 'text-warn'" />
                 <span class="min-w-0 flex-1">
-                  <span class="block text-[13px]" [class]="notices.isRead(n) ? 'font-medium text-muted' : 'font-semibold'">{{ n.title }}</span>
+                  <span class="block text-[14px]" [class]="notices.isRead(n) ? 'text-muted' : 'font-medium'">{{ n.title }}</span>
                   <span class="mt-0.5 block text-[12px] text-muted">{{ n.text }}</span>
                 </span>
                 @if (!notices.isRead(n)) {
@@ -56,13 +49,13 @@ import { Notifications } from './notifications';
               </a>
             </li>
           } @empty {
-            <li class="px-4 py-8 text-center">
-              <amelu-icon name="circleCheck" [size]="22" class="mx-auto block text-ok" />
-              <p class="mt-2 text-[13px] font-semibold">All good</p>
-              <p class="text-[12px] text-muted">Nothing needs your attention right now.</p>
+            <li class="flex items-center gap-2.5 px-4 py-2 text-[14px]">
+              <amelu-icon name="circleCheck" [size]="18" class="flex-none" />
+              No notifications
             </li>
           }
         </ul>
+        <div class="mt-1 h-3 border-t border-line" aria-hidden="true"></div>
       </div>
     }
   `,

@@ -82,7 +82,7 @@ import { UI } from '../ui';
         </div>
         <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
           <p class="max-w-xl text-[14px] text-muted">
-            Dedicated IPs are an add-on to any paid plan. Tell us how much mail you send and we'll set one up for you.
+            A dedicated IP is €10 a month per address, on every plan. Tell us how much mail you send and we'll set one up for you.
           </p>
           <a routerLink="/support/new" [class]="ui.primary + ' h-9'">Contact our team</a>
         </div>

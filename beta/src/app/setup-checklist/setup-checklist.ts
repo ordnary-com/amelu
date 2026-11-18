@@ -27,24 +27,24 @@ interface Step {
   selector: 'amelu-setup-checklist',
   imports: [RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Hidden entirely when there's nothing to show, so the hero next to it takes the full width.
+  // Hidden entirely when there's nothing to show.
   host: { class: 'block', '[class.hidden]': '!visible()' },
   template: `
     @if (visible() && steps(); as list) {
-      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-surface/60 px-4 py-2.5" aria-label="Get Amelu ready">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-line bg-surface px-5 py-3" aria-label="Get Amelu ready">
         <span class="text-[13px] font-semibold text-ink">Get Amelu ready</span>
         <span class="flex items-center gap-2">
-          <span class="h-1.5 w-24 overflow-hidden rounded-full bg-hero-ink/15">
+          <span class="h-1.5 w-24 overflow-hidden rounded-full bg-bg">
             <span class="block h-full rounded-full bg-accent transition-[width]" [style.width.%]="(doneCount() / list.length) * 100"></span>
           </span>
-          <span class="text-[12px] tabular-nums text-hero-ink/75">{{ doneCount() }} of {{ list.length }} done</span>
+          <span class="text-[12px] tabular-nums text-muted">{{ doneCount() }} of {{ list.length }} done</span>
         </span>
         @if (next(); as step) {
           <a [routerLink]="step.link" [fragment]="step.fragment" class="inline-flex items-center gap-1 text-[13px] font-medium text-link hover:underline">
             Next: {{ step.title }} <amelu-icon name="arrowRight" [size]="13" />
           </a>
         }
-        <button type="button" class="cursor-pointer text-[12px] text-hero-ink/60 hover:text-ink hover:underline" (click)="hide()">Hide</button>
+        <button type="button" class="cursor-pointer text-[12px] text-muted hover:text-ink hover:underline" (click)="hide()">Hide</button>
       </div>
     }
   `,

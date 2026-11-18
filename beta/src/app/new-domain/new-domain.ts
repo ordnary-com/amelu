@@ -43,6 +43,10 @@ export class NewDomain {
   protected readonly ui = UI;
   protected readonly defaults = DEFAULT_ADDRESSES;
   protected readonly sectionTitle = 'block text-[15px] font-medium';
+  // The summary: muted labels, and white boxes of label/value pairs.
+  protected readonly label = 'text-[13px] text-muted';
+  protected readonly box = 'space-y-1.5 rounded border border-line bg-surface px-3.5 py-3 text-[13px]';
+  protected readonly pair = 'flex items-baseline justify-between gap-3';
   protected readonly defaultRows = ADDRESS_ROWS.filter((row) => DEFAULT_ADDRESSES.includes(row.localPart));
 
   // Prefilled when the welcome flow sends someone here with ?name=.

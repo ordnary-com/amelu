@@ -1,17 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { Api, ApiKey, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
-import { EmptyState } from '../empty-state/empty-state';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 
 /** The current dashboard's /account/api-keys: list, create and revoke personal API keys. */
 @Component({
   selector: 'amelu-account-api-keys',
-  imports: [EmptyState, DatePipe, Alert, Icon, DitherShader],
+  imports: [DatePipe, Alert, Icon],
   templateUrl: './account-api-keys.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -20,6 +18,16 @@ import { DitherShader } from '../login/dither-shader';
   },
 })
 export class AccountApiKeys {
+  private readonly nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
+
+  /** The header's plus: straight to the name field of the create form. */
+  protected focusName(event: Event): void {
+    event.preventDefault();
+    const input = this.nameInput()?.nativeElement;
+    input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input?.focus({ preventScroll: true });
+  }
+
   private readonly api = inject(Api);
   protected readonly ui = UI;
 

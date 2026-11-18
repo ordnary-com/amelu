@@ -1,15 +1,40 @@
-<img src="frontend/public/amelu-logo.png" alt="Amelu" height="40" />
+<p align="center">
+  <a href="https://ordnary.com"><img src=".github/assets/ordnary-mark.png" alt="Ordnary" height="48" /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://amelu.org"><img src=".github/assets/amelu-logo.png" alt="Amelu" height="48" /></a>
+</p>
 
-Email hosting on your own domain, by [Ordnary](https://ordnary.com).
+<p align="center">
+  <strong>Email hosting on your own domain, by <a href="https://ordnary.com">Ordnary</a>.</strong>
+</p>
+
+<p align="center">
+  <a href="https://app.amelu.org"><img src="https://img.shields.io/badge/status-live-2ea44f" alt="Status: live" /></a>
+  <a href="https://github.com/ordnary-com/amelu/actions/workflows/go.yml"><img src="https://github.com/ordnary-com/amelu/actions/workflows/go.yml/badge.svg" alt="Go" /></a>
+  <a href="https://github.com/ordnary-com/amelu/actions/workflows/edge-worker.yml"><img src="https://github.com/ordnary-com/amelu/actions/workflows/edge-worker.yml/badge.svg" alt="Edge Worker" /></a>
+  <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white" alt="Go 1.26" />
+  <img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white" alt="Angular 22" />
+  <img src="https://img.shields.io/badge/mail-Stalwart-4B5563" alt="Stalwart" />
+  <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-source--available-0051fe" alt="License: source-available" /></a>
+</p>
+
+<p align="center">
+  <a href="https://amelu.org">Website</a>
+  &nbsp;·&nbsp;
+  <a href="https://app.amelu.org">Dashboard</a>
+  &nbsp;·&nbsp;
+  <a href="https://status.amelu.org">Status</a>
+  &nbsp;·&nbsp;
+  <a href="#security">Security</a>
+</p>
+
+---
 
 Amelu gives businesses and individuals mailboxes on their own domain with
 real IMAP, POP3 and SMTP, a branded webmail, and a dashboard that walks you
 through DNS. The mail itself is handled by [Stalwart](https://stalw.art), an
 open-source mail server we run ourselves in the EU; Amelu is everything
 around it.
-
-**Status:** live at [app.amelu.org](https://app.amelu.org), with a free plan
-and paid Go and Pro plans.
 
 ## What it does
 
@@ -97,7 +122,6 @@ cd cloudflare/edge && npm test
 | Rolling back | [`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md) |
 | marduk and routers | By hand from `ops/`; each folder's README says what goes where |
 
-Every change gets a short entry in [`devlog/`](devlog/README.txt).
 
 ## Security
 

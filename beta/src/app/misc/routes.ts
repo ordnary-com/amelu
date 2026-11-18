@@ -4,7 +4,6 @@ import { SupportNew } from '../support/support-new';
 import { SupportTicketPage } from '../support/support-ticket';
 import { Changelog } from './changelog';
 import { StatusPage } from './status-page';
-import { TerminateAccount } from './terminate-account';
 
 export const ROUTES: Routes = [
   { path: 'support', component: SupportHome, title: 'Support · Amelu' },
@@ -12,5 +11,4 @@ export const ROUTES: Routes = [
   { path: 'support/tickets/:id', component: SupportTicketPage, title: 'Ticket · Support · Amelu' },
   { path: 'changelog', component: Changelog, title: "What's new · Amelu" },
   { path: 'status', component: StatusPage, title: 'Service status · Amelu' },
-  { path: 'account/terminate', component: TerminateAccount, title: 'Terminate account · My Account · Amelu' },
 ];

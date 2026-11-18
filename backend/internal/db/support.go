@@ -40,9 +40,12 @@ type SupportMessage struct {
 	AuthorKind       string
 	AuthorCustomerID sql.NullString
 	AuthorName       string
-	Body             string
-	Internal         bool
-	CreatedAt        time.Time
+	// The customer's email and Ordnary picture; empty for staff.
+	AuthorEmail     string
+	AuthorAvatarURL string
+	Body            string
+	Internal        bool
+	CreatedAt       time.Time
 }
 
 const supportTicketSelect = `
@@ -186,8 +189,10 @@ func (s *Store) SupportTicketCounts(ctx context.Context) (map[string]int, error)
 // only when includeInternal.
 func (s *Store) ListSupportMessages(ctx context.Context, ticketID string, includeInternal bool) ([]SupportMessage, error) {
 	rows, err := s.conn.QueryContext(ctx, `
-		SELECT id, ticket_id, author_kind, author_customer_id, author_name, body, internal, created_at
-		FROM support_messages WHERE ticket_id = $1 AND (NOT internal OR $2) ORDER BY created_at`, ticketID, includeInternal)
+		SELECT m.id, m.ticket_id, m.author_kind, m.author_customer_id, m.author_name, COALESCE(c.email, ''), COALESCE(c.avatar_url, ''),
+		       m.body, m.internal, m.created_at
+		FROM support_messages m LEFT JOIN customers c ON c.id = m.author_customer_id
+		WHERE m.ticket_id = $1 AND (NOT m.internal OR $2) ORDER BY m.created_at`, ticketID, includeInternal)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +200,7 @@ func (s *Store) ListSupportMessages(ctx context.Context, ticketID string, includ
 	var out []SupportMessage
 	for rows.Next() {
 		var m SupportMessage
-		if err := rows.Scan(&m.ID, &m.TicketID, &m.AuthorKind, &m.AuthorCustomerID, &m.AuthorName, &m.Body, &m.Internal, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.TicketID, &m.AuthorKind, &m.AuthorCustomerID, &m.AuthorName, &m.AuthorEmail, &m.AuthorAvatarURL, &m.Body, &m.Internal, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

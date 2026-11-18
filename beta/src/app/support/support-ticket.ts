@@ -7,6 +7,7 @@ import { Api, SupportTicket, errorMessage } from '../api';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
+import { Avatar } from '../avatar';
 import { UI } from '../ui';
 import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
 
@@ -18,7 +19,7 @@ const BODY_MAX = 20000;
  */
 @Component({
   selector: 'amelu-support-ticket',
-  imports: [PageHeader, Alert, Icon, DatePipe, RouterLink],
+  imports: [PageHeader, Alert, Icon, Avatar, DatePipe, RouterLink],
   template: `
     @if (ticket(); as t) {
       <amelu-page-header [title]="t.subject" [crumbs]="[{ label: 'Support', link: '/support' }, { label: '#' + t.number }]">
@@ -46,11 +47,13 @@ const BODY_MAX = 20000;
               @for (m of t.messages ?? []; track m.id) {
                 <li class="px-4 py-3" [class.bg-bg/40]="m.authorKind === 'staff'">
                   <div class="flex items-center gap-2">
-                    <span
-                      class="flex size-6 flex-none items-center justify-center rounded-full text-[11px] font-bold"
-                      [class]="m.authorKind === 'staff' ? 'bg-accent text-white' : 'bg-bg text-muted'"
-                      aria-hidden="true"
-                    >{{ initial(m.authorName) }}</span>
+                    @if (m.authorKind === 'staff') {
+                      <span class="flex size-6 flex-none items-center justify-center rounded-full bg-accent" aria-hidden="true">
+                        <img src="/ordnary-mark-blue.png" alt="" class="size-3.5 brightness-0 invert" />
+                      </span>
+                    } @else {
+                      <amelu-avatar class="size-6" [size]="24" [src]="m.authorAvatarUrl" [name]="m.authorName" [email]="m.authorEmail" [gravatar]="true" />
+                    }
                     <span class="truncate text-[13px] font-medium">{{ m.authorName }}</span>
                     @if (m.authorKind === 'staff') {
                       <img src="/ordnary-mark-blue.png" alt="Ordnary staff" title="Ordnary staff" class="size-3.5 flex-none" />
@@ -216,10 +219,6 @@ export class SupportTicketPage {
 
   protected ago(iso: string): string {
     return timeAgo(iso);
-  }
-
-  protected initial(name: string): string {
-    return (name.trim()[0] ?? '?').toUpperCase();
   }
 
   protected async send(event: Event): Promise<void> {

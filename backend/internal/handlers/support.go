@@ -35,9 +35,12 @@ type supportMessageResponse struct {
 	ID         string `json:"id"`
 	AuthorKind string `json:"authorKind"`
 	AuthorName string `json:"authorName"`
-	Body       string `json:"body"`
-	Internal   bool   `json:"internal,omitempty"`
-	CreatedAt  string `json:"createdAt"`
+	// Customer messages only: who wrote it, for the avatar.
+	AuthorEmail     string `json:"authorEmail,omitempty"`
+	AuthorAvatarURL string `json:"authorAvatarUrl,omitempty"`
+	Body            string `json:"body"`
+	Internal        bool   `json:"internal,omitempty"`
+	CreatedAt       string `json:"createdAt"`
 }
 
 type supportTicketResponse struct {
@@ -101,7 +104,8 @@ func toSupportMessageResponses(msgs []db.SupportMessage, admin bool) []supportMe
 			name = supportStaffName
 		}
 		out = append(out, supportMessageResponse{
-			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, Body: m.Body, Internal: m.Internal,
+			ID: m.ID, AuthorKind: m.AuthorKind, AuthorName: name, AuthorEmail: m.AuthorEmail, AuthorAvatarURL: m.AuthorAvatarURL,
+			Body: m.Body, Internal: m.Internal,
 			CreatedAt: m.CreatedAt.UTC().Format(time.RFC3339),
 		})
 	}

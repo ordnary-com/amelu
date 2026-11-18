@@ -132,6 +132,9 @@ export interface SupportMessage {
   id: string;
   authorKind: 'customer' | 'staff';
   authorName: string;
+  /** Customer messages only. */
+  authorEmail?: string;
+  authorAvatarUrl?: string;
   body: string;
   createdAt: string;
 }

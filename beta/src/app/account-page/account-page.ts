@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Session } from '../session';
 import { ORDNARY_ACCOUNT_URL } from '../config';
 import { ROLE, badgeClass } from '../status';
 import { UI } from '../ui';
 import { Icon } from '../icon';
 
-/** The current dashboard's /account overview; the picture and name sit in the layout's banner. */
+/** /account: profile, email, two-step verification and password, all managed in the Ordnary account. */
 @Component({
   selector: 'amelu-account-page',
-  imports: [DatePipe, RouterLink, Icon],
+  imports: [DatePipe, Icon],
   templateUrl: './account-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -20,9 +19,15 @@ export class AccountPage {
   protected readonly ordnaryAccountUrl = ORDNARY_ACCOUNT_URL;
   protected readonly roles = ROLE;
   protected readonly ui = UI;
-  // Label/value rows: the label as a muted row header.
-  protected readonly key = 'w-48 px-4 py-3 text-left font-normal whitespace-nowrap text-muted max-mobile:w-32';
-  protected readonly headerLink = 'inline-flex items-center gap-1 text-[13px] text-link hover:underline';
+  // Cards with a title bar and an action icon, label-over-value fields and grey notes.
+  protected readonly card = 'overflow-hidden rounded border border-line bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.05)]';
+  protected readonly cardHeader = 'flex h-14 items-center justify-between gap-3 border-b border-line px-5';
+  protected readonly cardTitle = 'text-[16px] font-medium';
+  protected readonly headerAction = '-mr-1.5 inline-flex size-8 items-center justify-center rounded-md text-muted hover:bg-bg hover:text-ink';
+  protected readonly field = 'min-w-0 px-5 py-4 max-sm:not-first:border-t max-sm:not-first:border-line';
+  protected readonly fieldLabel = 'text-[13px] text-muted';
+  protected readonly fieldValue = 'mt-1 truncate text-[16px]';
+  protected readonly note = 'flex gap-2.5 bg-well px-5 py-4 text-[14px] leading-relaxed';
 
   protected badge(role: keyof typeof ROLE): string {
     return badgeClass(ROLE[role].tone);

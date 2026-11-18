@@ -50,6 +50,23 @@ type SupportMessage struct {
 	Body           string
 	Internal       bool
 	CreatedAt      time.Time
+	Attachments    []SupportAttachment
+}
+
+// SupportAttachment is a file sent with a message, without its contents.
+type SupportAttachment struct {
+	ID          string
+	MessageID   string
+	Filename    string
+	ContentType string
+	Size        int
+}
+
+// NewSupportAttachment is a file to store with a new message.
+type NewSupportAttachment struct {
+	Filename    string
+	ContentType string
+	Data        []byte
 }
 
 const supportTicketSelect = `
@@ -211,13 +228,61 @@ func (s *Store) ListSupportMessages(ctx context.Context, ticketID string, includ
 		}
 		out = append(out, m)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, s.attachSupportFiles(ctx, ticketID, out)
+}
+
+// attachSupportFiles fills in each message's attachments; those of messages
+// that weren't listed (internal notes for customers) are left out.
+func (s *Store) attachSupportFiles(ctx context.Context, ticketID string, msgs []SupportMessage) error {
+	rows, err := s.conn.QueryContext(ctx, `
+		SELECT id, message_id, filename, content_type, size FROM support_attachments
+		WHERE ticket_id = $1 ORDER BY created_at, filename`, ticketID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	index := make(map[string]int, len(msgs))
+	for i := range msgs {
+		index[msgs[i].ID] = i
+	}
+	for rows.Next() {
+		var a SupportAttachment
+		if err := rows.Scan(&a.ID, &a.MessageID, &a.Filename, &a.ContentType, &a.Size); err != nil {
+			return err
+		}
+		if i, ok := index[a.MessageID]; ok {
+			msgs[i].Attachments = append(msgs[i].Attachments, a)
+		}
+	}
+	return rows.Err()
+}
+
+// GetSupportAttachment returns one attachment of a ticket with its contents;
+// one on an internal note only when includeInternal.
+func (s *Store) GetSupportAttachment(ctx context.Context, ticketID, id string, includeInternal bool) (*SupportAttachment, []byte, error) {
+	var a SupportAttachment
+	var data []byte
+	err := s.conn.QueryRowContext(ctx, `
+		SELECT a.id, a.message_id, a.filename, a.content_type, a.size, a.data
+		FROM support_attachments a JOIN support_messages m ON m.id = a.message_id
+		WHERE a.ticket_id = $1 AND a.id = $2 AND (NOT m.internal OR $3)`, ticketID, id, includeInternal).
+		Scan(&a.ID, &a.MessageID, &a.Filename, &a.ContentType, &a.Size, &data)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	return &a, data, nil
 }
 
 // AddSupportMessage appends a message and, unless it's an internal note,
 // moves the ticket to newStatus ("open" after a customer reply, "answered"
 // after a staff reply).
-func (s *Store) AddSupportMessage(ctx context.Context, ticketID, authorKind string, authorCustomerID *string, authorName, body string, internal bool, newStatus string) (*SupportMessage, error) {
+func (s *Store) AddSupportMessage(ctx context.Context, ticketID, authorKind string, authorCustomerID *string, authorName, body string, internal bool, newStatus string, files ...NewSupportAttachment) (*SupportMessage, error) {
 	tx, err := s.conn.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -232,6 +297,16 @@ func (s *Store) AddSupportMessage(ctx context.Context, ticketID, authorKind stri
 		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at`,
 		ticketID, authorKind, authorCustomerID, authorName, body, internal).Scan(&m.ID, &m.CreatedAt); err != nil {
 		return nil, err
+	}
+	for _, f := range files {
+		a := SupportAttachment{MessageID: m.ID, Filename: f.Filename, ContentType: f.ContentType, Size: len(f.Data)}
+		if err := tx.QueryRowContext(ctx, `
+			INSERT INTO support_attachments (ticket_id, message_id, filename, content_type, size, data)
+			VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+			ticketID, m.ID, a.Filename, a.ContentType, a.Size, f.Data).Scan(&a.ID); err != nil {
+			return nil, err
+		}
+		m.Attachments = append(m.Attachments, a)
 	}
 	if internal {
 		_, err = tx.ExecContext(ctx, `UPDATE support_tickets SET updated_at = now() WHERE id = $1`, ticketID)

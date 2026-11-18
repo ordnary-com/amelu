@@ -83,3 +83,49 @@ func TestSupportTicketLifecycle(t *testing.T) {
 		t.Fatalf("open tickets = %d, want 1", n)
 	}
 }
+
+func TestSupportAttachments(t *testing.T) {
+	s := testStore(t)
+	ctx := context.Background()
+	orgID, ownerID := newTestOrgWithOwner(t, s)
+
+	ticket, err := s.CreateSupportTicket(ctx, orgID, ownerID, "Owner", "Bounce", "delivery", nil, "See attached")
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	m, err := s.AddSupportMessage(ctx, ticket.ID, "customer", &ownerID, "Owner", "", false, "open",
+		NewSupportAttachment{Filename: "bounce.eml", ContentType: "text/plain; charset=utf-8", Data: []byte("550 5.7.1 rejected")})
+	if err != nil {
+		t.Fatalf("reply with file: %v", err)
+	}
+	if len(m.Attachments) != 1 || m.Attachments[0].Size != 18 || m.Attachments[0].ID == "" {
+		t.Fatalf("unexpected attachments on the new message: %+v", m.Attachments)
+	}
+	note, err := s.AddSupportMessage(ctx, ticket.ID, "staff", nil, "agent@ordnary.com", "Log excerpt", true, "",
+		NewSupportAttachment{Filename: "log.txt", ContentType: "text/plain; charset=utf-8", Data: []byte("internal")})
+	if err != nil {
+		t.Fatalf("internal note with file: %v", err)
+	}
+
+	visible, err := s.ListSupportMessages(ctx, ticket.ID, false)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	files := 0
+	for _, msg := range visible {
+		files += len(msg.Attachments)
+	}
+	if files != 1 {
+		t.Fatalf("customers should see 1 attachment, got %d", files)
+	}
+	att, data, err := s.GetSupportAttachment(ctx, ticket.ID, m.Attachments[0].ID, false)
+	if err != nil || att.Filename != "bounce.eml" || string(data) != "550 5.7.1 rejected" {
+		t.Fatalf("get attachment: %+v %q %v", att, data, err)
+	}
+	if _, _, err := s.GetSupportAttachment(ctx, ticket.ID, note.Attachments[0].ID, false); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("an internal note's file must stay hidden from customers, got %v", err)
+	}
+	if _, _, err := s.GetSupportAttachment(ctx, ticket.ID, note.Attachments[0].ID, true); err != nil {
+		t.Fatalf("staff should get the internal file: %v", err)
+	}
+}

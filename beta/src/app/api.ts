@@ -138,6 +138,15 @@ export interface SupportMessage {
   authorTitle?: string;
   body: string;
   createdAt: string;
+  attachments?: SupportAttachment[];
+}
+
+export interface SupportAttachment {
+  id: string;
+  filename: string;
+  contentType: string;
+  /** Bytes. */
+  size: number;
 }
 
 export interface SupportTicket {
@@ -391,8 +400,13 @@ export class Api {
     return this.http.get<SupportTicket>(`/api/support/tickets/${id}`);
   }
 
-  replySupportTicket(id: string, body: string) {
-    return this.http.post<SupportMessage>(`/api/support/tickets/${id}/messages`, { body });
+  /** With files the reply goes as multipart/form-data (body plus "files"). */
+  replySupportTicket(id: string, body: string, files: File[] = []) {
+    if (!files.length) return this.http.post<SupportMessage>(`/api/support/tickets/${id}/messages`, { body });
+    const form = new FormData();
+    form.set('body', body);
+    for (const file of files) form.append('files', file, file.name);
+    return this.http.post<SupportMessage>(`/api/support/tickets/${id}/messages`, form);
   }
 
   closeSupportTicket(id: string) {

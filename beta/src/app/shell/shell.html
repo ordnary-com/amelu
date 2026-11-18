@@ -25,7 +25,7 @@
       </li>
       <li class="ml-2 max-lg:mr-2">
         <ul>
-          <!-- Domains only folds open; its pages are the items under it. -->
+          <!-- Categories only fold open; their pages are the items under them. -->
           <li [class]="groupedCategory">
             <button type="button" data-tour="domains" [class]="link + ' w-full cursor-pointer text-left'" [attr.aria-expanded]="open('domains')" (click)="toggle('domains')"><ng-icon name="lucideGlobe" size="15px" strokeWidth="2.5" /><span class="truncate">Domains</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('domains')" /></button>
           </li>
@@ -44,10 +44,13 @@
       </li>
       <li class="ml-2 max-lg:mr-2">
         <ul>
-          <li [class]="groupedCategory" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <a routerLink="/organization" data-tour="organization" [class]="link" [attr.aria-expanded]="open('organization')" (click)="categoryClick('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></a>
+          <li [class]="groupedCategory">
+            <button type="button" data-tour="organization" [class]="link + ' w-full cursor-pointer text-left'" [attr.aria-expanded]="open('organization')" (click)="toggle('organization')"><ng-icon name="lucideBuilding2" size="15px" strokeWidth="2.5" /><span class="truncate">My Organization</span><ng-icon name="lucideChevronDown" size="14px" strokeWidth="2.5" class="-ml-0.5 opacity-60 transition-transform duration-150" [class.-rotate-90]="!open('organization')" /></button>
           </li>
           @if (open('organization')) {
+          <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <a routerLink="/organization" [class]="link"><ng-icon name="lucideUsers" size="15px" strokeWidth="2.5" /><span class="truncate">Members</span></a>
+          </li>
           <li [class]="groupedSubitem" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
             <a routerLink="/organization/activity" [class]="link"><ng-icon name="lucideHistory" size="15px" strokeWidth="2.5" /><span class="truncate">Activity Log</span></a>
           </li>

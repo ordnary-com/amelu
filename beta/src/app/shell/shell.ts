@@ -30,6 +30,7 @@ import {
   lucideList,
   lucidePlus,
   lucideUser,
+  lucideUsers,
 } from '@ng-icons/lucide';
 
 // Mirrors the current dashboard's .sidemenu rules in frontend/public/app.css;
@@ -60,6 +61,7 @@ const LINK =
   lucideList,
       lucidePlus,
       lucideUser,
+  lucideUsers,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -173,7 +175,7 @@ export class Shell {
    * one open and folds the rest.
    */
   protected open(key: SidebarCategory): boolean {
-    if (this.url().startsWith('/organization/')) return key === 'organization';
+    if (this.url().startsWith('/organization')) return key === 'organization';
     if (this.url() === '/domains' || this.url() === '/domains/new') return key === 'domains';
     return !this.collapsed()[key];
   }
@@ -184,15 +186,9 @@ export class Shell {
     return this.mailboxAddress() ?? menu.label;
   }
 
-  /** Domains just folds and unfolds; its pages are the items under it. */
+  /** A category just folds and unfolds; its pages are the items under it. */
   protected toggle(key: SidebarCategory): void {
     this.setCollapsed(key, this.open(key));
-  }
-
-  /** Clicking a category opens its page and unfolds it; clicking it again on that page folds it. */
-  protected categoryClick(key: SidebarCategory): void {
-    const page = key === 'domains' ? '/domains' : '/organization';
-    this.setCollapsed(key, this.url() === page && this.open(key));
   }
 
   /** Unfolding one category folds the others. */

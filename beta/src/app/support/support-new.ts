@@ -6,6 +6,7 @@ import { Api, SupportCategory, errorMessage } from '../api';
 import { Domains } from '../domains';
 import { Alert } from '../alert/alert';
 import { UI } from '../ui';
+import { SupportTips } from './support-tips';
 import { Icon } from '../icon';
 import { SUPPORT_CATEGORIES } from './support-meta';
 import { Combobox, ComboboxOption } from '../combobox/combobox';
@@ -23,7 +24,7 @@ const BODY_MAX = 20000;
 /** /support/new: open a ticket. */
 @Component({
   selector: 'amelu-support-new',
-  imports: [Alert, Combobox, Icon, RouterLink, DecimalPipe],
+  imports: [Alert, Combobox, Icon, RouterLink, DecimalPipe, SupportTips],
   template: `
     <h1 class="flex items-center gap-2 text-[22px] leading-tight font-normal">
       <a routerLink="/support" class="text-link hover:underline">Support</a>
@@ -106,14 +107,7 @@ const BODY_MAX = 20000;
         </div>
       </form>
 
-      <aside [class]="ui.setCard">
-        <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Get a Faster Answer</h2></div>
-        <ul class="space-y-1.5 px-5 py-4 text-[14px] leading-relaxed text-muted">
-          <li>Name the domain and the address involved.</li>
-          <li>Say roughly when it happened.</li>
-          <li>Paste the full error or bounce message.</li>
-        </ul>
-      </aside>
+      <amelu-support-tips />
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

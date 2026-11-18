@@ -6,8 +6,7 @@ Wants=network-online.target
 
 # Traffic from 89.106.70.0/24 uses table 30, whose default routes point at
 # rtr1-ams (wg-quick@vultr) and rtr1-par (wg-quick@par); bgp-exit-check keeps
-# them in line. 89.106.70.2 is the test address. Used to live in the Lagrange
-# tunnel (wg-quick@bgp), removed with rtr1-nbg on 2026-11-17.
+# them in line. 89.106.70.2 is the test address.
 [Service]
 Type=oneshot
 RemainAfterExit=yes

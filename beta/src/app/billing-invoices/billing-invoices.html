@@ -1,74 +1,76 @@
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <section>
-    <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
-      Invoices
-      @if (invoices(); as list) {
-        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
-      }
-    </h2>
-    <div [class]="ui.card + ' overflow-x-auto'">
-      @if (invoices() === undefined) {
-        <div class="space-y-3 p-4" aria-hidden="true">
-          <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
-          <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
-        </div>
-      } @else if (invoices() === null) {
-        <amelu-empty-state title="Your invoices couldn't be loaded" [error]="true" />
-      } @else if (invoices()!.length === 0) {
-        <amelu-empty-state title="No invoices yet" illustration="invoice">
-          Invoices appear here automatically once your account moves to a paid plan.
-          <a actions routerLink="/billing/plans" [class]="ui.outline">View plans</a>
-        </amelu-empty-state>
+<div class="space-y-5">
+  <section [class]="ui.setCard">
+    <div [class]="ui.setHeader">
+      <h2 [class]="ui.setTitle">
+        Invoices
+        @if (invoices(); as list) {
+          <span class="font-normal text-muted">({{ list.length }})</span>
+        }
+      </h2>
+    </div>
+    <div [class]="ui.well">
+      @if (invoices() === null) {
+        <amelu-empty-state class="rounded-md border border-line bg-surface" title="Your invoices couldn't be loaded" [error]="true" [compact]="true" />
       } @else {
-        <table class="w-full text-[13px]">
-          <thead>
-            <tr class="border-b border-line bg-bg/60 text-left text-[12px] text-muted">
-              <th class="px-4 py-2.5 font-medium">Invoice</th>
-              <th class="px-2 py-2.5 font-medium">Date</th>
-              <th class="px-2 py-2.5 font-medium">Status</th>
-              <th class="px-2 py-2.5 text-right font-medium">Total</th>
-              <th class="px-4 py-2.5"><span class="sr-only">Links</span></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-line">
-            @for (invoice of invoices(); track invoice.id) {
-              <tr class="hover:bg-bg/60">
-                <td class="px-4 py-3 font-medium whitespace-nowrap">{{ invoice.number || invoice.id }}</td>
-                <td class="px-2 py-3 whitespace-nowrap text-muted">{{ invoice.createdAt | date: 'd MMM y' }}</td>
-                <td class="px-2 py-3">
-                  <span [class]="badge(invoiceStatus[invoice.status].tone)">{{ invoiceStatus[invoice.status].label }}</span>
-                </td>
-                <td class="px-2 py-3 text-right whitespace-nowrap tabular-nums">
-                  {{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}
-                </td>
-                <td class="px-4 py-3 text-right whitespace-nowrap">
-                  <span class="inline-flex gap-1.5">
-                    @if (invoice.hostedInvoiceUrl) {
-                      <a [href]="invoice.hostedInvoiceUrl" target="_blank" rel="noreferrer" [class]="ui.outline + ' h-7 px-2.5 text-[12px]'">View</a>
-                    }
-                    @if (invoice.invoicePdf) {
-                      <a [href]="invoice.invoicePdf" target="_blank" rel="noreferrer" [class]="ui.outline + ' h-7 px-2.5 text-[12px]'">PDF</a>
-                    }
-                  </span>
-                </td>
+        <div [class]="ui.tableWrap">
+          <table [class]="ui.table">
+            <thead>
+              <tr [class.text-muted]="!invoices()?.length">
+                <th [class]="ui.th">Invoice</th>
+                <th [class]="ui.th + ' max-sm:hidden'">Date</th>
+                <th [class]="ui.th">Status</th>
+                <th [class]="ui.th + ' text-right'">Total</th>
+                <th class="w-0 pr-4"><span class="sr-only">Links</span></th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @if (invoices() === undefined) {
+                @for (i of [1, 2]; track i) {
+                  <tr [class]="ui.tr" aria-hidden="true"><td [class]="ui.td" colspan="5"><span class="block h-3 w-full animate-pulse rounded bg-bg"></span></td></tr>
+                }
+              } @else {
+                @for (invoice of invoices(); track invoice.id) {
+                  <tr [class]="ui.tr">
+                    <td [class]="ui.td + ' font-medium whitespace-nowrap'">{{ invoice.number || invoice.id }}</td>
+                    <td [class]="ui.td + ' whitespace-nowrap max-sm:hidden'">{{ invoice.createdAt | date: 'd MMM y' }}</td>
+                    <td [class]="ui.td">
+                      <span class="inline-flex items-center gap-1.5 whitespace-nowrap" [class]="toneText[invoiceStatus[invoice.status].tone]">
+                        <amelu-icon [name]="toneIcon[invoiceStatus[invoice.status].tone]" [size]="16" />{{ invoiceStatus[invoice.status].label }}
+                      </span>
+                    </td>
+                    <td [class]="ui.td + ' text-right whitespace-nowrap tabular-nums'">{{ invoice.total / 100 | currency: invoice.currency.toUpperCase() }}</td>
+                    <td class="w-0 pr-4 text-right whitespace-nowrap">
+                      <span class="inline-flex gap-3 text-[13px]">
+                        @if (invoice.hostedInvoiceUrl) {
+                          <a [href]="invoice.hostedInvoiceUrl" target="_blank" rel="noreferrer" class="text-link hover:underline">View</a>
+                        }
+                        @if (invoice.invoicePdf) {
+                          <a [href]="invoice.invoicePdf" target="_blank" rel="noreferrer" class="text-link hover:underline">PDF</a>
+                        }
+                      </span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr [class]="ui.tr">
+                    <td colspan="5" class="px-4 py-8 text-center">
+                      <amelu-icon name="receipt" [size]="18" class="mx-auto block" />
+                      <p class="mt-2">No invoices yet</p>
+                      <p class="mt-0.5 text-[13px] text-muted">
+                        Invoices appear here once your account moves to a paid plan.
+                        <a routerLink="/billing/plans" class="text-link hover:underline">View plans</a>
+                      </p>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </div>
-  </section>
-
-  <!-- Same dither as the other help cards, rising from the bottom right. -->
-  <aside class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-    <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-      <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
-    </div>
-    <amelu-icon name="receipt" [size]="20" class="block text-ink" />
-    <h2 class="mt-3 text-[14px] font-bold">About invoices</h2>
-    <p class="mt-1 text-[13px] leading-relaxed text-muted">
-      Every invoice issued to your account, synced directly from Stripe. Open one to see the details or download it as
-      a PDF.
+    <p [class]="ui.setNote">
+      <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+      <span>Every invoice issued to your account, synced from Stripe. Open one to see the details or download it as a PDF.</span>
     </p>
-  </aside>
+  </section>
 </div>

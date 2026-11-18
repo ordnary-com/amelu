@@ -7,7 +7,6 @@ import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
 import { UI } from '../ui';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { Tone, badgeClass } from '../status';
 import { WebmailApi, WebmailBranding } from './webmail-api';
 
@@ -29,7 +28,7 @@ const LOGO_MAX_BYTES = 256 * 1024;
  */
 @Component({
   selector: 'amelu-organization-webmail',
-  imports: [Alert, EmptyState, RouterLink, Icon, DitherShader],
+  imports: [Alert, EmptyState, RouterLink, Icon],
   templateUrl: './organization-webmail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -37,6 +36,7 @@ const LOGO_MAX_BYTES = 256 * 1024;
 export class OrganizationWebmail {
   private readonly api = inject(WebmailApi);
   protected readonly ui = UI;
+  protected readonly fieldLabel = 'block text-[13px] text-muted';
   protected readonly badge = badgeClass;
 
   // undefined while loading, null when the request failed

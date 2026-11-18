@@ -20,9 +20,8 @@ interface Step {
 }
 
 /**
- * The first things to do with a new account, in the Overview banner until
- * they're done or hidden: every step as a segment, and the next one with what
- * it's for and a button to do it.
+ * The first things to do with a new account, as a panel on the Overview until
+ * they're done or hidden: a box per step, the next one outlined with its action.
  */
 @Component({
   selector: 'amelu-setup-checklist',
@@ -32,44 +31,39 @@ interface Step {
   host: { class: 'block', '[class.hidden]': '!visible()' },
   template: `
     @if (visible() && steps(); as list) {
-      <section class="w-full max-w-[760px] rounded-lg border border-line/60 bg-surface/80 p-4 backdrop-blur-sm" aria-labelledby="setup-title">
-        <div class="flex items-center gap-3">
-          <h2 id="setup-title" class="text-[14px] font-medium text-ink">Get Amelu ready</h2>
-          <span class="text-[12px] tabular-nums text-muted">{{ doneCount() }} of {{ list.length }} done</span>
-          <button type="button" class="ml-auto cursor-pointer text-[12px] text-muted hover:text-ink hover:underline" (click)="hide()">Hide</button>
+      <section class="overflow-hidden rounded-lg border border-line bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.05)]" aria-labelledby="setup-title">
+        <div class="flex h-11 items-center gap-3 border-b border-line px-4">
+          <h2 id="setup-title" class="text-[15px] font-medium">Get Amelu ready</h2>
+          <span class="text-[13px] tabular-nums text-muted">({{ doneCount() }} of {{ list.length }} done)</span>
+          <button type="button" class="ml-auto cursor-pointer text-[13px] text-muted hover:text-ink hover:underline" (click)="hide()">Hide</button>
         </div>
 
-        <!-- Every step as a segment: a bar that fills when done, the next one half-lit. -->
-        <ol class="mt-3 grid gap-3" [style.grid-template-columns]="'repeat(' + list.length + ', minmax(0, 1fr))'">
+        <ol class="grid gap-4 bg-well p-4 sm:grid-cols-2" [class.xl:grid-cols-4]="list.length === 4" [class.xl:grid-cols-5]="list.length === 5">
           @for (step of list; track step.title; let i = $index) {
             <li>
-              <a [routerLink]="step.link" [fragment]="step.fragment" class="group block" [attr.aria-current]="step === next() ? 'step' : null">
-                <span class="block h-1 rounded-full" [class]="step.done ? 'bg-accent' : step === next() ? 'bg-accent/40' : 'bg-hero-ink/15'"></span>
-                <span class="mt-2 flex items-start gap-1.5 text-[12px] leading-snug max-mobile:hidden" [class]="step.done ? 'text-muted' : step === next() ? 'font-medium text-ink' : 'text-muted'">
+              <a
+                [routerLink]="step.link"
+                [fragment]="step.fragment"
+                class="flex h-full flex-col rounded-md border bg-surface px-4 py-3 hover:border-ink/20"
+                [class]="step === next() ? 'border-accent' : 'border-line'"
+                [attr.aria-current]="step === next() ? 'step' : null"
+              >
+                <span class="flex items-center gap-2 text-[13px]">
                   @if (step.done) {
-                    <amelu-icon name="check" [size]="13" class="mt-px flex-none text-link" />
+                    <amelu-icon name="circleCheck" [size]="16" class="flex-none text-ok" />
                   } @else {
-                    <span class="flex-none tabular-nums">{{ i + 1 }}.</span>
+                    <span class="flex size-4 flex-none items-center justify-center rounded-full border text-[10px] tabular-nums" [class]="step === next() ? 'border-accent text-link' : 'border-line text-muted'">{{ i + 1 }}</span>
                   }
-                  <span class="group-hover:underline">{{ step.title }}</span>
+                  <span class="font-medium" [class.text-muted]="step.done">{{ step.title }}</span>
                 </span>
+                <span class="mt-1 text-[12px] leading-snug text-muted">{{ step.done ? 'Done' : step.text }}</span>
+                @if (step === next()) {
+                  <span class="mt-2.5 inline-flex items-center gap-1 text-[13px] font-medium text-link">{{ step.action }} <amelu-icon name="arrowRight" [size]="13" /></span>
+                }
               </a>
             </li>
           }
         </ol>
-
-        @if (next(); as step) {
-          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line/60 pt-3">
-            <p class="min-w-0 text-[13px]">
-              <span class="font-medium text-ink">Next: {{ step.title }}.</span>
-              <span class="text-muted"> {{ step.text }}</span>
-            </p>
-            <a [routerLink]="step.link" [fragment]="step.fragment" class="inline-flex h-8 flex-none items-center gap-1.5 rounded-md bg-accent px-3 text-[13px] font-medium text-white hover:bg-accent/85">
-              {{ step.action }}
-              <amelu-icon name="arrowRight" [size]="14" />
-            </a>
-          </div>
-        }
       </section>
     }
   `,

@@ -124,13 +124,14 @@ export interface DomainAlias {
   name: string;
 }
 
-export type SupportCategory = 'account' | 'domains' | 'delivery' | 'billing' | 'other';
+export type SupportCategory = 'account' | 'domains' | 'delivery' | 'billing' | 'other' | 'dedicated_ip';
 /** open: waiting on Amelu, answered: waiting on the customer, closed: done. */
 export type SupportStatus = 'open' | 'answered' | 'closed';
 
 export interface SupportMessage {
   id: string;
-  authorKind: 'customer' | 'staff';
+  /** system: a step Amelu records itself, such as a payment. */
+  authorKind: 'customer' | 'staff' | 'system';
   authorName: string;
   authorEmail?: string;
   authorAvatarUrl?: string;
@@ -139,6 +140,22 @@ export interface SupportMessage {
   body: string;
   createdAt: string;
   attachments?: SupportAttachment[];
+}
+
+export type DedicatedIpVolume = 'lt10k' | '10k-100k' | '100k-1m' | 'gt1m';
+export type DedicatedIpUseCase = 'transactional' | 'marketing' | 'both';
+
+/** A request for a dedicated IP, opened as a support ticket of its own kind. */
+export interface DedicatedIpRequest {
+  id: string;
+  ticketId: string;
+  /** requested -> approved -> paid -> active; declined or cancelled end it. */
+  status: 'requested' | 'approved' | 'declined' | 'paid' | 'active' | 'cancelled';
+  volume: DedicatedIpVolume;
+  useCase: DedicatedIpUseCase;
+  domains: string;
+  ip: string | null;
+  createdAt: string;
 }
 
 /** A sending IP reserved for your organization. */
@@ -173,6 +190,8 @@ export interface SupportTicket {
   closedAt: string | null;
   /** Only on a single ticket. */
   messages?: SupportMessage[];
+  /** Category dedicated_ip: the request and where it stands. */
+  dedicatedIpRequest?: DedicatedIpRequest;
 }
 
 /** A sending IP as the mail server last reported it. */
@@ -406,6 +425,20 @@ export class Api {
 
   getSupportTicket(id: string) {
     return this.http.get<SupportTicket>(`/api/support/tickets/${id}`);
+  }
+
+  createDedicatedIpRequest(input: { volume: DedicatedIpVolume; useCase: DedicatedIpUseCase; domains: string; message: string }) {
+    return this.http.post<DedicatedIpRequest>('/api/organization/dedicated-ips/requests', input);
+  }
+
+  /** The request that hasn't ended yet, or null. */
+  openDedicatedIpRequest() {
+    return this.http.get<DedicatedIpRequest | null>('/api/organization/dedicated-ips/requests/open');
+  }
+
+  /** Stripe Checkout for an approved request; go to the returned URL. */
+  dedicatedIpCheckout(requestId: string) {
+    return this.http.post<{ url: string }>(`/api/organization/dedicated-ips/requests/${requestId}/checkout`, {});
   }
 
   organizationDedicatedIps() {

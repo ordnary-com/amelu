@@ -87,6 +87,8 @@ type supportTicketResponse struct {
 	AssignedTo       *string `json:"assignedTo,omitempty"`
 
 	Messages []supportMessageResponse `json:"messages,omitempty"`
+	// Category dedicated_ip: the request and where it stands.
+	DedicatedIPRequest *dedicatedIPRequestResponse `json:"dedicatedIpRequest,omitempty"`
 }
 
 func toSupportTicketResponse(t *db.SupportTicket, admin bool) supportTicketResponse {
@@ -121,6 +123,9 @@ func toSupportMessageResponses(msgs []db.SupportMessage, admin bool) []supportMe
 	out := make([]supportMessageResponse, 0, len(msgs))
 	for _, m := range msgs {
 		name, email, avatar, title := m.AuthorName, m.AuthorEmail, m.AuthorAvatarURL, ""
+		if m.AuthorKind == "system" {
+			name, email, avatar = "Amelu", "", ""
+		}
 		if m.AuthorKind == "staff" {
 			// Staff are stored by their Ordnary email. Airplane keeps the
 			// email as the name (it marks your own replies by it).
@@ -315,6 +320,7 @@ func (a *App) GetSupportTicket(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := toSupportTicketResponse(t, false)
 	resp.Messages = toSupportMessageResponses(msgs, false)
+	a.withDedicatedIPRequest(r, t, &resp)
 	writeJSON(w, http.StatusOK, resp)
 }
 
@@ -406,6 +412,16 @@ func cleanAttachmentName(name string) string {
 		return "attachment"
 	}
 	return name
+}
+
+// withDedicatedIPRequest adds a dedicated IP request ticket's request.
+func (a *App) withDedicatedIPRequest(r *http.Request, t *db.SupportTicket, resp *supportTicketResponse) {
+	if t.Category != "dedicated_ip" {
+		return
+	}
+	if d, err := a.Store.GetDedicatedIPRequestByTicket(r.Context(), t.ID); err == nil {
+		resp.DedicatedIPRequest = toDedicatedIPRequestResponse(d)
+	}
 }
 
 // withAttachmentNote adds "(2 attachments)" to a notification's text.
@@ -573,6 +589,7 @@ func (a *App) AdminGetSupportTicket(w http.ResponseWriter, r *http.Request, oper
 	}
 	resp := toSupportTicketResponse(t, true)
 	resp.Messages = toSupportMessageResponses(msgs, true)
+	a.withDedicatedIPRequest(r, t, &resp)
 	writeJSON(w, http.StatusOK, resp)
 }
 

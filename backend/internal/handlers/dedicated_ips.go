@@ -210,6 +210,9 @@ func (a *App) AdminUpdateDedicatedIP(w http.ResponseWriter, r *http.Request, ope
 			writeError(w, http.StatusInternalServerError, "could not assign dedicated IP")
 			return
 		}
+		if target != nil {
+			a.finishDedicatedIPRequest(r, *target, ip)
+		}
 	}
 	if req.Note != nil {
 		if err := a.Store.UpdateDedicatedIPNote(r.Context(), ip, strings.TrimSpace(*req.Note)); err != nil {

@@ -1,15 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
-import { Api, SupportMessage, SupportTicket, errorMessage } from '../api';
+import { Api, DedicatedIpRequest, SupportMessage, SupportTicket, errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { Avatar } from '../avatar';
 import { UI } from '../ui';
 import { apiUrl } from '../config';
-import { CATEGORY_LABEL, STATUS, timeAgo } from './support-meta';
+import { CATEGORY_LABEL, DEDICATED_IP_STEPS, DEDICATED_IP_USE_CASES, DEDICATED_IP_VOLUMES, STATUS, timeAgo } from './support-meta';
 
 const BODY_MAX = 20000;
 // The API's limits on files sent with one message (handlers/support.go).
@@ -59,6 +59,14 @@ const MAX_TOTAL_BYTES = 20 << 20;
             </div>
             <ol class="divide-y divide-line">
               @for (m of t.messages ?? []; track m.id) {
+                @if (m.authorKind === 'system') {
+                  <!-- A step Amelu recorded itself (received, approved, paid...): a line, not a message. -->
+                  <li class="flex items-start gap-2.5 bg-accent/5 px-5 py-3 text-[13px]">
+                    <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none text-link" />
+                    <span class="min-w-0 flex-1 leading-relaxed">{{ m.body }}</span>
+                    <span class="flex-none text-muted" [title]="m.createdAt | date: 'medium'">{{ m.createdAt | date: 'd MMM, HH:mm' }}</span>
+                  </li>
+                } @else {
                 <li class="px-5 py-4" [class.bg-well]="m.authorKind === 'staff'">
                   <div class="flex items-center gap-2">
                     <amelu-avatar class="size-7" [size]="28" [src]="m.authorAvatarUrl" [name]="m.authorName" [email]="m.authorEmail" [gravatar]="true" [title]="tooltip(m)" />
@@ -86,6 +94,7 @@ const MAX_TOTAL_BYTES = 20 << 20;
                     </ul>
                   }
                 </li>
+                }
               }
             </ol>
             <!-- The composer: a box with the text, the files to send, and a toolbar. Files can be
@@ -148,6 +157,52 @@ const MAX_TOTAL_BYTES = 20 << 20;
         </div>
 
         <aside class="space-y-5">
+          @if (t.dedicatedIpRequest; as req) {
+            <section [class]="ui.setCard">
+              <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Dedicated IP Request</h2></div>
+              @if (req.status === 'declined' || req.status === 'cancelled') {
+                <p class="px-5 py-4 text-[14px] text-muted">{{ req.status === 'declined' ? 'This request was declined.' : 'This dedicated IP has ended.' }}</p>
+              } @else {
+                <!-- requested -> approved -> paid -> assigned, the current step in the accent. -->
+                <ol class="space-y-2.5 px-5 py-4">
+                  @for (step of steps; track step.status; let i = $index) {
+                    @let done = i < stepIndex(req.status) || req.status === 'active';
+                    @let current = i === stepIndex(req.status) && req.status !== 'active';
+                    <li class="flex items-center gap-2.5 text-[14px]">
+                      @if (done) {
+                        <amelu-icon name="circleCheck" [size]="17" class="flex-none text-ok" />
+                      } @else {
+                        <span class="flex size-[17px] flex-none items-center justify-center rounded-full border text-[10px] tabular-nums" [class]="current ? 'border-accent text-link' : 'border-line text-muted'">{{ i + 1 }}</span>
+                      }
+                      <span [class]="current ? 'font-medium text-link' : done ? '' : 'text-muted'">{{ step.label }}</span>
+                    </li>
+                  }
+                </ol>
+              }
+              <dl class="divide-y divide-line border-t border-line text-[14px]">
+                <div [class]="row"><dt [class]="key">Volume</dt><dd class="min-w-0 flex-1">{{ volumeLabel[req.volume] }} a month</dd></div>
+                <div [class]="row"><dt [class]="key">Sends</dt><dd class="min-w-0 flex-1">{{ useCaseLabel[req.useCase] }}</dd></div>
+                @if (req.domains) {
+                  <div [class]="row"><dt [class]="key">Domains</dt><dd class="min-w-0 flex-1 break-words">{{ req.domains }}</dd></div>
+                }
+                @if (req.ip) {
+                  <div [class]="row"><dt [class]="key">Address</dt><dd class="min-w-0 flex-1 font-mono text-[13px]"><a routerLink="/organization/dedicated-ips" class="text-link hover:underline">{{ req.ip }}</a></dd></div>
+                }
+              </dl>
+              @if (req.status === 'approved') {
+                <div class="border-t border-line px-5 py-4">
+                  @if (justPaid()) {
+                    <p class="mb-3 text-[13px] text-muted">Thanks! Your payment is being processed; this page updates once it's in.</p>
+                  }
+                  <button type="button" [class]="ui.primary + ' h-10 w-full justify-center'" [disabled]="paying()" (click)="pay(req.id)">
+                    {{ paying() ? 'One moment...' : 'Activate for €10 a month' }}
+                  </button>
+                  <p class="mt-2 text-[12px] text-muted">Billed monthly until you cancel it in billing.</p>
+                </div>
+              }
+            </section>
+          }
+
           <section [class]="ui.setCard">
             <div [class]="ui.setHeader"><h2 [class]="ui.setTitle">Details</h2></div>
             <dl class="divide-y divide-line text-[14px]">
@@ -224,6 +279,12 @@ export class SupportTicketPage {
   protected readonly error = signal<string | null>(null);
   protected readonly reply = signal('');
   protected readonly busy = signal(false);
+  protected readonly steps = DEDICATED_IP_STEPS;
+  protected readonly volumeLabel = Object.fromEntries(DEDICATED_IP_VOLUMES.map((v) => [v.id, v.label]));
+  protected readonly useCaseLabel = Object.fromEntries(DEDICATED_IP_USE_CASES.map((u) => [u.id, u.label]));
+  protected readonly paying = signal(false);
+  /** Back from Stripe Checkout; the webhook marks it paid a moment later. */
+  protected readonly justPaid = toSignal(inject(ActivatedRoute).queryParamMap.pipe(map((p) => p.get('paid') === '1')), { initialValue: false });
   protected readonly files = signal<File[]>([]);
   protected readonly fileError = signal<string | null>(null);
   protected readonly dragging = signal(false);
@@ -251,6 +312,19 @@ export class SupportTicketPage {
       });
     });
     void this.loadList();
+    // Back from paying: check every 5 seconds, for a minute at most, until the webhook marked it paid.
+    if (this.justPaid()) {
+      let tries = 0;
+      const timer = setInterval(() => {
+        const t = this.ticket();
+        if (++tries > 12 || (t && t.dedicatedIpRequest?.status !== 'approved')) {
+          clearInterval(timer);
+          return;
+        }
+        if (t) void this.load(t.id);
+      }, 5000);
+      inject(DestroyRef).onDestroy(() => clearInterval(timer));
+    }
   }
 
   private async load(id: string): Promise<void> {
@@ -277,6 +351,23 @@ export class SupportTicketPage {
     return m.authorKind === 'staff'
       ? [m.authorName, `${m.authorTitle ?? 'Amelu Support'}, Ordnary staff`, m.authorEmail].filter(Boolean).join('\n')
       : [m.authorName, m.authorEmail].filter(Boolean).join('\n');
+  }
+
+  protected stepIndex(status: DedicatedIpRequest['status']): number {
+    return this.steps.findIndex((s) => s.status === status);
+  }
+
+  /** Stripe Checkout for the approved request. */
+  protected async pay(requestId: string): Promise<void> {
+    this.paying.set(true);
+    this.error.set(null);
+    try {
+      const { url } = await firstValueFrom(this.api.dedicatedIpCheckout(requestId));
+      window.location.href = url;
+    } catch (err) {
+      this.error.set(errorMessage(err, 'Could not start the payment'));
+      this.paying.set(false);
+    }
   }
 
   protected attachmentUrl(ticketId: string, attachmentId: string): string {

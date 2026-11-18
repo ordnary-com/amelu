@@ -486,6 +486,11 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 		if session.Mode != stripe.CheckoutSessionModeSubscription || session.Customer == nil || session.Subscription == nil {
 			break
 		}
+		// A dedicated IP is a subscription of its own, never the plan.
+		if session.Metadata["kind"] == "dedicated_ip" {
+			a.dedicatedIPPaidWebhook(r, session.Metadata["requestId"], session.Subscription.ID)
+			break
+		}
 		customerID := session.Metadata["customerId"]
 		planTierID := session.Metadata["planTierId"]
 		if customerID == "" || planTierID == "" {
@@ -516,7 +521,7 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			log.Printf("stripe webhook: decode subscription: %v", err)
 			break
 		}
-		if sub.Customer == nil {
+		if sub.Customer == nil || sub.Metadata["kind"] == "dedicated_ip" {
 			break
 		}
 		planTierID := ""
@@ -563,6 +568,11 @@ func (a *App) StripeWebhook(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if sub.Customer == nil {
+			break
+		}
+		// Ending a dedicated IP's subscription ends that, not the plan.
+		if sub.Metadata["kind"] == "dedicated_ip" {
+			a.dedicatedIPEndedWebhook(r, sub.ID)
 			break
 		}
 		if err := a.Store.DowngradeCustomerToFreeByStripeCustomerID(ctx, sub.Customer.ID); err != nil {

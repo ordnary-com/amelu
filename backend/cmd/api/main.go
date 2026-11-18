@@ -215,6 +215,7 @@ func main() {
 	mux.HandleFunc("POST /internal/admin/support/tickets/{id}/messages", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminReplySupportTicket))
 	mux.HandleFunc("GET /internal/admin/support/tickets/{id}/attachments/{attachmentId}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminGetSupportAttachment))
 	mux.HandleFunc("PATCH /internal/admin/support/tickets/{id}", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminUpdateSupportTicket))
+	mux.HandleFunc("POST /internal/admin/support/tickets/{id}/dedicated-ip", auth.RequireAdmin(cfg.AdminSharedSecret, app.AdminDedicatedIPRequestAction))
 
 	mux.HandleFunc("POST /api/signup", app.Signup)
 	mux.HandleFunc("POST /api/login", app.Login)
@@ -286,6 +287,9 @@ func main() {
 	mux.HandleFunc("GET /api/domains/{id}/sending/history", auth.Require(app.Store, app.GetDomainSendingHistory))
 	mux.HandleFunc("GET /api/sending/network", auth.Require(app.Store, app.GetSendingNetwork))
 	mux.HandleFunc("GET /api/organization/dedicated-ips", auth.Require(app.Store, app.ListOrganizationDedicatedIPs))
+	mux.HandleFunc("POST /api/organization/dedicated-ips/requests", auth.Require(app.Store, app.CreateDedicatedIPRequest))
+	mux.HandleFunc("GET /api/organization/dedicated-ips/requests/open", auth.Require(app.Store, app.GetOpenDedicatedIPRequest))
+	mux.HandleFunc("POST /api/organization/dedicated-ips/requests/{id}/checkout", auth.Require(app.Store, app.DedicatedIPCheckout))
 	mux.HandleFunc("GET /api/support/tickets", auth.Require(app.Store, app.ListSupportTickets))
 	mux.HandleFunc("POST /api/support/tickets", auth.Require(app.Store, app.CreateSupportTicket))
 	mux.HandleFunc("GET /api/support/tickets/{id}", auth.Require(app.Store, app.GetSupportTicket))

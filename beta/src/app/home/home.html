@@ -7,7 +7,8 @@
 
   <div class="relative flex flex-wrap items-center justify-between gap-3">
     <p class="text-[13px] font-medium text-hero-ink/70">{{ today | date: 'EEEE d MMMM' }}</p>
-    <nav class="flex flex-wrap gap-5 max-mobile:gap-4" aria-label="Amelu links">
+    <!-- Small white buttons that stay readable over the dither on the right. -->
+    <nav class="flex flex-wrap gap-2" aria-label="Amelu links">
       <a routerLink="/changelog" [class]="heroLink" aria-label="What's new">
         <amelu-icon name="map" [size]="15" /><span class="max-mobile:hidden">What's new</span>
       </a>

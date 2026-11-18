@@ -1,181 +1,127 @@
 <img src="frontend/public/amelu-logo.png" alt="Amelu" height="40" />
 
-Email hosting on your own domain, from [Ordnary](https://ordnary.com).
+Email hosting on your own domain, by [Ordnary](https://ordnary.com).
 
----
+Amelu gives businesses and individuals mailboxes on their own domain with
+real IMAP, POP3 and SMTP, a branded webmail, and a dashboard that walks you
+through DNS. The mail itself is handled by [Stalwart](https://stalw.art), an
+open-source mail server we run ourselves in the EU; Amelu is everything
+around it.
 
-## Why we built this
-
-We wanted email on our own domain that we actually control: real IMAP/SMTP,
-no lock-in to a big provider, no proprietary web client. Most "custom domain
-email" options turn out to be a reseller markup on top of Google Workspace,
-or they leave you self-hosting a mail server yourself, which starts as a
-weekend project and quietly becomes a permanent job: DNS records, spam
-reputation, a server you now have to keep patched forever.
-
-Amelu is our attempt at a middle path. Under the hood it's
-[Stalwart](https://stalw.art), an open-source mail server, doing the actual
-mail handling. Amelu is the layer on top: a dashboard for verifying domains,
-setting up aliases, getting DNS right, and billing, so running your own mail
-server feels like signing up for a SaaS product instead of wrangling a
-server yourself at 1am because a cert expired.
-
-Right now it's a working demo, not a public launch, so don't go telling all
-your friends yet. Domain verification, mailbox provisioning, and billing all
-work end to end against a real Stalwart instance we operate, but we're still
-hardening things before opening it up more broadly.
+**Status:** live at [app.amelu.org](https://app.amelu.org), with a free plan
+and paid Go and Pro plans.
 
 ## What it does
 
-Verify a domain and get guided DNS instructions, with automatic fixes via
-Domain Connect where that's supported. Create mailboxes and aliases, forward
-addresses, set up a catch-all. Spam filtering is on by default and doesn't
-need any setup.
+- **Domains:** add a domain, see which DNS records are right and which are
+  missing, and fix them in one click at providers that support Domain
+  Connect.
+- **Mailboxes and addresses:** mailboxes with their own limits, aliases,
+  domain aliases, catch-all recipients, Bcc captures, pattern rewrites and
+  CSV import and export.
+- **Spam filtering:** on by default, with adjustable strictness and allow and
+  block lists per domain.
+- **Webmail:** Roundcube on `webmail.amelu.org`, or on the customer's own
+  hostname with their name, logo and colour.
+- **Organizations:** teammates, an activity log, API keys and billing through
+  Stripe.
+- **Any mail client:** it's plain IMAP, POP3 and SMTP, with autoconfig for the
+  common clients.
 
-Since it's plain IMAP, SMTP, and POP3 underneath, any mail client works,
-no proprietary app you're stuck with, use Thunderbird, Apple Mail, whatever
-you like. Billing runs through Stripe with a real free tier and monthly or
-annual paid plans. And because Stalwart runs on infrastructure we operate
-ourselves rather than someone else's platform, mail and data stay on servers
-in the EU.
+## How it's built
 
-## Architecture
+```
+app.amelu.org  ─┐
+                ├─> api.amelu.org (edge Worker) ─> Go API (Cloudflare Container) ─┬─> Neon Postgres
+webmail.amelu.org ─> Roundcube on marduk                                         └─> Stalwart on marduk
+```
 
-Nothing fancy, just a few pieces talking to each other:
+| Part | Where | What |
+|---|---|---|
+| `beta/` | Worker `amelu-beta` on `app.amelu.org` | The dashboard: Angular 22 (standalone, signals) and Tailwind v4 |
+| `frontend/` | Cloudflare Pages, no domain | The previous React dashboard, kept until `beta/` covers every page |
+| `backend/` | Cloudflare Container behind the edge Worker | Go API, stdlib `net/http`, Postgres via `pgx`, no framework, no ORM |
+| `cloudflare/edge/` | `api.amelu.org` | Public entrypoint; signs every request to the Go API and relays transactional mail |
+| `cloudflare/queues/`, `cloudflare/workflows/` | Cloudflare | Domain verification, Stalwart provisioning, retries |
+| `cloudflare/webmail/` | `webmail.amelu.org` | Worker in front of Roundcube |
+| `cloudflare/autoconfig/`, `cloudflare/status/` | Cloudflare | Mail client autoconfig and the status page |
+| `ops/` | marduk and the routers | Scripts and configs for the mail server and our own sending network |
 
-- `frontend/`: React 19 + Vite dashboard, deployed to Cloudflare Pages.
-- `backend/`: Go API, stdlib `net/http`, no framework, Postgres via `pgx`,
-  no ORM. This is the only thing the frontend ever talks to. Stalwart and
-  Postgres are never exposed directly.
-- `cloudflare/edge/`: small TypeScript Worker, public entrypoint for
-  `api.amelu.org`, binds straight to the Go origin running as a Cloudflare
-  Container, no VPS, no Tunnel, no public port on the origin at all.
-- `cloudflare/queues/` + `cloudflare/workflows/`: the durable async stuff,
-  domain verification, Stalwart provisioning, retries, dead-letter handling.
+Postgres holds accounts, domains and billing. Mail lives only in Stalwart's
+own store on **marduk**, the mail server, and never in Postgres.
 
-Postgres only stores account and billing metadata, kept separate from
-Stalwart's own mail store on purpose. Full migration architecture, rollout
-plan, rollback procedures: that's all in
-[`docs/cloudflare/`](docs/cloudflare/README.md) if you're curious.
+### Sending network
 
-## Tech stack
+Outgoing mail leaves marduk from dedicated addresses, split into pools so new
+domains can't hurt the reputation of established ones (`ops/marduk/amelu-ip-pools.py`).
+Customers see the list on the dashboard's Sending IPs page.
 
-- Frontend: React 19, Vite, react-router-dom, Material Web Components
-- Backend: Go 1.26, stdlib `net/http`, `pgx` (no ORM, no framework)
-- Mail: [Stalwart](https://stalw.art), talked to via its admin API
-- Billing: Stripe
-- Transactional email: Cloudflare Email Sending, relayed for the Go origin by the edge Worker
-- Edge/CDN/DNS: Cloudflare (Pages, Workers, Containers, Queues, Workflows, R2)
-- Everything glued together with pnpm workspaces
+We also run our own block, **89.106.70.0/24 on AS218905**, announced through
+two Vultr routers (`ops/rtr1-ams/`, `ops/rtr1-par/`) and carried to marduk
+over WireGuard, with automatic failover between them
+(`ops/marduk/bgp-exit-check.sh`). It is not used for customer mail yet.
 
 ## Running it locally
 
-You'll need:
-
-- Node 20+ (`.nvmrc` has the exact version, Vite's rolldown build doesn't
-  run on Node 18, learned that the hard way)
-- pnpm 9
-- Go 1.26+
-- a reachable PostgreSQL instance
+You need Node 20+ (see `.nvmrc`), pnpm 9, Go 1.26+ and a PostgreSQL database.
 
 ```bash
-git clone https://github.com/ordnary-com/amelu.git
-cd amelu
 pnpm install
-
-cp backend/.env.example backend/.env
-# fill in DATABASE_URL, STALWART_BASE_URL, STALWART_ADMIN_USER, STALWART_ADMIN_PASSWORD at minimum
-
-pnpm dev
+cp backend/.env.example backend/.env   # fill in DATABASE_URL and the Stalwart settings
+pnpm dev        # Go API on :8081 (and the old dashboard on :5173)
+pnpm dev:beta   # the dashboard on :4200, /api proxied to :8081
 ```
 
-That starts the frontend at `http://localhost:5173` and the backend at
-`http://localhost:8081`. Migrations are plain `.sql` files under
-`backend/internal/db/migrations/`, embedded via `go:embed` and applied
-automatically on backend startup, no separate migrate command to remember or
-forget.
+Migrations are `.sql` files in `backend/internal/db/migrations/`, embedded
+with `go:embed` and applied when the API starts. Optional integrations
+(Domain Connect, mail relay, Stripe, Ordnary sign-in) report themselves as
+unavailable when their settings are missing, instead of stopping the API.
 
-The rest of the integrations (Domain Connect, mail, Stripe, "Login with
-Ordnary account") follow the same pattern: if the config is missing, the
-feature just shrugs and reports itself unavailable at request time instead
-of crashing on startup. `backend/.env.example` has the full list of
-variables.
+> **Careful:** a local `.env` usually points at the production Stalwart.
+> Mailboxes and domains you create or delete locally change for real, so keep
+> `SENDING_LIMITS_SYNC=off`.
 
-### Running tests
+Tests:
 
 ```bash
-cd backend && go build ./... && go vet ./... && go test ./...
+cd backend && go vet ./... && go test ./...
 cd cloudflare/edge && npm test
 ```
 
-## Project structure
+## Deploying
 
-```
-amelu/
-├── backend/               Go API
-│   ├── cmd/api/           entrypoint
-│   └── internal/          auth, db, handlers, stalwart client, ordnaryauth, ...
-├── frontend/               React dashboard (Cloudflare Pages)
-├── cloudflare/
-│   ├── edge/               public API Worker, binds the origin Container
-│   ├── queues/              domain verification consumer
-│   ├── workflows/           Stalwart provisioning, mailbox expiration
-│   ├── tunnel/              historical cloudflared config, no longer in use
-│   └── terraform/           DNS/WAF templates (not applied automatically)
-├── docs/cloudflare/        architecture, deployment, security, rollback docs
-└── .github/workflows/      CI: Go, frontend, edge Worker, queue consumer, preview/prod deploy
-```
+| What | How |
+|---|---|
+| Dashboard (`app.amelu.org`) | `pnpm deploy:beta` from the repo root |
+| API, edge Worker, queues, workflows | See [`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md) |
+| Rolling back | [`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md) |
+| marduk and routers | By hand from `ops/`; each folder's README says what goes where |
 
-## Deployment
-
-Everything runs on Cloudflare now. Production is `app.amelu.org` (Pages) and
-`api.amelu.org` (edge Worker, bound straight to the Go API running as a
-Cloudflare Container, no VPS anywhere anymore). Postgres is managed, hosted
-on Neon. [`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md)
-has the full procedure, and [`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md)
-covers backing out of a bad deploy.
+Every change gets a short entry in [`devlog/`](devlog/README.txt).
 
 ## Security
 
-**Your password** is hashed with bcrypt and never stored in a form anyone can
-reverse, including us.
-
-**Your session** lives server-side in Postgres. The cookie only carries a
-random 32-byte token, and only its SHA-256 hash is stored, so even a full
-database leak hands an attacker nothing they can log in with. The cookie is
-`HttpOnly` (JavaScript can't read it), `Secure` (HTTPS only), `SameSite=Lax`,
-and expires after 7 days. Nothing auth-related is kept in `localStorage`.
-Password reset links are hashed the same way, single-use, and expire.
-
-**Your mail never touches this database.** Amelu's Postgres holds account,
-domain and billing metadata. Message content lives in Stalwart's own store on
-the mail server, deliberately kept separate.
-
-**The infrastructure isn't reachable.** The Go API has no public listener at
-all, Postgres isn't exposed, and Stalwart's admin API is only ever called
-from the origin over its own private network. Everything public goes through
-Cloudflare, and each hop is authenticated independently: the edge Worker
-signs every request to the origin (HMAC), background jobs use a separate
-secret so compromising one doesn't grant the other, and Stripe webhooks are
-signature-verified before a single byte is acted on. Logs redact
-`Authorization`, `Cookie`, `Set-Cookie` and every signature header, and
-request bodies are never logged.
-
-Honest about the gaps: **two-factor authentication doesn't exist yet**, which
-is the biggest missing piece for account security. Rate limiting is a
-Cloudflare WAF policy configured in the dashboard, not application code in
-this repo.
+- **Sign-in** goes through the customer's Ordnary account, so two-step
+  verification and passkeys come from there. Amelu itself stores no account
+  passwords.
+- **Sessions** are server-side. The cookie carries a random token and only its
+  SHA-256 hash is stored; it's `HttpOnly`, `Secure` and `SameSite=Lax`. API
+  keys can't create further keys or change the account.
+- **Nothing internal is public.** The Go API has no public listener, Postgres
+  and Stalwart's admin API aren't exposed, and each hop is authenticated on
+  its own: the edge signs requests to the API (HMAC), background jobs use a
+  separate secret, and Stripe webhooks are verified before anything happens.
+  Logs redact credentials and never include request bodies.
 
 [`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md) has the full
-trust-boundary breakdown. Found a security issue? Email **abuse@ordnary.com**
-instead of opening a public issue.
+breakdown. Report security issues to **abuse@ordnary.com**, not in a public
+issue.
 
 ## Contributing
 
-Issues and pull requests are welcome. Before making structural changes, skim
-`AGENTS.md` for this repo's conventions, no framework on the backend, no
-ORM, and mirror existing patterns rather than inventing new ones. Submitting
-a contribution means you agree to the terms in
+Issues and pull requests are welcome. Read `AGENTS.md` first: no backend
+framework, no ORM, and new pages and endpoints follow the closest existing
+one. Contributing means you agree to the terms in
 [`LICENSE.md`](LICENSE.md#4-contributions).
 
 ## License
@@ -189,8 +135,7 @@ or a team, charging anyone for access, or offering Amelu as a service under
 another name all need a separate license. Full terms, including exactly what
 counts as personal use, are in [`LICENSE.md`](LICENSE.md).
 
-Self-hosting is genuinely unsupported: Amelu is a management layer over
-*your* Stalwart server and *your* Postgres, and mail deliverability, backups,
-and security are yours to run. [`docs/cloudflare/`](docs/cloudflare/) is the
-closest thing to a deployment guide.
-</content>
+Self-hosting is unsupported: Amelu is a management layer over *your* Stalwart
+server and *your* Postgres, and mail deliverability, backups and security are
+yours to run. [`docs/cloudflare/`](docs/cloudflare/) is the closest thing to a
+deployment guide.

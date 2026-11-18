@@ -1,129 +1,137 @@
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="space-y-6">
-    @if (error(); as message) {
-      <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
-        {{ message }}
-      </amelu-alert>
-    }
+<div class="space-y-5">
+  @if (error(); as message) {
+    <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
+      {{ message }}
+    </amelu-alert>
+  }
 
-    @if (newKey(); as key) {
-      <amelu-alert kind="warning" title="Copy this key now" [dismissible]="true" (dismissed)="newKey.set(null)">
-        <p>It isn't stored and can't be shown again.</p>
-        <div class="mt-2.5 flex items-center gap-2">
-          <code class="min-w-0 flex-1 truncate rounded-md bg-black/10 px-2.5 py-1.5 font-mono text-[12px]">{{ key }}</code>
-          <button type="button" [class]="ui.primary + ' flex-none'" (click)="copyKey()">
-            {{ copied() ? 'Copied' : 'Copy' }}
-          </button>
-        </div>
-      </amelu-alert>
-    }
+  @if (newKey(); as key) {
+    <amelu-alert kind="warning" title="Copy this key now" [dismissible]="true" (dismissed)="newKey.set(null)">
+      <p>It isn't stored and can't be shown again.</p>
+      <div class="mt-2.5 flex items-center gap-2">
+        <code class="min-w-0 flex-1 truncate rounded-md bg-black/10 px-2.5 py-1.5 font-mono text-[12px]">{{ key }}</code>
+        <button type="button" [class]="ui.primary + ' flex-none'" (click)="copyKey()">
+          {{ copied() ? 'Copied' : 'Copy' }}
+        </button>
+      </div>
+    </amelu-alert>
+  }
 
-    <section>
-      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
-        API keys
+  <section [class]="ui.setCard">
+    <div [class]="ui.setHeader">
+      <h2 [class]="ui.setTitle">
+        API Keys
         @if (keys(); as list) {
-          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
+          <span class="font-normal text-muted">({{ list.length }})</span>
         }
       </h2>
-      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-        @if (keys() === undefined) {
-          @for (i of [1, 2]; track i) {
-            <div class="space-y-2 px-4 py-3" aria-hidden="true">
-              <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
-              <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
-            </div>
-          }
-        } @else {
-          @for (key of keys(); track key.id) {
-            <div class="flex items-center gap-3 px-4 py-3">
-              <span class="inline-flex size-8 flex-none items-center justify-center rounded-full bg-bg text-muted" aria-hidden="true">
-                <amelu-icon name="key" [size]="15" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <div class="flex min-w-0 items-center gap-2">
-                  <span class="truncate text-[13px] font-medium">{{ key.name }}</span>
-                  <code class="flex-none rounded bg-bg px-1.5 py-px font-mono text-[11px] text-muted">{{ key.prefix }}…</code>
-                </div>
-                <div class="mt-0.5 truncate text-[12px] text-muted">
-                  Created {{ key.createdAt | date: 'd MMM y' }} ·
-                  @if (key.lastUsedAt) {
-                    last used {{ key.lastUsedAt | date: 'd MMM y, HH:mm' }}
-                  } @else {
-                    never used
-                  }
-                </div>
-              </div>
-              <button
-                type="button"
-                class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
-                (click)="revokeTarget.set(key)"
-              >
-                Revoke
-              </button>
-            </div>
-          } @empty {
-            <amelu-empty-state title="No API keys yet" illustration="authentication">
-              Create a key to manage domains and mailboxes from your own scripts.
-            </amelu-empty-state>
-          }
-        }
+      <a href="#create-key" [class]="ui.setAction" aria-label="Create a key" title="Create a key" (click)="focusName($event)">
+        <amelu-icon name="plus" [size]="18" />
+      </a>
+    </div>
+    <div [class]="ui.well">
+      <div [class]="ui.tableWrap">
+        <table [class]="ui.table">
+          <thead>
+            <tr>
+              <th [class]="ui.th">Name</th>
+              <th [class]="ui.th + ' max-sm:hidden'">Key</th>
+              <th [class]="ui.th + ' max-md:hidden'">Created</th>
+              <th [class]="ui.th">Last used</th>
+              <th class="w-0 pr-4"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (keys() === undefined) {
+              @for (i of [1, 2]; track i) {
+                <tr [class]="ui.tr" aria-hidden="true">
+                  <td [class]="ui.td"><span class="block h-3 w-36 animate-pulse rounded bg-bg"></span></td>
+                  <td [class]="ui.td + ' max-sm:hidden'"><span class="block h-3 w-24 animate-pulse rounded bg-bg"></span></td>
+                  <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
+                  <td [class]="ui.td"><span class="block h-3 w-28 animate-pulse rounded bg-bg"></span></td>
+                  <td></td>
+                </tr>
+              }
+            } @else {
+              @for (key of keys(); track key.id) {
+                <tr [class]="ui.tr">
+                  <td [class]="ui.td + ' max-w-[260px]'">
+                    <span class="flex items-center gap-2"><amelu-icon name="key" [size]="15" class="flex-none text-muted" /><span class="truncate font-medium">{{ key.name }}</span></span>
+                  </td>
+                  <td [class]="ui.td + ' max-sm:hidden'"><code class="font-mono text-[12px] text-muted">{{ key.prefix }}…</code></td>
+                  <td [class]="ui.td + ' whitespace-nowrap max-md:hidden'">{{ key.createdAt | date: 'd MMM y' }}</td>
+                  <td [class]="ui.td + ' whitespace-nowrap'">
+                    @if (key.lastUsedAt) {
+                      {{ key.lastUsedAt | date: 'd MMM y, HH:mm' }}
+                    } @else {
+                      <span class="text-muted">Never</span>
+                    }
+                  </td>
+                  <td class="w-0 pr-4 text-right">
+                    <button type="button" class="cursor-pointer text-[13px] text-bad hover:underline" (click)="revokeTarget.set(key)">Revoke</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr [class]="ui.tr">
+                  <td colspan="5" class="px-4 py-8 text-center">
+                    <amelu-icon name="key" [size]="18" class="mx-auto block" />
+                    <p class="mt-2">No API keys yet</p>
+                    <p class="mt-0.5 text-[13px] text-muted">Create a key to manage domains and mailboxes from your own scripts.</p>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section>
-      <h2 [class]="ui.sectionTitle">Create a key</h2>
-      <form [class]="ui.card + ' flex flex-wrap items-end gap-3 p-4'" (submit)="create($event)">
-        <label class="min-w-56 flex-1">
-          <span [class]="ui.label">Name</span>
-          <input
-            [class]="ui.input"
-            placeholder="For example: provisioning script"
-            [value]="name()"
-            (input)="name.set($any($event.target).value)"
-            required
-          />
-        </label>
-        <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="creating()">
-          {{ creating() ? 'Creating...' : 'Create key' }}
-        </button>
-      </form>
-    </section>
-  </div>
+  <section id="create-key" [class]="ui.setCard">
+    <div [class]="ui.setHeader">
+      <h2 [class]="ui.setTitle">Create a Key</h2>
+    </div>
+    <form class="flex flex-wrap items-end gap-3 px-5 py-4" (submit)="create($event)">
+      <label class="min-w-56 flex-1">
+        <span class="text-[13px] text-muted">Name</span>
+        <input
+          #nameInput
+          [class]="ui.input"
+          placeholder="For example: provisioning script"
+          [value]="name()"
+          (input)="name.set($any($event.target).value)"
+          required
+        />
+      </label>
+      <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="creating()">
+        {{ creating() ? 'Creating...' : 'Create key' }}
+      </button>
+    </form>
+    <p [class]="ui.setNote">
+      <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+      <span>Treat a key like a password: anything holding it can manage your domains and mailboxes. A key can't change your account or create other keys, that still needs you signed in.</span>
+    </p>
+  </section>
 
-  <aside class="space-y-6">
-    <!-- Same dither as the other help cards, rising from the bottom right. -->
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
-      </div>
-      <amelu-icon name="key" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Using a key</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        An API key lets a script or service call the Amelu API as you, with the same permissions your account has. Send
-        it as a bearer token:
-      </p>
-      <code class="mt-3 block rounded-md border border-line bg-surface px-2.5 py-1.5 font-mono text-[12px]">Authorization: Bearer amelu_live_...</code>
-    </section>
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Treat it like a password</h2>
-      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-        <li class="flex gap-2.5">
-          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-warn"></span>
-          Anything holding a key can manage your domains and mailboxes.
-        </li>
-        <li class="flex gap-2.5">
-          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-          A key can't change your account or create other keys. That still needs you signed in.
-        </li>
-      </ul>
-    </section>
-  </aside>
+  <section [class]="ui.setCard">
+    <div [class]="ui.setHeader">
+      <h2 [class]="ui.setTitle">Using a Key</h2>
+    </div>
+    <div class="px-5 py-4">
+      <p class="text-[13px] text-muted">Send it as a bearer token</p>
+      <code class="mt-1 block truncate font-mono text-[15px]">Authorization: Bearer amelu_live_...</code>
+    </div>
+    <p [class]="ui.setNote">
+      <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+      <span>A script or service using a key calls the Amelu API as you, with the same permissions your account has.</span>
+    </p>
+  </section>
 </div>
 
 @if (revokeTarget(); as target) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeRevoke()">
     <div
-      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      class="w-full max-w-md rounded-md border border-line bg-popover p-5 shadow-xl"
       role="alertdialog"
       aria-modal="true"
       [attr.aria-label]="'Revoke ' + target.name"

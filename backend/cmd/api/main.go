@@ -176,6 +176,8 @@ func main() {
 	mux.HandleFunc("POST /internal/jobs/sending-stats", auth.RequireInternal(cfg.SendingStatsSecret, app.SendingStatsJob))
 	// marduk's amelu-ip-pools, with the same secret as amelu-sending-stats.
 	mux.HandleFunc("GET /internal/jobs/dedicated-ips", auth.RequireInternal(cfg.SendingStatsSecret, app.DedicatedIPRoutesJob))
+	// ops/marduk/amelu-sender-guard.py reports send pauses and their lifting.
+	mux.HandleFunc("POST /internal/jobs/domain-actions", auth.RequireInternal(cfg.SendingStatsSecret, app.DomainActionJob))
 
 	// Cross-customer admin surface for Helm (ordnary-identity/apps/helm, via
 	// services/helm-api) - see internal/handlers/admin.go and
@@ -298,6 +300,8 @@ func main() {
 	mux.HandleFunc("POST /api/support/tickets/{id}/close", auth.Require(app.Store, app.CloseSupportTicket))
 
 	mux.HandleFunc("GET /api/domains/{id}/activity", auth.Require(app.Store, app.GetActivity))
+	mux.HandleFunc("GET /api/domains/{id}/status", auth.Require(app.Store, app.GetDomainStatus))
+	mux.HandleFunc("POST /api/domains/{id}/status/review-request", auth.Require(app.Store, app.CreateSendingReview))
 	mux.HandleFunc("PATCH /api/domains/{id}/notes", auth.Require(app.Store, app.UpdateDomainNotes))
 	mux.HandleFunc("PATCH /api/domains/{id}/listing", auth.Require(app.Store, app.UpdateDomainListing))
 	mux.HandleFunc("POST /api/domains/{id}/transfer", auth.Require(app.Store, app.TransferDomain))

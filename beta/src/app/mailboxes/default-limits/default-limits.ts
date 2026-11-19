@@ -9,7 +9,6 @@ import { Alert } from '../../alert/alert';
 import { EmptyState } from '../../empty-state/empty-state';
 import { UI } from '../../ui';
 import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
 import { MailboxLimits, MailboxesApi } from '../mailboxes-api';
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
@@ -17,7 +16,7 @@ const BYTES_PER_GB = 1024 * 1024 * 1024;
 /** The current dashboard's Default Mailbox Limits: the storage caps a new mailbox on this domain starts with. */
 @Component({
   selector: 'amelu-default-limits',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon],
   templateUrl: './default-limits.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

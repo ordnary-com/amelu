@@ -20,76 +20,84 @@ import { DnsSpamApi, DomainNameservers } from './dns-spam-api';
   template: `
     @if (state(); as ns) {
       @if (ns.mode === 'amelu') {
-        <section [class]="ui.card + ' p-4'">
-          <div class="flex items-center justify-between gap-3">
-            <h2 class="text-[14px] font-bold">Amelu nameservers</h2>
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Amelu nameservers</h2>
             @if (ns.status === 'active') {
               <span [class]="badge.ok">In use</span>
             } @else {
               <span [class]="badge.warn">Waiting</span>
             }
           </div>
-          @if (ns.status === 'active') {
-            <p class="mt-1 text-[13px] leading-relaxed text-muted">
-              Amelu hosts the DNS for {{ domain() }}, and every mail record is set for you.
-            </p>
-          } @else {
-            <p class="mt-1 text-[13px] leading-relaxed text-muted">
-              At the company where you registered {{ domain() }}, replace its nameservers with these two. It usually
-              takes a few minutes, sometimes up to a day.
-            </p>
-          }
-          <ul class="mt-3 divide-y divide-line overflow-hidden rounded-md border border-line">
-            @for (name of ns.nameservers ?? []; track name) {
-              <li class="flex items-center gap-2 py-1.5 pr-1.5 pl-2.5">
-                <code class="min-w-0 flex-1 truncate font-mono text-[13px]">{{ name }}</code>
-                <button
-                  type="button"
-                  class="inline-flex size-7 flex-none cursor-pointer items-center justify-center rounded-md hover:bg-bg"
-                  [class]="copied() === name ? 'text-ok' : 'text-muted hover:text-ink'"
-                  [attr.aria-label]="'Copy ' + name"
-                  (click)="copy(name)"
-                >
-                  <amelu-icon [name]="copied() === name ? 'check' : 'copy'" [size]="14" />
-                </button>
-              </li>
+          <div [class]="ui.well">
+            @if (ns.status === 'active') {
+              <p class="text-[13px] leading-relaxed text-muted">
+                Amelu hosts the DNS for {{ domain() }}, and every mail record is set for you.
+              </p>
+            } @else {
+              <p class="text-[13px] leading-relaxed text-muted">
+                At the company where you registered {{ domain() }}, replace its nameservers with these two. It usually
+                takes a few minutes, sometimes up to a day.
+              </p>
             }
-          </ul>
-          <div class="mt-3 flex flex-wrap gap-2">
-            @if (ns.status !== 'active') {
-              <button type="button" [class]="ui.outline" [disabled]="loading()" (click)="load()">
-                {{ loading() ? 'Checking...' : 'Check again' }}
-              </button>
-            }
-            @if (showEditorLink()) {
-              <a [routerLink]="'/domains/' + domainId() + '/dns/zone'" [class]="ui.outline">Manage DNS records</a>
+            <ul class="mt-3 divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+              @for (name of ns.nameservers ?? []; track name) {
+                <li class="flex items-center gap-2 py-1.5 pr-1.5 pl-3">
+                  <code class="min-w-0 flex-1 truncate font-mono text-[13px]">{{ name }}</code>
+                  <button
+                    type="button"
+                    class="inline-flex size-7 flex-none cursor-pointer items-center justify-center rounded-md hover:bg-bg"
+                    [class]="copied() === name ? 'text-ok' : 'text-muted hover:text-ink'"
+                    [attr.aria-label]="'Copy ' + name"
+                    (click)="copy(name)"
+                  >
+                    <amelu-icon [name]="copied() === name ? 'check' : 'copy'" [size]="14" />
+                  </button>
+                </li>
+              }
+            </ul>
+            @if (ns.status !== 'active' || showEditorLink()) {
+              <div class="mt-3 flex flex-wrap gap-2">
+                @if (ns.status !== 'active') {
+                  <button type="button" [class]="ui.outline + ' bg-surface'" [disabled]="loading()" (click)="load()">
+                    {{ loading() ? 'Checking...' : 'Check again' }}
+                  </button>
+                }
+                @if (showEditorLink()) {
+                  <a [routerLink]="'/domains/' + domainId() + '/dns/zone'" [class]="ui.outline + ' bg-surface'">Manage DNS records</a>
+                }
+              </div>
             }
           </div>
         </section>
       } @else if (ns.available) {
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Let Amelu host your DNS</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            Point {{ domain() }} at the Amelu nameservers and every mail record is set and kept right for you. We copy
-            the records your domain has now, so your website keeps working.
-          </p>
-          @if (confirming()) {
-            <p class="mt-3 rounded-md border border-warn/40 bg-warn/10 p-2.5 text-[12px] leading-relaxed">
-              Check the copied records before you change the nameservers at your registrar. Records we couldn't find
-              (rare subdomains, for example) you add yourself.
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Let Amelu host your DNS</h2>
+          </div>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              Point {{ domain() }} at the Amelu nameservers and every mail record is set and kept right for you. We copy
+              the records your domain has now, so your website keeps working.
             </p>
-            <div class="mt-3 flex gap-2">
-              <button type="button" [class]="ui.primary" [disabled]="switching()" (click)="switch()">
-                {{ switching() ? 'Setting up...' : 'Use Amelu nameservers' }}
-              </button>
-              <button type="button" [class]="ui.outline" (click)="confirming.set(false)">Cancel</button>
-            </div>
-          } @else {
-            <button type="button" [class]="ui.outline + ' mt-3'" (click)="confirming.set(true)">Use Amelu nameservers</button>
-          }
-          @if (error(); as message) {
-            <p class="mt-2 text-[12px] text-bad">{{ message }}</p>
-          }
+            @if (confirming()) {
+              <p class="mt-3 rounded-md border border-warn/40 bg-warn/10 p-2.5 text-[12px] leading-relaxed">
+                Check the copied records before you change the nameservers at your registrar. Records we couldn't find
+                (rare subdomains, for example) you add yourself.
+              </p>
+              <div class="mt-3 flex gap-2">
+                <button type="button" [class]="ui.primary" [disabled]="switching()" (click)="switch()">
+                  {{ switching() ? 'Setting up...' : 'Use Amelu nameservers' }}
+                </button>
+                <button type="button" [class]="ui.outline + ' bg-surface'" (click)="confirming.set(false)">Cancel</button>
+              </div>
+            } @else {
+              <button type="button" [class]="ui.outline + ' mt-3 bg-surface'" (click)="confirming.set(true)">Use Amelu nameservers</button>
+            }
+            @if (error(); as message) {
+              <p class="mt-2 text-[12px] text-bad">{{ message }}</p>
+            }
+          </div>
         </section>
       }
     }

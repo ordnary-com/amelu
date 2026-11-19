@@ -7,134 +7,125 @@
     { label: 'New alias' },
   ]"
 >
-  Aliases redirect incoming messages to an existing mailbox and can coexist with mailboxes with the
-  same address.
+  An alias delivers mail into an existing mailbox, and can share its address with a mailbox.
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form id="new-alias-form" [class]="ui.panel" autocomplete="off" (submit)="submit($event)">
     @if (error(); as message) {
-      <amelu-alert
-        kind="error"
-        title="The alias wasn't created"
-        [dismissible]="true"
-        (dismissed)="error.set(null)"
-      >
-        {{ message }}
-      </amelu-alert>
+      <div class="border-b border-line p-4">
+        <amelu-alert kind="error" title="The alias wasn't created" [dismissible]="true" (dismissed)="error.set(null)">
+          {{ message }}
+        </amelu-alert>
+      </div>
     }
 
-    <section>
-      <h2 [class]="ui.sectionTitle">Alias setup</h2>
-      <div [class]="ui.card + ' space-y-5 p-4'">
-        <div>
-          <label for="alias-address" [class]="ui.label">Original addressee</label>
-          <div
-            class="mt-1.5 flex h-9 items-center rounded-md border border-line focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30"
-            [class.border-bad]="taken()"
-          >
-            <input
-              id="alias-address"
-              class="h-full w-full min-w-0 bg-transparent px-2.5 text-[13px] outline-none placeholder:text-muted"
-              placeholder="eg. nickname"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              autofocus
-              required
-              [value]="alias()"
-              [attr.aria-invalid]="taken() ? true : null"
-              [attr.aria-describedby]="taken() ? 'alias-taken' : null"
-              (input)="alias.set($any($event.target).value)"
-            />
-            <span
-              class="flex h-full items-center border-l border-line px-2.5 text-[13px] text-muted select-none"
-              >&#64;{{ ctx.domain()?.name }}</span
-            >
-          </div>
-          @if (taken(); as existing) {
-            <p id="alias-taken" class="mt-1 text-[12px] text-bad" role="alert">
-              {{ existing.address }} is already an alias of
-              <a
-                class="font-medium underline"
-                [routerLink]="'/domains/' + ctx.id() + '/mailboxes/' + existing.destinationMailboxId"
-                >{{ existing.destinationMailbox }}</a
-              >. Pick another address, or remove that alias first.
-            </p>
-          }
-          <p [class]="ui.hint">
-            Only the local part is needed. Everything after the &#64; sign is removed, as aliasing
-            to other domains isn't possible.
-          </p>
-        </div>
-
-        <amelu-mailbox-field
-          fieldId="alias-destination"
-          label="Deliver to"
-          [mailboxes]="mailboxes()"
-          [domainId]="ctx.id()"
-          [domainName]="ctx.domain()?.name ?? ''"
-          [(value)]="destination"
+    <section class="p-4">
+      <label for="alias-address" [class]="sectionTitle">Alias address</label>
+      <div
+        class="mt-3 flex h-11 items-center rounded-md border border-line bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25"
+        [class.border-bad]="taken()"
+      >
+        <input
+          id="alias-address"
+          class="h-full w-full min-w-0 bg-transparent pl-3.5 text-[15px] outline-none placeholder:text-muted/70"
+          placeholder="nickname"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          autofocus
+          required
+          [value]="alias()"
+          [attr.aria-invalid]="taken() ? true : null"
+          [attr.aria-describedby]="taken() ? 'alias-taken' : null"
+          (input)="alias.set($any($event.target).value)"
         />
+        <span class="flex h-full max-w-[60%] flex-none items-center truncate pr-3.5 pl-1 text-[15px] text-muted select-none">&#64;{{ ctx.domain()?.name ?? '' }}</span>
       </div>
+      @if (taken(); as existing) {
+        <p id="alias-taken" class="mt-2 text-[12px] text-bad" role="alert">
+          {{ existing.address }} is already an alias of
+          <a class="font-medium underline" [routerLink]="'/domains/' + ctx.id() + '/mailboxes/' + existing.destinationMailboxId">{{ existing.destinationMailbox }}</a>.
+          Pick another address, or remove that alias first.
+        </p>
+      } @else {
+        <p class="mt-2 text-[12px] text-muted">
+          Only the part before the &#64; is needed. Everything after it is removed, as aliasing to other domains isn't possible.
+        </p>
+      }
     </section>
 
-    <div class="flex items-center gap-3">
-      <button type="submit" [class]="ui.primary" [disabled]="!valid() || busy()">
-        {{ busy() ? 'Creating...' : 'Create alias' }}
-      </button>
-      <a
-        [routerLink]="'/domains/' + ctx.id() + '/aliases'"
-        class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
-        >Cancel</a
-      >
-    </div>
+    <section class="border-t border-line p-4">
+      <amelu-mailbox-field
+        [class]="bigField"
+        fieldId="alias-destination"
+        label="Deliver to"
+        [mailboxes]="mailboxes()"
+        [domainId]="ctx.id()"
+        [domainName]="ctx.domain()?.name ?? ''"
+        [(value)]="destination"
+      />
+    </section>
+
+    <section class="border-t border-line bg-well p-4">
+      <h2 [class]="sectionTitle">One mailbox per alias</h2>
+      <p class="mt-0.5 text-[13px] text-muted">
+        Each alias address delivers to a single mailbox, and an address can only be used by one alias on this domain.
+        A mailbox can have as many aliases as you like.
+      </p>
+    </section>
   </form>
 
-  <aside class="space-y-6">
-    @if (valid()) {
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Preview</h2>
-        <p class="mt-2 text-[13px] leading-relaxed text-muted">
-          Mail to <span class="font-medium break-all text-ink">{{ preview().from }}</span> is
-          delivered to <span class="font-medium break-all text-ink">{{ preview().to }}</span
-          >.
-        </p>
-      </section>
-    }
-
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">One mailbox per alias</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Each alias address delivers to a single mailbox, and an address can only be used by one
-        alias on this domain. A mailbox can have as many aliases as you like.
-      </p>
-    </section>
-
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div
-        class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
-        aria-hidden="true"
-      >
-        <amelu-dither-shader
-          colorBack="rgba(0,0,0,0)"
-          colorFront="var(--accent)"
-          shape="warp"
-          type="4x4"
-          [size]="2"
-          [speed]="0.3"
-        />
+  <aside [class]="ui.panel + ' xl:sticky xl:top-6'">
+    <div [class]="ui.panelHeader">
+      <h2 [class]="ui.panelTitle">Summary</h2>
+    </div>
+    <div class="divide-y divide-line bg-well">
+      <div class="space-y-3 p-4">
+        <div>
+          <p [class]="label">Alias</p>
+          <p class="mt-1 truncate text-[15px] font-medium" [class.text-muted]="!alias().trim()">{{ alias().trim() ? preview().from : 'Not entered yet' }}</p>
+        </div>
+        <dl [class]="box">
+          <div [class]="pair">
+            <dt>Delivers to</dt>
+            <dd class="truncate font-medium" [class.text-muted]="!destination()">{{ destination() ? preview().to : 'Not chosen yet' }}</dd>
+          </div>
+          <div [class]="pair"><dt>Domain</dt><dd class="truncate font-medium">{{ ctx.domain()?.name }}</dd></div>
+        </dl>
       </div>
-      <amelu-icon name="doc" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Many at once?</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Paste a list of aliases and their mailboxes as CSV instead.
-      </p>
-      <a
-        [routerLink]="'/domains/' + ctx.id() + '/aliases/import'"
-        class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
-        >Import from CSV</a
-      >
-    </section>
+
+      @if (alias().trim() && existing()) {
+        <div class="p-4">
+          <p [class]="label">Availability</p>
+          @if (taken(); as existing) {
+            <p class="mt-1 flex items-center gap-1.5 text-[15px] text-bad">Already in use <amelu-icon name="circleAlert" [size]="15" /></p>
+            <p class="mt-0.5 truncate text-[12px] text-muted">An alias of {{ existing.destinationMailbox }}</p>
+          } @else {
+            <p class="mt-1 flex items-center gap-1.5 text-[15px] text-ok">Available <amelu-icon name="circleCheck" [size]="15" /></p>
+            <p class="mt-0.5 text-[12px] text-muted">No other alias uses this address</p>
+          }
+        </div>
+      }
+
+      <div class="p-4">
+        <button
+          type="submit"
+          form="new-alias-form"
+          class="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-accent px-4 text-[14px] font-medium text-white hover:bg-accent/85 disabled:cursor-default disabled:opacity-50"
+          [disabled]="!valid() || busy()"
+        >
+          {{ busy() ? 'Creating...' : 'Create alias' }}
+          @if (!busy()) {
+            <amelu-icon name="arrowRight" [size]="16" />
+          }
+        </button>
+        <a [routerLink]="'/domains/' + ctx.id() + '/aliases'" class="mt-2 block text-center text-[13px] text-muted hover:text-ink hover:underline">Cancel</a>
+        <p class="mt-3 text-[12px] leading-relaxed text-muted">
+          Adding many at once? <a [routerLink]="'/domains/' + ctx.id() + '/aliases/import'" class="text-link hover:underline">Import from CSV</a>
+          takes a list of aliases and their mailboxes.
+        </p>
+      </div>
+    </div>
   </aside>
 </div>

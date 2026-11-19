@@ -13,7 +13,6 @@ import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { MailboxField, domainResource, localPart } from './shared';
@@ -25,7 +24,7 @@ import { MailboxField, domainResource, localPart } from './shared';
  */
 @Component({
   selector: 'amelu-new-alias',
-  imports: [RouterLink, PageHeader, Alert, MailboxField, Icon, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, MailboxField, Icon],
   templateUrl: './new-alias.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -48,7 +47,7 @@ export class NewAlias {
       : list;
   });
 
-  private readonly existing = domainResource(this.ctx.id, (id) => this.api.listAddressAliases(id))
+  protected readonly existing = domainResource(this.ctx.id, (id) => this.api.listAddressAliases(id))
     .value;
 
   protected readonly alias = signal('');
@@ -70,6 +69,15 @@ export class NewAlias {
       to: `${localPart(this.destination())}@${domain}`,
     };
   });
+
+  // The same form and summary styles as New mailbox.
+  protected readonly sectionTitle = 'block text-[15px] font-medium';
+  protected readonly label = 'text-[13px] text-muted';
+  protected readonly box = 'space-y-1.5 rounded border border-line bg-surface px-3.5 py-3 text-[13px]';
+  protected readonly pair = 'flex items-baseline justify-between gap-3';
+  // Scales the shared mailbox picker up to this form's large label and h-11 fields.
+  protected readonly bigField =
+    '[&>label]:text-[15px] [&>span]:mt-3 [&>span]:h-11 [&>p]:mt-3 [&_select]:mt-3 [&_select]:h-11 [&_select]:bg-surface [&_select]:pl-3.5 [&_select]:text-[15px] [&_amelu-icon]:mt-[6px]';
 
   constructor() {
     const preselect = inject(ActivatedRoute).snapshot.queryParamMap.get('mailbox');

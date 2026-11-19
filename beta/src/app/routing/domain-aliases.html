@@ -6,117 +6,113 @@
     { label: 'Domain aliases' },
   ]"
 >
-  Other domain names that also route mail to this domain's mailboxes. Add the alias domain's own DNS
-  records separately.
-  <a actions [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'" [class]="ui.primary">
-    New domain alias
-  </a>
+  Other domains you own that deliver into this domain's mailboxes.
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'" [class]="ui.primary">New domain alias</a>
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <section class="min-w-0 space-y-4">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
     @if (error(); as message) {
-      <amelu-alert
-        kind="error"
-        title="The domain alias wasn't removed"
-        [dismissible]="true"
-        (dismissed)="error.set(null)"
-      >
+      <amelu-alert kind="error" title="The domain alias wasn't removed" [dismissible]="true" (dismissed)="error.set(null)">
         {{ message }}
       </amelu-alert>
     }
 
-    <div>
-      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
-        Alias domains
-        @if (aliases(); as list) {
-          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
-            list.length
-          }}</span>
-        }
-      </h2>
-      <div [class]="ui.card + ' overflow-hidden'">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">
+          Alias domains
+          @if (aliases(); as list) {
+            <span class="font-normal text-muted">({{ list.length }})</span>
+          }
+        </h2>
+        <a [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'" [class]="ui.setAction" aria-label="New domain alias" title="New domain alias">
+          <amelu-icon name="plus" [size]="18" />
+        </a>
+      </div>
+      <div [class]="ui.well">
         @if (aliases() === null) {
-          <amelu-empty-state title="The domain aliases couldn't be loaded" [error]="true" />
-        } @else if (aliases(); as list) {
-          <ul class="divide-y divide-line">
-            @for (alias of list; track alias.name) {
-              <li class="flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-[14px] font-medium">{{ alias.name }}</div>
-                  <div class="truncate text-[12px] text-muted">
-                    Delivers to the same addresses at {{ ctx.domain()?.name }}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
-                  (click)="deleteTarget.set(alias.name)"
-                >
-                  Delete
-                </button>
-              </li>
-            } @empty {
-              <li>
-                <amelu-empty-state title="No domain aliases yet" illustration="domain-names">
-                  Add another domain you own, and mail to any address there arrives in the matching
-                  mailbox on
-                  {{ ctx.domain()?.name }}.
-                  <a
-                    actions
-                    [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'"
-                    [class]="ui.primary"
-                  >
-                    New domain alias
-                  </a>
-                </amelu-empty-state>
-              </li>
-            }
-          </ul>
+          <amelu-empty-state class="rounded-md border border-line bg-surface" title="The domain aliases couldn't be loaded" [error]="true" [compact]="true" />
         } @else {
-          <amelu-list-skeleton />
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr>
+                  <th [class]="ui.th">Alias domain</th>
+                  <th [class]="ui.th + ' max-md:hidden'">Delivers to</th>
+                  <th class="w-0 pr-4" aria-label="Actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (aliases(); as list) {
+                  @for (alias of list; track alias.name) {
+                    <tr [class]="ui.tr + ' hover:bg-bg/40'">
+                      <td [class]="ui.td + ' max-w-[300px]'">
+                        <span class="flex items-center gap-3">
+                          <amelu-icon name="globe" [size]="16" class="flex-none text-muted" />
+                          <span class="truncate font-medium">{{ alias.name }}</span>
+                        </span>
+                      </td>
+                      <td [class]="ui.td + ' text-muted max-md:hidden'">
+                        <span class="flex items-center gap-2">
+                          <amelu-icon name="arrowRight" [size]="14" class="flex-none" />
+                          The same addresses at {{ ctx.domain()?.name }}
+                        </span>
+                      </td>
+                      <td class="w-0 pr-4 text-right whitespace-nowrap">
+                        <button type="button" class="cursor-pointer text-[13px] text-bad hover:underline" [attr.aria-label]="'Delete ' + alias.name" (click)="deleteTarget.set(alias.name)">Delete</button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr [class]="ui.tr">
+                      <td colspan="3" class="px-4 py-10 text-center">
+                        <amelu-icon name="globe" [size]="18" class="mx-auto block" />
+                        <p class="mt-2">No domain aliases yet</p>
+                        <p class="mt-0.5 text-[13px] text-muted">Add another domain you own, and mail to any address there arrives in the matching mailbox on {{ ctx.domain()?.name }}.</p>
+                        <a [routerLink]="'/domains/' + ctx.id() + '/domain-aliases/new'" class="mt-1 inline-block text-[13px] text-link hover:underline">New domain alias</a>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  @for (i of [1, 2]; track i) {
+                    <tr [class]="ui.tr" aria-hidden="true">
+                      <td [class]="ui.td"><span class="block h-3 w-40 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></td>
+                      <td></td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
         }
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-  <aside class="space-y-6">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">How it works</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        With example.org as an alias of {{ ctx.domain()?.name || 'this domain' }}, mail to
-        sales&#64;example.org is delivered as if it was sent to sales&#64;{{
-          ctx.domain()?.name || 'this domain'
-        }}. Mailboxes and aliases are only managed here, on the main domain.
-      </p>
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">How it works</h2>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          With example.org as an alias of {{ ctx.domain()?.name || 'this domain' }}, mail to sales&#64;example.org is delivered as if it was sent to
+          sales&#64;{{ ctx.domain()?.name || 'this domain' }}. Mailboxes and aliases are only managed here, on the main domain.
+        </p>
+      </div>
     </section>
 
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div
-        class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
-        aria-hidden="true"
-      >
-        <amelu-dither-shader
-          colorBack="rgba(0,0,0,0)"
-          colorFront="var(--accent)"
-          shape="warp"
-          type="4x4"
-          [size]="2"
-          [speed]="0.3"
-        />
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">DNS for the alias domain</h2>
+        <a [routerLink]="'/domains/' + ctx.id() + '/dns'" class="text-[13px] text-link hover:underline">DNS records</a>
       </div>
-      <amelu-icon name="globe" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">DNS for the alias domain</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Mail only arrives once the alias domain's MX records point at the same mail servers as this
-        domain. Set them at your DNS provider for the alias domain.
-      </p>
-      <a
-        [routerLink]="'/domains/' + ctx.id() + '/dns'"
-        class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
-      >
-        See this domain's DNS records
-      </a>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Mail only arrives once the alias domain's MX records point at the same mail servers as this domain. Set them at the DNS provider of the alias domain.
+        </p>
+      </div>
     </section>
   </aside>
 </div>

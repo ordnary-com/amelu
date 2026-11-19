@@ -7,15 +7,14 @@ import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { PatternRewrite, RoutingApi } from './routing-api';
-import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
+import { ConfirmDelete, domainResource } from './shared';
 
 /** The current dashboard's /domains/:id/rewrites. */
 @Component({
   selector: 'amelu-pattern-rewrites',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, ConfirmDelete, ListSkeleton, Icon, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, ConfirmDelete, Icon],
   templateUrl: './pattern-rewrites.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

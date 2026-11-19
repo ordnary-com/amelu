@@ -7,125 +7,115 @@
     { label: 'New domain alias' },
   ]"
 >
-  Mail sent to any address at the alias domain is delivered as if it was sent to the same address at
-  this domain.
+  Mail to any address at the alias domain is delivered as if it was sent to the same address at this domain.
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+  <form id="new-domain-alias-form" [class]="ui.panel" autocomplete="off" (submit)="submit($event)">
     @if (error(); as message) {
-      <amelu-alert
-        kind="error"
-        title="The domain alias wasn't added"
-        [dismissible]="true"
-        (dismissed)="error.set(null)"
-      >
-        {{ message }}
-      </amelu-alert>
+      <div class="border-b border-line p-4">
+        <amelu-alert kind="error" title="The domain alias wasn't added" [dismissible]="true" (dismissed)="error.set(null)">
+          {{ message }}
+        </amelu-alert>
+      </div>
     }
 
-    <section>
-      <h2 [class]="ui.sectionTitle">Alias domain</h2>
-      <div [class]="ui.card + ' p-4'">
-        <label for="alias-domain" [class]="ui.label">Domain</label>
-        <input
-          id="alias-domain"
-          [class]="ui.input"
-          placeholder="For example: example.org"
-          autocomplete="off"
-          autocapitalize="off"
-          spellcheck="false"
-          autofocus
-          required
-          [value]="name()"
-          (input)="name.set($any($event.target).value)"
-        />
-        @if (sameAsDomain()) {
-          <p class="mt-1 text-[12px] text-warn">
-            That's this domain itself. Enter a different domain you own.
-          </p>
-        } @else {
-          <p [class]="ui.hint">A domain you own, without "www." or an &#64;.</p>
-        }
-      </div>
+    <section class="p-4">
+      <label for="alias-domain" [class]="sectionTitle">Alias domain</label>
+      <input
+        id="alias-domain"
+        class="mt-3 h-11 w-full rounded-md border border-line bg-surface px-3.5 text-[15px] outline-none placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/25"
+        placeholder="example.org"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        autofocus
+        required
+        [value]="name()"
+        (input)="name.set($any($event.target).value)"
+      />
+      @if (sameAsDomain()) {
+        <p class="mt-2 text-[12px] text-warn">That's this domain itself. Enter a different domain you own.</p>
+      } @else if (cleaned()) {
+        <p class="mt-2 text-[12px] text-muted">
+          Mail to any address at <span class="font-medium text-ink">{{ cleaned() }}</span> lands in the matching mailbox on
+          <span class="font-medium text-ink">{{ ctx.domain()?.name }}</span>.
+        </p>
+      } @else {
+        <p class="mt-2 text-[12px] text-muted">A domain you own, without "www." or an &#64;.</p>
+      }
     </section>
 
     <!-- An alias domain is served by our mail server just like a domain, so it proves ownership the same way. -->
     @if (ctx.domain(); as d) {
-      <section>
-        <h2 [class]="ui.sectionTitle">Prove that it's yours</h2>
-        <div [class]="ui.card + ' overflow-hidden text-[13px]'">
-          <p class="p-4 leading-relaxed text-muted">
-            Before adding it, publish this TXT record in the alias domain's DNS. We check it when you click Create.
-          </p>
-          <dl class="divide-y divide-line border-t border-line">
-            @for (row of [{ label: 'Type', value: 'TXT' }, { label: 'Name', value: '_amelu.' + (cleaned() || 'example.org') }, { label: 'Value', value: d.ownershipValue }]; track row.label) {
-              <div class="flex min-h-11 items-center gap-4 px-4 py-2">
-                <dt class="w-16 flex-none text-muted">{{ row.label }}</dt>
-                <dd class="min-w-0 flex-1 truncate font-mono" [title]="row.value">{{ row.value }}</dd>
-              </div>
-            }
-          </dl>
-        </div>
+      <section class="border-t border-line p-4">
+        <h2 [class]="sectionTitle">Prove that it's yours</h2>
+        <p class="mt-0.5 text-[13px] text-muted">
+          Before adding it, publish this TXT record in the alias domain's DNS. We check it when you click Create.
+        </p>
+        <dl class="mt-3 divide-y divide-line overflow-hidden rounded-md border border-line bg-surface text-[13px]">
+          @for (row of [{ label: 'Type', value: 'TXT' }, { label: 'Name', value: '_amelu.' + (cleaned() || 'example.org') }, { label: 'Value', value: d.ownershipValue }]; track row.label) {
+            <div class="flex min-h-11 items-center gap-4 px-4 py-2">
+              <dt class="w-16 flex-none text-muted">{{ row.label }}</dt>
+              <dd class="min-w-0 flex-1 truncate font-mono select-all" [title]="row.value">{{ row.value }}</dd>
+            </div>
+          }
+        </dl>
       </section>
     }
 
-    <div class="flex items-center gap-3">
-      <button
-        type="submit"
-        [class]="ui.primary"
-        [disabled]="!cleaned() || sameAsDomain() || busy()"
-      >
-        {{ busy() ? 'Adding...' : 'Create domain alias' }}
-      </button>
-      <a
-        [routerLink]="'/domains/' + ctx.id() + '/domain-aliases'"
-        class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
-        >Cancel</a
-      >
-    </div>
+    <section class="border-t border-line bg-well p-4">
+      <h2 [class]="sectionTitle">Alias or separate domain?</h2>
+      <p class="mt-0.5 text-[13px] text-muted">
+        An alias shares every mailbox with {{ ctx.domain()?.name || 'this domain' }}. If the other domain needs its own mailboxes,
+        <a routerLink="/domains/new" class="text-link hover:underline">add it as a separate domain</a> instead.
+      </p>
+    </section>
   </form>
 
-  <aside class="space-y-6">
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div
-        class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
-        aria-hidden="true"
-      >
-        <amelu-dither-shader
-          colorBack="rgba(0,0,0,0)"
-          colorFront="var(--accent)"
-          shape="warp"
-          type="4x4"
-          [size]="2"
-          [speed]="0.3"
-        />
+  <aside [class]="ui.panel + ' xl:sticky xl:top-6'">
+    <div [class]="ui.panelHeader">
+      <h2 [class]="ui.panelTitle">Summary</h2>
+    </div>
+    <div class="divide-y divide-line bg-well">
+      <div class="space-y-3 p-4">
+        <div>
+          <p [class]="label">Alias domain</p>
+          <p class="mt-1 truncate text-[15px] font-medium" [class.text-muted]="!cleaned()">{{ cleaned() || 'Not entered yet' }}</p>
+        </div>
+        <dl [class]="box">
+          <div [class]="pair"><dt>Delivers to</dt><dd class="truncate font-medium">{{ ctx.domain()?.name }}</dd></div>
+          <div [class]="pair"><dt>Mailboxes</dt><dd class="font-medium">Shared</dd></div>
+          <div [class]="pair"><dt>Ownership check</dt><dd class="font-medium">TXT record</dd></div>
+        </dl>
+        <div>
+          <p [class]="label">What happens next</p>
+          <ol [class]="box + ' mt-1.5'">
+            @for (step of steps; track step; let i = $index) {
+              <li [class]="pair + ' justify-start'"><span class="w-4 flex-none tabular-nums text-muted">{{ i + 1 }}</span><span class="font-medium">{{ step }}</span></li>
+            }
+          </ol>
+        </div>
       </div>
-      <amelu-icon name="globe" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Don't forget DNS</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        You still need to point the alias domain's own MX records at the same mail servers. Until
-        then, mail for it keeps going wherever it goes today.
-      </p>
-      <a
-        [routerLink]="'/domains/' + ctx.id() + '/dns'"
-        class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
-      >
-        See the MX records to use
-      </a>
-    </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Alias or separate domain?</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        An alias shares every mailbox with {{ ctx.domain()?.name || 'this domain' }}. If the other
-        domain needs its own mailboxes, add it as a separate domain instead.
-      </p>
-      <a
-        routerLink="/domains/new"
-        class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
-        >Add a domain</a
-      >
-    </section>
+      <div class="p-4">
+        <button
+          type="submit"
+          form="new-domain-alias-form"
+          class="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded bg-accent px-4 text-[14px] font-medium text-white hover:bg-accent/85 disabled:cursor-default disabled:opacity-50"
+          [disabled]="!cleaned() || sameAsDomain() || busy()"
+        >
+          {{ busy() ? 'Adding...' : 'Create domain alias' }}
+          @if (!busy()) {
+            <amelu-icon name="arrowRight" [size]="16" />
+          }
+        </button>
+        <a [routerLink]="'/domains/' + ctx.id() + '/domain-aliases'" class="mt-2 block text-center text-[13px] text-muted hover:text-ink hover:underline">Cancel</a>
+        <p class="mt-3 text-[12px] leading-relaxed text-muted">
+          Mail for the alias domain keeps going wherever it goes today until its MX records point at the same mail servers.
+          <a [routerLink]="'/domains/' + ctx.id() + '/dns'" class="text-link hover:underline">See the MX records to use</a>
+        </p>
+      </div>
+    </div>
   </aside>
 </div>

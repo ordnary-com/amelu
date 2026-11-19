@@ -282,16 +282,16 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
   if (!domainId) return [];
   const d = `/domains/${domainId}`;
   const columns: MenuColumn[] = [];
-  const domain: MenuEntry[] = [
-    { label: 'Recent Activity', link: `${d}/activity` },
-    { label: 'All Addresses', link: d },
-  ];
+  const domain: MenuEntry[] = [{ label: 'Overview', link: d }];
+  // On the Overview, its two quick actions sit under it.
   if (!section) {
     domain.push(
       { label: 'New Mailbox', link: `${d}/mailboxes/new`, sub: true, kind: 'create' },
       { label: 'New Alias', link: `${d}/aliases/new`, sub: true, kind: 'create' },
     );
   }
+  domain.push({ label: 'Recent Activity', link: `${d}/activity` });
+  domain.push({ label: 'Domain Status', link: `${d}/status`, attention: true });
   domain.push({ label: 'Mailboxes', link: `${d}/mailboxes`, area: true });
   if (section === 'mailboxes') {
     domain.push(

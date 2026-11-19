@@ -77,7 +77,7 @@ webmail.amelu.org ─> Roundcube on marduk                                      
 | `cloudflare/queues/`, `cloudflare/workflows/` | Cloudflare | Domain verification, Stalwart provisioning, retries |
 | `cloudflare/webmail/` | `webmail.amelu.org` | Worker in front of Roundcube |
 | `cloudflare/autoconfig/`, `cloudflare/status/` | Cloudflare | Mail client autoconfig and the status page |
-| `ops/` | marduk and the routers | Scripts and configs for the mail server and our own sending network |
+| `ops/` | marduk | Scripts and configs for the mail server |
 
 Postgres holds accounts, domains and billing. Mail lives only in Stalwart's
 own store on **marduk**, the mail server, and never in Postgres.
@@ -88,10 +88,10 @@ Outgoing mail leaves marduk from dedicated addresses, split into pools so new
 domains can't hurt the reputation of established ones (`ops/marduk/amelu-ip-pools.py`).
 Customers see the list on the dashboard's Sending IPs page.
 
-We also run our own block, **89.106.70.0/24 on AS218905**, announced through
-two Vultr routers (`ops/rtr1-ams/`, `ops/rtr1-par/`) and carried to marduk
-over WireGuard, with automatic failover between them
-(`ops/marduk/bgp-exit-check.sh`). It is not used for customer mail yet.
+The sending addresses come from Ordnary's block **89.106.70.0/24 on
+AS218905**, announced by Ordnary's routers and carried to marduk over
+WireGuard. The routers, the tunnels and the failover on marduk are
+documented and configured in the `ordnary-infra` repo (`network/`), not here.
 
 ## Running it locally
 

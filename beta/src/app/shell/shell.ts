@@ -14,6 +14,7 @@ import { Search } from '../search/search';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { apiUrl } from '../config';
 import { TechInfo } from '../login/tech-info';
+import { DitherShader } from '../login/dither-shader';
 import {
   lucideBuilding2,
   lucideChevronDown,
@@ -42,7 +43,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner, Tour],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner, Tour, DitherShader],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({

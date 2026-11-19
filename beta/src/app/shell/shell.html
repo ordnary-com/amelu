@@ -3,9 +3,14 @@
 
 <!-- The sidebar runs the full height in the chrome colour, with the logo on top;
      below lg it dissolves (contents) and the menus become a drawer. -->
-<div class="flex min-h-0 flex-none flex-col max-lg:contents">
+<div class="relative flex min-h-0 flex-none flex-col max-lg:contents">
+  <!-- A faint dither behind the menus, in the chrome's own ink colour so it follows every theme,
+       rising from the bottom and fading out towards the logo. -->
+  <div class="pointer-events-none absolute inset-0 opacity-[0.14] [mask-image:linear-gradient(to_top,black,rgba(0,0,0,0.5)_45%,transparent_85%)] max-lg:hidden" aria-hidden="true">
+    <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--chrome-ink)" shape="warp" type="4x4" [size]="2" [speed]="0.25" />
+  </div>
   <!-- The logo's 14px left padding lines it up with the menu text below. -->
-  <a routerLink="/" class="flex h-16 flex-none items-center pl-3.5 max-lg:hidden">
+  <a routerLink="/" class="relative flex h-16 flex-none items-center pl-3.5 max-lg:hidden">
     <!-- amelu-logo.png is flat blue on transparent: .chrome-logo turns it white, or black on the white theme. -->
     <img src="/amelu-logo.png" alt="Amelu" class="chrome-logo h-[22px]" />
   </a>
@@ -13,7 +18,7 @@
        one, then a column per level you're in (the domain, then its DNS, spam or a mailbox). -->
   <nav
     id="main-nav"
-    class="flex min-h-0 flex-1 text-[16px] font-normal max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
+    class="relative flex min-h-0 flex-1 text-[16px] font-normal max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-40 max-lg:flex-col max-lg:overflow-y-auto max-lg:bg-chrome max-lg:pr-0 max-lg:pb-8"
     [class.max-lg:hidden]="!navOpen()"
     aria-label="Main"
   >

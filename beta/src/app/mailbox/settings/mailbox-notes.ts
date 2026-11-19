@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } fr
 import { RouterLink } from '@angular/router';
 import { EmptyState } from '../../empty-state/empty-state';
 import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
 import { UI } from '../../ui';
 import { MailboxApi } from '../mailbox-api';
 import { MailboxContext, perMailbox } from '../mailbox-context';
@@ -12,70 +11,87 @@ import { SaveFeedback, Saving } from '../shared/saving';
 /** The current dashboard's MailboxAttachedNotesPage: free text kept with the mailbox. */
 @Component({
   selector: 'amelu-mailbox-notes',
-  imports: [RouterLink, DitherShader, EmptyState, Icon, MailboxHeading, SaveFeedback],
+  imports: [RouterLink, EmptyState, Icon, MailboxHeading, SaveFeedback],
   template: `
     <amelu-mailbox-heading title="Attached notes">
-      If you have some information you want attached to the mailbox, use the notes field. These are shown on the
-      mailbox's overview.
+      Free-form notes about this mailbox, shown on its overview.
     </amelu-mailbox-heading>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      @if (loaded() === null) {
-        <amelu-empty-state [class]="ui.card" title="The notes couldn't be loaded" [error]="true" />
-      } @else {
-        <section class="min-w-0">
-          <h2 [class]="ui.sectionTitle">Notes</h2>
-          <form [class]="ui.card + ' space-y-4 p-4'" (submit)="submit($event)">
-            <label class="block">
-              <span class="sr-only">Notes</span>
-              <textarea
-                rows="8"
-                [class]="ui.input + ' h-auto py-2 leading-relaxed'"
-                placeholder="Anything you want to add..."
-                [disabled]="!loaded()"
-                [value]="notes()"
-                (input)="notes.set($any($event.target).value); save.reset()"
-              ></textarea>
-              <span [class]="ui.hint + ' block'">Shown on the mailbox's overview.</span>
-            </label>
-            <amelu-save-feedback [state]="save" />
-              <div class="-mx-4 -mb-4 flex items-center justify-end gap-3 border-t border-line bg-bg/40 px-4 py-3">
-                @if (changed()) {
-                  <span class="mr-auto text-[12px] text-muted">Unsaved changes</span>
-                }
-                <button type="submit" [class]="ui.primary" [disabled]="save.busy() || !changed()">
-                  {{ save.busy() ? 'Saving...' : 'Save changes' }}
-                </button>
-              </div>
-          </form>
-        </section>
-      }
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+      <form class="min-w-0 space-y-5" (submit)="submit($event)">
+        <amelu-save-feedback [state]="save" success="Notes saved." />
 
-      <aside class="space-y-6">
-        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+        @if (loaded() === null) {
+          <amelu-empty-state class="rounded border border-line bg-surface" title="The notes couldn't be loaded" [error]="true" [compact]="true" />
+        } @else {
+          <section [class]="ui.setCard">
+            <div [class]="ui.setHeader">
+              <h2 [class]="ui.setTitle">Notes</h2>
+              @if (loaded()) {
+                <span class="text-[13px] text-muted tabular-nums">{{ notes().length }} {{ notes().length === 1 ? 'character' : 'characters' }}</span>
+              }
+            </div>
+            <div class="px-5 py-4">
+              <label for="mailbox-notes" class="block text-[14px]">Notes for {{ ctx.mailbox()?.address ?? 'this mailbox' }}</label>
+              @if (loaded()) {
+                <textarea
+                  id="mailbox-notes"
+                  rows="10"
+                  class="mt-2 block w-full resize-y rounded-md border border-line bg-surface px-3.5 py-2.5 text-[14px] leading-relaxed outline-none placeholder:text-muted/70 hover:border-ink/20 focus:border-accent focus:ring-2 focus:ring-accent/25"
+                  placeholder="For example: who uses this mailbox, or why a setting is the way it is"
+                  [value]="notes()"
+                  (input)="notes.set($any($event.target).value); save.reset()"
+                ></textarea>
+              } @else {
+                <span class="mt-2 block h-[232px] w-full animate-pulse rounded-md bg-bg" aria-hidden="true"></span>
+              }
+            </div>
+            <p [class]="ui.setNote">
+              <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+              <span>Plain text, shown on the mailbox's overview. Leave it empty to remove the notes.</span>
+            </p>
+            <div class="flex items-center gap-3 border-t border-line px-5 py-3">
+              <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="save.busy() || !changed()">
+                {{ save.busy() ? 'Saving...' : 'Save changes' }}
+              </button>
+              @if (changed()) {
+                <span class="text-[13px] text-muted">Unsaved changes</span>
+              }
+            </div>
+          </section>
+        }
+      </form>
+
+      <aside class="space-y-5">
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Ideas</h2>
           </div>
-          <amelu-icon name="doc" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">Ideas</h2>
-          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Who uses this mailbox, and who to ask before changing it.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Why it's set up the way it is, like a forward or a limit.
-            </li>
-          </ul>
+          <div [class]="ui.well">
+            <ul class="space-y-2 text-[13px] leading-relaxed text-muted">
+              <li class="flex gap-2.5">
+                <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+                Who uses this mailbox, and who to ask before changing it.
+              </li>
+              <li class="flex gap-2.5">
+                <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
+                Why it's set up the way it is, like a forward or a limit.
+              </li>
+            </ul>
+          </div>
         </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Who sees them</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            Only people in your organization, here in the dashboard and on the mailbox's
-            <a [routerLink]="ctx.base()" class="font-medium text-link hover:underline">overview</a>. Notes are never added
-            to mail.
-          </p>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Who sees them</h2>
+            <a [routerLink]="ctx.base()" class="text-[13px] text-link hover:underline">Overview</a>
+          </div>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              Only people in your organization, here in the dashboard and on the mailbox's overview. Notes are never
+              added to mail.
+            </p>
+          </div>
         </section>
       </aside>
     </div>

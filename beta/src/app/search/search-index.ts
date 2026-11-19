@@ -42,8 +42,9 @@ const GLOBAL: PageDef[] = [
 
 // Pages of one domain, relative to /domains/{id}.
 const DOMAIN: PageDef[] = [
-  { path: '', label: 'All addresses', hint: 'Mailboxes and aliases on this domain', keywords: 'overview addresses domain' },
+  { path: '', label: 'Overview', hint: 'The domain at a glance, with its mailboxes and aliases', keywords: 'overview addresses all addresses domain' },
   { path: '/activity', label: 'Recent activity', hint: 'What changed on this domain', keywords: 'activity history log' },
+  { path: '/status', label: 'Domain status', hint: 'Whether sending is paused or anything is limited', keywords: 'status paused pause blocked suspended abuse limit authentication failed' },
   { path: '/mailboxes', label: 'Mailboxes', hint: 'Every mailbox on this domain', keywords: 'mailboxes accounts users inboxes' },
   { path: '/mailboxes/new', label: 'New mailbox', hint: 'Create a mailbox', keywords: 'new mailbox create add account user' },
   { path: '/mailboxes/import', label: 'Import mailboxes', hint: 'Create many from a CSV', keywords: 'import csv bulk mailboxes' },

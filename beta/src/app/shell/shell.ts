@@ -6,6 +6,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { Domains } from '../domains';
 import { Api } from '../api';
 import { MailboxApi } from '../mailbox/mailbox-api';
+import { DomainAdminApi } from '../domain-admin/domain-admin-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { Tour } from '../tour/tour';
 import { isFree } from '../billing';
@@ -14,6 +15,7 @@ import { Search } from '../search/search';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { apiUrl } from '../config';
 import { TechInfo } from '../login/tech-info';
+import { DitherShader } from '../login/dither-shader';
 import {
   lucideBuilding2,
   lucideChevronDown,
@@ -42,7 +44,7 @@ const LINK =
 
 @Component({
   selector: 'amelu-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner, Tour],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AccountMenu, Search, NgIcon, TechInfo, NotificationBell, PromoBanner, Tour, DitherShader],
   templateUrl: './shell.html',
   viewProviders: [
     provideIcons({
@@ -118,6 +120,24 @@ export class Shell {
       ),
     ),
     { initialValue: null },
+  );
+
+  // The dot on Domain Status: fetched once per domain you enter, not on every navigation inside it.
+  private readonly domainAdminApi = inject(DomainAdminApi);
+  protected readonly domainAttention = toSignal(
+    toObservable(computed(() => this.at().domainId)).pipe(
+      distinctUntilChanged(),
+      switchMap((id) =>
+        id
+          ? this.domainAdminApi.status(id).pipe(
+              map((status) => status.attention),
+              catchError(() => of(false)),
+              startWith(false),
+            )
+          : of(false),
+      ),
+    ),
+    { initialValue: false },
   );
 
   // Only one menu column shows next to the main one. Inside a mailbox that is
@@ -245,6 +265,8 @@ interface MenuEntry {
   secondary?: boolean;
   /** Starts a new group under this heading. */
   group?: string;
+  /** Gets a warning dot while the domain has an active problem (Domain Status). */
+  attention?: boolean;
 }
 
 interface MenuColumn {
@@ -260,16 +282,16 @@ function menuColumns({ domainId, section, mailboxId }: Location): MenuColumn[] {
   if (!domainId) return [];
   const d = `/domains/${domainId}`;
   const columns: MenuColumn[] = [];
-  const domain: MenuEntry[] = [
-    { label: 'Recent Activity', link: `${d}/activity` },
-    { label: 'All Addresses', link: d },
-  ];
+  const domain: MenuEntry[] = [{ label: 'Overview', link: d }];
+  // On the Overview, its two quick actions sit under it.
   if (!section) {
     domain.push(
       { label: 'New Mailbox', link: `${d}/mailboxes/new`, sub: true, kind: 'create' },
       { label: 'New Alias', link: `${d}/aliases/new`, sub: true, kind: 'create' },
     );
   }
+  domain.push({ label: 'Recent Activity', link: `${d}/activity` });
+  domain.push({ label: 'Domain Status', link: `${d}/status`, attention: true });
   domain.push({ label: 'Mailboxes', link: `${d}/mailboxes`, area: true });
   if (section === 'mailboxes') {
     domain.push(

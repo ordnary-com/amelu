@@ -1,6 +1,5 @@
 <amelu-page-header title="DNS configuration" [crumbs]="crumbs()">
-  Add these records where your domain's DNS is hosted, usually your registrar. We look them up live, so you can see
-  when each one is right.
+  Add these records where your domain's DNS is hosted, and we check them live.
   <button actions type="button" [class]="ui.outline" [disabled]="dns.checking()" (click)="dns.recheck()">
     {{ dns.checking() ? 'Checking...' : 'Check again' }}
   </button>
@@ -11,8 +10,8 @@
 
 <amelu-section-tabs label="DNS" [base]="'/domains/' + dns.id()" [tabs]="tabs" />
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="min-w-0 space-y-6">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
     @if (dns.error(); as message) {
       @if (dns.records()) {
         <amelu-alert kind="error" title="The check didn't finish" [dismissible]="true" (dismissed)="dns.error.set(null)">
@@ -28,129 +27,183 @@
         </amelu-alert>
       }
 
-      <section [class]="ui.card + ' overflow-hidden px-4 pt-4'">
-        <div class="flex flex-wrap items-baseline justify-between gap-2">
-          <p class="text-[13px] text-muted">
-            <span class="text-[26px] leading-tight font-normal tracking-[-0.01em] text-ink">{{ summary.matched }}</span>
-            of {{ summary.total }} records verified
-          </p>
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Verification</h2>
           @if (dns.checkedAt(); as at) {
-            <span class="text-[12px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</span>
+            <span class="text-[13px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</span>
           }
         </div>
-        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
-          <div class="h-full rounded-full" [class]="summary.allMatched ? 'bg-ok' : 'bg-accent'" [style.width.%]="percent()"></div>
-        </div>
-        <p class="mt-2 text-[12px] text-muted" [class.pb-4]="!health()">{{ detail() }}</p>
+        <div [class]="ui.well">
+          <div class="overflow-hidden rounded-md border border-line bg-surface">
+            <div class="px-4 py-3">
+              <p class="text-[13px] text-muted">
+                <span class="text-[26px] leading-tight font-normal tracking-[-0.01em] text-ink tabular-nums">{{ summary.matched }}</span>
+                of {{ summary.total }} records verified
+              </p>
+              <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
+                <div class="h-full rounded-full" [class]="summary.allMatched ? 'bg-ok' : 'bg-accent'" [style.width.%]="percent()"></div>
+              </div>
+              <p class="mt-2 text-[12px] text-muted">{{ detail() }}</p>
+            </div>
 
-        @if (health(); as rows) {
-          <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line">
-            @for (row of rows; track row.label) {
-              <li class="flex items-center gap-3 px-4 py-2.5" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">
-                <span
-                  class="inline-flex size-5 flex-none items-center justify-center rounded-full"
-                  [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok text-white' : 'bg-bad text-white'"
-                  aria-hidden="true"
-                >
-                  @if (row.ok !== null) {
-                    <amelu-icon [name]="row.ok ? 'check' : 'close'" [size]="12" />
-                  }
-                </span>
-                <span class="min-w-0 flex-1">
-                  <span class="block text-[13px] font-medium" [class.text-bad]="row.ok === false">{{ row.label }}</span>
-                  <span class="block truncate text-[12px] text-muted">{{ row.what }}</span>
-                </span>
-                <span class="flex-none text-[12px]" [class]="row.ok === null ? 'text-muted' : row.ok ? 'text-ok' : 'font-medium text-bad'">
-                  {{ row.ok === null ? 'Not checked' : row.ok ? 'Verified' : 'Wrong' }}
-                </span>
-              </li>
+            @if (health(); as rows) {
+              <ul class="grid divide-y divide-line border-t border-line sm:grid-cols-2 sm:divide-y-0 sm:[&>li:nth-child(n+3)]:border-t sm:[&>li:nth-child(even)]:border-l [&>li]:border-line">
+                @for (row of rows; track row.label) {
+                  <li class="flex items-center gap-3 px-4 py-2.5" [title]="row.label + (row.ok === null ? ' not checked' : row.ok ? ' verified' : ' not verified')">
+                    <span
+                      class="inline-flex size-5 flex-none items-center justify-center rounded-full"
+                      [class]="row.ok === null ? 'bg-bg text-muted' : row.ok ? 'bg-ok text-white' : 'bg-bad text-white'"
+                      aria-hidden="true"
+                    >
+                      @if (row.ok !== null) {
+                        <amelu-icon [name]="row.ok ? 'check' : 'close'" [size]="12" />
+                      }
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-[13px] font-medium" [class.text-bad]="row.ok === false">{{ row.label }}</span>
+                      <span class="block truncate text-[12px] text-muted">{{ row.what }}</span>
+                    </span>
+                    <span class="flex-none text-[12px]" [class]="row.ok === null ? 'text-muted' : row.ok ? 'text-ok' : 'font-medium text-bad'">
+                      {{ row.ok === null ? 'Not checked' : row.ok ? 'Verified' : 'Wrong' }}
+                    </span>
+                  </li>
+                }
+              </ul>
             }
-          </ul>
-        }
+          </div>
+        </div>
       </section>
     } @else if (dns.records() === undefined) {
-      <div [class]="ui.card + ' space-y-3 p-4'" aria-hidden="true">
-        <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
-        <span class="block h-1.5 w-full animate-pulse rounded bg-bg"></span>
-        <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
-      </div>
+      <section [class]="ui.panel" aria-hidden="true">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Verification</h2>
+        </div>
+        <div [class]="ui.well">
+          <div class="space-y-3 rounded-md border border-line bg-surface px-4 py-4">
+            <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+            <span class="block h-1.5 w-full animate-pulse rounded bg-bg"></span>
+            <span class="block h-3 w-64 animate-pulse rounded bg-bg"></span>
+          </div>
+        </div>
+      </section>
     }
 
-    <section>
-      <div class="mb-3 flex items-center justify-between gap-3">
-        <h2 class="text-[14px] font-bold">{{ dns.summary()?.allMatched ? 'Records' : 'Records to add or fix' }}</h2>
-        <a [routerLink]="'/domains/' + dns.id() + '/dns/records'" class="text-[13px] font-medium text-link hover:underline">All records</a>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">
+          {{ dns.summary()?.allMatched ? 'Records' : 'Records to add or fix' }}
+          @if (todo(); as records) {
+            <span class="font-normal text-muted">({{ records.length }})</span>
+          }
+        </h2>
+        <a [routerLink]="'/domains/' + dns.id() + '/dns/records'" class="text-[13px] text-link hover:underline">All records</a>
       </div>
-      <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
+      <div [class]="ui.well">
         @if (dns.records() === null) {
-          <amelu-empty-state title="The DNS records couldn't be checked" [error]="true">
+          <amelu-empty-state class="rounded-md border border-line bg-surface" title="The DNS records couldn't be checked" [error]="true" [compact]="true">
             {{ dns.error() }}
           </amelu-empty-state>
-        } @else if (todo(); as records) {
-          @for (record of records; track $index) {
-            <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="px-4 py-4" />
-          } @empty {
-            <amelu-empty-state title="Nothing left to do" illustration="all-checked">
-              Every record matches. Keep them in place: removing one later stops mail or hurts delivery.
-              <a actions [routerLink]="'/domains/' + dns.id() + '/dns/records'" [class]="ui.outline">View all records</a>
-            </amelu-empty-state>
-          }
         } @else {
-          @for (i of [1, 2, 3]; track i) {
-            <div class="space-y-2.5 px-4 py-4" aria-hidden="true">
-              <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
-              <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
-              <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
-            </div>
-          }
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr>
+                  <th [class]="ui.th">Type</th>
+                  <th [class]="ui.th">Name</th>
+                  <th [class]="ui.th + ' max-md:hidden'">Value</th>
+                  <th [class]="ui.th">Status</th>
+                  <th class="w-0 pr-3" aria-label="Details"></th>
+                </tr>
+              </thead>
+              @if (todo(); as records) {
+                @for (record of records; track $index) {
+                  <tbody ameluDnsRecord [record]="record" [domain]="dns.domain()?.name ?? ''"></tbody>
+                } @empty {
+                  <tbody>
+                    <tr [class]="ui.tr">
+                      <td colspan="5" class="px-4 py-10 text-center">
+                        <amelu-icon name="circleCheck" [size]="18" class="mx-auto block text-ok" />
+                        <p class="mt-2">Nothing left to do</p>
+                        <p class="mt-0.5 text-[13px] text-muted">Every record matches. Keep them in place: removing one later stops mail or hurts delivery.</p>
+                        <a [routerLink]="'/domains/' + dns.id() + '/dns/records'" class="mt-1 inline-block text-[13px] text-link hover:underline">View all records</a>
+                      </td>
+                    </tr>
+                  </tbody>
+                }
+              } @else {
+                <tbody>
+                  @for (i of [1, 2, 3]; track i) {
+                    <tr [class]="ui.tr" aria-hidden="true">
+                      <td [class]="ui.td"><span class="block h-4 w-10 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="block h-3 w-28 animate-pulse rounded bg-bg"></span><span class="mt-2 block h-2.5 w-20 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="block h-3 w-16 animate-pulse rounded bg-bg"></span></td>
+                      <td></td>
+                    </tr>
+                  }
+                </tbody>
+              }
+            </table>
+          </div>
         }
       </div>
     </section>
   </div>
 
-  <aside class="space-y-6">
+  <aside class="space-y-5">
     <amelu-nameservers-card [domainId]="dns.id()" [domain]="dns.domain()?.name ?? ''" (changed)="dns.recheck()" />
+
     @if (dns.applyUrl(); as url) {
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Automatic setup</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          {{ dns.provider()?.name ?? 'Your DNS provider' }} supports automatic DNS setup. Sign in there, approve the
-          change, and every record is added for you.
-        </p>
-        <a [href]="url" [class]="ui.primary + ' mt-3'">Set up automatically</a>
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Automatic setup</h2>
+        </div>
+        <div [class]="ui.well">
+          <p class="text-[13px] leading-relaxed text-muted">
+            {{ dns.provider()?.name ?? 'Your DNS provider' }} supports automatic DNS setup. Sign in there, approve the
+            change, and every record is added for you.
+          </p>
+          <a [href]="url" [class]="ui.primary + ' mt-3'">Set up automatically</a>
+        </div>
       </section>
     } @else if (dns.provider(); as provider) {
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Your DNS is at {{ provider.name }}</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          Add the records in the DNS settings for this domain at {{ provider.name }}.
-        </p>
-        @if (provider.dnsUrl) {
-          <a [href]="provider.dnsUrl" target="_blank" rel="noopener" [class]="ui.outline + ' mt-3'">Open {{ provider.name }}</a>
-        }
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Your DNS is at {{ provider.name }}</h2>
+          @if (provider.dnsUrl) {
+            <a [href]="provider.dnsUrl" target="_blank" rel="noopener" class="flex-none text-[13px] text-link hover:underline">Open {{ provider.name }}</a>
+          }
+        </div>
+        <div [class]="ui.well">
+          <p class="text-[13px] leading-relaxed text-muted">Add the records in the DNS settings for this domain at {{ provider.name }}.</p>
+        </div>
       </section>
     }
 
-    <!-- Same dither as the DNS help card on the Domains page, rising from the bottom right. -->
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Import a zone file</h2>
+        <a [href]="dns.bindUrl()" class="text-[13px] text-link hover:underline">Download</a>
       </div>
-      <amelu-icon name="download" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Import a zone file</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Many DNS providers can import every record at once from a BIND zone file, usually under DNS import and export.
-      </p>
-      <a [href]="dns.bindUrl()" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">Download zone file</a>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Many DNS providers can import every record at once from a BIND zone file, usually under DNS import and export.
+        </p>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Adding records by hand</h2>
-      <ul class="mt-2 list-disc space-y-1.5 pl-4 text-[13px] leading-relaxed text-muted">
-        <li>Copy each field into the matching field at your provider. Leave the TTL at its default.</li>
-        <li>Already have an MX or SPF record from another mail provider? Replace it, don't add a second one.</li>
-        <li>Changes can take a few minutes to an hour to show up. Use Check again after saving.</li>
-      </ul>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Adding records by hand</h2>
+      </div>
+      <div [class]="ui.well">
+        <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface text-[13px] leading-relaxed">
+          <li class="px-4 py-2.5">Copy each field into the matching field at your provider. Leave the TTL at its default.</li>
+          <li class="px-4 py-2.5">Already have an MX or SPF record from another mail provider? Replace it, don't add a second one.</li>
+          <li class="px-4 py-2.5">Changes can take a few minutes to an hour to show up. Use Check again after saving.</li>
+        </ul>
+      </div>
     </section>
   </aside>
 </div>

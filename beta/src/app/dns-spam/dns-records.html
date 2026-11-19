@@ -1,6 +1,5 @@
 <amelu-page-header title="DNS configuration" [crumbs]="crumbs()">
-  Add these records where your domain's DNS is hosted, usually your registrar. We look them up live, so you can see
-  when each one is right.
+  Every record your domain needs, with what we found when we last looked it up.
   <button actions type="button" [class]="ui.outline" [disabled]="dns.checking()" (click)="dns.recheck()">
     {{ dns.checking() ? 'Checking...' : 'Check again' }}
   </button>
@@ -12,8 +11,8 @@
 
 <amelu-section-tabs label="DNS" [base]="'/domains/' + dns.id()" [tabs]="tabs" />
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <section class="min-w-0 space-y-4">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
     @if (dns.error(); as message) {
       @if (dns.records()) {
         <amelu-alert kind="error" title="The check didn't finish" [dismissible]="true" (dismissed)="dns.error.set(null)">
@@ -22,103 +21,164 @@
       }
     }
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2 class="text-[14px] font-bold">
-        @if (dns.summary(); as summary) {
-          {{ summary.matched }} of {{ summary.total }} verified
-        } @else {
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">
           Records
-        }
-      </h2>
-      <div class="flex h-8 items-center rounded-md border border-line bg-surface p-0.5" role="tablist">
-        @for (option of filters; track option.value) {
-          <button
-            type="button"
-            role="tab"
-            class="h-full cursor-pointer rounded px-2.5 text-[12px] font-medium transition-colors"
-            [class]="filter() === option.value ? 'bg-accent/10 text-ink' : 'text-muted hover:text-ink'"
-            [attr.aria-selected]="filter() === option.value"
-            (click)="filter.set(option.value)"
-          >
-            {{ option.label }}
-          </button>
+          @if (filtered(); as records) {
+            <span class="font-normal text-muted">({{ records.length }})</span>
+          }
+        </h2>
+        @if (dns.summary(); as summary) {
+          <span class="text-[13px] text-muted">{{ summary.matched }} of {{ summary.total }} verified</span>
         }
       </div>
-    </div>
+      <div [class]="ui.well">
+        <div class="mb-3 flex">
+          <div class="flex h-9 items-center rounded-md border border-line bg-surface p-0.5" role="tablist">
+            @for (option of filters; track option.value) {
+              <button
+                type="button"
+                role="tab"
+                class="h-full cursor-pointer rounded px-3 text-[13px] font-medium transition-colors"
+                [class]="filter() === option.value ? 'bg-accent/10 text-ink' : 'text-muted hover:text-ink'"
+                [attr.aria-selected]="filter() === option.value"
+                (click)="filter.set(option.value)"
+              >
+                {{ option.label }}
+              </button>
+            }
+          </div>
+        </div>
 
-    <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-      @if (dns.records() === null) {
-        <amelu-empty-state title="The DNS records couldn't be checked" [error]="true">
-          {{ dns.error() }}
-        </amelu-empty-state>
-      } @else if (filtered(); as records) {
-        @for (record of records; track $index) {
-          <amelu-dns-record [record]="record" [domain]="dns.domain()?.name ?? ''" class="px-4 py-4" />
-        } @empty {
-          @if (filter() === 'todo') {
-            <amelu-empty-state title="Nothing needs attention" illustration="all-checked">Every record matches what we expect.</amelu-empty-state>
-          } @else if (filter() === 'matched') {
-            <amelu-empty-state title="No verified records yet" illustration="domain-names">
-              Once you add the records at your DNS provider, they show up here after the next check.
-              <a actions [routerLink]="'/domains/' + dns.id() + '/dns'" [class]="ui.outline">Back to DNS setup</a>
-            </amelu-empty-state>
-          } @else {
-            <amelu-empty-state title="No records" illustration="no-data">The mail server didn't return any records for this domain.</amelu-empty-state>
-          }
-        }
-      } @else {
-        @for (i of [1, 2, 3, 4]; track i) {
-          <div class="space-y-2.5 px-4 py-4" aria-hidden="true">
-            <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
-            <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
-            <span class="block h-7 w-full animate-pulse rounded bg-bg"></span>
+        @if (dns.records() === null) {
+          <amelu-empty-state class="rounded-md border border-line bg-surface" title="The DNS records couldn't be checked" [error]="true" [compact]="true">
+            {{ dns.error() }}
+          </amelu-empty-state>
+        } @else {
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr>
+                  <th [class]="ui.th">Type</th>
+                  <th [class]="ui.th">Name</th>
+                  <th [class]="ui.th + ' max-md:hidden'">Value</th>
+                  <th [class]="ui.th">Status</th>
+                  <th class="w-0 pr-3" aria-label="Details"></th>
+                </tr>
+              </thead>
+              @if (filtered(); as records) {
+                @for (record of records; track $index) {
+                  <tbody ameluDnsRecord [record]="record" [domain]="dns.domain()?.name ?? ''"></tbody>
+                } @empty {
+                  <tbody>
+                    <tr [class]="ui.tr">
+                      <td colspan="5" class="px-4 py-10 text-center">
+                        @if (filter() === 'todo') {
+                          <amelu-icon name="circleCheck" [size]="18" class="mx-auto block text-ok" />
+                          <p class="mt-2">Nothing needs attention</p>
+                          <p class="mt-0.5 text-[13px] text-muted">Every record matches what we expect.</p>
+                        } @else if (filter() === 'matched') {
+                          <amelu-icon name="listChecks" [size]="18" class="mx-auto block" />
+                          <p class="mt-2">No verified records yet</p>
+                          <p class="mt-0.5 text-[13px] text-muted">Once you add the records at your DNS provider, they show up here after the next check.</p>
+                          <a [routerLink]="'/domains/' + dns.id() + '/dns'" class="mt-1 inline-block text-[13px] text-link hover:underline">Back to DNS setup</a>
+                        } @else {
+                          <amelu-icon name="globe" [size]="18" class="mx-auto block" />
+                          <p class="mt-2">No records</p>
+                          <p class="mt-0.5 text-[13px] text-muted">The mail server didn't return any records for this domain.</p>
+                        }
+                      </td>
+                    </tr>
+                  </tbody>
+                }
+              } @else {
+                <tbody>
+                  @for (i of [1, 2, 3, 4]; track i) {
+                    <tr [class]="ui.tr" aria-hidden="true">
+                      <td [class]="ui.td"><span class="block h-4 w-10 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="block h-3 w-28 animate-pulse rounded bg-bg"></span><span class="mt-2 block h-2.5 w-20 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-48 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="block h-3 w-16 animate-pulse rounded bg-bg"></span></td>
+                      <td></td>
+                    </tr>
+                  }
+                </tbody>
+              }
+            </table>
           </div>
         }
-      }
-    </div>
-  </section>
+      </div>
+    </section>
+  </div>
 
-  <aside class="space-y-6">
-    <section>
-      <h2 [class]="ui.sectionTitle">Status</h2>
-      <ul [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-        @if (counts(); as rows) {
-          @for (row of rows; track row.status) {
-            <li class="flex items-center justify-between gap-3 px-4 py-2.5">
-              <span [class]="row.class">{{ row.label }}</span>
-              <span class="text-[13px] font-semibold tabular-nums">{{ row.count }}</span>
-            </li>
-          }
-          @if (dns.checkedAt(); as at) {
-            <li class="px-4 py-2.5 text-[12px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</li>
-          }
-        } @else {
-          @for (i of [1, 2, 3, 4]; track i) {
-            <li class="px-4 py-3" aria-hidden="true">
-              <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
-            </li>
-          }
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Status</h2>
+        @if (dns.checkedAt(); as at) {
+          <span class="text-[13px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</span>
         }
-      </ul>
+      </div>
+      <div [class]="ui.well">
+        <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+          @if (counts(); as rows) {
+            @for (row of rows; track row.status) {
+              <li class="flex items-center gap-3 px-4 py-2.5">
+                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full" [class]="row.look.circle" aria-hidden="true">
+                  @if (row.look.icon; as icon) {
+                    <amelu-icon [name]="icon" [size]="12" />
+                  }
+                </span>
+                <span class="min-w-0 flex-1 text-[13px]">{{ row.label }}</span>
+                <span class="text-[13px] font-medium tabular-nums" [class.text-bad]="row.count > 0 && (row.status === 'mismatch' || row.status === 'missing')">{{ row.count }}</span>
+              </li>
+            }
+          } @else {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <li class="px-4 py-3" aria-hidden="true">
+                <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+              </li>
+            }
+          }
+        </ul>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Prefer to import?</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Download the zone file and import it at your DNS provider. Most providers support BIND zone files, usually under
-        DNS import and export.
-      </p>
-      <a [href]="dns.bindUrl()" [class]="ui.outline + ' mt-3'">Download zone file</a>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Prefer to import?</h2>
+        <a [href]="dns.bindUrl()" class="text-[13px] text-link hover:underline">Download</a>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Download the zone file and import it at your DNS provider. Most providers support BIND zone files, usually under
+          DNS import and export.
+        </p>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">What the statuses mean</h2>
-      <dl class="mt-2 space-y-2 text-[13px]">
-        <div><dt class="font-medium">Verified</dt><dd class="text-muted">Published exactly as expected.</dd></div>
-        <div><dt class="font-medium">Wrong value</dt><dd class="text-muted">Something is published at this name, but not this value.</dd></div>
-        <div><dt class="font-medium">Missing</dt><dd class="text-muted">Nothing is published at this name yet.</dd></div>
-        <div><dt class="font-medium">Not checked</dt><dd class="text-muted">A record type we don't look up live.</dd></div>
-      </dl>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">What the statuses mean</h2>
+      </div>
+      <div [class]="ui.well">
+        <dl class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface text-[13px]">
+          @for (item of legend; track item.status) {
+            <div class="flex gap-3 px-4 py-2.5">
+              <span class="mt-px inline-flex size-5 flex-none items-center justify-center rounded-full" [class]="item.look.circle" aria-hidden="true">
+                @if (item.look.icon; as icon) {
+                  <amelu-icon [name]="icon" [size]="12" />
+                }
+              </span>
+              <div class="min-w-0">
+                <dt class="font-medium">{{ item.label }}</dt>
+                <dd class="mt-0.5 text-[12px] leading-relaxed text-muted">{{ item.text }}</dd>
+              </div>
+            </div>
+          }
+        </dl>
+      </div>
     </section>
   </aside>
 </div>

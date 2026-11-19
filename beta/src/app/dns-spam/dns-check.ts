@@ -15,6 +15,14 @@ export const RECORD_STATUS: Record<DnsRecordCheck['status'], { label: string; to
   unchecked: { label: 'Not checked', tone: 'neutral' },
 };
 
+/** A status as a check or cross circle and coloured text, like the DNS panel on the domain Overview. */
+export const RECORD_STATUS_LOOK: Record<DnsRecordCheck['status'], { circle: string; icon: 'check' | 'close' | null; text: string }> = {
+  matched: { circle: 'bg-ok text-white', icon: 'check', text: 'text-ok' },
+  mismatch: { circle: 'bg-bad text-white', icon: 'close', text: 'font-medium text-bad' },
+  missing: { circle: 'bg-bad text-white', icon: 'close', text: 'font-medium text-bad' },
+  unchecked: { circle: 'bg-bg text-muted', icon: null, text: 'text-muted' },
+};
+
 /**
  * The live DNS check for the domain in the route, plus Domain Connect. A
  * recheck keeps the last result on screen until the new one arrives.

@@ -50,13 +50,13 @@ export function localPart(value: string): string {
       (click)="close()"
     >
       <div
-        class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+        class="w-full max-w-md rounded-md border border-line bg-popover p-5 shadow-xl"
         role="alertdialog"
         aria-modal="true"
         [attr.aria-label]="title()"
         (click)="$event.stopPropagation()"
       >
-        <h3 class="text-[15px] font-bold break-words">{{ title() }}</h3>
+        <h3 class="text-[15px] font-medium break-words">{{ title() }}</h3>
         <p class="mt-2 text-[13px] leading-relaxed text-muted"><ng-content /></p>
         <div class="mt-5 flex justify-end gap-2">
           <button type="button" [class]="ui.outline" (click)="close()" [disabled]="busy()">

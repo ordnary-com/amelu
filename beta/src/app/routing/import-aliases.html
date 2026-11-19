@@ -8,22 +8,18 @@
   ]"
 >
   @if (!results()) {
-    Bulk import address aliases from comma separated values (CSV). Each row is two columns and has
-    no header: the alias address, then the destination mailbox it should deliver to.
+    Create many address aliases at once from CSV data, in the format on the right.
   }
 </amelu-page-header>
 
 @if (results(); as rows) {
-  <div class="max-w-3xl space-y-5">
+  <div class="max-w-4xl space-y-5">
     @if (rows.length === 0) {
       <amelu-alert kind="warning" title="Nothing was imported">
         No row had both an alias and a destination. Check the format and try again.
       </amelu-alert>
     } @else if (failed() === 0) {
-      <amelu-alert
-        kind="success"
-        [title]="rows.length + (rows.length === 1 ? ' alias' : ' aliases') + ' created'"
-      >
+      <amelu-alert kind="success" [title]="rows.length + (rows.length === 1 ? ' alias' : ' aliases') + ' created'">
         Mail to these addresses is delivered to their mailboxes from now on.
       </amelu-alert>
     } @else {
@@ -33,169 +29,152 @@
     }
 
     @if (rows.length) {
-      <section>
-        <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
-          Rows
-          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
-            rows.length
-          }}</span>
-        </h2>
-        <div [class]="ui.card + ' overflow-x-auto'">
-          <table class="w-full text-left text-[13px]">
-            <thead class="border-b border-line text-[12px] text-muted">
-              <tr>
-                <th class="px-4 py-2.5 font-medium">Alias</th>
-                <th class="px-4 py-2.5 font-medium">Destination</th>
-                <th class="px-4 py-2.5 font-medium">Result</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-              @for (row of rows; track $index) {
-                <tr class="hover:bg-bg/60">
-                  <td class="px-4 py-2.5 align-top font-medium break-all">{{ row.alias }}</td>
-                  <td class="px-4 py-2.5 align-top break-all">{{ row.destination }}</td>
-                  <td class="px-4 py-2.5 align-top">
-                    @if (row.error) {
-                      <span [class]="badgeClass('bad')">Failed</span>
-                      <span class="mt-1 block text-[12px] text-bad">{{ row.error }}</span>
-                    } @else {
-                      <span [class]="badgeClass('ok')">Created</span>
-                    }
-                  </td>
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Results <span class="font-normal text-muted">({{ rows.length }})</span></h2>
+          <span class="text-[13px] text-muted">{{ rows.length - failed() }} created · {{ failed() }} failed</span>
+        </div>
+        <div [class]="ui.well">
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr>
+                  <th [class]="ui.th">Alias</th>
+                  <th [class]="ui.th">Result</th>
+                  <th [class]="ui.th + ' max-sm:hidden'">Delivers to</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (row of rows; track $index) {
+                  <tr [class]="ui.tr">
+                    <td [class]="ui.td + ' max-w-[260px] truncate font-medium'">{{ row.alias }}</td>
+                    <td [class]="ui.td">
+                      @if (row.error) {
+                        <span class="inline-flex items-start gap-1.5 text-bad"><amelu-icon name="circleX" [size]="15" class="mt-px flex-none" />{{ row.error }}</span>
+                      } @else {
+                        <span class="inline-flex items-center gap-1.5 text-ok"><amelu-icon name="circleCheck" [size]="15" />Created</span>
+                      }
+                    </td>
+                    <td [class]="ui.td + ' max-w-[260px] truncate max-sm:hidden'">{{ row.destination }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     }
 
-    <div class="flex flex-wrap gap-2">
-      <a [routerLink]="'/domains/' + ctx.id() + '/aliases'" [class]="ui.primary"
-        >Return to all aliases</a
-      >
-      <button type="button" [class]="ui.outline" (click)="startOver()">Import more</button>
+    <div class="flex flex-wrap items-center gap-2">
+      <a [routerLink]="'/domains/' + ctx.id() + '/aliases'" [class]="ui.primary + ' h-9'">Return to all aliases</a>
+      <button type="button" [class]="ui.outline + ' h-9'" (click)="startOver()">Import more</button>
     </div>
   </div>
 } @else {
-  <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-    <form class="min-w-0 space-y-6" (submit)="submit($event)">
-      @if (error(); as message) {
-        <amelu-alert
-          kind="error"
-          title="The aliases weren't imported"
-          [dismissible]="true"
-          (dismissed)="error.set(null)"
-        >
-          {{ message }}
-        </amelu-alert>
-      }
-
-      <section>
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-[14px] font-bold">CSV data</h2>
-          <label [class]="ui.outline + ' relative'">
+  <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+    <form [class]="ui.panel" (submit)="submit($event)">
+      <div [class]="ui.panelHeader">
+        <label for="csv-data" [class]="ui.panelTitle">CSV data</label>
+        <span class="flex items-center gap-3 text-[13px]">
+          @if (rowCount() > 0) {
+            <span class="text-muted">{{ rowCount() }} {{ rowCount() === 1 ? 'line' : 'lines' }}</span>
+          }
+          <label class="cursor-pointer text-link hover:underline has-[:focus-visible]:underline">
             Load a file
-            <input
-              type="file"
-              accept=".csv,text/csv,text/plain"
-              class="sr-only"
-              (change)="loadFile($event)"
-            />
+            <input type="file" accept=".csv,text/csv,text/plain" class="sr-only" (change)="loadFile($event)" />
           </label>
+        </span>
+      </div>
+      @if (error(); as message) {
+        <div class="border-b border-line p-4">
+          <amelu-alert kind="error" title="The aliases weren't imported" [dismissible]="true" (dismissed)="error.set(null)">
+            {{ message }}
+          </amelu-alert>
         </div>
-        <div [class]="ui.card + ' p-4'">
-          <label for="csv-data" class="sr-only">CSV data</label>
-          <textarea
-            id="csv-data"
-            rows="16"
-            class="block w-full resize-y rounded-md border border-line bg-transparent px-2.5 py-2 font-mono text-[12px] leading-relaxed outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
-            placeholder="Paste your data here..."
-            spellcheck="false"
-            required
-            [value]="csv()"
-            (input)="csv.set($any($event.target).value)"
-          ></textarea>
-          <p [class]="ui.hint">
-            Example row: <span class="font-mono">sales,john</span> delivers sales&#64;{{
-              ctx.domain()?.name ?? 'yourdomain'
-            }}
-            to john&#64;{{ ctx.domain()?.name ?? 'yourdomain' }}.
+      }
+      <div class="p-4">
+        <textarea
+          id="csv-data"
+          rows="16"
+          class="block w-full resize-y rounded-md border border-line bg-surface px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/25"
+          placeholder="Paste your data here, one alias per line"
+          spellcheck="false"
+          required
+          [value]="csv()"
+          (input)="csv.set($any($event.target).value)"
+        ></textarea>
+        <p class="mt-2 text-[12px] text-muted">
+          Example row: <span class="font-mono">sales,john</span> delivers sales&#64;{{ ctx.domain()?.name ?? 'yourdomain' }}
+          to john&#64;{{ ctx.domain()?.name ?? 'yourdomain' }}.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 border-t border-line bg-well px-4 py-3">
+        <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!csv().trim() || busy()">
+          {{ busy() ? 'Importing...' : 'Import aliases' }}
+          @if (!busy()) {
+            <amelu-icon name="arrowRight" [size]="15" />
+          }
+        </button>
+        <a [routerLink]="'/domains/' + ctx.id() + '/aliases'" class="text-[13px] text-muted hover:text-ink hover:underline">Cancel</a>
+      </div>
+    </form>
+
+    <aside class="space-y-5">
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Format</h2>
+        </div>
+        <div [class]="ui.well + ' space-y-3 text-[13px] leading-relaxed'">
+          <p class="text-muted">
+            Each line needs <span class="font-medium text-ink">exactly</span> these fields in this order, separated by a comma, with no header row.
+          </p>
+          <code class="block rounded-md border border-line bg-surface px-3 py-2 font-mono text-[12px] break-words">{{ format }}</code>
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <tbody>
+                @for (field of fields; track field.name; let first = $first) {
+                  <tr [class]="first ? '' : ui.tr">
+                    <td [class]="ui.td + ' w-0 align-top font-mono text-[12px] font-medium whitespace-nowrap'">{{ field.name }}</td>
+                    <td [class]="ui.td + ' text-[12px] text-muted'">{{ field.description }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Examples</h2>
+        </div>
+        <div [class]="ui.well">
+          <pre class="overflow-x-auto rounded-md border border-line bg-surface px-3 py-2.5 font-mono text-[12px] leading-relaxed">{{ examples() }}</pre>
+        </div>
+      </section>
+
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Row by row</h2>
+        </div>
+        <div [class]="ui.well">
+          <p class="text-[13px] leading-relaxed text-muted">
+            Every row is created on its own, so one bad row doesn't stop the rest. The results list which rows failed and why,
+            for example a destination that isn't a mailbox here or an alias that's already taken.
           </p>
         </div>
       </section>
 
-      <div class="flex items-center gap-3">
-        <button type="submit" [class]="ui.primary" [disabled]="!csv().trim() || busy()">
-          {{ busy() ? 'Importing...' : 'Import aliases' }}
-        </button>
-        <a
-          [routerLink]="'/domains/' + ctx.id() + '/aliases'"
-          class="text-[13px] font-medium text-muted hover:text-ink hover:underline"
-          >Cancel</a
-        >
-      </div>
-    </form>
-
-    <aside class="space-y-6">
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Acceptable CSV format</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          Each line needs <span class="font-semibold text-ink">exactly</span> these fields in this
-          order. Only a comma is an acceptable separator, and there's no header row.
-        </p>
-        <code class="mt-2 block rounded-md bg-bg px-2.5 py-1.5 font-mono text-[12px]"
-          >Alias, Destination</code
-        >
-        <dl class="mt-3 space-y-2.5 text-[13px]">
-          @for (field of fields; track field.name) {
-            <div>
-              <dt class="font-semibold">{{ field.name }}</dt>
-              <dd class="text-muted">{{ field.description }}</dd>
-            </div>
-          }
-        </dl>
-        <h3 class="mt-4 text-[13px] font-semibold">Examples</h3>
-        <pre
-          class="mt-1.5 overflow-x-auto rounded-md bg-bg px-2.5 py-2 font-mono text-[12px] leading-relaxed"
-          >{{ examples() }}</pre>
-      </section>
-
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Row by row</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          Every row is created on its own, so one bad row doesn't stop the rest. The results list
-          which rows failed and why, for example a destination that isn't a mailbox here or an alias
-          that's already taken.
-        </p>
-      </section>
-
-      <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-        <div
-          class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
-          aria-hidden="true"
-        >
-          <amelu-dither-shader
-            colorBack="rgba(0,0,0,0)"
-            colorFront="var(--accent)"
-            shape="warp"
-            type="4x4"
-            [size]="2"
-            [speed]="0.3"
-          />
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Starting from an export?</h2>
+          <a [href]="exportUrl()" download class="text-[13px] text-link hover:underline">Export CSV</a>
         </div>
-        <amelu-icon name="download" [size]="20" class="block text-ink" />
-        <h2 class="mt-3 text-[14px] font-bold">Starting from an export?</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          The alias export uses this same format, so it can be edited and imported again.
-        </p>
-        <a
-          [href]="exportUrl()"
-          download
-          class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg"
-        >
-          Export current aliases
-        </a>
+        <div [class]="ui.well">
+          <p class="text-[13px] leading-relaxed text-muted">
+            The alias export uses this same format, so it can be edited and imported again.
+          </p>
+        </div>
       </section>
     </aside>
   </div>

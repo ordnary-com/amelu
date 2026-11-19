@@ -6,14 +6,13 @@ import { injectDomain } from '../domain-context';
 import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 
 /** The current dashboard's /domains/:id/domain-aliases/new. */
 @Component({
   selector: 'amelu-new-domain-alias',
-  imports: [RouterLink, PageHeader, Alert, Icon, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, Icon],
   templateUrl: './new-domain-alias.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -31,6 +30,13 @@ export class NewDomainAlias {
   protected readonly sameAsDomain = computed(
     () => !!this.cleaned() && this.cleaned() === this.ctx.domain()?.name,
   );
+
+  // The same form and summary styles as New mailbox.
+  protected readonly sectionTitle = 'block text-[15px] font-medium';
+  protected readonly label = 'text-[13px] text-muted';
+  protected readonly box = 'space-y-1.5 rounded border border-line bg-surface px-3.5 py-3 text-[13px]';
+  protected readonly pair = 'flex items-baseline justify-between gap-3';
+  protected readonly steps = ['Publish the TXT record', 'Create the alias', 'Set its MX records'];
 
   protected async submit(event: Event): Promise<void> {
     event.preventDefault();

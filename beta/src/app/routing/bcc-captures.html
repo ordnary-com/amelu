@@ -6,118 +6,113 @@
     { label: 'Bcc. captures' },
   ]"
 >
-  Silently deliver a copy of mail matching a wildcard pattern to another address, without affecting
-  normal delivery.
-  <a actions [routerLink]="'/domains/' + ctx.id() + '/bccs/new'" [class]="ui.primary">
-    New Bcc. capture
-  </a>
+  Quietly copy mail that matches a pattern to another address. Normal delivery stays the same.
+  <a actions [routerLink]="'/domains/' + ctx.id() + '/bccs/new'" [class]="ui.primary">New Bcc. capture</a>
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <section class="min-w-0 space-y-4">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
     @if (error(); as message) {
-      <amelu-alert
-        kind="error"
-        title="The Bcc. capture wasn't removed"
-        [dismissible]="true"
-        (dismissed)="error.set(null)"
-      >
+      <amelu-alert kind="error" title="The Bcc. capture wasn't removed" [dismissible]="true" (dismissed)="error.set(null)">
         {{ message }}
       </amelu-alert>
     }
 
-    <div>
-      <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
-        Captures
-        @if (captures(); as list) {
-          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{
-            list.length
-          }}</span>
-        }
-      </h2>
-      <div [class]="ui.card + ' overflow-hidden'">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">
+          Captures
+          @if (captures(); as list) {
+            <span class="font-normal text-muted">({{ list.length }})</span>
+          }
+        </h2>
+        <a [routerLink]="'/domains/' + ctx.id() + '/bccs/new'" [class]="ui.setAction" aria-label="New Bcc. capture" title="New Bcc. capture">
+          <amelu-icon name="plus" [size]="18" />
+        </a>
+      </div>
+      <div [class]="ui.well">
         @if (captures() === null) {
-          <amelu-empty-state title="The Bcc. captures couldn't be loaded" [error]="true" />
-        } @else if (captures(); as list) {
-          <ul class="divide-y divide-line">
-            @for (capture of list; track capture.id) {
-              <li class="flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
-                <div class="min-w-0 flex-1">
-                  <div class="truncate font-mono text-[13px] font-medium">
-                    {{ capture.pattern }}
-                  </div>
-                  <div class="truncate text-[12px] text-muted">Copy to {{ capture.capture }}</div>
-                </div>
-                <button
-                  type="button"
-                  class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10"
-                  (click)="deleteTarget.set(capture)"
-                >
-                  Delete
-                </button>
-              </li>
-            } @empty {
-              <li>
-                <amelu-empty-state title="No Bcc. captures yet" illustration="confidential-letter">
-                  Keep a copy of matching mail in an archive or a colleague's mailbox, without the
-                  sender or recipient noticing.
-                  <a
-                    actions
-                    [routerLink]="'/domains/' + ctx.id() + '/bccs/new'"
-                    [class]="ui.primary"
-                  >
-                    New Bcc. capture
-                  </a>
-                </amelu-empty-state>
-              </li>
-            }
-          </ul>
+          <amelu-empty-state class="rounded-md border border-line bg-surface" title="The Bcc. captures couldn't be loaded" [error]="true" [compact]="true" />
         } @else {
-          <amelu-list-skeleton />
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr>
+                  <th [class]="ui.th">Pattern</th>
+                  <th [class]="ui.th">Copy to</th>
+                  <th class="w-0 pr-4" aria-label="Actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (captures(); as list) {
+                  @for (capture of list; track capture.id) {
+                    <tr [class]="ui.tr + ' hover:bg-bg/40'">
+                      <td [class]="ui.td + ' max-w-[300px]'">
+                        <span class="flex items-center gap-3">
+                          <amelu-icon name="copy" [size]="16" class="flex-none text-muted" />
+                          <code class="truncate font-mono text-[12px] font-medium">{{ capture.pattern }}</code>
+                        </span>
+                      </td>
+                      <td [class]="ui.td + ' max-w-[300px]'">
+                        <span class="flex items-center gap-2">
+                          <amelu-icon name="arrowRight" [size]="14" class="flex-none text-muted" />
+                          <span class="truncate">{{ capture.capture }}</span>
+                        </span>
+                      </td>
+                      <td class="w-0 pr-4 text-right whitespace-nowrap">
+                        <button type="button" class="cursor-pointer text-[13px] text-bad hover:underline" [attr.aria-label]="'Delete the capture for ' + capture.pattern" (click)="deleteTarget.set(capture)">Delete</button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr [class]="ui.tr">
+                      <td colspan="3" class="px-4 py-10 text-center">
+                        <amelu-icon name="copy" [size]="18" class="mx-auto block" />
+                        <p class="mt-2">No Bcc. captures yet</p>
+                        <p class="mt-0.5 text-[13px] text-muted">Keep a copy of matching mail in an archive or a colleague's mailbox, without the sender or recipient noticing.</p>
+                        <a [routerLink]="'/domains/' + ctx.id() + '/bccs/new'" class="mt-1 inline-block text-[13px] text-link hover:underline">New Bcc. capture</a>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  @for (i of [1, 2]; track i) {
+                    <tr [class]="ui.tr" aria-hidden="true">
+                      <td [class]="ui.td"><span class="block h-3 w-40 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="block h-3 w-44 animate-pulse rounded bg-bg"></span></td>
+                      <td></td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
         }
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-  <aside class="space-y-6">
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div
-        class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]"
-        aria-hidden="true"
-      >
-        <amelu-dither-shader
-          colorBack="rgba(0,0,0,0)"
-          colorFront="var(--accent)"
-          shape="warp"
-          type="4x4"
-          [size]="2"
-          [speed]="0.3"
-        />
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">How captures work</h2>
       </div>
-      <amelu-icon name="copy" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">How captures work</h2>
-      <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-        <li class="flex gap-2.5">
-          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-          Applies to mail delivered to any mailbox on this domain.
-        </li>
-        <li class="flex gap-2.5">
-          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-          The original is delivered as normal; the copy goes out on the side.
-        </li>
-        <li class="flex gap-2.5">
-          <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-          The copy address can be on any domain, for example an archive.
-        </li>
-      </ul>
+      <div [class]="ui.well">
+        <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface text-[13px] leading-relaxed">
+          <li class="px-4 py-2.5">Applies to mail delivered to any mailbox on this domain.</li>
+          <li class="px-4 py-2.5">The original is delivered as normal; the copy goes out on the side.</li>
+          <li class="px-4 py-2.5">The copy address can be on any domain, for example an archive.</li>
+        </ul>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Mind the privacy rules</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Copying someone's mail without them knowing can be restricted where you or they live. Let
-        mailbox users know when their mail is archived.
-      </p>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Mind the privacy rules</h2>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Copying someone's mail without them knowing can be restricted where you or they live. Let mailbox users know when their mail is archived.
+        </p>
+      </div>
     </section>
   </aside>
 </div>

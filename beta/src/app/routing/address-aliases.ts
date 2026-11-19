@@ -7,16 +7,15 @@ import { PageHeader } from '../page-header/page-header';
 import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
-import { ConfirmDelete, ListSkeleton, domainResource } from './shared';
+import { ConfirmDelete, domainResource } from './shared';
 import { apiUrl } from '../config';
 
 /** The current dashboard's /domains/:id/aliases: every address alias across the domain's mailboxes. */
 @Component({
   selector: 'amelu-address-aliases',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, ConfirmDelete, ListSkeleton, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, ConfirmDelete],
   templateUrl: './address-aliases.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

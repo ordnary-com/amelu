@@ -1,10 +1,6 @@
 
 @if (result(); as done) {
-  <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
-    <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
-    <amelu-icon name="chevronRight" [size]="12" />
-    <span class="text-ink">New domain</span>
-  </nav>
+  <amelu-crumb-title class="mb-5" title="New domain" [crumbs]="[{ label: 'Domains', link: '/domains' }]" />
   <div class="max-w-2xl space-y-5">
     <amelu-alert kind="success" [title]="done.domain.name + ' is added'">
       @if (addedWith() === 'amelu') {
@@ -65,15 +61,10 @@
     </div>
   </div>
 } @else if (pending(); as claim) {
-  <nav class="mb-3 flex items-center gap-1 text-[13px] text-muted" aria-label="Breadcrumb">
-    <a routerLink="/domains" class="hover:text-ink hover:underline">Domains</a>
-    <amelu-icon name="chevronRight" [size]="12" />
-    <span class="text-ink">New domain</span>
-  </nav>
   <div class="max-w-3xl space-y-5">
     <div>
-      <h1 class="text-[22px] font-bold tracking-[-0.4px]">One more step for {{ claim.name }}</h1>
-      <p class="mt-1.5 text-[13px] text-muted">
+      <amelu-crumb-title [title]="'One more step for ' + claim.name" [crumbs]="[{ label: 'Domains', link: '/domains' }]" />
+      <p class="mt-1 text-[13px] text-muted">
         Before {{ claim.name }} goes live on our mail servers, we check that it's yours. It's saved, so you can leave and
         come back to it from Domains.
       </p>

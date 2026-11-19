@@ -19,7 +19,7 @@
   >
     <!-- The main column carries its own right gutter, so it keeps the same width whether
          or not a second column opens next to it. -->
-    <ul [class]="column + ' flex w-[226px] flex-col pr-4 max-lg:w-full max-lg:pr-0'">
+    <ul [class]="column + ' flex w-[226px] flex-none flex-col pr-4 max-lg:w-full max-lg:pr-0'">
       <li [class]="item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         <a routerLink="/" [class]="link"><ng-icon name="lucideHome" size="15px" strokeWidth="2.5" /><span class="truncate">Overview</span></a>
       </li>
@@ -61,7 +61,7 @@
     <!-- One menu column next to the main one: the domain's, or, inside a mailbox,
          the mailbox's with a way back up to the domain's (drill-down, see shell.ts). -->
     @if (shown(); as menu) {
-      <ul [class]="column + ' w-48 border-l border-chrome-ink/10 px-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:px-0'" [attr.aria-label]="menu.label">
+      <ul [class]="column + ' w-[226px] flex-none border-l border-chrome-ink/10 px-1 max-lg:mt-2 max-lg:w-full max-lg:border-t max-lg:border-l-0 max-lg:pt-2 max-lg:px-0'" [attr.aria-label]="menu.label">
         @if (parentMenu(); as parent) {
           <li class="mx-2">
             <button type="button" [class]="link + ' w-full cursor-pointer py-1.5 text-left'" (click)="level.set(shownIndex() - 1)">

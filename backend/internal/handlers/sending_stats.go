@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net"
@@ -148,26 +149,34 @@ func (a *App) GetDomainSending(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not load domain")
 		return
 	}
-	tier, err := a.Store.GetOrganizationPlanTierID(r.Context(), customer.OrganizationID.String)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "could not load plan")
-		return
-	}
-	limit, err := a.Store.GetOutgoingLimit(r.Context(), tier)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "could not load plan")
-		return
-	}
-	sent, at, err := a.Store.GetSendingStat(r.Context(), domain.Name)
+	out, err := a.domainSendingUsage(r.Context(), customer.OrganizationID.String, domain.Name)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load sending stats")
 		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// domainSendingUsage is the domain's last-24-hours count against its plan's
+// daily limit, for the Overview and the Domain status page.
+func (a *App) domainSendingUsage(ctx context.Context, organizationID, domainName string) (domainSendingResponse, error) {
+	tier, err := a.Store.GetOrganizationPlanTierID(ctx, organizationID)
+	if err != nil {
+		return domainSendingResponse{}, err
+	}
+	limit, err := a.Store.GetOutgoingLimit(ctx, tier)
+	if err != nil {
+		return domainSendingResponse{}, err
+	}
+	sent, at, err := a.Store.GetSendingStat(ctx, domainName)
+	if err != nil {
+		return domainSendingResponse{}, err
 	}
 	out := domainSendingResponse{Sent: sent, Limit: limit}
 	if !at.IsZero() {
 		out.UpdatedAt = &at
 	}
-	writeJSON(w, http.StatusOK, out)
+	return out, nil
 }
 
 type sendingHistoryResponse struct {

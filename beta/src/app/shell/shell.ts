@@ -6,6 +6,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { Domains } from '../domains';
 import { Api } from '../api';
 import { MailboxApi } from '../mailbox/mailbox-api';
+import { DomainAdminApi } from '../domain-admin/domain-admin-api';
 import { PromoBanner } from '../promo-banner/promo-banner';
 import { Tour } from '../tour/tour';
 import { isFree } from '../billing';
@@ -119,6 +120,24 @@ export class Shell {
       ),
     ),
     { initialValue: null },
+  );
+
+  // The dot on Domain Status: fetched once per domain you enter, not on every navigation inside it.
+  private readonly domainAdminApi = inject(DomainAdminApi);
+  protected readonly domainAttention = toSignal(
+    toObservable(computed(() => this.at().domainId)).pipe(
+      distinctUntilChanged(),
+      switchMap((id) =>
+        id
+          ? this.domainAdminApi.status(id).pipe(
+              map((status) => status.attention),
+              catchError(() => of(false)),
+              startWith(false),
+            )
+          : of(false),
+      ),
+    ),
+    { initialValue: false },
   );
 
   // Only one menu column shows next to the main one. Inside a mailbox that is
@@ -246,6 +265,8 @@ interface MenuEntry {
   secondary?: boolean;
   /** Starts a new group under this heading. */
   group?: string;
+  /** Gets a warning dot while the domain has an active problem (Domain Status). */
+  attention?: boolean;
 }
 
 interface MenuColumn {

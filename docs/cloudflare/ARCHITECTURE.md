@@ -124,7 +124,7 @@ No Cloudflare product sits between a mail client and Stalwart. See
   operating a separate VPS and `cloudflared` fleet.
 - **pg1-nbg instead of Neon (since 2026-11-18)**: all Ordnary Postgres now
   runs on one server with pgBackRest backups and monitoring, documented in
-  ordnary-infra/pg1-nbg. It has no public port: `backend/entrypoint.sh` opens
+  ordnary-infra (servers/database). It has no public port: `backend/entrypoint.sh` opens
   a `cloudflared access tcp` tunnel with an Access service token
   (`PG_TUNNEL_HOSTNAME`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`) and
   `DATABASE_URL` points at `127.0.0.1:5432` inside the container.

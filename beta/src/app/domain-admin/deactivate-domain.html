@@ -2,11 +2,11 @@
   title="Deactivate domain"
   [crumbs]="[{ label: 'Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Deactivate domain' }]"
 >
-  Pause all mail delivery to and from this domain, without removing any data.
+  Pause all mail to and from this domain without removing any data.
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="min-w-0 space-y-6">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
     @if (error(); as message) {
       <amelu-alert kind="error" title="Something went wrong" [dismissible]="true" (dismissed)="error.set(null)">
         {{ message }}
@@ -22,94 +22,100 @@
       </amelu-alert>
     }
 
-    @if (ctx.domain() === undefined) {
-      <div [class]="ui.card + ' space-y-3 p-4'" aria-hidden="true">
-        <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
-        <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
-        <span class="block h-3 w-3/4 animate-pulse rounded bg-bg"></span>
-      </div>
-    } @else if (ctx.domain() === null) {
-      <amelu-empty-state [class]="ui.card" title="Domain couldn't be loaded" [error]="true" />
+    @if (ctx.domain() === null) {
+      <amelu-empty-state class="rounded border border-line bg-surface" title="Domain couldn't be loaded" [error]="true" [compact]="true" />
     } @else {
-      <section>
-        <h2 [class]="ui.sectionTitle">Current status</h2>
-        <div [class]="ui.card + ' p-4'">
-          <div class="flex flex-wrap items-center gap-2.5">
-            <span class="text-[14px] font-semibold">{{ ctx.domain()?.name }}</span>
-            <span [class]="status()!.class">{{ status()!.label }}</span>
-          </div>
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle">{{ ctx.domain()?.name ?? 'Domain status' }}</h2>
+          @if (status(); as s) {
+            <span [class]="s.class">{{ s.label }}</span>
+          }
+        </div>
 
-          @if (suspended()) {
-            <p class="mt-3 text-[13px] leading-relaxed">
-              This domain is currently deactivated. Mail delivery to and from it is suspended, and any message sent to
-              it during this time is rejected rather than queued for later delivery.
+        @if (ctx.domain() === undefined) {
+          <div class="space-y-3 px-5 py-4" aria-hidden="true">
+            <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
+            <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
+            <span class="block h-3 w-3/4 animate-pulse rounded bg-bg"></span>
+          </div>
+        } @else if (suspended()) {
+          <div class="px-5 py-4">
+            <p class="text-[14px] leading-relaxed">
+              This domain is deactivated. Mail to and from it is suspended, and messages sent to it now are rejected
+              rather than queued for later.
             </p>
-            <p class="mt-2 text-[13px] leading-relaxed text-muted">
-              No data has been removed. Every mailbox, message, and setting on this domain has been retained exactly as
-              it was and will be available again as soon as you reactivate.
+          </div>
+          <p [class]="ui.setNote">
+            <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+            <span>No data was removed. Every mailbox, message and setting is kept as it was and comes back as soon as you reactivate.</span>
+          </p>
+          <div class="flex items-center gap-3 border-t border-line px-5 py-3">
+            <button type="button" [class]="ui.primary + ' h-9'" (click)="reactivate()" [disabled]="busy()">
+              {{ busy() ? 'Reactivating...' : 'Reactivate domain' }}
+            </button>
+          </div>
+        } @else {
+          <div class="px-5 py-4">
+            <p class="text-[14px] leading-relaxed">
+              Deactivating stops mail to and from this domain right away. Messages sent to it while it's deactivated are
+              rejected by the mail server, not queued for later.
             </p>
-            <div class="-mx-4 -mb-4 mt-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
-              <button type="button" [class]="ui.primary" (click)="reactivate()" [disabled]="busy()">
-                {{ busy() ? 'Reactivating...' : 'Reactivate domain' }}
-              </button>
-            </div>
-          } @else {
-            <p class="mt-3 text-[13px] leading-relaxed">
-              Deactivating suspends mail delivery to and from this domain immediately. Messages sent to it while
-              deactivated are rejected at the mail server, not queued or held for later delivery.
-            </p>
-            <p class="mt-2 text-[13px] leading-relaxed text-muted">
-              This is a reversible operational change, not a data-deletion action: mailboxes, messages, and settings
-              are left untouched and become available again the moment you reactivate.
-            </p>
-            <ul class="-mx-4 mt-4 divide-y divide-line border-t border-line" aria-label="While it's deactivated">
-              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
-                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
-                  <amelu-icon name="close" [size]="12" />
-                </span>
+            <p class="mt-4 text-[13px] text-muted">While it's deactivated</p>
+            <ul class="mt-2 space-y-2 text-[14px] leading-relaxed" aria-label="While it's deactivated">
+              <li class="flex items-start gap-2.5">
+                <amelu-icon name="circleX" [size]="16" class="mt-0.5 flex-none text-bad" />
                 Incoming mail is rejected, so senders get a bounce.
               </li>
-              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
-                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
-                  <amelu-icon name="close" [size]="12" />
-                </span>
+              <li class="flex items-start gap-2.5">
+                <amelu-icon name="circleX" [size]="16" class="mt-0.5 flex-none text-bad" />
                 Mailboxes can't send mail.
               </li>
-              <li class="flex items-center gap-3 px-4 py-2.5 text-[13px]">
-                <span class="inline-flex size-5 flex-none items-center justify-center rounded-full bg-ok/15 text-ok" aria-hidden="true">
-                  <amelu-icon name="check" [size]="12" />
-                </span>
+              <li class="flex items-start gap-2.5">
+                <amelu-icon name="circleCheck" [size]="16" class="mt-0.5 flex-none text-ok" />
                 All mailboxes, messages and settings are kept.
               </li>
             </ul>
-            <div class="-mx-4 -mb-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
-              <button type="button" [class]="ui.dangerOutline" (click)="confirming.set(true)" [disabled]="busy()">
-                Deactivate this domain
-              </button>
-            </div>
-          }
-        </div>
+          </div>
+          <p [class]="ui.setNote">
+            <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+            <span>This doesn't delete anything. Reactivate the domain here whenever you're ready.</span>
+          </p>
+          <div class="flex items-center gap-3 border-t border-line px-5 py-3">
+            <button type="button" [class]="ui.dangerOutline + ' h-9'" (click)="confirming.set(true)" [disabled]="busy()">
+              Deactivate this domain
+            </button>
+          </div>
+        }
       </section>
     }
   </div>
 
-  <aside class="space-y-6">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Deactivate or delete?</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Deactivating only pauses mail. To permanently erase this domain's data instead, for example to fulfil a data
-        subject's erasure request under the GDPR, use
-        <a [routerLink]="'/domains/' + ctx.id() + '/delete'" class="text-link hover:underline">Delete domain</a>.
-      </p>
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Deactivate or delete?</h2>
+        <a [routerLink]="'/domains/' + ctx.id() + '/delete'" class="text-[13px] text-link hover:underline">Delete domain</a>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Deactivating only pauses mail. To erase this domain's data for good, for example to handle an erasure request
+          under the GDPR, delete the domain instead.
+        </p>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">After reactivating</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        The domain goes back to DNS pending until its records are checked again. Check the
-        <a [routerLink]="'/domains/' + ctx.id() + '/dns'" class="text-link hover:underline">DNS configuration</a>
-        if it doesn't turn active on its own.
-      </p>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">After reactivating</h2>
+        <a [routerLink]="'/domains/' + ctx.id() + '/dns'" class="text-[13px] text-link hover:underline">DNS configuration</a>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          The domain goes back to DNS pending until its records are checked again. Check its DNS records if it doesn't
+          turn active on its own.
+        </p>
+      </div>
     </section>
   </aside>
 </div>
@@ -117,18 +123,18 @@
 @if (confirming()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="close()">
     <div
-      class="w-full max-w-md rounded-lg border border-line bg-popover p-5 shadow-xl"
+      class="w-full max-w-md rounded-md border border-line bg-popover p-5 shadow-xl"
       role="alertdialog"
       aria-modal="true"
       [attr.aria-label]="'Deactivate ' + ctx.domain()?.name + '?'"
       (click)="$event.stopPropagation()"
     >
-      <h3 class="text-[15px] font-bold">Deactivate {{ ctx.domain()?.name }}?</h3>
+      <h3 class="text-[15px] font-medium">Deactivate {{ ctx.domain()?.name }}?</h3>
       <p class="mt-2 text-[13px] leading-relaxed text-muted">
-        Mail sent to any address on {{ ctx.domain()?.name }} will be rejected immediately and this will remain the case
-        until the domain is reactivated. No mailboxes, messages, or settings are changed or deleted by this action.
+        Mail sent to any address on {{ ctx.domain()?.name }} is rejected right away, until you reactivate the domain. No
+        mailboxes, messages or settings are changed or deleted.
       </p>
-      <div class="mt-5 flex justify-end gap-2">
+      <div class="mt-5 flex flex-wrap justify-end gap-2">
         <button type="button" [class]="ui.outline" (click)="close()" [disabled]="busy()">Cancel</button>
         <button type="button" [class]="ui.danger" (click)="deactivate()" [disabled]="busy()">
           {{ busy() ? 'Deactivating...' : 'Yes, deactivate' }}

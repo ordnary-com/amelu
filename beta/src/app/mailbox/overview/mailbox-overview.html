@@ -1,76 +1,85 @@
-<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-  @for (stat of stats(); track stat.label) {
-    <a
-      [routerLink]="ctx.base() + '/' + stat.link"
-      class="flex min-w-0 flex-col rounded-lg border border-line bg-surface px-4 pt-3 pb-3.5 transition-colors hover:border-ink/20 hover:bg-bg/40"
-    >
-      <span class="flex items-center justify-between gap-2 text-[12px] text-muted">
-        {{ stat.label }}
-        <amelu-icon name="chevronRight" [size]="13" class="opacity-60" />
-      </span>
-      @if (stat.value === undefined) {
-        <span class="mt-2.5 block h-6 w-12 animate-pulse rounded bg-bg"></span>
-      } @else if (stat.value === null) {
-        <span class="mt-2 block text-[13px] text-muted">Unavailable</span>
-      } @else {
-        <span class="mt-1 block truncate text-[26px] leading-tight font-normal tracking-[-0.01em]" [class.text-muted]="stat.muted">
-          {{ stat.value }}
-          @if (stat.of) {
-            <span class="text-[13px] tracking-normal text-muted">of {{ stat.of }}</span>
-          }
+<!-- Summary: label on the left, the value on the right, each box a link to its page, like the domain's. -->
+<section [class]="ui.panel">
+  <div [class]="ui.panelHeader">
+    <h2 [class]="ui.panelTitle">Summary</h2>
+  </div>
+  <div class="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (stat of stats(); track stat.label) {
+      <a
+        [routerLink]="ctx.base() + '/' + stat.link"
+        class="group flex min-h-14 items-center justify-between gap-3 rounded border border-line bg-surface px-4 py-2.5 transition-colors hover:border-accent/30"
+      >
+        <span class="flex min-w-0 items-center gap-1 text-[14px]">
+          <span class="truncate">{{ stat.label }}</span>
+          <amelu-icon name="chevronRight" [size]="13" class="flex-none text-muted opacity-0 transition-opacity group-hover:opacity-100" />
         </span>
-        @if (stat.of) {
-          <span class="mt-2 block h-1 overflow-hidden rounded-full bg-bg">
-            <span class="block h-full rounded-full bg-accent" [style.width.%]="(+stat.value / stat.of) * 100"></span>
+        @if (stat.value === undefined) {
+          <span class="block h-6 w-12 flex-none animate-pulse rounded bg-bg"></span>
+        } @else if (stat.value === null) {
+          <span class="flex-none text-[13px] text-muted">Unavailable</span>
+        } @else {
+          <span
+            class="flex-none leading-none font-normal whitespace-nowrap tabular-nums"
+            [class]="stat.big ? 'text-[28px]' : 'text-[18px]'"
+            [class.text-muted]="stat.muted"
+          >
+            {{ stat.value }}@if (stat.of) {<span class="text-[14px] text-muted"> / {{ stat.of }}</span>}
           </span>
         }
-      }
-    </a>
-  }
-</div>
+      </a>
+    }
+  </div>
+</section>
 
-<div class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="min-w-0 space-y-6">
-    <section>
-      <h2 class="text-[14px] font-bold">Details</h2>
-      <p class="mt-1 mb-3 text-[13px] text-muted">How this mailbox is set up right now. Click a row to change it.</p>
-      <dl [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-        @for (row of rows(); track row.label) {
-          <div class="group relative flex items-center gap-4 px-4 py-2.5" [class]="row.link ? 'hover:bg-bg/60' : ''">
-            <dt class="w-32 flex-none text-[13px] text-muted sm:w-44">{{ row.label }}</dt>
-            <dd class="min-w-0 flex-1 text-[13px]">
-              @if (row.value === undefined) {
-                <span class="block h-3 w-32 animate-pulse rounded bg-bg"></span>
-              } @else if (row.value === null) {
-                <span class="text-muted">Unknown</span>
-              } @else {
-                @if (row.value.badge) {
-                  <span [class]="row.value.badge">{{ row.value.text }}</span>
+<div class="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Details</h2>
+        <span class="text-[13px] text-muted max-sm:hidden">Click a row to change it</span>
+      </div>
+      <div [class]="ui.well">
+        <dl class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+          @for (row of rows(); track row.label) {
+            <div class="group relative flex min-h-11 items-center gap-4 px-4 py-2.5" [class]="row.link ? 'hover:bg-bg/40' : ''">
+              <dt class="w-32 flex-none text-[13px] text-muted sm:w-44">{{ row.label }}</dt>
+              <dd class="min-w-0 flex-1 text-[13px]">
+                @if (row.value === undefined) {
+                  <span class="block h-3 w-32 animate-pulse rounded bg-bg"></span>
+                } @else if (row.value === null) {
+                  <span class="text-muted">Unknown</span>
                 } @else {
-                  <span class="break-words" [class.text-muted]="row.value.muted">{{ row.value.text }}</span>
+                  @if (row.value.badge) {
+                    <span [class]="row.value.badge">{{ row.value.text }}</span>
+                  } @else {
+                    <span class="break-words" [class.text-muted]="row.value.muted">{{ row.value.text }}</span>
+                  }
                 }
+              </dd>
+              @if (row.link) {
+                <!-- The link covers the whole row, so the row itself is the click target. -->
+                <a
+                  [routerLink]="ctx.base() + '/' + row.link"
+                  class="flex-none text-muted after:absolute after:inset-0"
+                  [attr.aria-label]="'Change ' + row.label.toLowerCase()"
+                >
+                  <amelu-icon name="chevronRight" [size]="14" class="text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
+                </a>
               }
-            </dd>
-            @if (row.link) {
-              <!-- The link covers the whole row, so the row itself is the click target. -->
-              <a
-                [routerLink]="ctx.base() + '/' + row.link"
-                class="flex-none text-muted after:absolute after:inset-0"
-                [attr.aria-label]="'Change ' + row.label.toLowerCase()"
-              >
-                <amelu-icon name="chevronRight" [size]="14" class="text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
-              </a>
-            }
-          </div>
-        }
-      </dl>
+            </div>
+          }
+        </dl>
+      </div>
     </section>
 
-    <section>
-      <h2 [class]="ui.sectionTitle">Name</h2>
-      <form [class]="ui.card + ' space-y-4 p-4'" (submit)="saveName($event)">
+    <form [class]="ui.setCard" (submit)="saveName($event)">
+      <div [class]="ui.setHeader">
+        <h2 [class]="ui.setTitle">Name</h2>
+      </div>
+      <div class="px-5 py-4">
+        <amelu-save-feedback class="mb-4" [state]="nameSave" />
         <label class="block">
-          <span [class]="ui.label">Name</span>
+          <span class="block text-[14px]">Name</span>
           <input
             [class]="ui.input"
             placeholder="For example: Jane Doe"
@@ -80,18 +89,28 @@
           />
           <span [class]="ui.hint">Shown in the mailbox list, to tell mailboxes apart.</span>
         </label>
-        <amelu-save-feedback [state]="nameSave" />
-        <button type="submit" [class]="ui.primary" [disabled]="nameSave.busy() || !nameChanged()">
+      </div>
+      <div class="flex flex-wrap items-center gap-3 border-t border-line px-5 py-3">
+        <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="nameSave.busy() || !nameChanged()">
           {{ nameSave.busy() ? 'Saving...' : 'Save' }}
         </button>
-      </form>
-    </section>
+        @if (nameChanged()) {
+          <span class="text-[12px] text-muted">Unsaved changes</span>
+        }
+      </div>
+    </form>
 
-    <section>
-      <h2 [class]="ui.sectionTitle">Access</h2>
-      <div [class]="ui.card + ' space-y-4 p-4'">
-        @if (ctx.mailbox(); as mailbox) {
-          <p class="text-[13px] leading-relaxed text-muted">
+    <section [class]="ui.setCard">
+      <div [class]="ui.setHeader">
+        <h2 [class]="ui.setTitle">Access</h2>
+        @if (statusBadge(); as badge) {
+          <span [class]="badge.class">{{ badge.label }}</span>
+        }
+      </div>
+      @if (ctx.mailbox(); as mailbox) {
+        <div class="px-5 py-4">
+          <amelu-save-feedback class="mb-4" [state]="statusSave" />
+          <p class="text-[14px] leading-relaxed">
             @if (mailbox.status === 'active') {
               Suspending stops this mailbox from sending, receiving and signing in. Its messages and settings are kept,
               and you can activate it again at any time.
@@ -100,10 +119,11 @@
               as it was.
             }
           </p>
-          <amelu-save-feedback [state]="statusSave" />
+        </div>
+        <div class="flex flex-wrap items-center gap-3 border-t border-line px-5 py-3">
           <button
             type="button"
-            [class]="mailbox.status === 'active' ? ui.dangerOutline : ui.outline"
+            [class]="(mailbox.status === 'active' ? ui.dangerOutline : ui.outline) + ' h-9'"
             [disabled]="statusSave.busy()"
             (click)="toggleStatus()"
           >
@@ -113,32 +133,33 @@
               {{ mailbox.status === 'active' ? 'Suspend mailbox' : 'Activate mailbox' }}
             }
           </button>
-        } @else {
+        </div>
+      } @else {
+        <div class="space-y-3 px-5 py-4" aria-hidden="true">
+          <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
           <span class="block h-3 w-2/3 animate-pulse rounded bg-bg"></span>
-        }
-      </div>
+        </div>
+      }
     </section>
   </div>
 
-  <aside class="space-y-6">
-    <section>
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-[14px] font-bold">Notes</h2>
-        <a [routerLink]="ctx.base() + '/notes'" class="text-[13px] font-medium text-link hover:underline">Edit</a>
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Notes</h2>
+        <a [routerLink]="ctx.base() + '/notes'" class="text-[13px] text-link hover:underline">Edit</a>
       </div>
-      <div [class]="ui.card">
+      <div [class]="ui.well">
         @if (notes(); as n) {
           @if (n.notes.trim()) {
-            <p class="px-4 py-3 text-[13px] leading-relaxed break-words whitespace-pre-wrap">{{ n.notes }}</p>
+            <p class="rounded-md border border-line bg-surface px-4 py-3 text-[13px] leading-relaxed break-words whitespace-pre-wrap">{{ n.notes }}</p>
           } @else {
-            <amelu-empty-state title="No notes" [compact]="true">
-              Keep anything worth knowing about this mailbox here, like who uses it.
-            </amelu-empty-state>
+            <p class="text-[13px] leading-relaxed text-muted">No notes yet. Keep anything worth knowing about this mailbox here, like who uses it.</p>
           }
         } @else if (notes() === null) {
-          <amelu-empty-state title="Notes couldn't be loaded" [error]="true" [compact]="true" />
+          <p class="text-[13px] text-muted">Notes couldn't be loaded.</p>
         } @else {
-          <div class="space-y-3 px-4 py-4" aria-hidden="true">
+          <div class="space-y-3 rounded-md border border-line bg-surface px-4 py-4" aria-hidden="true">
             <span class="block h-3 w-full animate-pulse rounded bg-bg"></span>
             <span class="block h-3 w-2/3 animate-pulse rounded bg-bg"></span>
           </div>
@@ -146,23 +167,20 @@
       </div>
     </section>
 
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Use it in a mail app</h2>
+        <a [routerLink]="ctx.base() + '/usage'" class="text-[13px] text-link hover:underline">Server settings</a>
       </div>
-      <amelu-icon name="mail" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Use it in a mail app</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Sign in with the full address and the mailbox password. Incoming mail is IMAP, outgoing is SMTP, both on
-        <span class="font-mono text-[12px] text-ink">{{ server }}</span>.
-      </p>
-      <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <a [routerLink]="ctx.base() + '/usage'" fragment="phone" class="inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Sign in with the full address and the mailbox password. Incoming mail is IMAP, outgoing is SMTP, both on
+          <span class="font-mono text-[12px] text-ink">{{ server }}</span>.
+        </p>
+        <a [routerLink]="ctx.base() + '/usage'" fragment="phone" [class]="ui.outline + ' mt-3 bg-surface'">
           Set up a phone with a QR code
         </a>
-        <a [routerLink]="ctx.base() + '/usage'" class="text-[13px] font-medium text-link hover:underline">All server settings</a>
       </div>
     </section>
-
   </aside>
 </div>

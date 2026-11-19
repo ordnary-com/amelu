@@ -10,12 +10,12 @@ import { DomainHealthChecks, healthScore } from '../domain-health';
 import { Alert } from '../alert/alert';
 import { Icon } from '../icon';
 import { DOMAIN_STATUS, MAILBOX_STATUS, TONES, badgeClass } from '../status';
-import { DitherShader } from '../login/dither-shader';
 import { VerifyOwnership } from '../verify-ownership/verify-ownership';
 import { UI } from '../ui';
 import { isFree } from '../billing';
 import { EmptyState } from '../empty-state/empty-state';
 import { countedMailboxes } from '../standard-addresses';
+import { CrumbTitle } from '../page-header/page-header';
 
 type Kind = 'all' | 'mailboxes' | 'aliases';
 
@@ -39,7 +39,7 @@ type Loaded<T> = T | null | undefined;
  */
 @Component({
   selector: 'amelu-domain-detail',
-  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, Alert, Icon, DeliveryChart, DitherShader, VerifyOwnership],
+  imports: [EmptyState, DatePipe, DecimalPipe, RouterLink, Alert, Icon, DeliveryChart, VerifyOwnership, CrumbTitle],
   templateUrl: './domain-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -147,7 +147,7 @@ export class DomainDetail {
   protected readonly search = signal('');
 
   // Mailboxes first, then aliases, each alphabetically, like a mail client's address book.
-  private readonly rows = computed<AddressRow[] | undefined>(() => {
+  protected readonly rows = computed<AddressRow[] | undefined>(() => {
     const mailboxes = this.mailboxes();
     const aliases = this.aliases();
     if (mailboxes === undefined) return undefined;
@@ -228,7 +228,7 @@ function mailboxRow(mailbox: Mailbox, base: string): AddressRow {
     name: mailbox.displayName,
     detail: 'Mailbox',
     // Active is the normal case; only call out the exceptions.
-    badge: mailbox.status === 'active' ? null : { label: status.label, class: `flex-none rounded-full px-2 py-0.5 text-[11px] font-medium ${TONES[status.tone]}` },
+    badge: mailbox.status === 'active' ? null : { label: status.label, class: `flex-none rounded px-2 py-0.5 text-[11px] font-medium ${TONES[status.tone]}` },
     link: `${base}/mailboxes/${mailbox.id}`,
   };
 }

@@ -1,0 +1,299 @@
+<amelu-page-header
+  title="Domain status"
+  [crumbs]="[{ label: 'Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Domain status' }]"
+>
+  Whether we've limited or paused anything on this domain, why, and what you can do about it.
+  @if (!unverified()) {
+    <button actions type="button" [class]="ui.outline" [disabled]="checking()" (click)="reload()">
+      {{ checking() ? 'Checking...' : 'Check again' }}
+    </button>
+  }
+</amelu-page-header>
+
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <div class="min-w-0 space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Status</h2>
+        @if (checkedAt(); as at) {
+          <span class="text-[13px] text-muted">Checked at {{ at | date: 'HH:mm:ss' }}</span>
+        }
+      </div>
+      <div [class]="ui.well">
+        @if (unverified()) {
+          <amelu-empty-state class="rounded-md border border-line bg-surface" title="Verify this domain first" [compact]="true">
+            Until you've proven you own it, the domain isn't on our mail server, so nothing can be paused or limited yet.
+            <a actions [routerLink]="'/domains/' + ctx.id()" class="text-[13px] text-link hover:underline">Verify ownership</a>
+          </amelu-empty-state>
+        } @else if (status() === null) {
+          <amelu-empty-state class="rounded-md border border-line bg-surface" title="The domain status couldn't be loaded" [error]="true" [compact]="true">
+            Try again in a minute. If it keeps failing, contact support.
+          </amelu-empty-state>
+        } @else if (status(); as s) {
+          <div class="overflow-hidden rounded-md border border-line bg-surface">
+            @if (problems().length === 0) {
+              <div class="flex items-start gap-3 px-4 py-4">
+                <span
+                  class="inline-flex size-9 flex-none items-center justify-center rounded-full"
+                  [class]="unchecked() ? 'bg-warn/15 text-warn' : 'bg-ok/15 text-ok'"
+                  aria-hidden="true"
+                >
+                  <amelu-icon [name]="unchecked() ? 'circleAlert' : 'circleCheck'" [size]="20" />
+                </span>
+                <div class="min-w-0 pt-0.5">
+                  @if (unchecked()) {
+                    <p class="text-[17px] leading-tight">No action on record</p>
+                    <p class="mt-1 text-[13px] text-muted">
+                      We couldn't reach the mail server to confirm that sending works, but nothing has been paused or limited on
+                      {{ s.domain.name }}. Check again in a minute.
+                    </p>
+                  } @else {
+                    <p class="text-[17px] leading-tight">All good</p>
+                    <p class="mt-1 text-[13px] text-muted">Nothing is paused or limited on {{ s.domain.name }}. Mail goes out and comes in as usual.</p>
+                  }
+                </div>
+              </div>
+            }
+
+            @for (problem of problems(); track problem.key + problem.title; let first = $first) {
+              <div class="flex items-start gap-3 px-4 py-4" [class.border-t]="!first" [class.border-line]="!first">
+                <span class="inline-flex size-9 flex-none items-center justify-center rounded-full bg-bad/15 text-bad" aria-hidden="true">
+                  <amelu-icon name="circleX" [size]="20" />
+                </span>
+                <div class="min-w-0 flex-1 pt-0.5">
+                  <p class="text-[17px] leading-tight text-bad">{{ problem.title }}</p>
+
+                  @switch (problem.key) {
+                    @case ('sending') {
+                      <p class="mt-1 text-[13px] text-muted">
+                        Our abuse protection stopped outgoing mail from {{ s.domain.name }}. Mail still arrives as usual. Mail apps
+                        report this as "authentication failed" when you send; your password is fine, so changing it won't help.
+                      </p>
+                      <dl class="mt-3 grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-6 gap-y-2 text-[13px]">
+                        <dt class="text-muted">Reason</dt>
+                        <dd>
+                          @if (s.sending.reason; as reason) {
+                            {{ reason }}
+                          } @else {
+                            <span class="text-muted">Not recorded. We'll look it up when you request a review.</span>
+                          }
+                        </dd>
+                        @if (s.sending.since; as since) {
+                          <dt class="text-muted">Since</dt>
+                          <dd>
+                            <time [attr.datetime]="since">{{ since | date: 'd MMM y, HH:mm' }}</time>
+                          </dd>
+                        }
+                        <dt class="text-muted">Mailboxes</dt>
+                        <dd class="flex flex-wrap gap-1.5">
+                          @for (address of s.sending.pausedMailboxes; track address) {
+                            <span class="rounded border border-line bg-well px-1.5 py-0.5 font-mono text-[12px]">{{ address }}</span>
+                          }
+                        </dd>
+                      </dl>
+                      <div class="mt-4 rounded-md border border-line bg-well px-4 py-3">
+                        @if (s.review; as review) {
+                          <div class="flex flex-wrap items-center gap-3">
+                            <amelu-icon name="clock" [size]="18" class="flex-none text-link" />
+                            <div class="min-w-0 flex-1">
+                              <p class="text-[13px] font-medium">Review requested · ticket #{{ review.number }}</p>
+                              <p class="mt-0.5 text-[12px] text-muted">
+                                {{ review.status === 'answered' ? 'Our team replied in the ticket.' : 'Our team reviews it by hand and replies in the ticket.' }}
+                              </p>
+                            </div>
+                            <a [routerLink]="['/support/tickets', review.ticketId]" [class]="ui.outline + ' h-9 bg-surface'">Open ticket</a>
+                          </div>
+                        } @else {
+                          <p class="text-[13px] font-medium">What to do</p>
+                          <ol class="mt-2 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed">
+                            <li>
+                              Read our
+                              <a href="https://amelu.org/acceptable-use" target="_blank" rel="noopener" class="text-link hover:underline">Acceptable Use Policy</a>.
+                              Cold outreach and purchased or scraped lists aren't allowed.
+                            </li>
+                            <li>Remove the addresses that bounced from your lists before you send again.</li>
+                            <li>Request a review. Tell us what you send and how the recipients got on your list.</li>
+                          </ol>
+                          <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                            @if (canRequest()) {
+                              <a [routerLink]="'/domains/' + ctx.id() + '/status/review'" [class]="ui.primary + ' h-9'">
+                                Request a review
+                                <amelu-icon name="arrowRight" [size]="15" />
+                              </a>
+                            } @else {
+                              <p class="text-[12px] text-muted">Only owners and admins can request a review. Ask one of them.</p>
+                            }
+                          </div>
+                          <p class="mt-3 text-[12px] text-muted">
+                            Can't use the dashboard? Email <a [href]="abuseMail" class="text-link hover:underline">abuse&#64;amelu.org</a> from an
+                            address outside this domain. We review every request by hand.
+                          </p>
+                        }
+                      </div>
+                    }
+                    @case ('account') {
+                      <p class="mt-1 text-[13px] text-muted">{{ s.account.message }}</p>
+                    }
+                    @case ('domain') {
+                      @if (s.domain.status === 'suspended') {
+                        <p class="mt-1 text-[13px] text-muted">
+                          Mail to and from {{ s.domain.name }} is stopped until the domain is reactivated.
+                          <a [routerLink]="'/domains/' + ctx.id() + '/deactivate'" class="text-link hover:underline">Reactivate the domain</a>
+                        </p>
+                      } @else {
+                        <p class="mt-1 text-[13px] text-muted">
+                          The domain couldn't be added to the mail server.
+                          <a routerLink="/support" class="text-link hover:underline">Contact support</a> and we'll finish the setup.
+                        </p>
+                      }
+                    }
+                  }
+                </div>
+              </div>
+            }
+
+            <ul class="divide-y divide-line border-t border-line">
+              @for (row of rows(); track row.label) {
+                <li class="flex items-center gap-3 px-4 py-2.5">
+                  <amelu-icon [name]="toneIcon[row.tone]" [size]="16" class="flex-none" [class]="toneText[row.tone]" />
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[13px] font-medium">{{ row.label }}</span>
+                    <span class="block truncate text-[12px] text-muted" [title]="row.detail">{{ row.detail }}</span>
+                  </span>
+                  <span class="flex-none text-right text-[13px] tabular-nums" [class]="row.tone === 'ok' || row.tone === 'neutral' ? '' : toneText[row.tone] + ' font-medium'">
+                    {{ row.value }}
+                  </span>
+                  @if (row.link; as link) {
+                    <a [routerLink]="link.to" class="w-20 flex-none text-right text-[12px] text-link hover:underline max-sm:hidden">{{ link.label }}</a>
+                  } @else {
+                    <span class="w-20 flex-none max-sm:hidden" aria-hidden="true"></span>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <div class="overflow-hidden rounded-md border border-line bg-surface" aria-hidden="true">
+            <div class="flex items-start gap-3 px-4 py-4">
+              <span class="size-9 flex-none animate-pulse rounded-full bg-bg"></span>
+              <span class="min-w-0 flex-1 pt-1">
+                <span class="block h-4 w-32 animate-pulse rounded bg-bg"></span>
+                <span class="mt-2 block h-3 w-72 max-w-full animate-pulse rounded bg-bg"></span>
+              </span>
+            </div>
+            <ul class="divide-y divide-line border-t border-line">
+              @for (i of [1, 2, 3, 4, 5]; track i) {
+                <li class="flex items-center gap-3 px-4 py-3">
+                  <span class="size-4 flex-none animate-pulse rounded-full bg-bg"></span>
+                  <span class="min-w-0 flex-1"><span class="block h-3 w-24 animate-pulse rounded bg-bg"></span><span class="mt-1.5 block h-2.5 w-48 max-w-full animate-pulse rounded bg-bg"></span></span>
+                  <span class="h-3 w-16 animate-pulse rounded bg-bg"></span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </section>
+
+    @if (!unverified() && status() !== null) {
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Action history</h2>
+          @if (status(); as s) {
+            <span class="text-[13px] text-muted">{{ s.actions.length }} {{ s.actions.length === 1 ? 'entry' : 'entries' }}</span>
+          }
+        </div>
+        <div [class]="ui.well">
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <thead>
+                <tr>
+                  <th [class]="ui.th">When</th>
+                  <th [class]="ui.th">What</th>
+                  <th [class]="ui.th + ' max-md:hidden'">Reason</th>
+                  <th [class]="ui.th + ' w-0 text-right'">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (status(); as s) {
+                  @for (action of s.actions; track action.id) {
+                    <tr [class]="ui.tr">
+                      <td [class]="ui.td + ' whitespace-nowrap tabular-nums'">
+                        <time [attr.datetime]="action.createdAt" [title]="action.createdAt | date: 'd MMM y, HH:mm:ss'">{{ action.createdAt | date: 'd MMM y, HH:mm' }}</time>
+                      </td>
+                      <td [class]="ui.td">
+                        <span class="block">{{ kind[action.kind] }}</span>
+                        <span [class]="ui.tdSub">{{ source[action.source] }}</span>
+                        <span class="mt-1 block text-[12px] text-muted md:hidden">{{ action.reason }}</span>
+                      </td>
+                      <td [class]="ui.td + ' max-md:hidden'">{{ action.reason || '-' }}</td>
+                      <td [class]="ui.td + ' text-right whitespace-nowrap'">
+                        @if (action.active) {
+                          <span [class]="badge('bad')">Active</span>
+                        } @else {
+                          <span [class]="badge('ok')">Lifted</span>
+                          @if (action.liftedAt; as lifted) {
+                            <span class="mt-1 block text-[12px] text-muted tabular-nums">{{ lifted | date: 'd MMM y, HH:mm' }}</span>
+                          }
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr [class]="ui.tr">
+                      <td colspan="4" class="px-4 py-10 text-center">
+                        <amelu-icon name="circleCheck" [size]="18" class="mx-auto block text-ok" />
+                        <p class="mt-2">Nothing on record</p>
+                        <p class="mt-0.5 text-[13px] text-muted">We've never paused or limited this domain. If we ever do, it shows up here with the reason.</p>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  @for (i of [1, 2, 3]; track i) {
+                    <tr [class]="ui.tr" aria-hidden="true">
+                      <td [class]="ui.td"><span class="block h-3 w-28 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="block h-3 w-24 animate-pulse rounded bg-bg"></span><span class="mt-2 block h-2.5 w-32 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-56 animate-pulse rounded bg-bg"></span></td>
+                      <td [class]="ui.td"><span class="ml-auto block h-4 w-14 animate-pulse rounded bg-bg"></span></td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    }
+  </div>
+
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Why we pause sending</h2>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Every Amelu customer sends from the same mail servers. When one domain sends mail people didn't ask for, providers like Gmail
+          and Outlook start refusing mail from all of us. Pausing that domain early keeps delivery working for everyone, including you.
+        </p>
+        <p class="mt-3 text-[13px] leading-relaxed text-muted">
+          Cold outreach, purchased or scraped lists and mail to people who never signed up aren't allowed, whatever the volume.
+          <a href="https://amelu.org/acceptable-use" target="_blank" rel="noopener" class="text-link hover:underline">Acceptable Use Policy</a>
+        </p>
+      </div>
+    </section>
+
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Need help?</h2>
+        <a routerLink="/support" class="text-[13px] text-link hover:underline">Support</a>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          While sending is paused, request a review from this page or email
+          <a [href]="abuseMail" class="text-link hover:underline">abuse&#64;amelu.org</a>. For anything else,
+          <a routerLink="/support" class="text-link hover:underline">open a support ticket</a> and we'll get back to you.
+        </p>
+      </div>
+    </section>
+  </aside>
+</div>

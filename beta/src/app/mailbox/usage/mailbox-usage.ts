@@ -4,7 +4,6 @@ import { UI } from '../../ui';
 import { MailboxContext } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
 import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
 import { AUTOCONFIG_ORIGIN, AUTODISCOVER_HOST } from '../../config';
 import { PhoneQr } from '../../phone-qr';
 import { markSetupStep } from '../../setup-progress';
@@ -115,148 +114,232 @@ interface Setting {
 /** The current dashboard's MailboxUsageInstructionsPage: what to type into a mail app. */
 @Component({
   selector: 'amelu-mailbox-usage',
-  imports: [RouterLink, MailboxHeading, PhoneQr, Icon, DitherShader],
+  imports: [RouterLink, MailboxHeading, PhoneQr, Icon],
   template: `
     <amelu-mailbox-heading title="Usage instructions">
-      To correctly configure your email client, you will need the correct server parameters. Please find them below.
+      The settings to enter in a mail, calendar or contacts app to use this mailbox.
     </amelu-mailbox-heading>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="min-w-0 space-y-6">
-        <section>
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-            <h2 class="text-[14px] font-bold">Set up your apps</h2>
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+      <div class="min-w-0 space-y-5">
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Set up your apps</h2>
             @if (platformLabel(); as label) {
-              <span class="rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">Showing apps for {{ label }}</span>
+              <span class="truncate text-[13px] text-muted">Showing apps for {{ label }}</span>
             }
           </div>
-          <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-            @for (app of shownApps(); track app.id) {
-              <div class="px-4 py-3.5">
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2.5">
-                  <div class="min-w-0 flex-1">
-                    <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold">
-                      {{ app.name }}
-                      @for (part of app.covers; track part) {
-                        <span class="rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">{{ part }}</span>
-                      }
-                    </p>
-                    <p class="mt-1 text-[13px] leading-relaxed text-muted">{{ app.how }}</p>
+          <div [class]="ui.well">
+            <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+              @for (app of shownApps(); track app.id) {
+                <li class="px-4 py-3">
+                  <div class="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+                    <div class="min-w-0 flex-1">
+                      <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-medium">
+                        {{ app.name }}
+                        @for (part of app.covers; track part) {
+                          <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-medium text-muted">{{ part }}</span>
+                        }
+                      </p>
+                      <p class="mt-0.5 text-[13px] leading-relaxed text-muted">{{ app.how }}</p>
+                    </div>
+                    @if (app.id === 'apple' && profileUrl(); as url) {
+                      <a [href]="url" [class]="ui.outline" download>
+                        <amelu-icon name="download" [size]="14" />
+                        Download profile
+                      </a>
+                    }
                   </div>
-                  @if (app.id === 'apple' && profileUrl(); as url) {
-                    <a [href]="url" [class]="ui.outline" download>
-                      Download profile
-                    </a>
+                  @if (app.id === 'outlook' && autodiscover(); as record) {
+                    <div class="mt-2.5 flex items-center gap-1 rounded-md border border-line bg-well py-1 pr-1 pl-3">
+                      <code class="min-w-0 flex-1 truncate font-mono text-[12px]" [title]="record">{{ record }}</code>
+                      <button
+                        type="button"
+                        [class]="copyButton + (copied() === record ? ' text-ok' : ' text-muted hover:text-ink')"
+                        aria-label="Copy the DNS record"
+                        [title]="copied() === record ? 'Copied' : 'Copy'"
+                        (click)="copy(record)"
+                      >
+                        <amelu-icon [name]="copied() === record ? 'check' : 'copy'" [size]="12" />
+                      </button>
+                    </div>
                   }
-                </div>
-                @if (app.id === 'outlook' && autodiscover(); as record) {
-                  <div class="mt-2.5 flex items-center gap-2 rounded-md border border-line bg-bg/60 py-1 pr-1 pl-3">
-                    <code class="min-w-0 flex-1 truncate font-mono text-[12px]" [title]="record">{{ record }}</code>
-                    <button
-                      type="button"
-                      class="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted hover:bg-surface hover:text-ink"
-                      aria-label="Copy the DNS record"
-                      (click)="copy(record)"
-                    >
-                      {{ copied() === record ? 'Copied' : 'Copy' }}
-                    </button>
-                  </div>
-                }
-              </div>
-            }
-            @if (hiddenApps() > 0) {
-              <button
-                type="button"
-                class="w-full cursor-pointer px-4 py-3 text-left text-[13px] font-medium text-link hover:bg-bg/60"
-                (click)="showAll.set(true)"
-              >
-                Show all apps ({{ hiddenApps() }} more)
-              </button>
-            }
+                </li>
+              }
+              @if (hiddenApps() > 0) {
+                <li>
+                  <button
+                    type="button"
+                    class="w-full cursor-pointer px-4 py-2.5 text-left text-[13px] text-link hover:bg-bg/40 hover:underline"
+                    (click)="showAll.set(true)"
+                  >
+                    Show all apps ({{ hiddenApps() }} more)
+                  </button>
+                </li>
+              }
+            </ul>
+            <p class="mt-3 text-[12px] text-muted">Any other app: use the server settings below.</p>
           </div>
-          <p class="mt-2 text-[12px] text-muted">Any other app: use the settings below.</p>
         </section>
 
-        @for (section of sections(); track section.title) {
-          <section>
-            <h2 [class]="ui.sectionTitle">{{ section.title }}</h2>
-            <dl [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-              @for (row of section.rows; track row.label) {
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Server settings</h2>
+          </div>
+          <div [class]="ui.well">
+            <!-- The sign-in is the same for every server below. -->
+            <dl class="mb-3 divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+              @for (row of login(); track row.label) {
                 <div class="flex min-h-11 items-center gap-4 px-4 py-2">
                   <dt class="w-28 flex-none text-[13px] text-muted">{{ row.label }}</dt>
-                  <dd class="min-w-0 flex-1 truncate" [class]="row.copy ? 'font-mono text-[12px]' : 'text-[13px]'" [class.text-muted]="row.muted" [title]="row.copy ? row.value : ''">
+                  <dd class="flex min-w-0 flex-1 items-center gap-1">
                     @if (row.value) {
-                      {{ row.value }}
+                      <span class="min-w-0 truncate" [class]="row.copy ? 'font-mono text-[12px]' : 'text-[13px]'" [class.text-muted]="row.muted" [title]="row.copy ? row.value : ''">{{ row.value }}</span>
+                      @if (row.copy) {
+                        <button
+                          type="button"
+                          [class]="copyButton + (copied() === row.value ? ' text-ok' : ' text-muted hover:text-ink')"
+                          [attr.aria-label]="'Copy ' + row.label.toLowerCase()"
+                          [title]="copied() === row.value ? 'Copied' : 'Copy'"
+                          (click)="copy(row.value)"
+                        >
+                          <amelu-icon [name]="copied() === row.value ? 'check' : 'copy'" [size]="12" />
+                        </button>
+                      }
                     } @else {
                       <span class="block h-3 w-40 animate-pulse rounded bg-bg"></span>
                     }
                   </dd>
-                  @if (row.copy && row.value) {
-                    <button
-                      type="button"
-                      class="inline-flex h-7 flex-none cursor-pointer items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted hover:bg-bg hover:text-ink"
-                      [attr.aria-label]="'Copy ' + row.label.toLowerCase()"
-                      (click)="copy(row.value)"
-                    >
-                      {{ copied() === row.value ? 'Copied' : 'Copy' }}
-                    </button>
-                  }
                 </div>
               }
             </dl>
-          </section>
-        }
 
-        <p class="text-[12px] leading-relaxed text-muted">
-          IMAP keeps mail in sync on all your devices; use POP3 only if an app needs it, since it downloads mail to one
-          device. If your app or network can't use port 465, use 587 with STARTTLS instead.
-        </p>
+            <div [class]="ui.tableWrap">
+              <table [class]="ui.table">
+                <thead>
+                  <tr>
+                    <th [class]="ui.th">Use</th>
+                    <th [class]="ui.th">Server</th>
+                    <th [class]="ui.th">Port</th>
+                    <th [class]="ui.th + ' max-sm:hidden'">Security</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of servers; track row.use) {
+                    <tr [class]="ui.tr">
+                      <td [class]="ui.td">
+                        <span class="block">{{ row.use }}</span>
+                        <span [class]="ui.tdSub">{{ row.protocol }}<span class="sm:hidden">, {{ row.security }}</span></span>
+                      </td>
+                      <td [class]="ui.td + ' max-w-[260px]'">
+                        <span class="flex min-w-0 items-center gap-1">
+                          <code class="min-w-0 truncate font-mono text-[12px]" [title]="server">{{ server }}</code>
+                          <button
+                            type="button"
+                            [class]="copyButton + (copied() === server ? ' text-ok' : ' text-muted hover:text-ink')"
+                            aria-label="Copy server"
+                            [title]="copied() === server ? 'Copied' : 'Copy'"
+                            (click)="copy(server)"
+                          >
+                            <amelu-icon [name]="copied() === server ? 'check' : 'copy'" [size]="12" />
+                          </button>
+                        </span>
+                      </td>
+                      <td [class]="ui.td + ' font-mono text-[12px] tabular-nums'">{{ row.port }}</td>
+                      <td [class]="ui.td + ' whitespace-nowrap max-sm:hidden'">{{ row.security }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-3 text-[12px] leading-relaxed text-muted">
+              IMAP keeps mail in sync on all your devices; use POP3 only if an app needs it, since it downloads mail to one
+              device. If your app or network can't use port 465, use 587 with STARTTLS instead.
+            </p>
+          </div>
+        </section>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Calendar and contacts</h2>
+          </div>
+          <div [class]="ui.well">
+            <dl class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+              @for (row of dav; track row.label) {
+                <div class="flex min-h-11 items-center gap-4 px-4 py-2">
+                  <dt class="w-28 flex-none text-[13px] text-muted">{{ row.label }}</dt>
+                  <dd class="flex min-w-0 flex-1 items-center gap-1">
+                    <code class="min-w-0 truncate font-mono text-[12px]" [title]="row.value">{{ row.value }}</code>
+                    <button
+                      type="button"
+                      [class]="copyButton + (copied() === row.value ? ' text-ok' : ' text-muted hover:text-ink')"
+                      [attr.aria-label]="'Copy ' + row.label.toLowerCase()"
+                      [title]="copied() === row.value ? 'Copied' : 'Copy'"
+                      (click)="copy(row.value)"
+                    >
+                      <amelu-icon [name]="copied() === row.value ? 'check' : 'copy'" [size]="12" />
+                    </button>
+                  </dd>
+                </div>
+              }
+            </dl>
+            <p class="mt-3 text-[12px] leading-relaxed text-muted">Sign in with the same username and password as for mail.</p>
+          </div>
+        </section>
       </div>
 
-      <aside class="space-y-6">
+      <aside class="space-y-5">
         @if (profileUrl(); as url) {
-          <section id="phone" [class]="ui.card + ' p-4'">
-            <h2 class="text-[14px] font-bold">Set up your iPhone or iPad</h2>
-            <p class="mt-1 text-[13px] leading-relaxed text-muted">
-              Point the camera at this code and tap the link. Install the profile in Settings and enter the mailbox
-              password when asked.
-            </p>
-            <amelu-phone-qr class="mx-auto mt-3 max-w-[180px]" [url]="url" [label]="'QR code for the ' + (ctx.mailbox()?.address ?? '') + ' profile'" />
-            <p class="mt-3 text-[12px] leading-relaxed text-muted">
-              On Android, add the account in Gmail or Outlook with the full address; most apps find the settings by
-              themselves.
-            </p>
+          <section id="phone" [class]="ui.panel">
+            <div [class]="ui.panelHeader">
+              <h2 [class]="ui.panelTitle">Set up your iPhone or iPad</h2>
+            </div>
+            <div [class]="ui.well">
+              <p class="text-[13px] leading-relaxed text-muted">
+                Point the camera at this code and tap the link. Install the profile in Settings and enter the mailbox
+                password when asked.
+              </p>
+              <div class="mt-3 rounded-md border border-line bg-surface p-3">
+                <amelu-phone-qr class="mx-auto max-w-[180px]" [url]="url" [label]="'QR code for the ' + (ctx.mailbox()?.address ?? '') + ' profile'" />
+              </div>
+              <p class="mt-3 text-[12px] leading-relaxed text-muted">
+                On Android, add the account in Gmail or Outlook with the full address; most apps find the settings by
+                themselves.
+              </p>
+            </div>
           </section>
         }
-        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Signing in</h2>
+            <a [routerLink]="ctx.base() + '/password'" class="text-[13px] text-link hover:underline">Password</a>
           </div>
-          <amelu-icon name="key" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">Signing in</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            The username is always the full address. The password is the mailbox password, not your Amelu account
-            password.
-          </p>
-          <a [routerLink]="ctx.base() + '/password'" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">
-            Set or reset the password
-          </a>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              The username is always the full address. The password is the mailbox password, not your Amelu account
+              password. You can set or reset it on the Password page.
+            </p>
+          </div>
         </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Can't connect?</h2>
-          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Check that IMAP or ManageSieve is switched on for this mailbox.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              A suspended mailbox can't sign in until it's activated again.
-            </li>
-          </ul>
-          <a [routerLink]="ctx.base() + '/services'" class="mt-2.5 inline-block text-[13px] font-medium text-link hover:underline">
-            Enabled services
-          </a>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Can't connect?</h2>
+            <a [routerLink]="ctx.base() + '/services'" class="text-[13px] text-link hover:underline">Enabled services</a>
+          </div>
+          <div [class]="ui.well">
+            <ul class="space-y-2 text-[13px] leading-relaxed text-muted">
+              <li class="flex gap-2.5">
+                <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60" aria-hidden="true"></span>
+                Check that IMAP or ManageSieve is switched on for this mailbox.
+              </li>
+              <li class="flex gap-2.5">
+                <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60" aria-hidden="true"></span>
+                A suspended mailbox can't sign in until it's activated again.
+              </li>
+            </ul>
+          </div>
         </section>
       </aside>
     </div>
@@ -297,34 +380,26 @@ export class MailboxUsage {
     return `_autodiscover._tcp.${address.split('@')[1]}. SRV 0 0 443 ${AUTODISCOVER_HOST}.`;
   });
 
-  protected readonly sections = computed(() => {
-    const address = this.ctx.mailbox()?.address ?? '';
-    const login: Setting[] = [
-      { label: 'Username', value: address, copy: true },
-      { label: 'Password', value: '(mailbox password)', muted: true },
-    ];
-    const server = (protocol: string, port: string, security: string): Setting[] => [
-      { label: 'Protocol', value: protocol },
-      { label: 'Server', value: MAIL_SERVER, copy: true },
-      { label: 'Port', value: port },
-      { label: 'Security', value: security },
-    ];
-    return [
-      { title: 'Incoming mail', rows: [...server('IMAP', '993', 'TLS'), ...login] },
-      { title: 'Incoming mail with POP3', rows: [...server('POP3', '995', 'TLS'), ...login] },
-      { title: 'Outgoing mail', rows: [...server('SMTP', '465', 'TLS'), ...login] },
-      { title: 'Outgoing mail with STARTTLS', rows: [...server('SMTP', '587', 'STARTTLS'), ...login] },
-      {
-        title: 'Calendar and contacts',
-        rows: [
-          { label: 'Calendar', value: `https://${MAIL_SERVER}/dav/cal/`, copy: true },
-          { label: 'Contacts', value: `https://${MAIL_SERVER}/dav/card/`, copy: true },
-          ...login,
-        ],
-      },
-      { title: 'ManageSieve', rows: server('ManageSieve', '4190', 'StartTLS') },
-    ];
-  });
+  protected readonly server = MAIL_SERVER;
+  protected readonly copyButton = 'inline-flex size-6 flex-none cursor-pointer items-center justify-center rounded hover:bg-bg';
+
+  protected readonly login = computed((): Setting[] => [
+    { label: 'Username', value: this.ctx.mailbox()?.address ?? '', copy: true },
+    { label: 'Password', value: 'The mailbox password', muted: true },
+  ]);
+
+  protected readonly servers: { use: string; protocol: string; port: string; security: string }[] = [
+    { use: 'Incoming mail', protocol: 'IMAP', port: '993', security: 'TLS' },
+    { use: 'Incoming mail with POP3', protocol: 'POP3', port: '995', security: 'TLS' },
+    { use: 'Outgoing mail', protocol: 'SMTP', port: '465', security: 'TLS' },
+    { use: 'Outgoing mail with STARTTLS', protocol: 'SMTP', port: '587', security: 'STARTTLS' },
+    { use: 'Mail filters', protocol: 'ManageSieve', port: '4190', security: 'STARTTLS' },
+  ];
+
+  protected readonly dav: Setting[] = [
+    { label: 'Calendar', value: `https://${MAIL_SERVER}/dav/cal/` },
+    { label: 'Contacts', value: `https://${MAIL_SERVER}/dav/card/` },
+  ];
 
   protected async copy(value: string): Promise<void> {
     await navigator.clipboard.writeText(value);

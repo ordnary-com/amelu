@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Icon } from '../icon';
 import { DitherShader } from '../login/dither-shader';
@@ -11,33 +10,41 @@ import { activePromo } from '../promo';
  */
 @Component({
   selector: 'amelu-promo-banner',
-  imports: [DatePipe, RouterLink, Icon, DitherShader],
+  imports: [RouterLink, Icon, DitherShader],
   template: `
     @if (promo && variant() === 'sidebar') {
-      <!-- Part of the menu: a dither in the menu's own ink, rising from the bottom and fading
-           into the sidebar, with the deal on top of it. -->
-      <div class="relative overflow-hidden rounded-lg px-3 pt-10 pb-3 text-[12px] leading-snug text-chrome-ink" role="note" [attr.aria-label]="promo.name + ' deal'">
-        <div class="pointer-events-none absolute inset-0 opacity-25 [mask-image:linear-gradient(to_top,black,rgba(0,0,0,0.5)_45%,transparent)]" aria-hidden="true">
-          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--chrome-ink)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
-        </div>
-        <div class="relative">
-          <p class="text-[13px] font-semibold">{{ promo.name }}</p>
-          <p class="mt-0.5 text-chrome-ink/75">{{ capital(promo.yearly.deal) }} on Go or Pro, until {{ promo.lastDay | date: 'd MMM' }}.</p>
-          <div class="mt-2.5">
-            <button
-              type="button"
-              class="inline-flex cursor-pointer items-center gap-1.5 rounded bg-chrome-ink/15 px-2 py-1 font-mono text-[12px] font-bold tracking-wide backdrop-blur-sm hover:bg-chrome-ink/25"
-              [attr.aria-label]="'Copy ' + promo.yearly.code"
-              (click)="copy(promo.yearly.code)"
-            >
-              {{ promo.yearly.code }}
-              <amelu-icon [name]="copied() === promo.yearly.code ? 'check' : 'copy'" [size]="11" />
-            </button>
-          </div>
-          <a routerLink="/billing/plans" class="mt-2 inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline">
-            See plans <amelu-icon name="arrowRight" [size]="12" />
-          </a>
-        </div>
+      <!-- A coupon on the menu's own colours: the phase and days left, the discount large,
+           the yearly code as a dashed ticket to copy, and the monthly code under it. -->
+      <div class="rounded-md border border-chrome-ink/15 bg-chrome-ink/[0.06] p-3 text-[12px] leading-snug text-chrome-ink" role="note" [attr.aria-label]="promo.name + ' deal'">
+        <p class="flex items-center justify-between gap-2">
+          <span class="rounded bg-chrome-ink/15 px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">{{ promo.name }}</span>
+          <span class="text-[11px] text-chrome-ink/70">{{ shortLeft() }}</span>
+        </p>
+        <p class="mt-2.5 text-[22px] leading-none font-medium tracking-[-0.01em]">{{ headline(promo.yearly.deal).big }}</p>
+        <p class="mt-1 text-chrome-ink/75">{{ headline(promo.yearly.deal).rest }} on Go or Pro, paid yearly</p>
+        <button
+          type="button"
+          class="mt-3 flex w-full cursor-pointer items-center justify-between gap-2 rounded border border-dashed border-chrome-ink/40 px-2.5 py-1.5 font-mono text-[12px] font-bold tracking-wide transition-colors hover:border-chrome-ink/70 hover:bg-chrome-ink/10"
+          [attr.aria-label]="'Copy ' + promo.yearly.code"
+          (click)="copy(promo.yearly.code)"
+        >
+          {{ promo.yearly.code }}
+          <span class="flex items-center gap-1 font-sans text-[11px] font-normal tracking-normal text-chrome-ink/75">
+            {{ copied() === promo.yearly.code ? 'Copied' : 'Copy' }}
+            <amelu-icon [name]="copied() === promo.yearly.code ? 'check' : 'copy'" [size]="11" />
+          </span>
+        </button>
+        <p class="mt-2 text-[11px] text-chrome-ink/70">
+          Monthly?
+          <button type="button" class="cursor-pointer font-mono font-bold underline-offset-2 hover:underline" [attr.aria-label]="'Copy ' + promo.monthly.code" (click)="copy(promo.monthly.code)">{{ promo.monthly.code }}</button>
+          @if (copied() === promo.monthly.code) {
+            <amelu-icon name="check" [size]="10" class="inline-block align-[-1px]" />
+          }
+          gives {{ promo.monthly.deal }}.
+        </p>
+        <a routerLink="/billing/plans" class="mt-2.5 inline-flex items-center gap-1 text-[12px] font-medium underline-offset-2 hover:underline">
+          See plans <amelu-icon name="arrowRight" [size]="12" />
+        </a>
       </div>
     } @else if (promo) {
       <!-- A dithered card like the Overview banner: the deal large on the left, both codes
@@ -102,6 +109,21 @@ export class PromoBanner {
     if (days <= 0) return 'Last day today';
     const end = new Date(this.promo.lastDay + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' });
     return `Ends ${end}, ${days} day${days === 1 ? '' : 's'} left`;
+  }
+
+  /** "9 days left" or "Last day", short for the sidebar. */
+  protected shortLeft(): string {
+    if (!this.promo) return '';
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam' }).format(new Date());
+    const days = Math.round((Date.parse(this.promo.lastDay) - Date.parse(today)) / 86_400_000);
+    return days <= 0 ? 'Last day' : `${days} day${days === 1 ? '' : 's'} left`;
+  }
+
+  /** "30% off your first year" as "30% off" (large) and "Your first year". */
+  protected headline(deal: string): { big: string; rest: string } {
+    const at = deal.indexOf(' off ');
+    if (at < 0) return { big: this.capital(deal), rest: '' };
+    return { big: deal.slice(0, at + 4), rest: this.capital(deal.slice(at + 5)) };
   }
 
   protected capital(text: string): string {

@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 
-/** One on/off setting in a card: label and hint on the left, a switch on the right. Stack them in a `divide-y divide-line` card. */
+/** One on/off setting in a card: label and hint on the left, a switch on the right. Stack them in a `divide-y divide-line` list in a ui.setCard, like the default services. */
 @Component({
   selector: 'amelu-switch-row',
   template: `
-    <label class="flex items-center gap-4 px-4 py-3" [class]="disabled() ? 'cursor-default' : 'cursor-pointer hover:bg-bg/60'">
+    <label class="flex items-center gap-4 px-5 py-3.5" [class]="disabled() ? 'cursor-default' : 'cursor-pointer hover:bg-bg/40'">
       <span class="min-w-0 flex-1">
-        <span class="block text-[14px] font-medium">{{ label() }}</span>
-        <span class="mt-0.5 block text-[12px] leading-relaxed text-muted empty:hidden"><ng-content /></span>
+        <span class="block text-[14px]">{{ label() }}</span>
+        <span class="mt-0.5 block text-[13px] leading-relaxed text-muted empty:hidden"><ng-content /></span>
       </span>
       <button
         type="button"

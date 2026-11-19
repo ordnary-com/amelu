@@ -1,0 +1,21 @@
+Subject: The new Amelu dashboard is here
+
+Hello,
+
+app.amelu.org has a new dashboard. We rebuilt it page by page, so the things you do every day take fewer clicks and everything else is easier to find.
+
+EVERY DOMAIN AT A GLANCE
+Each domain has an Overview with its mailboxes and aliases, DNS checks, sending against your plan and recent activity, all on one page.
+
+SEE HOW YOUR MAIL IS DELIVERED
+A new chart shows what happened to the mail each domain sent in the last 14 days, and why receivers turned any of it down.
+
+HELP WITHOUT LEAVING THE DASHBOARD
+Open a ticket, follow the replies and attach screenshots, right where you manage your mail.
+
+ONE ACCOUNT FOR EVERYTHING
+You sign in with your Ordnary account, so there's no separate Amelu password to keep track of.
+
+Open the dashboard: https://app.amelu.org
+
+The Amelu team

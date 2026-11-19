@@ -1,0 +1,21 @@
+Subject: Send from an IP address that's yours alone
+
+Hello,
+
+Amelu now offers dedicated IPs. A dedicated IP is used by your organization only, so its sending reputation depends on nobody else's mail.
+
+Price: €10 a month per address
+Available on: every plan
+Comes from: Ordnary's own network
+
+HOW TO GET ONE
+1. Request it: under My Organization > Dedicated IPs, tell us roughly how much mail you send.
+2. We review and you pay: our team looks at the request, and once it's approved you pay the €10 a month.
+3. We assign the address: the address is added to your organization.
+4. Amelu switches over: as soon as its DNS checks out and your domains' SPF records include Amelu, your mail goes out from it.
+
+Request a dedicated IP: https://app.amelu.org/organization/dedicated-ips
+
+Most senders don't need one: Amelu's shared addresses are monitored closely. A dedicated IP makes sense when you send a steady volume and want full control over your reputation.
+
+The Amelu team

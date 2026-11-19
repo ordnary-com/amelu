@@ -6,8 +6,8 @@ import { injectDomain } from '../../domain-context';
 import { PageHeader } from '../../page-header/page-header';
 import { Alert } from '../../alert/alert';
 import { UI } from '../../ui';
-import { badgeClass } from '../../status';
 import { ImportMailboxResult, MailboxesApi } from '../mailboxes-api';
+import { Icon } from '../../icon';
 
 // Matches what ImportMailboxesCSV in backend/internal/handlers/mailboxes.go actually does with each column.
 const FIELDS = [
@@ -28,7 +28,7 @@ const EXAMPLES = ['Bob, bob@domain.tld, s3cReTPa55,,,,', 'Alice, alice@domain.tl
 /** The current dashboard's /domains/:id/mailboxes/import: bulk create mailboxes from pasted CSV. */
 @Component({
   selector: 'amelu-import-mailboxes',
-  imports: [RouterLink, PageHeader, Alert],
+  imports: [RouterLink, PageHeader, Alert, Icon],
   templateUrl: './import-mailboxes.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -36,7 +36,6 @@ const EXAMPLES = ['Bob, bob@domain.tld, s3cReTPa55,,,,', 'Alice, alice@domain.tl
 export class ImportMailboxes {
   private readonly api = inject(MailboxesApi);
   protected readonly ui = UI;
-  protected readonly createdBadge = badgeClass('ok');
   protected readonly ctx = injectDomain();
   protected readonly base = computed(() => `/domains/${this.ctx.id()}`);
   protected readonly fields = FIELDS;

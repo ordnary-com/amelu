@@ -9,15 +9,14 @@ import { Alert } from '../../alert/alert';
 import { UI } from '../../ui';
 import { MailboxesApi } from '../mailboxes-api';
 import { countedMailboxes } from '../../standard-addresses';
-import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
+import { Icon, IconName } from '../../icon';
 
 type PasswordMethod = 'generate' | 'password';
 
 /** The current dashboard's /domains/:id/mailboxes/new. */
 @Component({
   selector: 'amelu-new-mailbox',
-  imports: [RouterLink, PageHeader, Alert, Icon, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, Icon],
   templateUrl: './new-mailbox.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -72,10 +71,17 @@ export class NewMailbox {
     return usage ? Math.min(100, (usage.used / Math.max(1, usage.max)) * 100) : 0;
   });
 
-  protected readonly methods: { value: PasswordMethod; title: string; text: string }[] = [
-    { value: 'generate', title: 'Generate a password for me', text: 'A strong password, shown once after the mailbox is created.' },
-    { value: 'password', title: 'Set initial password', text: 'Type one yourself, for example to hand it over in person.' },
+  protected readonly methods: { value: PasswordMethod; title: string; text: string; icon: IconName }[] = [
+    { value: 'generate', title: 'Generate one for me', text: 'A strong password, shown once after the mailbox is created.', icon: 'refresh' },
+    { value: 'password', title: 'Set it myself', text: 'Type one, for example to hand it over in person.', icon: 'key' },
   ];
+
+  // The same summary styles as Add domain.
+  protected readonly sectionTitle = 'block text-[15px] font-medium';
+  protected readonly label = 'text-[13px] text-muted';
+  protected readonly box = 'space-y-1.5 rounded border border-line bg-surface px-3.5 py-3 text-[13px]';
+  protected readonly pair = 'flex items-baseline justify-between gap-3';
+  protected readonly address = computed(() => `${this.localPart().trim().toLowerCase()}@${this.ctx.domain()?.name ?? ''}`);
 
   protected readonly steps = [
     { title: 'Create the mailbox', text: 'It gets the default services and limits set for this domain.' },

@@ -8,13 +8,12 @@
   ]"
 >
   @if (!results()) {
-    Bulk import mailboxes from comma separated values (CSV) data. The input data must be in the acceptable format. Only up to 100 non-existing
-    mailboxes may be imported.
+    Create many mailboxes at once from CSV data, in the format on the right. Up to 100 new mailboxes per import.
   }
 </amelu-page-header>
 
 @if (results(); as rows) {
-  <div class="max-w-3xl space-y-5">
+  <div class="max-w-4xl space-y-5">
     @if (summary().created > 0) {
       <amelu-alert kind="warning" title="Save the passwords now">
         {{ summary().created }} {{ summary().created === 1 ? 'mailbox was' : 'mailboxes were' }} created. Generated passwords are shown only once.
@@ -26,123 +25,150 @@
       </amelu-alert>
     }
 
-    <section>
-      <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
-        Results
-        <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ rows.length }}</span>
-      </h2>
-      <div [class]="ui.card + ' overflow-hidden'">
-        <div class="hidden border-b border-line bg-bg/60 px-4 py-2 text-[12px] font-medium text-muted sm:flex">
-          <span class="w-64 flex-none">Address</span>
-          <span>Result</span>
-        </div>
-        <ul class="divide-y divide-line">
-          @for (row of rows; track $index) {
-            <li class="flex flex-col gap-x-3 gap-y-1.5 px-4 py-3 sm:flex-row sm:items-center">
-              <span class="truncate text-[14px] font-medium sm:w-64 sm:flex-none">{{ row.address }}</span>
-              <div class="min-w-0 flex-1 text-[13px]">
-                @if (row.error) {
-                  <span class="text-bad">{{ row.error }}</span>
-                } @else {
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span [class]="createdBadge">Created</span>
-                    @if (row.password) {
-                      <code class="min-w-0 truncate rounded-md bg-bg px-2.5 py-1 font-mono text-[12px]">{{ row.password }}</code>
-                      <button type="button" [class]="ui.outline + ' h-7'" (click)="copy(row)">
-                        {{ copied() === row.address ? 'Copied' : 'Copy' }}
-                      </button>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Results <span class="font-normal text-muted">({{ rows.length }})</span></h2>
+        <span class="text-[13px] text-muted">{{ summary().created }} created · {{ summary().failed }} failed</span>
+      </div>
+      <div [class]="ui.well">
+        <div [class]="ui.tableWrap">
+          <table [class]="ui.table">
+            <thead>
+              <tr>
+                <th [class]="ui.th">Address</th>
+                <th [class]="ui.th">Result</th>
+                <th [class]="ui.th + ' max-sm:hidden'">Password</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows; track $index) {
+                <tr [class]="ui.tr">
+                  <td [class]="ui.td + ' max-w-[260px] truncate font-medium'">{{ row.address }}</td>
+                  <td [class]="ui.td">
+                    @if (row.error) {
+                      <span class="inline-flex items-start gap-1.5 text-bad"><amelu-icon name="circleX" [size]="15" class="mt-px flex-none" />{{ row.error }}</span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1.5 text-ok"><amelu-icon name="circleCheck" [size]="15" />Created</span>
+                      @if (row.note) {
+                        <span [class]="ui.tdSub + ' text-warn!'">{{ row.note }}</span>
+                      }
                     }
-                  </div>
-                  @if (row.note) {
-                    <p class="mt-1 text-[12px] text-warn">{{ row.note }}</p>
-                  }
-                }
-              </div>
-            </li>
-          } @empty {
-            <li class="px-4 py-6 text-center text-[13px] text-muted">No rows with an address were found in the data.</li>
-          }
-        </ul>
+                  </td>
+                  <td [class]="ui.td + ' max-sm:hidden'">
+                    @if (row.password) {
+                      <span class="flex items-center gap-2">
+                        <code class="min-w-0 truncate rounded bg-bg px-2 py-0.5 font-mono text-[12px] select-all">{{ row.password }}</code>
+                        <button type="button" class="inline-flex flex-none cursor-pointer items-center gap-1 text-[12px] text-link hover:underline" (click)="copy(row)">
+                          <amelu-icon [name]="copied() === row.address ? 'check' : 'copy'" [size]="13" />
+                          {{ copied() === row.address ? 'Copied' : 'Copy' }}
+                        </button>
+                      </span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr [class]="ui.tr"><td colspan="3" class="px-4 py-8 text-center text-muted">No rows with an address were found in the data.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <div class="flex flex-wrap gap-2">
-      <a [routerLink]="base() + '/mailboxes'" [class]="ui.primary">Return to all mailboxes</a>
-      <button type="button" [class]="ui.outline" (click)="again()">Import more</button>
+    <div class="flex flex-wrap items-center gap-2">
+      <a [routerLink]="base() + '/mailboxes'" [class]="ui.primary + ' h-9'">Back to mailboxes</a>
+      <button type="button" [class]="ui.outline + ' h-9'" (click)="again()">Import more</button>
     </div>
   </div>
 } @else {
-  <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
-    <form class="min-w-0 space-y-4" (submit)="submit($event)">
+  <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start">
+    <form [class]="ui.panel" (submit)="submit($event)">
+      <div [class]="ui.panelHeader">
+        <label for="csv-data" [class]="ui.panelTitle">CSV data</label>
+        @if (rowCount() > 0) {
+          <span class="text-[13px] text-muted">{{ rowCount() }} {{ rowCount() === 1 ? 'line' : 'lines' }}</span>
+        }
+      </div>
       @if (error(); as message) {
-        <amelu-alert kind="error" title="The import failed" [dismissible]="true" (dismissed)="error.set(null)">
-          {{ message }}
-        </amelu-alert>
-      }
-
-      <section>
-        <h2 [class]="ui.sectionTitle">CSV data</h2>
-        <div [class]="ui.card + ' p-4'">
-          <label for="csv-data" class="sr-only">CSV data</label>
-          <textarea
-            id="csv-data"
-            rows="18"
-            class="block w-full resize-y rounded-md border border-line bg-transparent px-2.5 py-2 font-mono text-[12px] leading-relaxed outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
-            placeholder="Paste your data here..."
-            spellcheck="false"
-            required
-            [value]="csv()"
-            (input)="csv.set($any($event.target).value)"
-          ></textarea>
-          <p [class]="ui.hint">
-            @if (rowCount() > 0) {
-              {{ rowCount() }} {{ rowCount() === 1 ? 'line' : 'lines' }}. Each row is created on its own, so one failing row doesn't stop the rest.
-            } @else {
-              One mailbox per line, no header row.
-            }
-          </p>
+        <div class="border-b border-line p-4">
+          <amelu-alert kind="error" title="The import failed" [dismissible]="true" (dismissed)="error.set(null)">
+            {{ message }}
+          </amelu-alert>
         </div>
-      </section>
-
-      <div class="flex items-center gap-3">
-        <button type="submit" [class]="ui.primary" [disabled]="!csv().trim() || busy()">
+      }
+      <div class="p-4">
+        <textarea
+          id="csv-data"
+          rows="16"
+          class="block w-full resize-y rounded-md border border-line bg-surface px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/25"
+          placeholder="Paste your data here, one mailbox per line"
+          spellcheck="false"
+          required
+          [value]="csv()"
+          (input)="csv.set($any($event.target).value)"
+        ></textarea>
+        <p class="mt-2 text-[12px] text-muted">
+          @if (rowCount() > 0) {
+            Each row is created on its own, so one failing row doesn't stop the rest. Up to 100 new mailboxes per import.
+          } @else {
+            One mailbox per line, no header row. Up to 100 new mailboxes per import.
+          }
+        </p>
+      </div>
+      <div class="flex items-center gap-3 border-t border-line bg-well px-4 py-3">
+        <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!csv().trim() || busy()">
           {{ busy() ? 'Importing...' : 'Import mailboxes' }}
+          @if (!busy()) {
+            <amelu-icon name="arrowRight" [size]="15" />
+          }
         </button>
-        <a [routerLink]="base() + '/mailboxes'" class="text-[13px] font-medium text-muted hover:text-ink hover:underline">Cancel</a>
+        <a [routerLink]="base() + '/mailboxes'" class="text-[13px] text-muted hover:text-ink hover:underline">Cancel</a>
       </div>
     </form>
 
-    <aside class="space-y-6">
-      <section>
-        <h2 [class]="ui.sectionTitle">Acceptable CSV format</h2>
-        <div [class]="ui.card + ' space-y-3 p-4 text-[13px] leading-relaxed'">
+    <aside class="space-y-5">
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Format</h2>
+        </div>
+        <div [class]="ui.well + ' space-y-3 text-[13px] leading-relaxed'">
           <p class="text-muted">
-            Our parser expects <span class="font-semibold text-ink">exactly</span> the following order of fields. Only comma is an acceptable
-            separator.
+            The fields in <span class="font-medium text-ink">exactly</span> this order, separated by commas, with no header row: 6 commas on every line.
           </p>
-          <code class="block rounded-md bg-bg px-2.5 py-1.5 font-mono text-[12px] break-words">{{ format }}</code>
-          <p class="text-muted">The descriptive header in the first row should not be present. You should have exactly 6 commas on each line.</p>
-          <dl class="-mx-4 space-y-2.5 border-t border-line px-4 pt-3">
-            @for (field of fields; track field.name) {
-              <div>
-                <dt class="font-mono text-[12px] font-semibold">{{ field.name }}</dt>
-                <dd class="text-[12px] text-muted">{{ field.description }}</dd>
-              </div>
-            }
-          </dl>
+          <code class="block rounded-md border border-line bg-surface px-3 py-2 font-mono text-[12px] break-words">{{ format }}</code>
+          <div [class]="ui.tableWrap">
+            <table [class]="ui.table">
+              <tbody>
+                @for (field of fields; track field.name; let first = $first) {
+                  <tr [class]="first ? '' : ui.tr">
+                    <td [class]="ui.td + ' w-0 align-top font-mono text-[12px] font-medium whitespace-nowrap'">{{ field.name }}</td>
+                    <td [class]="ui.td + ' text-[12px] text-muted'">{{ field.description }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      <section>
-        <h2 [class]="ui.sectionTitle">Examples</h2>
-        <pre [class]="ui.card + ' overflow-x-auto p-4 font-mono text-[12px] leading-relaxed'">{{ examples }}</pre>
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Examples</h2>
+        </div>
+        <div [class]="ui.well">
+          <pre class="overflow-x-auto rounded-md border border-line bg-surface px-3 py-2.5 font-mono text-[12px] leading-relaxed">{{ examples }}</pre>
+        </div>
       </section>
 
-      <section [class]="ui.card + ' p-4'">
-        <h2 class="text-[14px] font-bold">Moving from another domain?</h2>
-        <p class="mt-1 text-[13px] leading-relaxed text-muted">
-          Export the mailboxes from another Amelu domain and paste them here. Passwords aren't exported, so new ones are generated.
-        </p>
+      <section [class]="ui.panel">
+        <div [class]="ui.panelHeader">
+          <h2 [class]="ui.panelTitle">Moving from another domain?</h2>
+        </div>
+        <div [class]="ui.well">
+          <p class="text-[13px] leading-relaxed text-muted">
+            Export the mailboxes from another Amelu domain and paste them here. Passwords aren't exported, so new ones are generated.
+          </p>
+        </div>
       </section>
     </aside>
   </div>

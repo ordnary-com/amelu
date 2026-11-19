@@ -1,5 +1,5 @@
 <amelu-page-header
-  title="Default mailbox services"
+  title="Default services"
   [crumbs]="[
     { label: 'Domains', link: '/domains' },
     { label: ctx.domain()?.name ?? '', link: base() },
@@ -7,12 +7,11 @@
     { label: 'Default services' },
   ]"
 >
-  Once a new mailbox is provisioned, a default set of services will be activated based on this setting. This setting has no effect on
-  existing mailboxes on this domain.
+  The services a new mailbox on {{ ctx.domain()?.name ?? 'this domain' }} starts with. Existing mailboxes keep their own.
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <form class="min-w-0 space-y-6" (submit)="submit($event)">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <form class="min-w-0 space-y-5" (submit)="submit($event)">
     @if (error(); as message) {
       <amelu-alert kind="error" title="The services weren't saved" [dismissible]="true" (dismissed)="error.set(null)">
         {{ message }}
@@ -25,18 +24,21 @@
     }
 
     @if (saved() === null) {
-      <div [class]="ui.card">
-        <amelu-empty-state title="The default services couldn't be loaded" [error]="true" />
-      </div>
+      <amelu-empty-state class="rounded border border-line bg-surface" title="The default services couldn't be loaded" [error]="true" [compact]="true" />
     } @else {
-      <section>
-        <h2 [class]="ui.sectionTitle">Enabled services</h2>
-        <ul [class]="ui.card + ' divide-y divide-line'">
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle">Services for new mailboxes</h2>
+          @if (draft()) {
+            <span class="text-[13px] text-muted tabular-nums">{{ enabledCount() }} of {{ serviceTotal() }} on</span>
+          }
+        </div>
+        <ul class="divide-y divide-line">
           @for (service of services; track service.key) {
-            <li class="flex items-center gap-4 px-4 py-3">
+            <li class="flex items-center gap-4 px-5 py-3.5">
               <span class="min-w-0 flex-1">
-                <span class="block text-[14px] font-medium">{{ service.label }}</span>
-                <span class="block text-[12px] text-muted">{{ service.hint }}</span>
+                <span class="block text-[14px]">{{ service.label }}</span>
+                <span class="mt-0.5 block text-[13px] text-muted">{{ service.hint }}</span>
               </span>
               @if (draft(); as d) {
                 <button
@@ -55,89 +57,84 @@
               }
             </li>
           }
-        </ul>
-      </section>
-
-      <section>
-        <h2 [class]="ui.sectionTitle">Sieve filtering</h2>
-        <div [class]="ui.card">
-          <div class="flex items-center gap-4 px-4 py-3">
+          <li class="flex items-center gap-4 px-5 py-3.5">
             <span class="min-w-0 flex-1">
-              <span class="block text-[14px] font-medium">May access ManageSieve</span>
-              <span class="block text-[12px] text-muted">
-                Sieve is a programming language that can be used for email filtering. When enabled, custom scripts may be managed using the
-                ManageSieve protocol.
-              </span>
+              <span class="block text-[14px]">ManageSieve</span>
+              <span class="mt-0.5 block text-[13px] text-muted">Lets mail apps manage the mailbox's own Sieve filter scripts.</span>
             </span>
             @if (draft(); as d) {
               <button
-                type="button"
-                role="switch"
-                class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
-                [class]="d.maySieve ? 'bg-accent' : 'bg-line'"
-                [attr.aria-checked]="d.maySieve"
-                aria-label="May access ManageSieve"
-                (click)="toggle('maySieve')"
-              >
-                <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="d.maySieve ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
-              </button>
+                  type="button"
+                  role="switch"
+                  class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
+                  [class]="d.maySieve ? 'bg-accent' : 'bg-line'"
+                  [attr.aria-checked]="d.maySieve"
+                  aria-label="ManageSieve"
+                  (click)="toggle('maySieve')"
+                >
+                  <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="d.maySieve ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
+                </button>
             } @else {
               <span class="h-6 w-10 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
             }
-          </div>
+          </li>
+        </ul>
+        @if (draft() && !draft()!.maySend && !draft()!.mayReceive) {
+          <p class="flex gap-2.5 border-t border-line bg-warn/10 px-5 py-3 text-[13px] leading-relaxed text-warn">
+            <amelu-icon name="circleAlert" [size]="16" class="mt-0.5 flex-none" />
+            <span>With sending and receiving both off, a new mailbox can't be used for email until you turn them on for it.</span>
+          </p>
+        }
+        <div class="flex items-center gap-3 border-t border-line bg-well px-5 py-3">
+          <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="!dirty() || busy()">
+            {{ busy() ? 'Saving...' : 'Save changes' }}
+          </button>
+          @if (dirty()) {
+            <span class="text-[13px] text-muted">Unsaved changes</span>
+          }
         </div>
       </section>
-
-      @if (draft() && !draft()!.maySend && !draft()!.mayReceive) {
-        <amelu-alert kind="warning" title="New mailboxes won't send or receive mail">
-          With both sending and receiving off, a new mailbox can't be used for email until you turn them on for it.
-        </amelu-alert>
-      }
-
-      <div class="flex items-center gap-3">
-        <button type="submit" [class]="ui.primary" [disabled]="!dirty() || busy()">
-          {{ busy() ? 'Saving...' : 'Save changes' }}
-        </button>
-        @if (dirty()) {
-          <span class="text-[12px] text-muted">Unsaved changes</span>
-        }
-      </div>
     }
   </form>
 
-  <aside class="space-y-6">
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Keep it minimal</h2>
       </div>
-      <amelu-icon name="shield" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Keep it minimal</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        We recommend keeping the enabled services to the necessary minimum in order to reduce attack surface.
-      </p>
-      @if (draft()) {
-        <p class="mt-3 text-[12px] text-muted">{{ enabledCount() }} of {{ serviceTotal() }} services on for new mailboxes.</p>
-        <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-bg">
-          <div class="h-full rounded-full bg-accent" [style.width.%]="enabledPercent()"></div>
-        </div>
-      }
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Turn on only what new mailboxes need. Every service that's off is one less way in for someone who gets hold of a password.
+        </p>
+        @if (draft()) {
+          <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-bg">
+            <div class="h-full rounded-full bg-accent" [style.width.%]="enabledPercent()"></div>
+          </div>
+          <p class="mt-1.5 text-[12px] text-muted tabular-nums">{{ enabledCount() }} of {{ serviceTotal() }} services on</p>
+        }
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Existing mailboxes</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        These defaults are only read when a mailbox is created. To change what an existing mailbox may do, open it from
-        <a [routerLink]="base() + '/mailboxes'" class="font-medium text-link hover:underline">all mailboxes</a>
-        and change its services there.
-      </p>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Existing mailboxes</h2>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          These defaults are only read when a mailbox is created. To change an existing one, open it from
+          <a [routerLink]="base() + '/mailboxes'" class="text-link hover:underline">Mailboxes</a> and change its services there.
+        </p>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Storage caps</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        New mailboxes also get this domain's
-        <a [routerLink]="base() + '/mailboxes/limits'" class="font-medium text-link hover:underline">default limits</a>.
-      </p>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Storage</h2>
+        <a [routerLink]="base() + '/mailboxes/limits'" class="text-[13px] text-link hover:underline">Default limits</a>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">New mailboxes also get this domain's default limits for stored messages and disk space.</p>
+      </div>
     </section>
   </aside>
 </div>

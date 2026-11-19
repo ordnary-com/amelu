@@ -15,7 +15,6 @@ import { Alert } from '../alert/alert';
 import { EmptyState } from '../empty-state/empty-state';
 import { badgeClass } from '../status';
 import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { UI } from '../ui';
 import { RoutingApi } from './routing-api';
 import { domainResource } from './shared';
@@ -23,7 +22,7 @@ import { domainResource } from './shared';
 /** The current dashboard's /domains/:id/catchall: where mail to unknown addresses goes. */
 @Component({
   selector: 'amelu-catchall',
-  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon, DitherShader],
+  imports: [RouterLink, PageHeader, Alert, EmptyState, Icon],
   templateUrl: './catchall.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

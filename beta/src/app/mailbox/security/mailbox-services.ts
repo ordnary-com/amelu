@@ -2,108 +2,124 @@ import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } fr
 import { RouterLink } from '@angular/router';
 import { EmptyState } from '../../empty-state/empty-state';
 import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
 import { UI } from '../../ui';
 import { EnabledServices, MailboxApi } from '../mailbox-api';
 import { MailboxContext, perMailbox } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
 import { SaveFeedback, Saving } from '../shared/saving';
-import { SwitchRow } from '../shared/switch-row';
+
+type ServiceKey = keyof EnabledServices;
 
 const NONE: EnabledServices = { maySend: false, mayReceive: false, mayImap: false, mayPop3: false, maySieve: false, mayDav: false };
 
 /** The current dashboard's MailboxEnabledServicesPage. */
 @Component({
   selector: 'amelu-mailbox-services',
-  imports: [RouterLink, DitherShader, EmptyState, Icon, MailboxHeading, SaveFeedback, SwitchRow],
+  imports: [RouterLink, EmptyState, Icon, MailboxHeading, SaveFeedback],
   template: `
     <amelu-mailbox-heading title="Enabled services">
-      Choose services which should be made available to this mailbox. Please disable unnecessary services in order to
-      reduce attack surface.
+      Choose which services this mailbox can use. Turn off the ones it doesn't need.
     </amelu-mailbox-heading>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      @if (loaded() === null) {
-        <amelu-empty-state [class]="ui.card" title="The services couldn't be loaded" [error]="true" />
-      } @else {
-        <form class="min-w-0 space-y-6" (submit)="submit($event)">
-          <amelu-save-feedback [state]="save" />
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+      <form class="min-w-0 space-y-5" (submit)="submit($event)">
+        <amelu-save-feedback [state]="save" success="Services saved." />
 
-          <section>
-            <h2 [class]="ui.sectionTitle">Enabled services</h2>
-            <div [class]="ui.card + ' divide-y divide-line overflow-hidden'">
-              <amelu-switch-row label="May send" [disabled]="!loaded()" [checked]="form().maySend" (checkedChange)="set({ maySend: $event })">
-                Send mail over SMTP.
-              </amelu-switch-row>
-              <amelu-switch-row label="May receive" [disabled]="!loaded()" [checked]="form().mayReceive" (checkedChange)="set({ mayReceive: $event })">
-                Accept incoming mail for this address.
-              </amelu-switch-row>
-              <amelu-switch-row label="May access over IMAP" [disabled]="!loaded()" [checked]="form().mayImap" (checkedChange)="set({ mayImap: $event })">
-                Read mail from a mail app, synced across devices.
-              </amelu-switch-row>
-              <amelu-switch-row label="May access over POP3" [disabled]="!loaded()" [checked]="form().mayPop3" (checkedChange)="set({ mayPop3: $event })">
-                Download mail to a single device.
-              </amelu-switch-row>
-              <amelu-switch-row label="Calendar and contacts" [disabled]="!loaded()" [checked]="form().mayDav" (checkedChange)="set({ mayDav: $event })">
-                Sync calendars and contacts with apps over CalDAV and CardDAV.
-              </amelu-switch-row>
+        @if (loaded() === null) {
+          <amelu-empty-state class="rounded border border-line bg-surface" title="The services couldn't be loaded" [error]="true" [compact]="true" />
+        } @else {
+          <section [class]="ui.setCard">
+            <div [class]="ui.setHeader">
+              <h2 [class]="ui.setTitle">Services for this mailbox</h2>
+              @if (loaded()) {
+                <span class="text-[13px] text-muted tabular-nums">{{ enabledCount() }} of {{ serviceTotal }} on</span>
+              }
+            </div>
+            <ul class="divide-y divide-line">
+              @for (service of services; track service.key) {
+                <li class="flex items-center gap-4 px-5 py-3.5">
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[14px]">{{ service.label }}</span>
+                    <span class="mt-0.5 block text-[13px] text-muted">{{ service.hint }}</span>
+                  </span>
+                  @if (loaded()) {
+                    <button
+                      type="button"
+                      role="switch"
+                      [class]="switchClass"
+                      [class.bg-accent]="form()[service.key]"
+                      [class.bg-line]="!form()[service.key]"
+                      [attr.aria-checked]="form()[service.key]"
+                      [attr.aria-label]="service.label"
+                      (click)="toggle(service.key)"
+                    >
+                      <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="form()[service.key] ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
+                    </button>
+                  } @else {
+                    <span class="h-6 w-10 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+                  }
+                </li>
+              }
+            </ul>
+            @if (loaded() && !form().maySend && !form().mayReceive) {
+              <p class="flex gap-2.5 border-t border-line bg-warn/10 px-5 py-3 text-[13px] leading-relaxed text-warn">
+                <amelu-icon name="circleAlert" [size]="16" class="mt-0.5 flex-none" />
+                <span>With sending and receiving both off, this mailbox can't be used for email.</span>
+              </p>
+            }
+            <div class="flex items-center gap-3 border-t border-line bg-well px-5 py-3">
+              <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="save.busy() || !changed()">
+                {{ save.busy() ? 'Saving...' : 'Save changes' }}
+              </button>
+              @if (changed()) {
+                <span class="text-[13px] text-muted">Unsaved changes</span>
+              }
             </div>
           </section>
+        }
+      </form>
 
-          <section>
-            <h2 [class]="ui.sectionTitle">Sieve filtering</h2>
-            <div [class]="ui.card + ' overflow-hidden'">
-              <amelu-switch-row label="May access ManageSieve" [disabled]="!loaded()" [checked]="form().maySieve" (checkedChange)="set({ maySieve: $event })">
-                Sieve is a programming language that can be used for email filtering. When enabled, custom scripts may be
-                managed using the ManageSieve protocol.
-              </amelu-switch-row>
-            </div>
-          </section>
-
-          <div class="flex items-center gap-3">
-            <button type="submit" [class]="ui.primary" [disabled]="save.busy() || !changed()">
-              {{ save.busy() ? 'Saving...' : 'Save changes' }}
-            </button>
-            @if (changed()) {
-              <span class="text-[12px] text-muted">Unsaved changes</span>
+      <aside class="space-y-5">
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Less is safer</h2>
+          </div>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              A leaked password only works over the services that are on. A mailbox that only receives, like a shared
+              inbox read through another mailbox, doesn't need sending or IMAP.
+            </p>
+            @if (loaded()) {
+              <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-bg">
+                <div class="h-full rounded-full bg-accent" [style.width.%]="(enabledCount() / serviceTotal) * 100"></div>
+              </div>
+              <p class="mt-1.5 text-[12px] text-muted tabular-nums">{{ enabledCount() }} of {{ serviceTotal }} services on</p>
             }
           </div>
-        </form>
-      }
+        </section>
 
-      <aside class="space-y-6">
-        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">New mailboxes</h2>
+            <a [routerLink]="'/domains/' + ctx.domainId() + '/mailboxes/services'" class="text-[13px] text-link hover:underline">Default services</a>
           </div>
-          <amelu-icon name="shield" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">Less is safer</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            A leaked password can only be used over the services that are on. A mailbox that only receives, like a
-            shared inbox read through another mailbox, doesn't need sending or IMAP.
-          </p>
-          @if (loaded()) {
-            <p class="mt-3 text-[12px] text-muted">{{ enabledCount() }} of {{ serviceTotal }} services on for this mailbox.</p>
-            <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-bg">
-              <div class="h-full rounded-full bg-accent" [style.width.%]="(enabledCount() / serviceTotal) * 100"></div>
-            </div>
-          }
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              New mailboxes on this domain start with the domain's default services. Changes here only affect this mailbox.
+            </p>
+          </div>
         </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Defaults for new mailboxes</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            New mailboxes on this domain start with the domain's
-            <a [routerLink]="'/domains/' + ctx.domainId() + '/mailboxes/services'" class="font-medium text-link hover:underline">default services</a>.
-            Changes here only affect this mailbox.
-          </p>
-        </section>
-        <section [class]="ui.card + ' p-4'">
-          <h2 class="text-[14px] font-bold">Not the same as suspending</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            To switch everything off for a while, suspend the mailbox from its
-            <a [routerLink]="ctx.base()" class="font-medium text-link hover:underline">overview</a>
-            instead.
-          </p>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Not the same as suspending</h2>
+            <a [routerLink]="ctx.base()" class="text-[13px] text-link hover:underline">Overview</a>
+          </div>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              To switch everything off for a while, suspend the mailbox from its overview instead.
+            </p>
+          </div>
         </section>
       </aside>
     </div>
@@ -116,12 +132,23 @@ export class MailboxServices {
   protected readonly ctx = inject(MailboxContext);
   protected readonly ui = UI;
 
+  protected readonly services: { key: ServiceKey; label: string; hint: string }[] = [
+    { key: 'maySend', label: 'May send', hint: 'Send mail over SMTP.' },
+    { key: 'mayReceive', label: 'May receive', hint: 'Accept incoming mail for this address.' },
+    { key: 'mayImap', label: 'May access over IMAP', hint: 'Read mail in a mail app, kept in sync across devices.' },
+    { key: 'mayPop3', label: 'May access over POP3', hint: 'Download mail to a single device.' },
+    { key: 'mayDav', label: 'Calendar and contacts', hint: 'Sync calendars and contacts with apps over CalDAV and CardDAV.' },
+    { key: 'maySieve', label: 'ManageSieve', hint: 'Lets mail apps manage the Sieve scripts that filter this mailbox.' },
+  ];
+  protected readonly switchClass =
+    'relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none';
+
   protected readonly loaded = perMailbox((id) => this.api.services(id));
   protected readonly form = linkedSignal(() => this.loaded() ?? NONE);
   protected readonly changed = computed(() => {
     const loaded = this.loaded();
     const form = this.form();
-    return !!loaded && (Object.keys(NONE) as (keyof EnabledServices)[]).some((key) => loaded[key] !== form[key]);
+    return !!loaded && (Object.keys(NONE) as ServiceKey[]).some((key) => loaded[key] !== form[key]);
   });
   protected readonly serviceTotal = Object.keys(NONE).length;
   protected readonly enabledCount = computed(() => Object.values(this.form()).filter(Boolean).length);
@@ -130,6 +157,10 @@ export class MailboxServices {
   protected set(patch: Partial<EnabledServices>): void {
     this.form.update((form) => ({ ...form, ...patch }));
     this.save.reset();
+  }
+
+  protected toggle(key: ServiceKey): void {
+    this.set({ [key]: !this.form()[key] });
   }
 
   protected async submit(event: Event): Promise<void> {

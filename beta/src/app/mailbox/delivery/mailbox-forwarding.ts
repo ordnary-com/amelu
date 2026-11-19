@@ -5,7 +5,6 @@ import { errorMessage } from '../../api';
 import { Alert } from '../../alert/alert';
 import { EmptyState } from '../../empty-state/empty-state';
 import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
 import { UI } from '../../ui';
 import { MailboxApi, MailboxForward } from '../mailbox-api';
 import { MailboxContext, perMailbox } from '../mailbox-context';
@@ -14,18 +13,16 @@ import { MailboxHeading } from '../shared/heading';
 /** The current dashboard's MailboxForwardingPage: copies of incoming mail to addresses on other domains. */
 @Component({
   selector: 'amelu-mailbox-forwarding',
-  imports: [RouterLink, Alert, DitherShader, EmptyState, Icon, MailboxHeading],
+  imports: [RouterLink, Alert, EmptyState, Icon, MailboxHeading],
   template: `
     <amelu-mailbox-heading title="Forwarding">
-      Forwarding sends a copy of incoming messages of this mailbox to an address on another domain. To forward to an
-      address on this same domain, use aliases or delegation instead.
+      Send a copy of incoming mail to an address on another domain.
     </amelu-mailbox-heading>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div class="min-w-0 space-y-6">
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+      <div class="min-w-0 space-y-5">
         <amelu-alert kind="warning" title="Spam isn't forwarded">
-          If an incoming message is considered spam by our filter, it will not be forwarded further. A copy is placed in
-          the Junk folder of this mailbox instead.
+          Mail our filter marks as spam stays in this mailbox's Junk folder and isn't forwarded.
         </amelu-alert>
 
         @if (error(); as message) {
@@ -34,103 +31,160 @@ import { MailboxHeading } from '../shared/heading';
           </amelu-alert>
         }
 
-        <section>
-          <h2 [class]="ui.sectionTitle + ' flex items-center gap-2'">
-            Forwarding to
-            @if (forwards(); as list) {
-              <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ list.length }}</span>
-            }
-          </h2>
-          <div [class]="ui.card + ' overflow-hidden'">
-            @if (forwards(); as list) {
-              <ul class="divide-y divide-line">
-                @for (forward of list; track forward.id) {
-                  <li class="flex items-center gap-3 px-4 py-3 hover:bg-bg/60">
-                    <span class="inline-flex size-8 flex-none items-center justify-center rounded-full bg-bg text-muted" aria-hidden="true">
-                      <amelu-icon name="mail" [size]="14" />
-                    </span>
-                    <div class="min-w-0 flex-1">
-                      <div class="truncate text-[14px] font-medium">{{ forward.destination }}</div>
-                      <div class="truncate text-[12px] text-muted">Receives copies of incoming mail</div>
-                    </div>
-                    <button
-                      type="button"
-                      class="h-7 flex-none cursor-pointer rounded-md px-2.5 text-[12px] font-medium text-bad hover:bg-bad/10 disabled:cursor-default disabled:opacity-50"
-                      [disabled]="removing() === forward.id"
-                      (click)="remove(forward)"
-                    >
-                      {{ removing() === forward.id ? 'Deleting...' : 'Delete' }}
-                    </button>
-                  </li>
-                } @empty {
-                  <li>
-                    <amelu-empty-state title="Not forwarding yet" illustration="message-sent">Add an address below to start sending copies there.</amelu-empty-state>
-                  </li>
-                }
-              </ul>
-            } @else if (forwards() === null) {
-              <amelu-empty-state title="Forwards couldn't be loaded" [error]="true" />
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">
+              Forwarding to
+              @if (forwards(); as list) {
+                <span class="font-normal text-muted">({{ list.length }})</span>
+              }
+            </h2>
+            <button type="button" [class]="ui.setAction + ' cursor-pointer'" aria-label="New forwarding" title="New forwarding" (click)="destinationInput.focus()">
+              <amelu-icon name="plus" [size]="18" />
+            </button>
+          </div>
+          <div [class]="ui.well">
+            @if (forwards() === null) {
+              <amelu-empty-state class="rounded-md border border-line bg-surface" title="Forwards couldn't be loaded" [error]="true" [compact]="true" />
             } @else {
-              <ul class="divide-y divide-line" aria-hidden="true">
-                @for (i of [1, 2]; track i) {
-                  <li class="flex items-center gap-3 px-4 py-3">
-                    <span class="size-8 flex-none animate-pulse rounded-full bg-bg"></span>
-                    <span class="block h-3 w-56 animate-pulse rounded bg-bg"></span>
-                  </li>
-                }
-              </ul>
+              <div [class]="ui.tableWrap">
+                <table [class]="ui.table">
+                  <thead>
+                    <tr>
+                      <th [class]="ui.th">Destination</th>
+                      <th class="w-0 pr-4" aria-label="Actions"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @if (forwards(); as list) {
+                      @for (forward of list; track forward.id) {
+                        <tr [class]="ui.tr + ' hover:bg-bg/40'">
+                          <td [class]="ui.td + ' max-w-[420px]'">
+                            <span class="flex items-center gap-3">
+                              <amelu-icon name="arrowRight" [size]="15" class="flex-none text-muted" />
+                              <span class="min-w-0">
+                                <span class="block truncate font-medium">{{ forward.destination }}</span>
+                                <span [class]="ui.tdSub">Gets a copy of incoming mail</span>
+                              </span>
+                            </span>
+                          </td>
+                          <td class="w-0 pr-4 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              class="cursor-pointer text-[13px] text-bad hover:underline disabled:cursor-default disabled:no-underline disabled:opacity-50"
+                              [attr.aria-label]="'Stop forwarding to ' + forward.destination"
+                              [disabled]="removing() === forward.id"
+                              (click)="remove(forward)"
+                            >
+                              {{ removing() === forward.id ? 'Deleting...' : 'Delete' }}
+                            </button>
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr [class]="ui.tr">
+                          <td colspan="2" class="px-4 py-10 text-center">
+                            <amelu-icon name="mail" [size]="18" class="mx-auto block" />
+                            <p class="mt-2">Not forwarding yet</p>
+                            <p class="mt-0.5 text-[13px] text-muted">Add an address below to start sending copies there.</p>
+                          </td>
+                        </tr>
+                      }
+                    } @else {
+                      @for (i of [1, 2]; track i) {
+                        <tr [class]="ui.tr" aria-hidden="true">
+                          <td [class]="ui.td"><span class="flex items-center gap-3"><span class="size-4 animate-pulse rounded bg-bg"></span><span class="h-3 w-56 animate-pulse rounded bg-bg"></span></span></td>
+                          <td></td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
             }
           </div>
         </section>
 
-        <section>
-          <h2 [class]="ui.sectionTitle">New forwarding</h2>
-          <form [class]="ui.card + ' space-y-4 p-4'" (submit)="create($event)">
-            <label class="block">
-              <span [class]="ui.label">Destination address</span>
-              <input
-                type="email"
-                [class]="ui.input"
-                placeholder="For example: someone@example.com"
-                required
-                [value]="destination()"
-                (input)="destination.set($any($event.target).value)"
-              />
-              <span [class]="ui.hint + ' block'">An address on another domain. Mail keeps arriving here as well.</span>
-            </label>
-            <div class="-mx-4 -mb-4 flex justify-end border-t border-line bg-bg/40 px-4 py-3">
-              <button type="submit" [class]="ui.primary" [disabled]="creating()">
-                {{ creating() ? 'Adding...' : 'New forwarding' }}
-              </button>
+        <form [class]="ui.panel" (submit)="create($event)">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">New forwarding</h2>
+          </div>
+          <section class="p-4">
+            <label for="forward-destination" class="block text-[15px] font-medium">Destination address</label>
+            <input
+              #destinationInput
+              id="forward-destination"
+              type="email"
+              class="mt-3 h-11 w-full rounded-md border border-line bg-surface px-3.5 text-[15px] outline-none placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/25"
+              placeholder="someone@example.com"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              required
+              [value]="destination()"
+              (input)="destination.set($any($event.target).value)"
+            />
+            <p class="mt-2 text-[12px] text-muted">An address on another domain.</p>
+
+            <!-- Where incoming mail ends up once this is added. -->
+            <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-line bg-well px-4 py-3 text-[13px]">
+              <span class="font-mono text-[12px] text-muted">{{ ctx.mailbox()?.address ?? 'This mailbox' }}</span>
+              <amelu-icon name="arrowRight" [size]="15" class="text-muted" />
+              <span class="inline-flex items-center gap-1.5 font-medium"><amelu-icon name="inbox" [size]="15" class="flex-none text-link" />Kept here</span>
+              <span class="text-muted">and</span>
+              @if (destination().trim()) {
+                <span class="inline-flex min-w-0 items-center gap-1.5 font-medium"><amelu-icon name="copy" [size]="15" class="flex-none text-link" /><span class="truncate">{{ destination().trim().toLowerCase() }}</span></span>
+              } @else {
+                <span class="inline-flex items-center gap-1.5 text-muted"><amelu-icon name="copy" [size]="15" class="flex-none" />a copy to the address above</span>
+              }
             </div>
-          </form>
-        </section>
+          </section>
+          <div class="flex items-center gap-3 border-t border-line bg-well px-4 py-3">
+            <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="creating()">
+              {{ creating() ? 'Adding...' : 'Add forwarding' }}
+            </button>
+          </div>
+        </form>
       </div>
 
-      <aside class="space-y-6">
-        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      <aside class="space-y-5">
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Forwarding, aliases or delegation?</h2>
           </div>
-          <amelu-icon name="mail" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">Forwarding, aliases or delegation?</h2>
-          <ul class="mt-2 space-y-2 text-[13px] leading-relaxed text-muted">
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-accent"></span>
-              Forwarding keeps the mail here and sends a copy to another domain.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              Delegation moves the mail to other mailboxes on this domain instead.
-            </li>
-            <li class="flex gap-2.5">
-              <span class="mt-[7px] size-1.5 flex-none rounded-full bg-muted/60"></span>
-              An alias gives this mailbox an extra address.
-            </li>
-          </ul>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <a [routerLink]="ctx.base() + '/delegation'" [class]="ui.outline">Delegation</a>
-            <a [routerLink]="'/domains/' + ctx.domainId() + '/aliases'" [class]="ui.outline">Aliases</a>
+          <div [class]="ui.well">
+            <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface text-[13px] leading-relaxed">
+              <li class="px-4 py-2.5">Forwarding keeps the mail here and sends a copy to another domain.</li>
+              <li class="px-4 py-2.5">Delegation moves the mail to other mailboxes on this domain instead.</li>
+              <li class="px-4 py-2.5">An alias gives this mailbox an extra address.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Related</h2>
+          </div>
+          <div [class]="ui.well">
+            <ul class="divide-y divide-line overflow-hidden rounded-md border border-line bg-surface">
+              <li>
+                <a [routerLink]="ctx.base() + '/delegation'" class="group flex items-center gap-3 px-4 py-2.5 hover:bg-bg/50">
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[13px] font-medium text-link group-hover:underline">Delegation</span>
+                    <span class="mt-0.5 block text-[12px] text-muted">Hand mail to mailboxes on this domain</span>
+                  </span>
+                  <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted group-hover:text-ink" />
+                </a>
+              </li>
+              <li>
+                <a [routerLink]="'/domains/' + ctx.domainId() + '/aliases'" class="group flex items-center gap-3 px-4 py-2.5 hover:bg-bg/50">
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-[13px] font-medium text-link group-hover:underline">Address aliases</span>
+                    <span class="mt-0.5 block text-[12px] text-muted">Extra addresses for a mailbox</span>
+                  </span>
+                  <amelu-icon name="chevronRight" [size]="14" class="flex-none text-muted group-hover:text-ink" />
+                </a>
+              </li>
+            </ul>
           </div>
         </section>
       </aside>

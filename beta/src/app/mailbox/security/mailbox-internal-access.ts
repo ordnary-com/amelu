@@ -2,66 +2,95 @@ import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } fr
 import { RouterLink } from '@angular/router';
 import { EmptyState } from '../../empty-state/empty-state';
 import { Icon } from '../../icon';
-import { DitherShader } from '../../login/dither-shader';
+import { badgeClass } from '../../status';
 import { UI } from '../../ui';
 import { MailboxApi } from '../mailbox-api';
 import { MailboxContext, perMailbox } from '../mailbox-context';
 import { MailboxHeading } from '../shared/heading';
 import { SaveFeedback, Saving } from '../shared/saving';
-import { SwitchRow } from '../shared/switch-row';
 
 /** The current dashboard's MailboxInternalAccessPage ("Private Internal Mailbox"). */
 @Component({
   selector: 'amelu-mailbox-internal-access',
-  imports: [RouterLink, DitherShader, EmptyState, Icon, MailboxHeading, SaveFeedback, SwitchRow],
+  imports: [RouterLink, EmptyState, Icon, MailboxHeading, SaveFeedback],
   template: `
     <amelu-mailbox-heading title="Private internal mailbox">
-      A mailbox can be restricted to receive messages only from other mailboxes on this domain. No external message
-      would be accepted.
+      Only accept mail from other mailboxes on this domain, and turn away everything from outside.
     </amelu-mailbox-heading>
 
-    <div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      @if (loaded() === null) {
-        <amelu-empty-state [class]="ui.card" title="The setting couldn't be loaded" [error]="true" />
-      } @else {
-        <form class="min-w-0 space-y-4" (submit)="submit($event)">
-          <amelu-save-feedback [state]="save" />
-          <section>
-            <h2 [class]="ui.sectionTitle">Incoming mail</h2>
-            <div [class]="ui.card + ' overflow-hidden'">
-              <amelu-switch-row
-                label="Internal access only"
-                [disabled]="!loaded()"
-                [checked]="internalOnly()"
-                (checkedChange)="internalOnly.set($event); save.reset()"
-              >
-                Only mail from other mailboxes on {{ domain() }} is accepted.
-              </amelu-switch-row>
-              <div class="flex items-center justify-end gap-3 border-t border-line bg-bg/40 px-4 py-3">
-                @if (changed()) {
-                  <span class="mr-auto text-[12px] text-muted">Unsaved changes</span>
-                }
-                <button type="submit" [class]="ui.primary" [disabled]="save.busy() || !changed()">
-                  {{ save.busy() ? 'Saving...' : 'Save changes' }}
+    <div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+      <form class="min-w-0 space-y-5" (submit)="submit($event)">
+        <amelu-save-feedback [state]="save" success="Setting saved." />
+
+        @if (loaded() === null) {
+          <amelu-empty-state class="rounded border border-line bg-surface" title="The setting couldn't be loaded" [error]="true" [compact]="true" />
+        } @else {
+          <section [class]="ui.setCard">
+            <div [class]="ui.setHeader">
+              <h2 [class]="ui.setTitle">Incoming mail</h2>
+              @if (loaded(); as l) {
+                <span [class]="l.internalAccessOnly ? badge.warn : badge.neutral">{{ l.internalAccessOnly ? 'Internal only' : 'Open to everyone' }}</span>
+              }
+            </div>
+            <div class="flex items-center gap-4 px-5 py-3.5">
+              <span class="min-w-0 flex-1">
+                <span id="internal-label" class="block text-[14px]">Internal access only</span>
+                <span class="mt-0.5 block text-[13px] text-muted">Only mail from other mailboxes on {{ domain() }} is accepted.</span>
+              </span>
+              @if (loaded()) {
+                <button
+                  type="button"
+                  role="switch"
+                  aria-labelledby="internal-label"
+                  [attr.aria-checked]="internalOnly()"
+                  class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
+                  [class]="internalOnly() ? 'bg-accent' : 'bg-line'"
+                  (click)="internalOnly.set(!internalOnly()); save.reset()"
+                >
+                  <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="internalOnly() ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
                 </button>
-              </div>
+              } @else {
+                <span class="h-6 w-10 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+              }
+            </div>
+            <p [class]="ui.setNote">
+              <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+              <span>Mail from any address outside {{ domain() }} is refused while this is on. Sending is not affected.</span>
+            </p>
+            <div class="flex items-center gap-3 border-t border-line px-5 py-3">
+              <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="save.busy() || !changed()">
+                {{ save.busy() ? 'Saving...' : 'Save changes' }}
+              </button>
+              @if (changed()) {
+                <span class="text-[13px] text-muted">Unsaved changes</span>
+              }
             </div>
           </section>
-        </form>
-      }
+        }
+      </form>
 
-      <aside class="space-y-6">
-        <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-          <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-            <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+      <aside class="space-y-5">
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">When to use it</h2>
           </div>
-          <amelu-icon name="shield" [size]="20" class="block text-ink" />
-          <h2 class="mt-3 text-[14px] font-bold">When to use it</h2>
-          <p class="mt-1 text-[13px] leading-relaxed text-muted">
-            Use this feature to set up an internal, private mailbox. Use the domain's denylists and junklists for even
-            finer control.
-          </p>
-          <a [routerLink]="'/domains/' + ctx.domainId() + '/spam'" [class]="ui.outline + ' mt-3'">Spam filtering</a>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              For a mailbox that should only hear from colleagues, like an internal helpdesk or a team inbox.
+            </p>
+          </div>
+        </section>
+
+        <section [class]="ui.panel">
+          <div [class]="ui.panelHeader">
+            <h2 [class]="ui.panelTitle">Finer control</h2>
+            <a [routerLink]="'/domains/' + ctx.domainId() + '/spam'" class="text-[13px] text-link hover:underline">Spam filtering</a>
+          </div>
+          <div [class]="ui.well">
+            <p class="text-[13px] leading-relaxed text-muted">
+              To block or flag only certain senders, use the domain's denylists and junklists instead.
+            </p>
+          </div>
         </section>
       </aside>
     </div>
@@ -73,6 +102,7 @@ export class MailboxInternalAccess {
   private readonly api = inject(MailboxApi);
   protected readonly ctx = inject(MailboxContext);
   protected readonly ui = UI;
+  protected readonly badge = { warn: badgeClass('warn'), neutral: badgeClass('neutral') };
 
   protected readonly loaded = perMailbox((id) => this.api.internalAccess(id));
   protected readonly internalOnly = linkedSignal(() => this.loaded()?.internalAccessOnly ?? false);

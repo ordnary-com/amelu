@@ -2,8 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { injectDomain } from '../domain-context';
-import { Icon } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 import { Alert } from '../alert/alert';
 import { LoadErrors } from '../load-errors';
 import { MailboxApi, RepairResult } from './mailbox-api';
@@ -12,71 +10,62 @@ import { errorMessage } from '../api';
 import { signal } from '@angular/core';
 import { UI } from '../ui';
 import { apiUrl } from '../config';
-import { MAILBOX_STATUS, badgeClass } from '../status';
+import { MAILBOX_STATUS, TONES } from '../status';
 import { MailboxContext } from './mailbox-context';
+import { CrumbTitle } from '../page-header/page-header';
+import { Icon } from '../icon';
 
 /** Header and the shared mailbox for every /domains/:domainId/mailboxes/:mailboxId page. */
 @Component({
   selector: 'amelu-mailbox-layout',
-  imports: [RouterLink, RouterOutlet, DatePipe, Alert, Icon, DitherShader],
+  imports: [RouterLink, RouterOutlet, DatePipe, Alert, CrumbTitle, Icon],
   providers: [MailboxContext],
   template: `
     @if (mailbox() === null) {
       <div class="mx-auto max-w-md py-16 text-center">
-        <h1 class="text-[22px] font-bold tracking-[-0.4px]">Mailbox not found</h1>
+        <h1 class="text-[22px] leading-tight font-normal">Mailbox not found</h1>
         <p class="mt-2 text-[13px] text-muted">It may have been deleted, or it belongs to another organization.</p>
         <a [routerLink]="mailboxesLink()" class="mt-4 inline-block text-[13px] font-medium text-link hover:underline">Back to Mailboxes</a>
       </div>
     } @else {
-      <!-- The mailbox as a banner, like the domain overview: the same dither, its address large, and
-           its status and details below. -->
-      <section class="relative mb-6 overflow-hidden rounded-lg bg-hero px-7 pt-5 pb-6 text-hero-ink max-mobile:px-5">
-        <div class="pointer-events-none absolute inset-0 opacity-45 [mask-image:linear-gradient(to_left,black_0%,rgba(0,0,0,0.7)_25%,rgba(0,0,0,0.3)_55%,rgba(0,0,0,0.06)_85%,transparent_100%)] max-mobile:opacity-25" aria-hidden="true">
-          <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="3" [speed]="0.35" />
-        </div>
-
-        <div class="relative flex flex-wrap items-center justify-between gap-3">
-          <nav class="flex min-w-0 items-center gap-1 text-[13px] font-medium text-hero-ink/70" aria-label="Breadcrumb">
-            @for (crumb of crumbs(); track $index; let last = $last) {
-              @if (crumb.link) {
-                <a [routerLink]="crumb.link" class="truncate hover:text-ink hover:underline">{{ crumb.label }}</a>
-              } @else {
-                <span class="truncate">{{ crumb.label }}</span>
+      <!-- The mailbox's header, like the domain overview's: the title with its breadcrumb, its status and
+           details below, and the main action on the right. -->
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div class="min-w-0">
+          <amelu-crumb-title [title]="mailbox()?.address ?? ''" [crumbs]="crumbs()" />
+          @if (mailbox(); as m) {
+            <p class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[14px] text-muted">
+              <span class="inline-flex h-6 flex-none items-center gap-1.5 rounded px-2 text-[12px] font-medium" [class]="status()!.tone">
+                <span class="size-1.5 rounded-full bg-current" aria-hidden="true"></span>
+                {{ status()!.label }}
+              </span>
+              @if (m.displayName) {
+                <span aria-hidden="true">·</span>
+                <span class="text-ink">{{ m.displayName }}</span>
               }
-              @if (!last) {
-                <amelu-icon name="chevronRight" [size]="12" class="flex-none" />
-              }
-            }
-          </nav>
-          @if (mailbox()) {
-            <!-- A real link: the API answers with a redirect into webmail, signed in as this mailbox. -->
-            <a [href]="webmailUrl()" target="_blank" rel="noreferrer" [class]="ui.outline + ' bg-surface/70 backdrop-blur-sm'">
-              Open in webmail
-            </a>
+              <span aria-hidden="true">·</span>
+              <span>Created {{ m.createdAt | date: 'd MMM y' }}</span>
+            </p>
+          } @else {
+            <span class="mt-2 block h-5 w-64 animate-pulse rounded bg-bg"></span>
           }
         </div>
-
-        @if (mailbox(); as m) {
-          <h1 class="relative mt-7 truncate text-[34px] leading-[1.1] font-normal tracking-[-0.02em] text-ink max-mobile:mt-5 max-mobile:text-[26px]" [title]="m.address">{{ m.address }}</h1>
-          <div class="relative mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-hero-ink/75">
-            <span [class]="status()!.class">{{ status()!.label }}</span>
-            @if (m.displayName) {
-              <span class="text-ink">{{ m.displayName }}</span>
-              <span aria-hidden="true">·</span>
-            }
-            <span>Created {{ m.createdAt | date: 'd MMM y' }}</span>
+        @if (mailbox()) {
+          <div class="flex gap-2">
+            <!-- A real link: the API answers with a redirect into webmail, signed in as this mailbox. -->
+            <a [href]="webmailUrl()" target="_blank" rel="noreferrer" [class]="ui.outline + ' h-9'">
+              Open in webmail
+              <amelu-icon name="external" [size]="14" class="text-muted" />
+            </a>
           </div>
-        } @else {
-          <span class="relative mt-7 block h-9 w-72 max-w-full animate-pulse rounded bg-hero-ink/10"></span>
-          <span class="relative mt-3 block h-5 w-48 animate-pulse rounded bg-hero-ink/10"></span>
         }
-      </section>
+      </div>
 
       @if (repaired(); as r) {
         <amelu-alert class="mb-5" kind="success" title="Mailbox repaired">
           @if (r.mailboxRecreated) {
             <p>{{ r.address }} exists on the mail servers again. Its new password, shown only now:</p>
-            <p class="mt-1 font-mono text-[14px] font-bold select-all">{{ r.password }}</p>
+            <p class="mt-1 font-mono text-[14px] font-medium select-all">{{ r.password }}</p>
           } @else {
             <p>{{ r.address }} already existed on the mail servers; nothing was changed.</p>
           }
@@ -149,6 +138,6 @@ export class MailboxLayout {
     const mailbox = this.mailbox();
     if (!mailbox) return null;
     const status = MAILBOX_STATUS[mailbox.status];
-    return { label: status.label, class: badgeClass(status.tone) };
+    return { label: status.label, tone: TONES[status.tone] };
   });
 }

@@ -124,7 +124,7 @@ export interface DomainAlias {
   name: string;
 }
 
-export type SupportCategory = 'account' | 'domains' | 'delivery' | 'billing' | 'other' | 'dedicated_ip';
+export type SupportCategory = 'account' | 'domains' | 'delivery' | 'billing' | 'other' | 'dedicated_ip' | 'sending_review';
 /** open: waiting on Amelu, answered: waiting on the customer, closed: done. */
 export type SupportStatus = 'open' | 'answered' | 'closed';
 

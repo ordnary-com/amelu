@@ -5,13 +5,14 @@ import { errorMessage } from '../api';
 import { Alert } from '../alert/alert';
 import { injectDomain } from '../domain-context';
 import { EmptyState } from '../empty-state/empty-state';
+import { Icon } from '../icon';
 import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { DomainAdminApi, DomainSettings } from './domain-admin-api';
 
 @Component({
   selector: 'amelu-domain-notes',
-  imports: [PageHeader, Alert, EmptyState],
+  imports: [PageHeader, Alert, EmptyState, Icon],
   templateUrl: './domain-notes.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

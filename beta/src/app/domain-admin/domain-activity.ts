@@ -9,7 +9,6 @@ import { EmptyState } from '../empty-state/empty-state';
 import { PageHeader } from '../page-header/page-header';
 import { UI } from '../ui';
 import { Icon, IconName } from '../icon';
-import { DitherShader } from '../login/dither-shader';
 
 type Category = 'all' | 'domain' | 'mailboxes' | 'spam';
 
@@ -53,7 +52,7 @@ interface Row {
 
 @Component({
   selector: 'amelu-domain-activity',
-  imports: [PageHeader, EmptyState, DatePipe, RouterLink, Icon, DitherShader],
+  imports: [PageHeader, EmptyState, DatePipe, RouterLink, Icon],
   templateUrl: './domain-activity.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
@@ -65,6 +64,10 @@ export class DomainActivity {
   protected readonly dot = DOT;
   protected readonly icon = ICON;
   protected readonly tile = TILE;
+  protected readonly label: Record<Exclude<Category, 'all'>, string> = { domain: 'Domain', mailboxes: 'Mailboxes', spam: 'Spam filtering' };
+  protected readonly choiceOn = UI.choiceOn + ' text-ink';
+  // Day rows in the table, like the favorites row on the Domains page.
+  protected readonly groupRow = 'bg-bg/40 px-4 py-1.5 text-[12px] font-medium text-muted';
 
   protected readonly filters: { value: Category; label: string }[] = [
     { value: 'all', label: 'All' },

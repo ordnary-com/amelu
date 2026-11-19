@@ -2,113 +2,140 @@
   title="Recent activity"
   [crumbs]="[{ label: 'Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Recent activity' }]"
 >
-  The last events recorded for this domain.
+  The last 50 events recorded for this domain, newest first.
 </amelu-page-header>
 
-<!-- Filter chips with counts; they take the place of the old summary card. -->
-<div class="mb-6 flex flex-wrap gap-2" role="group" aria-label="Filter activity">
-  @for (option of chips(); track option.value) {
-    <button
-      type="button"
-      class="inline-flex h-8 cursor-pointer items-center gap-2 rounded-full border px-3 text-[13px] font-medium transition-colors"
-      [class]="filter() === option.value ? 'border-accent/40 bg-accent/10 text-ink' : 'border-line bg-surface text-muted hover:border-ink/20 hover:text-ink'"
-      [attr.aria-pressed]="filter() === option.value"
-      (click)="filter.set(option.value)"
-    >
-      @if (option.value !== 'all') {
-        <span class="size-1.5 rounded-full" [class]="dot[option.value]" aria-hidden="true"></span>
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <section [class]="ui.panel">
+    <div [class]="ui.panelHeader">
+      <h2 [class]="ui.panelTitle">Events</h2>
+      @if (entries(); as list) {
+        <span class="text-[13px] text-muted">{{ list.length }} {{ list.length === 1 ? 'event' : 'events' }}</span>
       }
-      {{ option.label }}
-      @if (option.count !== null) {
-        <span class="text-[12px] font-normal text-muted tabular-nums">{{ option.count }}</span>
-      }
-    </button>
-  }
-</div>
-
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <div class="min-w-0 space-y-6">
-    @if (days() === undefined) {
-      <div [class]="ui.card + ' overflow-hidden'" aria-hidden="true">
-        @for (i of [1, 2, 3, 4]; track i) {
-          <div class="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0">
-            <span class="size-8 animate-pulse rounded-full bg-bg"></span>
-            <span class="h-3 w-64 animate-pulse rounded bg-bg"></span>
-          </div>
+    </div>
+    <div [class]="ui.well">
+      <!-- Filter by what an event touched, with counts. -->
+      <div class="mb-3 flex flex-wrap gap-2" role="group" aria-label="Filter activity">
+        @for (option of chips(); track option.value) {
+          <button
+            type="button"
+            class="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border px-3 text-[13px] font-medium transition-colors"
+            [class]="filter() === option.value ? choiceOn : 'border-line bg-surface text-muted hover:border-ink/20 hover:text-ink'"
+            [attr.aria-pressed]="filter() === option.value"
+            (click)="filter.set(option.value)"
+          >
+            @if (option.value !== 'all') {
+              <span class="size-2 rounded-full" [class]="dot[option.value]" aria-hidden="true"></span>
+            }
+            {{ option.label }}
+            @if (option.count !== null) {
+              <span class="text-[12px] font-normal text-muted tabular-nums">{{ option.count }}</span>
+            }
+          </button>
         }
       </div>
-    } @else if (days() === null) {
-      <amelu-empty-state [class]="ui.card" title="Activity couldn't be loaded" [error]="true" />
-    } @else {
-      @for (group of days(); track group.day) {
-        <section>
-          <h2 class="mb-3 flex items-center gap-2 text-[14px] font-bold">
-            {{ dayLabel(group.day) }}
-            <span class="rounded bg-bg px-1.5 py-0.5 text-[11px] font-normal text-muted">{{ group.rows.length }}</span>
-          </h2>
-          <!-- A timeline: each event hangs off one thin line, with an icon for what it touched. -->
-          <ol [class]="ui.card + ' px-4 py-1'">
-            @for (row of group.rows; track row.entry.id; let last = $last) {
-              <li class="relative flex items-start gap-3 py-3">
-                @if (!last) {
-                  <span class="absolute top-[46px] -bottom-1 left-4 w-px bg-line" aria-hidden="true"></span>
-                }
-                <span class="relative inline-flex size-8 flex-none items-center justify-center rounded-full" [class]="tile[row.category]" aria-hidden="true">
-                  <amelu-icon [name]="icon[row.category]" [size]="15" />
-                </span>
-                <div class="min-w-0 flex-1 pt-1.5">
-                  <p class="text-[13px] break-words">{{ row.entry.message }}</p>
-                  @if (row.bySupport) {
-                    <span class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">
-                      <amelu-icon name="lifebuoy" [size]="11" />
-                      By Amelu support
-                    </span>
-                  }
-                </div>
-                <time class="flex-none pt-1.5 text-[12px] text-muted tabular-nums" [attr.datetime]="row.entry.createdAt" [title]="row.entry.createdAt | date: 'd MMM y, HH:mm:ss'">
-                  {{ row.entry.createdAt | date: 'HH:mm' }}
-                </time>
-              </li>
-            }
-          </ol>
-        </section>
-      } @empty {
-        @if (filter() === 'all') {
-          <amelu-empty-state [class]="ui.card" title="No activity recorded yet" illustration="in-progress">
-            Changes to this domain, its mailboxes and its spam filtering are listed here as they happen.
-          </amelu-empty-state>
-        } @else {
-          <amelu-empty-state [class]="ui.card" title="Nothing in this category" illustration="no-data">
-            None of the recent events are of this kind.
-            <button actions type="button" [class]="ui.outline" (click)="filter.set('all')">Show all</button>
-          </amelu-empty-state>
-        }
-      }
-    }
-  </div>
 
-  <aside class="space-y-6">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">What gets recorded</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Verification, mailboxes and aliases being added or removed, password changes, forwarding, catch-all and spam
-        filter changes, and changes to the domain itself. Only the last 50 events are kept on this page.
-      </p>
+      @if (days() === null) {
+        <amelu-empty-state class="rounded-md border border-line bg-surface" title="Activity couldn't be loaded" [error]="true" [compact]="true" />
+      } @else {
+        <div [class]="ui.tableWrap">
+          <table [class]="ui.table">
+            <thead>
+              <tr>
+                <th [class]="ui.th">Event</th>
+                <th [class]="ui.th + ' max-md:hidden'">Type</th>
+                <th [class]="ui.th + ' w-0 text-right'">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (days() === undefined) {
+                @for (i of [1, 2, 3, 4]; track i) {
+                  <tr [class]="ui.tr" aria-hidden="true">
+                    <td [class]="ui.td"><span class="flex items-center gap-3"><span class="size-7 animate-pulse rounded-full bg-bg"></span><span class="h-3 w-64 animate-pulse rounded bg-bg"></span></span></td>
+                    <td [class]="ui.td + ' max-md:hidden'"><span class="block h-3 w-20 animate-pulse rounded bg-bg"></span></td>
+                    <td [class]="ui.td"><span class="ml-auto block h-3 w-10 animate-pulse rounded bg-bg"></span></td>
+                  </tr>
+                }
+              } @else {
+                @for (group of days(); track group.day) {
+                  <!-- One group row per day, like the favorites row on the Domains page. -->
+                  <tr [class]="ui.tr">
+                    <td colspan="3" [class]="groupRow">
+                      {{ dayLabel(group.day) }} <span class="font-normal">· {{ group.rows.length }}</span>
+                    </td>
+                  </tr>
+                  @for (row of group.rows; track row.entry.id) {
+                    <tr [class]="ui.tr">
+                      <td [class]="ui.td">
+                        <span class="flex items-start gap-3">
+                          <span class="mt-px inline-flex size-7 flex-none items-center justify-center rounded-full" [class]="tile[row.category]" aria-hidden="true">
+                            <amelu-icon [name]="icon[row.category]" [size]="14" />
+                          </span>
+                          <span class="min-w-0 pt-1">
+                            <span class="block break-words">{{ row.entry.message }}</span>
+                            @if (row.bySupport) {
+                              <span [class]="ui.tdSub"><amelu-icon name="lifebuoy" [size]="12" />By Amelu support</span>
+                            }
+                          </span>
+                        </span>
+                      </td>
+                      <td [class]="ui.td + ' whitespace-nowrap max-md:hidden'">
+                        <span class="inline-flex items-center gap-2">
+                          <span class="size-2 rounded-full" [class]="dot[row.category]" aria-hidden="true"></span>
+                          {{ label[row.category] }}
+                        </span>
+                      </td>
+                      <td [class]="ui.td + ' text-right whitespace-nowrap text-muted tabular-nums'">
+                        <time [attr.datetime]="row.entry.createdAt" [title]="row.entry.createdAt | date: 'd MMM y, HH:mm:ss'">{{ row.entry.createdAt | date: 'HH:mm' }}</time>
+                      </td>
+                    </tr>
+                  }
+                } @empty {
+                  <tr [class]="ui.tr">
+                    <td colspan="3" class="px-4 py-10 text-center">
+                      <amelu-icon [name]="filter() === 'all' ? 'clock' : 'search'" [size]="18" class="mx-auto block" />
+                      @if (filter() === 'all') {
+                        <p class="mt-2">No activity recorded yet</p>
+                        <p class="mt-0.5 text-[13px] text-muted">Changes to this domain, its mailboxes and its spam filtering show up here as they happen.</p>
+                      } @else {
+                        <p class="mt-2">Nothing in this category</p>
+                        <button type="button" class="mt-1 cursor-pointer text-[13px] text-link hover:underline" (click)="filter.set('all')">Show all events</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </section>
+
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">What gets recorded</h2>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Verification, mailboxes and aliases being added or removed, password changes, forwarding, catch-all and spam
+          filter changes, and changes to the domain itself. Only the last 50 events are kept here.
+        </p>
+      </div>
     </section>
 
-    <!-- Same dither as the DNS help card on the Domains page, rising from the bottom right. -->
-    <section class="relative overflow-hidden rounded-lg border border-line bg-surface p-4 *:relative">
-      <div class="pointer-events-none !absolute inset-0 opacity-30 [mask-image:linear-gradient(to_top_left,black,rgba(0,0,0,0.45)_40%,transparent_80%)]" aria-hidden="true">
-        <amelu-dither-shader colorBack="rgba(0,0,0,0)" colorFront="var(--accent)" shape="warp" type="4x4" [size]="2" [speed]="0.3" />
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Looking for who did it?</h2>
       </div>
-      <amelu-icon name="users" [size]="20" class="block text-ink" />
-      <h2 class="mt-3 text-[14px] font-bold">Looking for who did it?</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        The organization's
-        <a routerLink="/organization/activity" class="text-link hover:underline">activity log</a>
-        shows which team member made each change, across all your domains.
-      </p>
-      <a routerLink="/organization/activity" class="mt-4 inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-[13px] font-medium hover:border-ink/20 hover:bg-bg">Open the activity log</a>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          The organization's
+          <a routerLink="/organization/activity" class="text-link hover:underline">activity log</a>
+          shows which team member made each change, across all your domains.
+        </p>
+      </div>
     </section>
   </aside>
 </div>

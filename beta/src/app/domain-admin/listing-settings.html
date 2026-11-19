@@ -2,11 +2,11 @@
   title="Listing settings"
   [crumbs]="[{ label: 'Domains', link: '/domains' }, { label: ctx.domain()?.name ?? '', link: '/domains/' + ctx.id() }, { label: 'Listing settings' }]"
 >
-  Control whether this domain appears in any public directory of Amelu domains.
+  Choose whether this domain shows up in public directories of Amelu domains.
 </amelu-page-header>
 
-<div class="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-  <form class="min-w-0 space-y-6" (submit)="save($event)">
+<div class="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+  <form class="min-w-0 space-y-5" (submit)="save($event)">
     @if (error(); as message) {
       <amelu-alert kind="error" title="The setting wasn't saved" [dismissible]="true" (dismissed)="error.set(null)">
         {{ message }}
@@ -18,67 +18,76 @@
       </amelu-alert>
     }
 
-    <section>
-      <h2 [class]="ui.sectionTitle">Public listing</h2>
-      @if (settings() === undefined) {
-        <div [class]="ui.card + ' flex items-center gap-3 p-4'" aria-hidden="true">
-          <span class="h-3 w-56 animate-pulse rounded bg-bg"></span>
-          <span class="ml-auto h-6 w-10 animate-pulse rounded-full bg-bg"></span>
+    @if (settings() === null) {
+      <amelu-empty-state class="rounded border border-line bg-surface" title="Listing setting couldn't be loaded" [error]="true" [compact]="true" />
+    } @else {
+      <section [class]="ui.setCard">
+        <div [class]="ui.setHeader">
+          <h2 [class]="ui.setTitle">Public listing</h2>
+          @if (settings()) {
+            <span [class]="current() ? badge.ok : badge.neutral">{{ current() ? 'Listed' : 'Not listed' }}</span>
+          }
         </div>
-      } @else if (settings() === null) {
-        <amelu-empty-state [class]="ui.card" title="Listing setting couldn't be loaded" [error]="true" />
-      } @else {
-        <div [class]="ui.card + ' flex items-start gap-4 p-4'">
-          <div class="min-w-0 flex-1">
-            <p id="listing-label" class="text-[14px] font-semibold">List this domain publicly</p>
-            <p class="mt-1.5">
-              <span [class]="current() ? badge.ok : badge.neutral">{{ current() ? 'Listed' : 'Not listed' }}</span>
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-labelledby="listing-label"
-            [attr.aria-checked]="listed()"
-            class="relative mt-0.5 inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
-            [class]="listed() ? 'bg-accent' : 'bg-line'"
-            (click)="toggle()"
-          >
-            <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="listed() ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
+        <div class="flex items-center gap-4 px-5 py-3.5">
+          <span class="min-w-0 flex-1">
+            <span id="listing-label" class="block text-[14px]">List this domain publicly</span>
+            <span class="mt-0.5 block text-[13px] text-muted">Shows the domain name only, never mailboxes, addresses or mail.</span>
+          </span>
+          @if (settings()) {
+            <button
+              type="button"
+              role="switch"
+              aria-labelledby="listing-label"
+              [attr.aria-checked]="listed()"
+              class="relative inline-flex h-6 w-10 flex-none cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:outline-none"
+              [class]="listed() ? 'bg-accent' : 'bg-line'"
+              (click)="toggle()"
+            >
+              <span class="size-5 rounded-full bg-white shadow-sm transition-transform" [class]="listed() ? 'translate-x-[18px]' : 'translate-x-0.5'"></span>
+            </button>
+          } @else {
+            <span class="h-6 w-10 flex-none animate-pulse rounded-full bg-bg" aria-hidden="true"></span>
+          }
+        </div>
+        <p [class]="ui.setNote">
+          <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
+          <span>New domains are never listed until you turn this on. Mail delivery works the same either way.</span>
+        </p>
+        <div class="flex items-center gap-3 border-t border-line px-5 py-3">
+          <button type="submit" [class]="ui.primary + ' h-9'" [disabled]="busy() || !settings() || !changed()">
+            {{ busy() ? 'Saving...' : 'Save changes' }}
           </button>
+          @if (changed()) {
+            <span class="text-[13px] text-muted">Unsaved changes</span>
+          }
         </div>
-      }
-    </section>
-
-    <div class="flex items-center gap-3">
-      <button type="submit" [class]="ui.primary" [disabled]="busy() || !settings() || !changed()">
-        {{ busy() ? 'Saving...' : 'Save' }}
-      </button>
-    </div>
+      </section>
+    }
   </form>
 
-  <aside class="space-y-6">
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">What listing does</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        A listed domain may be shown by name in a public directory of domains hosted on Amelu. It doesn't expose any
-        mailboxes, addresses or mail.
-      </p>
+  <aside class="space-y-5">
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">What listing does</h2>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          A listed domain may be shown by name in a public directory of domains hosted on Amelu. It doesn't expose any
+          mailboxes, addresses or mail.
+        </p>
+      </div>
     </section>
 
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Off by default</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        New domains are never listed until you turn this on. Mail delivery works the same either way.
-      </p>
-    </section>
-
-    <section [class]="ui.card + ' p-4'">
-      <h2 class="text-[14px] font-bold">Per mailbox</h2>
-      <p class="mt-1 text-[13px] leading-relaxed text-muted">
-        Mailboxes have their own listing setting, under each mailbox in
-        <a [routerLink]="'/domains/' + ctx.id() + '/mailboxes'" class="text-link hover:underline">Mailboxes</a>.
-      </p>
+    <section [class]="ui.panel">
+      <div [class]="ui.panelHeader">
+        <h2 [class]="ui.panelTitle">Per mailbox</h2>
+        <a [routerLink]="'/domains/' + ctx.id() + '/mailboxes'" class="text-[13px] text-link hover:underline">Mailboxes</a>
+      </div>
+      <div [class]="ui.well">
+        <p class="text-[13px] leading-relaxed text-muted">
+          Mailboxes have their own listing setting. Open a mailbox from the list to change it.
+        </p>
+      </div>
     </section>
   </aside>
 </div>

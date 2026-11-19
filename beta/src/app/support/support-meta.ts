@@ -9,10 +9,11 @@ export const SUPPORT_CATEGORIES: { id: SupportCategory; label: string; hint: str
   { id: 'other', label: 'Something else', hint: 'Anything that fits nowhere else', icon: 'dots' },
 ];
 
-// Dedicated IP requests come from their own form, not the topic list.
+// Dedicated IP and sending review requests come from their own forms, not the topic list.
 export const CATEGORY_LABEL = {
   ...Object.fromEntries(SUPPORT_CATEGORIES.map((c) => [c.id, c.label])),
   dedicated_ip: 'Dedicated IP',
+  sending_review: 'Sending review',
 } as Record<SupportCategory, string>;
 
 export const DEDICATED_IP_VOLUMES: { id: DedicatedIpVolume; label: string }[] = [

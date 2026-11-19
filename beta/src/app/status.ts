@@ -14,7 +14,7 @@ export const DEDICATED_IP_STATE: Record<'sending' | 'paused' | 'setting_up', { l
 export const TONE_TEXT: Record<Tone, string> = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', neutral: 'text-muted' };
 export const TONE_ICON: Record<Tone, IconName> = { ok: 'circleCheck', warn: 'circleAlert', bad: 'circleX', neutral: 'clock' };
 
-export const BADGE = 'inline-flex flex-none items-center rounded-full px-2 py-0.5 text-[11px] font-medium';
+export const BADGE = 'inline-flex flex-none items-center rounded px-2 py-0.5 text-[11px] font-medium';
 
 export const TONES: Record<Tone, string> = {
   ok: 'bg-ok/15 text-ok',

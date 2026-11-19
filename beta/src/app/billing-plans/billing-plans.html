@@ -59,7 +59,7 @@
             <span class="text-[26px] leading-none font-normal tracking-[-0.02em]">{{ money(price(plan)) }}</span>
             <span class="text-[12px] text-muted">/{{ period(plan) === 'monthly' ? 'month' : 'year' }}</span>
             @if (!plan.custom && interval() === 'annual') {
-              <span class="ml-auto rounded-full bg-ok/15 px-2 py-0.5 text-[11px] font-medium text-ok">Save {{ money(savings(plan)) }}</span>
+              <span class="ml-auto rounded bg-ok/15 px-2 py-0.5 text-[11px] font-medium text-ok">Save {{ money(savings(plan)) }}</span>
             }
           }
         </div>

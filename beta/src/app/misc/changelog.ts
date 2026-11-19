@@ -109,7 +109,7 @@ import { BUILD_INFO } from '../build-info';
             } @else {
               <span class="rounded bg-bg px-1.5 py-0.5 font-mono text-[12px] font-semibold">{{ build.commit }}</span>
             }
-            <span class="rounded-full bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">{{ build.version }}</span>
+            <span class="rounded bg-bg px-2 py-0.5 text-[11px] font-medium text-muted">{{ build.version }}</span>
           </div>
           @if (build.commitSubject) {
             <p class="mt-2 text-[13px] leading-snug font-medium">{{ build.commitSubject }}</p>

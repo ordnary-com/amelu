@@ -30,10 +30,10 @@ interface Row extends SendingIp {
 // server moved and started sending only from our own block.
 const CURRENT_IPS: SendingIp[] = [];
 
-// Our own block 89.106.70.0/24 (AS218905), routed through rtr2-ams, rtr1-ams
-// and rtr1-par. All 64 are listed so customers can allowlist them before they
-// send. One cluster name per /24 (mta0) and the last octet as the host, so
-// out-1.mta0 is .1.
+// Ordnary's block 89.106.70.0/24 (AS218905), routed through Ordnary's
+// routers (ordnary-infra, network/). All 64 are listed so customers can
+// allowlist them before they send. One cluster name per /24 (mta0) and the
+// last octet as the host, so out-1.mta0 is .1.
 const OWN_BLOCK_IPS: SendingIp[] = Array.from({ length: 64 }, (_, i) => ({
   name: `out-${i + 1}.mta0.amelu.org`,
   ip: `89.106.70.${i + 1}`,

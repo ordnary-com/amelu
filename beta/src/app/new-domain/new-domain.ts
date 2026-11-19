@@ -11,6 +11,7 @@ import { STANDARD_ADDRESSES } from '../standard-addresses';
 import { DnsSpamApi, DomainConnectStatus } from '../dns-spam/dns-spam-api';
 import { NameserversCard } from '../dns-spam/nameservers-card';
 import { VerifyOwnership } from '../verify-ownership/verify-ownership';
+import { CrumbTitle } from '../page-header/page-header';
 
 // The addresses email standards expect on every domain (RFC 2142), same as the current dashboard.
 const DEFAULT_ADDRESSES = STANDARD_ADDRESSES;
@@ -31,7 +32,7 @@ interface CreatedAddress {
 /** The current dashboard's /domains/new: add a domain, optionally with its default addresses. */
 @Component({
   selector: 'amelu-new-domain',
-  imports: [RouterLink, Alert, Icon, NameserversCard, VerifyOwnership],
+  imports: [RouterLink, Alert, Icon, NameserversCard, VerifyOwnership, CrumbTitle],
   templateUrl: './new-domain.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },

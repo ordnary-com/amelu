@@ -46,8 +46,7 @@ pnpm dev        # starts the dashboard (:4200, proxies /api) and the backend (:8
 ```
 
 Needs `backend/.env` (copy `backend/.env.example`) and a reachable Postgres
-at `DATABASE_URL`. Requires Node 20+ (see `.nvmrc`) - Vite's rolldown build
-does not run on Node 18.
+at `DATABASE_URL`. Requires Node 20+ (see `.nvmrc`).
 
 ## Production
 
@@ -73,7 +72,7 @@ repository (see `.gitignore`).
 
 Amelu has its own changelog: entries in the `changelog_entries` table, written
 through a token API (`backend/internal/handlers/changelog_api.go`). Published
-entries show on the dashboard's What's new page (`/changelog` in `beta/`),
+entries show on the dashboard's What's new page (`/changelog` in `frontend/`),
 merged with Amelu's items from Ordnary's public changelog feed, newest first.
 
 Auth is `Authorization: Bearer $CHANGELOG_API_TOKEN` (in `backend/.env`,

@@ -260,10 +260,24 @@ export interface CreatedApiKey extends ApiKey {
 export interface Connector {
   id: string;
   clientName: string;
-  mailbox: string;
+  /** What it can reach: addresses, "All of example.com" or "All mailboxes". */
+  access: string[];
   scopes: string[];
   createdAt: string;
   lastUsedAt?: string;
+}
+
+export interface ConnectDomain {
+  id: string;
+  name: string;
+  mailboxes: { id: string; address: string }[];
+}
+
+/** What the customer ticked: everything, whole domains and/or single mailboxes. */
+export interface ConnectTargets {
+  all: boolean;
+  domainIds: string[];
+  mailboxIds: string[];
 }
 
 export interface ConnectRequest {
@@ -271,7 +285,7 @@ export interface ConnectRequest {
   redirectHost: string;
   scopes: string[];
   allowed: boolean;
-  mailboxes: { id: string; address: string }[];
+  domains: ConnectDomain[];
 }
 
 export interface ConnectApproval {
@@ -279,7 +293,7 @@ export interface ConnectApproval {
   redirectUri: string;
   state: string;
   codeChallenge: string;
-  mailboxId: string;
+  targets: ConnectTargets;
   scopes: string[];
   deny: boolean;
 }

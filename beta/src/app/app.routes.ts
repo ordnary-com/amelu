@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 import { authGuard } from './auth.guard';
 import { onboardingGuard } from './onboarding.guard';
@@ -24,6 +25,10 @@ export const routes: Routes = [
     loadComponent: () => import('./token-pages/accept-invite').then((m) => m.AcceptInvite),
     title: 'Accept invitation · Amelu',
   },
+  // Mock-data preview of the consent page's states; dev builds only.
+  ...(isDevMode()
+    ? [{ path: 'connect/preview', loadComponent: () => import('./connect/connect-preview').then((m) => m.ConnectPreview), title: 'Connect preview · Amelu' }]
+    : []),
   {
     path: 'connect',
     canActivate: [authGuard],

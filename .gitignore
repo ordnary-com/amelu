@@ -13,3 +13,8 @@ devlog/
 
 # spartan/ui CLI cache
 .nx/
+
+# Local only: infra, docs and Cloudflare Workers are kept out of the repo
+ops/
+docs/
+cloudflare/

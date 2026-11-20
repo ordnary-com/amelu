@@ -111,6 +111,10 @@ REPORTS_PER_HOUR = 120
 # One boolean expression: an {"if": ..., "then": "false"} exemption didn't
 # reliably exempt (devlog 2026-11-07).
 NOT_SERVER_MADE = "!(source == 'report' || source == 'dsn')"
+# NOT_LOCAL misses inbound mail: rcpt_domain is empty when these caps run, so
+# mail coming in counted against them (20 Nov 2026). Only mail with one of our
+# domains as sender is ours to cap.
+OUR_SENDER = "is_local_domain(sender_domain)"
 # Messages an hour over all sending IPs, by days since the OVH IPs first sent.
 WARMUP = [60, 120, 250, 500, 800, 1200]
 SINCE_FILE = "/var/lib/amelu-ip-pools/ovh-since"
@@ -551,7 +555,7 @@ def main():
         pools, extra = {}, {}
     # The tunnel is gone; its cap stays disabled so nothing counts against it.
     tunnel_cap = {"match": {}, "else": "false"}
-    send_cap = {"match": {"0": NOT_LOCAL}, "else": "true"}
+    send_cap = {"match": {"0": NOT_LOCAL}, "else": OUR_SENDER}
 
     cur = jmap([["x:MtaOutboundStrategy/get", {"ids": ["singleton"]}, "0"],
                 ["x:MtaConnectionStrategy/get", {}, "1"],
@@ -579,7 +583,7 @@ def main():
         elif existing[group]["sourceIps"] != source or existing[group]["ehloHostname"] != fields["ehloHostname"]:
             calls.append(["x:MtaConnectionStrategy/set", {"update": {existing[group]["id"]: fields}}, "o" + group])
     pcap = next((t for t in throttles if t["description"].startswith(PER_DOMAIN_CAP)), None)
-    per_domain = {"match": {"0": NOT_LOCAL}, "else": NOT_SERVER_MADE}
+    per_domain = {"match": {"0": NOT_LOCAL}, "else": f"{OUR_SENDER} && {NOT_SERVER_MADE}"}
     if pcap and pcap["match"] != per_domain:
         calls.append(["x:MtaOutboundThrottle/set", {"update": {pcap["id"]: {"match": per_domain}}}, "p"])
     rcap = next((t for t in throttles if t["description"].startswith(REPORT_CAP)), None)

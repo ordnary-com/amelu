@@ -24,3 +24,16 @@ func TestParseChangelog(t *testing.T) {
 		t.Errorf("got %+v\nwant %+v", got, want)
 	}
 }
+
+func TestNotesFromBody(t *testing.T) {
+	got := notesFromBody("- Faster search\n\n* Dark mode for the sidebar\nPlain line  \n")
+	want := []string{"Faster search", "Dark mode for the sidebar", "Plain line"}
+	if len(got) != len(want) {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	}
+}

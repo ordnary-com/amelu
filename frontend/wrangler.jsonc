@@ -1,5 +1,5 @@
 // The dashboard on app.amelu.org (and beta.amelu.org): static files only, no Worker code.
-// Deploy with `pnpm deploy` from the repo root (builds, then uploads). The Worker keeps its
+// Deploy with `pnpm deploy:frontend` from the repo root (builds, then uploads). The Worker keeps its
 // original name, amelu-beta, so the deployed project and its domains stay as they are.
 {
   "$schema": "node_modules/wrangler/config-schema.json",

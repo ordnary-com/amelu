@@ -120,7 +120,7 @@ cd backend && go vet ./... && go test ./...
 
 | What | How |
 |---|---|
-| Dashboard (`app.amelu.org`) | `pnpm deploy` from the repo root |
+| Dashboard (`app.amelu.org`) | `pnpm deploy:frontend` from the repo root |
 
 The API and edge Worker are deployed from outside this repository.
 

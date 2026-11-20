@@ -165,8 +165,14 @@ func main() {
 	// Cloudflare Tunnel connector and the edge Worker's origin health
 	// check. See docs/cloudflare/TUNNEL.md and EDGE_WORKER.md.
 	mux.HandleFunc("GET /api/healthz", app.Healthz)
-	// Public: it only mirrors Ordnary's own public changelog feed.
+	// Public: published entries of our own changelog plus Ordnary's public
+	// changelog feed.
 	mux.HandleFunc("GET /api/changelog", app.GetChangelog)
+	// The changelog API: a bearer token (CHANGELOG_API_TOKEN), no session.
+	mux.HandleFunc("GET /api/changelog/entries", handlers.RequireChangelogToken(cfg.ChangelogAPIToken, app.ListChangelogEntries))
+	mux.HandleFunc("POST /api/changelog/entries", handlers.RequireChangelogToken(cfg.ChangelogAPIToken, app.CreateChangelogEntry))
+	mux.HandleFunc("PATCH /api/changelog/entries/{id}", handlers.RequireChangelogToken(cfg.ChangelogAPIToken, app.UpdateChangelogEntry))
+	mux.HandleFunc("DELETE /api/changelog/entries/{id}", handlers.RequireChangelogToken(cfg.ChangelogAPIToken, app.DeleteChangelogEntry))
 
 	// Internal-only: HMAC-signed shared secret (auth.RequireInternal), and
 	// must never be routed to by the public edge Worker or exposed outside

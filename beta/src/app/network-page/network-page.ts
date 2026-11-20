@@ -75,6 +75,8 @@ const isPool = (group: string): group is Pool => POOLS.some((p) => p.id === grou
 })
 export class NetworkPage {
   protected readonly ui = UI;
+  protected readonly choiceOn = UI.choiceOn + ' text-ink';
+  protected readonly groupRow = 'bg-bg/40 px-4 py-1.5 text-[12px] font-medium text-muted';
 
   /** null until the report loads, or when it can't. */
   private readonly report = toSignal(
@@ -114,8 +116,7 @@ export class NetworkPage {
   });
   protected readonly pools = POOLS;
   protected readonly networks = NETWORKS;
-  protected readonly networkOf = Object.fromEntries(NETWORKS.map((n) => [n.id, n])) as Record<Network, (typeof NETWORKS)[number]>;
-  /** Pools with addresses in the selected subnet (plus the selected one, so it can be cleared). */
+  /** Pools with addresses (plus the selected one, so it can be cleared). */
   protected readonly visiblePools = computed(() =>
     POOLS.filter((p) => p.id === this.pool() || this.count(p.id) > 0),
   );
@@ -124,40 +125,33 @@ export class NetworkPage {
 
   protected readonly search = signal('');
   protected readonly pool = signal<Pool | 'all'>('all');
-  protected readonly network = signal<Network | 'all'>('all');
 
   protected readonly filtered = computed(() => {
     const query = this.search().trim().toLowerCase();
     const pool = this.pool();
-    const network = this.network();
     return this.ips().filter(
-      (row) =>
-        (pool === 'all' || row.pool === pool) &&
-        (network === 'all' || row.network === network) &&
-        (!query || row.name.includes(query) || row.ip.includes(query)),
+      (row) => (pool === 'all' || row.pool === pool) && (!query || row.name.includes(query) || row.ip.includes(query)),
     );
   });
 
-  protected readonly activePool = computed(() => POOLS.find((p) => p.id === this.pool()) ?? null);
-  protected readonly activeNetwork = computed(() => NETWORKS.find((n) => n.id === this.network()) ?? null);
-  protected readonly filtering = computed(
-    () => this.pool() !== 'all' || this.network() !== 'all' || this.search().trim() !== '',
+  /** The filtered addresses grouped by pool, in the order of POOLS, for the group rows in the table. */
+  protected readonly groups = computed(() =>
+    POOLS.map((p) => ({ pool: p, rows: this.filtered().filter((row) => row.pool === p.id) })).filter((g) => g.rows.length),
   );
 
-  /** Addresses in a pool within the selected network, so the counts match the table. */
-  protected count(pool: Pool | 'all'): number {
-    const network = this.network();
-    return this.ips().filter((row) => (network === 'all' || row.network === network) && (pool === 'all' || row.pool === pool)).length;
-  }
+  /** Addresses that are sending right now. */
+  protected readonly sendingCount = computed(() => this.ips().filter((row) => row.status === 'sending').length);
+  protected readonly reported = computed(() => (this.report()?.ips ?? []).length > 0);
 
-  protected networkCount(network: Network | 'all'): number {
-    return network === 'all' ? this.ips().length : this.ips().filter((row) => row.network === network).length;
+  protected readonly filtering = computed(() => this.pool() !== 'all' || this.search().trim() !== '');
+
+  protected count(pool: Pool | 'all'): number {
+    return pool === 'all' ? this.ips().length : this.ips().filter((row) => row.pool === pool).length;
   }
 
   protected clearFilters(): void {
     this.search.set('');
     this.pool.set('all');
-    this.network.set('all');
   }
 
   /** The IP just copied, or 'list'; shows a check for a moment. */

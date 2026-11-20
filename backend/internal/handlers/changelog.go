@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -36,13 +38,22 @@ type changelogCache struct {
 
 var changelog changelogCache
 
-// GetChangelog -> GET /api/changelog
+// GetChangelog -> GET /api/changelog: the published entries of our own
+// changelog (changelog_api.go) and Amelu's items from Ordnary's feed, newest
+// first. Either source failing on its own still returns the other.
 func (a *App) GetChangelog(w http.ResponseWriter, r *http.Request) {
-	entries, err := changelog.get(r.Context())
-	if err != nil {
-		writeUpstreamError(w, "could not load the changelog", err)
+	own, ownErr := a.ownChangelog(r)
+	if ownErr != nil {
+		log.Printf("changelog: own entries: %v", ownErr)
+	}
+	feed, feedErr := changelog.get(r.Context())
+	if feedErr != nil && ownErr != nil {
+		writeUpstreamError(w, "could not load the changelog", feedErr)
 		return
 	}
+	entries := append(append([]changelogEntry{}, own...), feed...)
+	// Dates are YYYY-MM-DD, so they sort as strings; undated entries go last.
+	sort.SliceStable(entries, func(i, j int) bool { return entries[i].Date > entries[j].Date })
 	writeJSON(w, http.StatusOK, map[string]any{"entries": entries})
 }
 

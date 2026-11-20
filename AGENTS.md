@@ -79,6 +79,58 @@ Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
   shape - list pages, create forms, settings forms, and sub-sidebars all
   already have an established pattern in `Layout.tsx` and `pages/`.
 
+## Changelog API
+
+Amelu has its own changelog: entries in the `changelog_entries` table, written
+through a token API (`backend/internal/handlers/changelog_api.go`). Published
+entries show on the dashboard's What's new page (`/changelog` in `beta/`),
+merged with Amelu's items from Ordnary's public changelog feed, newest first.
+
+Auth is `Authorization: Bearer $CHANGELOG_API_TOKEN` (in `backend/.env`,
+never commit it or paste it into chat). Without the variable the routes 503.
+
+```
+T=$(grep -E '^CHANGELOG_API_TOKEN=' backend/.env | cut -d= -f2-)
+API=http://localhost:8081/api/changelog/entries
+
+curl -s $API -H "Authorization: Bearer $T"                      # all entries, drafts too
+curl -s -X POST $API -H "Authorization: Bearer $T" -H 'Content-Type: application/json' \
+  -d '{"title":"…","body":"- …\n- …","published":true}'          # create (draft unless published)
+#   add "date":"YYYY-MM-DD" to publish it with that date (older changes); PATCH takes it too
+curl -s -X PATCH $API/<id> -H "Authorization: Bearer $T" -H 'Content-Type: application/json' \
+  -d '{"title":"…","body":"…","published":false}'                 # any of the three fields
+curl -s -X DELETE $API/<id> -H "Authorization: Bearer $T"
+```
+
+Production: `API=https://api.amelu.org/api/changelog/entries` with the token
+from `~/.config/amelu/changelog-api.token` (Worker secret
+`CHANGELOG_API_TOKEN` on amelu-edge-api-production, passed to the container).
+
+The body becomes the entry's notes, one per line; a leading `- ` is dropped.
+On production, requests with Python's default user agent get a 403 from the
+edge firewall; use curl or send your own User-Agent.
+The date shown is the day the entry was (last) published.
+
+When to post, and how:
+
+- **After a change customers will notice** (a new or reworked page, a new
+  setting, a fix to something they could run into), post one entry. Not for
+  refactors, internal tooling, ops scripts or devlog-only work.
+- **List first.** If a recent entry already covers the same area, `PATCH` it
+  (add a note, sharpen the title) instead of posting a near duplicate.
+- **Net changes only.** Something changed and changed back (a font, a layout,
+  a limit lifted and restored) gets no entry, or the earlier entry is fixed;
+  temporary things (a promotion, a maintenance notice) get none either.
+- **Customer language.** Title: what changed, short, no trailing period
+  ("Sending IPs page redesigned"). Notes: one concrete change each, in plain
+  words. No em-dashes, no internal names (Stalwart, marduk, Cloudflare, Redis,
+  table or endpoint names), no commit hashes.
+- **Draft or published.** Locally, publish right away so it shows on
+  What's new. An entry about work that isn't live yet stays a draft on
+  production until the change is deployed.
+- **Say what you did.** After posting or editing, tell the user the title and
+  id, so they can change or remove it.
+
 ## Devlog
 
 Every change gets a short devlog entry in `devlog/`, listed in the index at

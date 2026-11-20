@@ -95,6 +95,19 @@ func (s *Store) UpdateChangelogEntry(ctx context.Context, id string, in UpdateCh
 	return e, nil
 }
 
+// SetChangelogPublishedAt publishes an entry with a given date, for entries
+// written after the fact about older changes.
+func (s *Store) SetChangelogPublishedAt(ctx context.Context, id string, at time.Time) (*ChangelogEntry, error) {
+	row := s.conn.QueryRowContext(ctx, `
+		UPDATE changelog_entries SET published_at = $1, updated_at = now() WHERE id = $2
+		RETURNING `+changelogColumns, at, id)
+	e, err := scanChangelogEntry(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return e, err
+}
+
 func (s *Store) DeleteChangelogEntry(ctx context.Context, id string) error {
 	res, err := s.conn.ExecContext(ctx, `DELETE FROM changelog_entries WHERE id = $1`, id)
 	if err != nil {

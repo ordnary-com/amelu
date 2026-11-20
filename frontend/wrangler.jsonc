@@ -1,11 +1,12 @@
-// The 2.0 dashboard on app.amelu.org (and beta.amelu.org): static files only, no Worker code.
-// Deploy with `pnpm deploy:beta` from the repo root (builds, then uploads).
+// The dashboard on app.amelu.org (and beta.amelu.org): static files only, no Worker code.
+// Deploy with `pnpm deploy` from the repo root (builds, then uploads). The Worker keeps its
+// original name, amelu-beta, so the deployed project and its domains stay as they are.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "amelu-beta",
   "compatibility_date": "2026-07-01",
   "assets": {
-    "directory": "./dist/beta/browser",
+    "directory": "./dist/frontend/browser",
     // Client-side routes (/domains, /login, ...) all serve index.html.
     "not_found_handling": "single-page-application"
   },

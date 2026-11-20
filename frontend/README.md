@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
+# Amelu dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The customer dashboard: Angular 22 (standalone, zoneless, signals) with
+Tailwind v4, styled after ordnary-console. It talks to the Go API in
+`backend/`.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+pnpm install
+pnpm dev          # Go API on :8081 and this app on :4200, /api proxied to :8081
+pnpm build
+pnpm deploy       # build, then upload to the amelu-beta Worker (app.amelu.org)
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Signing in happens on this app's own /login page (via Ordnary). The API
+must list this app's origin in `CORS_ORIGIN` (`http://localhost:4200`
+locally) so the Ordnary callback sends you back here.
+
+Layout of `src/app`:
+
+- `shell/` top bar and the sidebar, with a menu column per level you're in
+  (domain, then DNS, spam or a mailbox), as in the current dashboard.
+- `api.ts` the shared API client and types; page groups that need more keep
+  their own `*-api.ts` next to their pages.
+- `ui.ts`, `status.ts`, `alert/`, `empty-state/`, `page-header/`, `icon.ts`
+  the shared building blocks every page uses.
+- One folder per page, or per group of pages under a domain (`mailboxes/`,
+  `mailbox/`, `routing/`, `dns-spam/`, `domain-admin/`), each with its own
+  lazily loaded `routes.ts`.

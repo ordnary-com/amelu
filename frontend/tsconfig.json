@@ -1,7 +1,61 @@
 {
+  "compileOnSave": false,
+  "compilerOptions": {
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "paths": {
+      "@spartan-ng/helm/button": ["./src/app/ui/button/src/index.ts"],
+      "@spartan-ng/helm/utils": ["./src/app/ui/utils/src/index.ts"],
+      "@spartan-ng/helm/input": ["./src/app/ui/input/src/index.ts"],
+      "@spartan-ng/helm/textarea": ["./src/app/ui/textarea/src/index.ts"],
+      "@spartan-ng/helm/label": ["./src/app/ui/label/src/index.ts"],
+      "@spartan-ng/helm/field": ["./src/app/ui/field/src/index.ts"],
+      "@spartan-ng/helm/separator": ["./src/app/ui/separator/src/index.ts"],
+      "@spartan-ng/helm/card": ["./src/app/ui/card/src/index.ts"],
+      "@spartan-ng/helm/badge": ["./src/app/ui/badge/src/index.ts"],
+      "@spartan-ng/helm/alert": ["./src/app/ui/alert/src/index.ts"],
+      "@spartan-ng/helm/avatar": ["./src/app/ui/avatar/src/index.ts"],
+      "@spartan-ng/helm/skeleton": ["./src/app/ui/skeleton/src/index.ts"],
+      "@spartan-ng/helm/tabs": ["./src/app/ui/tabs/src/index.ts"],
+      "@spartan-ng/helm/dialog": ["./src/app/ui/dialog/src/index.ts"],
+      "@spartan-ng/helm/alert-dialog": ["./src/app/ui/alert-dialog/src/index.ts"],
+      "@spartan-ng/helm/dropdown-menu": ["./src/app/ui/dropdown-menu/src/index.ts"],
+      "@spartan-ng/helm/popover": ["./src/app/ui/popover/src/index.ts"],
+      "@spartan-ng/helm/tooltip": ["./src/app/ui/tooltip/src/index.ts"],
+      "@spartan-ng/helm/combobox": ["./src/app/ui/combobox/src/index.ts"],
+      "@spartan-ng/helm/input-group": ["./src/app/ui/input-group/src/index.ts"],
+      "@spartan-ng/helm/select": ["./src/app/ui/select/src/index.ts"],
+      "@spartan-ng/helm/native-select": ["./src/app/ui/native-select/src/index.ts"],
+      "@spartan-ng/helm/table": ["./src/app/ui/table/src/index.ts"],
+      "@spartan-ng/helm/empty": ["./src/app/ui/empty/src/index.ts"],
+      "@spartan-ng/helm/kbd": ["./src/app/ui/kbd/src/index.ts"],
+      "@spartan-ng/helm/breadcrumb": ["./src/app/ui/breadcrumb/src/index.ts"],
+      "@spartan-ng/helm/spinner": ["./src/app/ui/spinner/src/index.ts"],
+      "@spartan-ng/helm/sonner": ["./src/app/ui/sonner/src/index.ts"],
+      "@spartan-ng/helm/item": ["./src/app/ui/item/src/index.ts"],
+      "@spartan-ng/helm/hover-card": ["./src/app/ui/hover-card/src/index.ts"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true
+  },
   "files": [],
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
   ]
 }

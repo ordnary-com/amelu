@@ -108,3 +108,5 @@ filed in Sent and readable back via `?folder=sent`.
   the most requested missing piece for agent use.
 - **Attachment download.** Attachments are listed, not fetchable.
 - **Folders beyond inbox and sent**, and marking messages read or deleted.
+
+AI assistants such as ChatGPT use a separate, narrower credential: see [CONNECTORS.md](CONNECTORS.md).

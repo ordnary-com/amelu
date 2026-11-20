@@ -66,7 +66,7 @@ export class AccountLayout {
   protected readonly navItem = 'flex h-10 items-center rounded px-4 text-[14px] font-medium bg-bg/60 hover:bg-bg';
   protected readonly groups: { label: string; items: { label: string; link?: string; href?: string; danger?: boolean }[] }[] = [
     { label: 'Your account', items: [{ label: 'Profile', link: '/account' }, { label: 'Appearance', link: '/account/appearance' }] },
-    { label: 'Access', items: [{ label: 'API Keys', link: '/account/api-keys' }, { label: 'Ordnary account', href: ORDNARY_ACCOUNT_URL }] },
+    { label: 'Access', items: [{ label: 'API Keys', link: '/account/api-keys' }, { label: 'Connected Apps', link: '/account/connected-apps' }, { label: 'Ordnary account', href: ORDNARY_ACCOUNT_URL }] },
     { label: 'Danger zone', items: [{ label: 'Terminate account', link: '/account/terminate', danger: true }] },
   ];
 

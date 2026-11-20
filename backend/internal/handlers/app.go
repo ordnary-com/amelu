@@ -39,6 +39,9 @@ type App struct {
 	// invitees (e.g. https://app.amelu.org/reset-password/<token>), and the
 	// success/cancel/return URLs for Stripe Checkout and the billing portal.
 	FrontendOrigin string
+	// PublicAPIURL is where this API is reachable from outside (the edge
+	// Worker), advertised in the OAuth discovery documents for connectors.
+	PublicAPIURL string
 	// FrontendOrigins are all dashboards allowed to call the API (the current
 	// one first, then the 2.0 dashboard). Signing in through Ordnary returns
 	// to whichever of these started it.

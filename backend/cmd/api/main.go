@@ -54,6 +54,7 @@ func main() {
 		Stalwart:                 stalwart.NewClient(cfg.StalwartBaseURL, cfg.StalwartUser, cfg.StalwartPassword),
 		CookieSecure:             strings.HasPrefix(cfg.CORSOrigins[0], "https://"),
 		FrontendOrigin:           cfg.CORSOrigins[0],
+		PublicAPIURL:             cfg.PublicAPIURL,
 		SupportNotifyEmail:       cfg.SupportNotifyEmail,
 		FrontendOrigins:          cfg.CORSOrigins,
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
@@ -268,6 +269,20 @@ func main() {
 	mux.HandleFunc("GET /api/account/api-keys", auth.RequireSession(app.Store, app.ListAPIKeys))
 	mux.HandleFunc("POST /api/account/api-keys", auth.RequireSession(app.Store, app.CreateAPIKey))
 	mux.HandleFunc("DELETE /api/account/api-keys/{id}", auth.RequireSession(app.Store, app.RevokeAPIKey))
+
+	// AI connectors: OAuth for MCP clients (ChatGPT and others), the consent
+	// step the customer sees in the dashboard, and the MCP endpoint itself.
+	// Approval and revocation are session-only, like API key management.
+	mux.HandleFunc("GET /.well-known/oauth-protected-resource", app.OAuthProtectedResourceMetadata)
+	mux.HandleFunc("GET /.well-known/oauth-protected-resource/mcp", app.OAuthProtectedResourceMetadata)
+	mux.HandleFunc("GET /.well-known/oauth-authorization-server", app.OAuthAuthorizationServerMetadata)
+	mux.HandleFunc("POST /oauth/register", app.OAuthRegister)
+	mux.HandleFunc("POST /oauth/token", app.OAuthToken)
+	mux.HandleFunc("POST /mcp", app.MCP)
+	mux.HandleFunc("GET /api/oauth/connect", auth.RequireSession(app.Store, app.GetConnectRequest))
+	mux.HandleFunc("POST /api/oauth/connect", auth.RequireSession(app.Store, app.ApproveConnect))
+	mux.HandleFunc("GET /api/account/connectors", auth.RequireSession(app.Store, app.ListConnectors))
+	mux.HandleFunc("DELETE /api/account/connectors/{id}", auth.RequireSession(app.Store, app.RevokeConnector))
 
 	mux.HandleFunc("POST /api/domains", auth.Require(app.Store, app.CreateDomain))
 	mux.HandleFunc("GET /api/domains", auth.Require(app.Store, app.ListDomains))

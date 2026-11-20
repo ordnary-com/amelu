@@ -26,6 +26,8 @@ export class AmeluOriginContainer extends Container<Env> {
     STALWART_ADMIN_USER: workerEnv.STALWART_ADMIN_USER,
     STALWART_ADMIN_PASSWORD: workerEnv.STALWART_ADMIN_PASSWORD,
     CORS_ORIGIN: workerEnv.ALLOWED_ORIGIN,
+    // Advertised to AI connectors in the OAuth discovery documents (docs/CONNECTORS.md).
+    PUBLIC_API_URL: "https://api.amelu.org",
     ORIGIN_SHARED_SECRET: workerEnv.ORIGIN_SHARED_SECRET,
     // Mail goes out through the edge (src/mail.ts), see outboundByHost below.
     MAIL_RELAY_URL: "http://mail.internal/send",

@@ -144,6 +144,37 @@ func toAddresses(raw []string) ([]stalwart.Address, error) {
 	return out, nil
 }
 
+// buildOutgoing validates a send request and turns it into the message handed
+// to Stalwart. The API's send route, drafts and the MCP tools all go through
+// it so the limits can't drift apart.
+func buildOutgoing(req sendMessageRequest) (stalwart.SendMessage, error) {
+	to, err := toAddresses(req.To)
+	if err != nil {
+		return stalwart.SendMessage{}, err
+	}
+	cc, err := toAddresses(req.CC)
+	if err != nil {
+		return stalwart.SendMessage{}, err
+	}
+	if len(to) == 0 {
+		return stalwart.SendMessage{}, errors.New("at least one recipient is required")
+	}
+	if len(to)+len(cc) > maxRecipients {
+		return stalwart.SendMessage{}, errors.New("too many recipients")
+	}
+	subject := strings.TrimSpace(req.Subject)
+	if len(subject) > maxSubjectLength {
+		return stalwart.SendMessage{}, errors.New("subject is too long")
+	}
+	if req.TextBody == "" && req.HTMLBody == "" {
+		return stalwart.SendMessage{}, errors.New("a textBody or htmlBody is required")
+	}
+	if len(req.TextBody) > maxBodyLength || len(req.HTMLBody) > maxBodyLength {
+		return stalwart.SendMessage{}, errors.New("message body is too large")
+	}
+	return stalwart.SendMessage{To: to, CC: cc, Subject: subject, TextBody: req.TextBody, HTMLBody: req.HTMLBody}, nil
+}
+
 // SendMailboxMessage sends mail as this mailbox. There is no From in the
 // request: a message always goes out as the mailbox it was submitted through,
 // so a key can never send as a colleague's address.
@@ -163,53 +194,20 @@ func (a *App) SendMailboxMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	to, err := toAddresses(req.To)
+	msg, err := buildOutgoing(req)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	cc, err := toAddresses(req.CC)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if len(to) == 0 {
-		writeError(w, http.StatusBadRequest, "at least one recipient is required")
-		return
-	}
-	if len(to)+len(cc) > maxRecipients {
-		writeError(w, http.StatusBadRequest, "too many recipients")
-		return
-	}
 
-	req.Subject = strings.TrimSpace(req.Subject)
-	if len(req.Subject) > maxSubjectLength {
-		writeError(w, http.StatusBadRequest, "subject is too long")
-		return
-	}
-	if req.TextBody == "" && req.HTMLBody == "" {
-		writeError(w, http.StatusBadRequest, "a textBody or htmlBody is required")
-		return
-	}
-	if len(req.TextBody) > maxBodyLength || len(req.HTMLBody) > maxBodyLength {
-		writeError(w, http.StatusBadRequest, "message body is too large")
-		return
-	}
-
-	id, err := a.Stalwart.Send(r.Context(), mailbox.LocalPart, domain.Name, stalwart.SendMessage{
-		To:       to,
-		CC:       cc,
-		Subject:  req.Subject,
-		TextBody: req.TextBody,
-		HTMLBody: req.HTMLBody,
-	})
+	id, err := a.Stalwart.Send(r.Context(), mailbox.LocalPart, domain.Name, msg)
 	if err != nil {
 		writeUpstreamError(w, "could not send message", err)
 		return
 	}
 
 	a.Store.LogActivity(r.Context(), domain.ID, "mailbox.message_sent",
-		"Sent a message from "+mailbox.LocalPart+"@"+domain.Name+" to "+to[0].Email)
+		"Sent a message from "+mailbox.LocalPart+"@"+domain.Name+" to "+msg.To[0].Email)
 
 	writeJSON(w, http.StatusCreated, sendMessageResponse{ID: id})
 }

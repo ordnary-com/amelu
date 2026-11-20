@@ -51,7 +51,7 @@ at `DATABASE_URL`. Requires Node 20+ (see `.nvmrc`).
 ## Production
 
 Deployed on Cloudflare: `app.amelu.org` (Worker `amelu-beta`, static assets,
-deployed with `pnpm deploy`) -> `api.amelu.org` (edge Worker) -> Go API +
+deployed with `pnpm deploy:frontend`) -> `api.amelu.org` (edge Worker) -> Go API +
 Postgres. Mail (Stalwart, MX) is separate infrastructure, untouched by this
 stack. The edge Worker, ops scripts and infra docs are kept outside this
 repository (see `.gitignore`).

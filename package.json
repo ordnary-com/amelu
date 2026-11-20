@@ -7,7 +7,7 @@
     "dev:frontend": "pnpm --filter frontend start",
     "dev:backend": "bash -c 'cd backend && set -a && source .env && set +a && go run ./cmd/api'",
     "build": "pnpm --filter frontend build",
-    "deploy": "pnpm --filter frontend run deploy",
+    "deploy:frontend": "pnpm --filter frontend run deploy",
     "deploy:webmail": "cd cloudflare/webmail && npm run deploy"
   },
   "devDependencies": {

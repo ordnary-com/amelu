@@ -8,7 +8,7 @@ Tailwind v4, styled after ordnary-console. It talks to the Go API in
 pnpm install
 pnpm dev          # Go API on :8081 and this app on :4200, /api proxied to :8081
 pnpm build
-pnpm deploy       # build, then upload to the amelu-beta Worker (app.amelu.org)
+pnpm deploy:frontend   # (repo root) build, then upload to the amelu-beta Worker (app.amelu.org)
 ```
 
 Signing in happens on this app's own /login page (via Ordnary). The API

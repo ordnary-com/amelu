@@ -15,20 +15,20 @@ interface Scenario {
 const DOMAINS: ConnectDomain[] = [
   {
     id: 'd1',
-    name: 'ironoathbeardco.ca',
+    name: 'example.com',
     mailboxes: [
-      { id: 'm1', address: 'contact@ironoathbeardco.ca' },
-      { id: 'm2', address: 'orders@ironoathbeardco.ca' },
-      { id: 'm3', address: 'brad@ironoathbeardco.ca' },
+      { id: 'm1', address: 'contact@example.com' },
+      { id: 'm2', address: 'orders@example.com' },
+      { id: 'm3', address: 'alex@example.com' },
     ],
   },
-  { id: 'd2', name: 'ironoathbarbers.com', mailboxes: [{ id: 'm4', address: 'hello@ironoathbarbers.com' }, { id: 'm5', address: 'bookings@ironoathbarbers.com' }] },
-  { id: 'd3', name: 'ironoath.shop', mailboxes: [{ id: 'm6', address: 'support@ironoath.shop' }] },
+  { id: 'd2', name: 'example.shop', mailboxes: [{ id: 'm4', address: 'hello@example.shop' }, { id: 'm5', address: 'bookings@example.shop' }] },
+  { id: 'd3', name: 'example.studio', mailboxes: [{ id: 'm6', address: 'support@example.studio' }] },
 ];
 
 const base = (over: Partial<ConnectRequest> = {}): ConnectRequest => ({
-  clientName: 'ChatGPT',
-  redirectHost: 'chatgpt.com',
+  clientName: 'AI assistant',
+  redirectHost: 'assistant.example',
   scopes: ['mail.read', 'mail.draft'],
   allowed: true,
   domains: DOMAINS,
@@ -73,7 +73,7 @@ const SCENARIOS: Scenario[] = [
       [request]="current().request"
       [message]="current().message ?? null"
       [error]="current().error ?? null"
-      account="brad@ironoathbeardco.ca"
+      account="alex@example.com"
       [(targets)]="targets"
       [(granted)]="granted"
       (approved)="pick(4)"

@@ -1,6 +1,7 @@
-# AI connectors (ChatGPT and other MCP clients)
+# AI connectors (MCP)
 
-A customer can give an AI assistant access to chosen mailboxes, whole domains
+A customer can give an AI assistant (any client that supports remote MCP
+connectors with OAuth) access to chosen mailboxes, whole domains
 or everything in their organization, without sharing any mailbox password. The assistant connects to `https://api.amelu.org/mcp`
 (Model Context Protocol, JSON-RPC over POST) and authenticates with OAuth.
 

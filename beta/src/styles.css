@@ -4,8 +4,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: Roboto, Arial, Helvetica, sans-serif;
-  --font-display: Roboto, Arial, Helvetica, sans-serif;
+  --font-sans: "Google Sans", Arial, Helvetica, sans-serif;
+  --font-display: "Google Sans", Arial, Helvetica, sans-serif;
   /* No bold anywhere, as on amelu.org: font-bold and font-semibold set medium. */
   --font-weight-semibold: 500;
   --font-weight-bold: 500;
@@ -347,7 +347,7 @@
   }
 }
 
-/* Headings in the display font (Roboto, like the rest). Base layer, so a
+/* Headings in the display font (Google Sans, like the rest). Base layer, so a
    page's own font class still wins. Bold elements and headings, which browsers
    set in bold by default, stay medium. */
 .chrome-logo {

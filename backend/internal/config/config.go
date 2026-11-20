@@ -152,7 +152,7 @@ func Load() (*Config, error) {
 		StalwartBaseURL:        os.Getenv("STALWART_BASE_URL"),
 		StalwartUser:           os.Getenv("STALWART_ADMIN_USER"),
 		StalwartPassword:       os.Getenv("STALWART_ADMIN_PASSWORD"),
-		CORSOrigins:            splitList(getEnv("CORS_ORIGIN", "http://localhost:5173")),
+		CORSOrigins:            splitList(getEnv("CORS_ORIGIN", "http://localhost:4200")),
 		PublicAPIURL:           strings.TrimRight(getEnv("PUBLIC_API_URL", "http://localhost:8081"), "/"),
 
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),

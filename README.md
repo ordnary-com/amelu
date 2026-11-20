@@ -70,14 +70,12 @@ webmail.amelu.org ─> Roundcube on marduk                                      
 
 | Part | Where | What |
 |---|---|---|
-| `beta/` | Worker `amelu-beta` on `app.amelu.org` | The dashboard: Angular 22 (standalone, signals) and Tailwind v4 |
-| `frontend/` | Cloudflare Pages, no domain | The previous React dashboard, kept until `beta/` covers every page |
+| `frontend/` | Worker `amelu-beta` on `app.amelu.org` | The dashboard: Angular 22 (standalone, signals) and Tailwind v4 |
 | `backend/` | Cloudflare Container behind the edge Worker | Go API, stdlib `net/http`, Postgres via `pgx`, no framework, no ORM |
-| `cloudflare/edge/` | `api.amelu.org` | Public entrypoint; signs every request to the Go API and relays transactional mail |
-| `cloudflare/queues/`, `cloudflare/workflows/` | Cloudflare | Domain verification, Stalwart provisioning, retries |
-| `cloudflare/webmail/` | `webmail.amelu.org` | Worker in front of Roundcube |
-| `cloudflare/autoconfig/`, `cloudflare/status/` | Cloudflare | Mail client autoconfig and the status page |
-| `ops/` | marduk | Scripts and configs for the mail server |
+
+The edge Worker, the queues and workflows, the webmail Worker, mail client
+autoconfig, the status page and the mail server scripts run the same
+platform but are not part of this repository.
 
 Postgres holds accounts, domains and billing. Mail lives only in Stalwart's
 own store on **marduk**, the mail server, and never in Postgres.
@@ -85,7 +83,7 @@ own store on **marduk**, the mail server, and never in Postgres.
 ### Sending network
 
 Outgoing mail leaves marduk from dedicated addresses, split into pools so new
-domains can't hurt the reputation of established ones (`ops/marduk/amelu-ip-pools.py`).
+domains can't hurt the reputation of established ones.
 Customers see the list on the dashboard's Sending IPs page.
 
 The sending addresses come from Ordnary's block **89.106.70.0/24 on
@@ -100,8 +98,7 @@ You need Node 20+ (see `.nvmrc`), pnpm 9, Go 1.26+ and a PostgreSQL database.
 ```bash
 pnpm install
 cp backend/.env.example backend/.env   # fill in DATABASE_URL and the Stalwart settings
-pnpm dev        # Go API on :8081 (and the old dashboard on :5173)
-pnpm dev:beta   # the dashboard on :4200, /api proxied to :8081
+pnpm dev        # Go API on :8081 and the dashboard on :4200, /api proxied to :8081
 ```
 
 Migrations are `.sql` files in `backend/internal/db/migrations/`, embedded
@@ -117,18 +114,15 @@ Tests:
 
 ```bash
 cd backend && go vet ./... && go test ./...
-cd cloudflare/edge && npm test
 ```
 
 ## Deploying
 
 | What | How |
 |---|---|
-| Dashboard (`app.amelu.org`) | `pnpm deploy:beta` from the repo root |
-| API, edge Worker, queues, workflows | See [`docs/cloudflare/DEPLOYMENT.md`](docs/cloudflare/DEPLOYMENT.md) |
-| Rolling back | [`docs/cloudflare/ROLLBACK.md`](docs/cloudflare/ROLLBACK.md) |
-| marduk and routers | By hand from `ops/`; each folder's README says what goes where |
+| Dashboard (`app.amelu.org`) | `pnpm deploy` from the repo root |
 
+The API and edge Worker are deployed from outside this repository.
 
 ## Security
 
@@ -144,9 +138,7 @@ cd cloudflare/edge && npm test
   separate secret, and Stripe webhooks are verified before anything happens.
   Logs redact credentials and never include request bodies.
 
-[`docs/cloudflare/SECURITY.md`](docs/cloudflare/SECURITY.md) has the full
-breakdown. Report security issues to **abuse@ordnary.com**, not in a public
-issue.
+Report security issues to **abuse@ordnary.com**, not in a public issue.
 
 ## Contributing
 

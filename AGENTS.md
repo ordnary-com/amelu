@@ -5,25 +5,17 @@ mailboxes and domains on top of a self-hosted Stalwart mail server, backed by
 its own Postgres database for account/billing metadata - kept separate from
 Stalwart's own mail data store.
 
-This is a pnpm monorepo: `frontend` (React/Vite) talks to `backend` (Go) over
+This is a pnpm monorepo: `frontend` (Angular) talks to `backend` (Go) over
 a JSON HTTP API. `pnpm dev` at the repo root starts both together.
 
 ## Layout
 
-- `frontend/` - React 19 + Vite + react-router v7. UI is Material Web
-  Components (`@material/web`), styled through one global stylesheet
-  (`frontend/public/app.css`) - no Tailwind, no other component library.
-  Pages live in `frontend/src/pages`, one file per route, all wired flat in
-  `frontend/src/App.tsx` (no file-based routing, no nested layouts besides
-  the single `Layout` wrapper). Every API call goes through the one typed
-  client in `frontend/src/api/client.ts` (a `request<T>` wrapper plus one
-  method per endpoint) - never `fetch` directly from a page.
-- `beta/` - the 2.0 dashboard being rebuilt page for page: Angular 22
-  (standalone, signals) with Tailwind v4, against the same Go API. See
-  `beta/README.md`. It has its own Ordnary sign-in page; `CORS_ORIGIN`
-  lists both dashboards.
-- `cloudflare/webmail/` - the Worker behind webmail.amelu.org: a proxy to
-  Roundcube, which runs on the mail host. See `docs/WEBMAIL.md`.
+- `frontend/` - the dashboard on app.amelu.org: Angular 22 (standalone,
+  signals) with Tailwind v4. See `frontend/README.md`. Pages live in
+  `frontend/src/app`, one folder per page or group of pages, each lazily
+  loaded from `app.routes.ts`. Every API call goes through the shared client
+  in `frontend/src/app/api.ts` (or a `*-api.ts` next to a page group). It has
+  its own Ordnary sign-in page; `CORS_ORIGIN` lists its origin.
 - `backend/` - Go, stdlib `net/http` with 1.22+ pattern routing
   (`mux.HandleFunc("GET /api/...", ...)` in `cmd/api/main.go`), no web
   framework. Postgres via `pgx`, no ORM - `internal/db/store.go` plus
@@ -50,8 +42,7 @@ a JSON HTTP API. `pnpm dev` at the repo root starts both together.
 
 ```
 pnpm install
-pnpm dev        # starts frontend (:5173) and backend (:8081) together
-pnpm dev:beta   # the 2.0 dashboard on :4200, proxies /api to :8081
+pnpm dev        # starts the dashboard (:4200, proxies /api) and the backend (:8081)
 ```
 
 Needs `backend/.env` (copy `backend/.env.example`) and a reachable Postgres
@@ -60,12 +51,11 @@ does not run on Node 18.
 
 ## Production
 
-Deployed on Cloudflare: `app.amelu.org` (Pages) -> `api.amelu.org` (edge
-Worker) -> Cloudflare Tunnel -> Go API + Postgres (Docker on a Hetzner VPS).
-Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
-`docs/cloudflare/` for the full architecture/ops docs, and
-`docs/FRONTEND_DEPLOYS.md` for how to actually ship a frontend change
-(manual `wrangler pages deploy` today - no CI/CD deploy yet).
+Deployed on Cloudflare: `app.amelu.org` (Worker `amelu-beta`, static assets,
+deployed with `pnpm deploy`) -> `api.amelu.org` (edge Worker) -> Go API +
+Postgres. Mail (Stalwart, MX) is separate infrastructure, untouched by this
+stack. The edge Worker, ops scripts and infra docs are kept outside this
+repository (see `.gitignore`).
 
 ## Conventions worth knowing before editing
 
@@ -77,7 +67,7 @@ Mail (Stalwart, MX) is separate infrastructure, untouched by this stack. See
 - Before adding a new frontend page, sidebar section, or backend resource,
   find and mirror the closest existing example rather than inventing a new
   shape - list pages, create forms, settings forms, and sub-sidebars all
-  already have an established pattern in `Layout.tsx` and `pages/`.
+  already have an established pattern in `frontend/src/app/shell` and the page folders.
 
 ## Changelog API
 

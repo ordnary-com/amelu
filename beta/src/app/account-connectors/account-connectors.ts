@@ -72,7 +72,7 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
                       <td colspan="5" class="px-4 py-8 text-center">
                         <amelu-icon name="mail" [size]="18" class="mx-auto block" />
                         <p class="mt-2">No connected apps</p>
-                        <p class="mt-0.5 text-[13px] text-muted">Add Amelu as a connector in an AI assistant such as ChatGPT to give it access to the mailboxes you choose.</p>
+                        <p class="mt-0.5 text-[13px] text-muted">Add Amelu as an MCP connector in your AI assistant to give it access to the mailboxes you choose.</p>
                       </td>
                     </tr>
                   }
@@ -89,15 +89,15 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
 
       <section [class]="ui.setCard">
         <div [class]="ui.setHeader">
-          <h2 [class]="ui.setTitle">Connecting ChatGPT</h2>
+          <h2 [class]="ui.setTitle">Connecting an AI assistant</h2>
         </div>
         <div class="px-5 py-4">
-          <p class="text-[13px] text-muted">Add a custom connector with this address</p>
+          <p class="text-[13px] text-muted">Add a custom MCP connector with this address</p>
           <code class="mt-1 block truncate font-mono text-[15px]">{{ mcpUrl }}</code>
         </div>
         <p [class]="ui.setNote">
           <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
-          <span>ChatGPT will send you here to choose what it can reach and what it may do. Reading mail and writing drafts is the safe default. Think before allowing it to send.</span>
+          <span>Your assistant will send you here to choose what it can reach and what it may do. Reading mail and writing drafts is the safe default. Think before allowing it to send.</span>
         </p>
       </section>
     </div>

@@ -50,12 +50,12 @@ func TestConnectorLifecycle(t *testing.T) {
 		t.Fatalf("client: %v %v", cl, err)
 	}
 
-	code := OAuthCode{ClientID: "client1", CustomerID: cust.ID, MailboxID: mb.ID, Scopes: []string{"mail.read", "mail.draft"}, RedirectURI: "https://a.example/cb", CodeChallenge: "chal"}
+	code := OAuthCode{ClientID: "client1", CustomerID: cust.ID, Targets: []Target{{Kind: TargetMailbox, ID: mb.ID}, {Kind: TargetDomain, ID: dom.ID}}, Scopes: []string{"mail.read", "mail.draft"}, RedirectURI: "https://a.example/cb", CodeChallenge: "chal"}
 	if err := s.CreateOAuthCode(ctx, "codehash", code, time.Minute); err != nil {
 		t.Fatal(err)
 	}
 	got, err := s.ConsumeOAuthCode(ctx, "codehash")
-	if err != nil || len(got.Scopes) != 2 || got.MailboxID != mb.ID {
+	if err != nil || len(got.Scopes) != 2 || len(got.Targets) != 2 || got.Targets[1].Kind != TargetDomain || got.Targets[1].ID != dom.ID {
 		t.Fatalf("consume: %+v %v", got, err)
 	}
 	if _, err := s.ConsumeOAuthCode(ctx, "codehash"); !errors.Is(err, ErrNotFound) {
@@ -66,7 +66,7 @@ func TestConnectorLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	grant, err := s.GetConnectorGrantByAccessHash(ctx, "acc1")
-	if err != nil || grant.MailboxID != mb.ID || len(grant.Scopes) != 2 {
+	if err != nil || len(grant.Targets) != 2 || grant.Targets[0].ID != mb.ID || len(grant.Scopes) != 2 {
 		t.Fatalf("grant: %+v %v", grant, err)
 	}
 
@@ -84,7 +84,7 @@ func TestConnectorLifecycle(t *testing.T) {
 	}
 
 	list, err := s.ListConnectors(ctx, cust.ID)
-	if err != nil || len(list) != 1 || list[0].MailboxAddr != "contact@example.com" || list[0].ClientName != "ChatGPT" {
+	if err != nil || len(list) != 1 || len(list[0].Targets) != 2 || list[0].ClientName != "ChatGPT" {
 		t.Fatalf("list: %+v %v", list, err)
 	}
 	if err := s.RevokeConnector(ctx, cust.ID, list[0].ID); err != nil {

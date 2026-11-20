@@ -314,6 +314,9 @@ def classify(line, ip):
     """'strong', 'weak' or None for a rejection line sent from ip."""
     # From/to come before hostname and could contain any word.
     text = line.split("hostname = ", 1)[-1].lower()
+    # So does the receiving host itself: any refusal from *.ess.barracudanetworks.com
+    # (a recipient's own block list too) would read as a Barracuda listing.
+    text = re.sub(r'^"[^"]*"', "", text)
     if any(k in text for k in DOMAIN_WORDS) and ip not in text:
         return None
     if any(k in text for k in STRONG):

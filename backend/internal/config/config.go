@@ -99,6 +99,11 @@ type Config struct {
 	// surface (fails closed), same convention as InternalJobsSharedSecret.
 	AdminSharedSecret string
 
+	// ChangelogAPIToken is the bearer token for /api/changelog/entries, the
+	// API that writes Amelu's own changelog entries (see "Changelog API" in
+	// CLAUDE.md). Empty disables those routes (fails closed).
+	ChangelogAPIToken string
+
 	// Webmail single sign-on (docs/WEBMAIL.md): "Open in webmail" on a
 	// mailbox redirects to WebmailURL with a token signed by
 	// WebmailSSOSecret, which the Roundcube plugin amelu_sso verifies.
@@ -173,6 +178,7 @@ func Load() (*Config, error) {
 		OrdnaryCookieSecret: os.Getenv("ORDNARY_COOKIE_SECRET"),
 
 		AdminSharedSecret: os.Getenv("AMELU_ADMIN_SHARED_SECRET"),
+		ChangelogAPIToken: os.Getenv("CHANGELOG_API_TOKEN"),
 	}
 
 	var missing []string

@@ -23,6 +23,10 @@ type Config struct {
 	// primary dashboard: emailed links and Stripe redirects point there.
 	CORSOrigins []string
 
+	// PublicAPIURL is the externally reachable base URL of this API, put in
+	// the OAuth discovery documents for AI connectors.
+	PublicAPIURL string
+
 	// Domain Connect (Cloudflare "fix DNS automatically" flow) is optional:
 	// until the template is approved by Cloudflare (see
 	// internal/domainconnect), it's fine to run without these set. When
@@ -144,6 +148,7 @@ func Load() (*Config, error) {
 		StalwartUser:           os.Getenv("STALWART_ADMIN_USER"),
 		StalwartPassword:       os.Getenv("STALWART_ADMIN_PASSWORD"),
 		CORSOrigins:            splitList(getEnv("CORS_ORIGIN", "http://localhost:5173")),
+		PublicAPIURL:           strings.TrimRight(getEnv("PUBLIC_API_URL", "http://localhost:8081"), "/"),
 
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),

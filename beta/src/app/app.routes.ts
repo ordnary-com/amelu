@@ -25,6 +25,12 @@ export const routes: Routes = [
     title: 'Accept invitation · Amelu',
   },
   {
+    path: 'connect',
+    canActivate: [authGuard],
+    loadComponent: () => import('./connect/connect').then((m) => m.Connect),
+    title: 'Connect an app · Amelu',
+  },
+  {
     path: 'welcome',
     canActivate: [authGuard],
     loadComponent: () => import('./onboarding/onboarding').then((m) => m.Onboarding),

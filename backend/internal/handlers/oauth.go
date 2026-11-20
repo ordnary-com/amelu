@@ -161,9 +161,15 @@ type connectMailbox struct {
 	Address string `json:"address"`
 }
 
-// connectableMailboxes are the mailboxes the signed-in customer may hand to an
-// assistant: only owners and admins can open mailbox contents at all.
-func (a *App) connectableMailboxes(r *http.Request, customer *db.Customer) ([]connectMailbox, bool, error) {
+type connectDomain struct {
+	ID        string           `json:"id"`
+	Name      string           `json:"name"`
+	Mailboxes []connectMailbox `json:"mailboxes"`
+}
+
+// connectableCatalog is what the signed-in customer may hand to an assistant:
+// only owners and admins can open mailbox contents at all.
+func (a *App) connectableCatalog(r *http.Request, customer *db.Customer) (catalog []catalogDomain, allowed bool, err error) {
 	if !customer.OrganizationID.Valid {
 		return nil, false, nil
 	}
@@ -174,23 +180,8 @@ func (a *App) connectableMailboxes(r *http.Request, customer *db.Customer) ([]co
 	if !authz.CanAccessMailboxContents(role) {
 		return nil, false, nil
 	}
-	domains, err := a.Store.ListDomainsForOrganization(r.Context(), customer.OrganizationID.String)
-	if err != nil {
-		return nil, false, err
-	}
-	out := []connectMailbox{}
-	for _, d := range domains {
-		boxes, err := a.Store.ListMailboxes(r.Context(), d.ID)
-		if err != nil {
-			return nil, false, err
-		}
-		for _, m := range boxes {
-			if m.Status == "active" {
-				out = append(out, connectMailbox{ID: m.ID, Address: m.LocalPart + "@" + d.Name})
-			}
-		}
-	}
-	return out, true, nil
+	catalog, err = a.orgCatalog(r.Context(), customer.OrganizationID.String)
+	return catalog, err == nil, err
 }
 
 func (a *App) loadAuthorizeClient(w http.ResponseWriter, r *http.Request, clientID, redirectURI string) (*db.OAuthClient, bool) {
@@ -234,10 +225,18 @@ func (a *App) GetConnectRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mailboxes, allowed, err := a.connectableMailboxes(r, customer)
+	catalog, allowed, err := a.connectableCatalog(r, customer)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not list mailboxes")
 		return
+	}
+	domains := make([]connectDomain, 0, len(catalog))
+	for _, d := range catalog {
+		entry := connectDomain{ID: d.Domain.ID, Name: d.Domain.Name, Mailboxes: []connectMailbox{}}
+		for _, m := range d.Mailboxes {
+			entry.Mailboxes = append(entry.Mailboxes, connectMailbox{ID: m.ID, Address: d.address(m)})
+		}
+		domains = append(domains, entry)
 	}
 
 	redirectHost := ""
@@ -249,18 +248,18 @@ func (a *App) GetConnectRequest(w http.ResponseWriter, r *http.Request) {
 		"redirectHost": redirectHost,
 		"scopes":       scopes,
 		"allowed":      allowed,
-		"mailboxes":    mailboxes,
+		"domains":      domains,
 	})
 }
 
 type connectApproveRequest struct {
-	ClientID      string   `json:"clientId"`
-	RedirectURI   string   `json:"redirectUri"`
-	State         string   `json:"state"`
-	CodeChallenge string   `json:"codeChallenge"`
-	MailboxID     string   `json:"mailboxId"`
-	Scopes        []string `json:"scopes"`
-	Deny          bool     `json:"deny"`
+	ClientID      string           `json:"clientId"`
+	RedirectURI   string           `json:"redirectUri"`
+	State         string           `json:"state"`
+	CodeChallenge string           `json:"codeChallenge"`
+	Targets       requestedTargets `json:"targets"`
+	Scopes        []string         `json:"scopes"`
+	Deny          bool             `json:"deny"`
 }
 
 func redirectWith(base string, params map[string]string) string {
@@ -309,7 +308,7 @@ func (a *App) ApproveConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mailboxes, allowed, err := a.connectableMailboxes(r, customer)
+	catalog, allowed, err := a.connectableCatalog(r, customer)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not list mailboxes")
 		return
@@ -318,14 +317,10 @@ func (a *App) ApproveConnect(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusForbidden, "only organization owners and admins can connect a mailbox")
 		return
 	}
-	address := ""
-	for _, m := range mailboxes {
-		if m.ID == req.MailboxID {
-			address = m.Address
-		}
-	}
-	if address == "" {
-		writeError(w, http.StatusBadRequest, "choose one of your mailboxes")
+	orgID := customer.OrganizationID.String
+	targets, err := validateTargets(req.Targets, orgID, catalog)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -335,7 +330,7 @@ func (a *App) ApproveConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = a.Store.CreateOAuthCode(r.Context(), hash, db.OAuthCode{
-		ClientID: client.ID, CustomerID: customer.ID, MailboxID: req.MailboxID, Scopes: scopes,
+		ClientID: client.ID, CustomerID: customer.ID, Targets: targets, Scopes: scopes,
 		RedirectURI: req.RedirectURI, CodeChallenge: req.CodeChallenge,
 	}, authCodeTTL)
 	if err != nil {
@@ -343,8 +338,9 @@ func (a *App) ApproveConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.Store.LogOrganizationAudit(r.Context(), customer.OrganizationID.String, &customer.ID, customer.Email,
-		"connector.authorized", "mailbox", req.MailboxID, client.Name+" ("+address+": "+strings.Join(scopes, ", ")+")", nil, requestIP(r))
+	a.Store.LogOrganizationAudit(r.Context(), orgID, &customer.ID, customer.Email,
+		"connector.authorized", "connector", client.ID,
+		client.Name+" ("+strings.Join(targetLabels(targets, orgID, catalog), ", ")+": "+strings.Join(scopes, ", ")+")", nil, requestIP(r))
 
 	writeJSON(w, http.StatusOK, map[string]string{"redirectUrl": redirectWith(req.RedirectURI, map[string]string{
 		"code": code, "state": req.State,
@@ -417,7 +413,7 @@ func (a *App) OAuthToken(w http.ResponseWriter, r *http.Request) {
 type connectorResponse struct {
 	ID         string   `json:"id"`
 	ClientName string   `json:"clientName"`
-	Mailbox    string   `json:"mailbox"`
+	Access     []string `json:"access"`
 	Scopes     []string `json:"scopes"`
 	CreatedAt  string   `json:"createdAt"`
 	LastUsedAt string   `json:"lastUsedAt,omitempty"`
@@ -433,9 +429,20 @@ func (a *App) ListConnectors(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not list connectors")
 		return
 	}
+	var catalog []catalogDomain
+	if customer.OrganizationID.Valid {
+		if catalog, err = a.orgCatalog(r.Context(), customer.OrganizationID.String); err != nil {
+			writeError(w, http.StatusInternalServerError, "could not list connectors")
+			return
+		}
+	}
 	out := make([]connectorResponse, 0, len(rows))
 	for _, c := range rows {
-		item := connectorResponse{ID: c.ID, ClientName: c.ClientName, Mailbox: c.MailboxAddr, Scopes: c.Scopes, CreatedAt: c.CreatedAt.Format(http.TimeFormat)}
+		access := targetLabels(c.Targets, customer.OrganizationID.String, catalog)
+		if access == nil {
+			access = []string{}
+		}
+		item := connectorResponse{ID: c.ID, ClientName: c.ClientName, Access: access, Scopes: c.Scopes, CreatedAt: c.CreatedAt.Format(http.TimeFormat)}
 		if c.LastUsedAt.Valid {
 			item.LastUsedAt = c.LastUsedAt.Time.Format(http.TimeFormat)
 		}

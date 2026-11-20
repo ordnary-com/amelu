@@ -37,7 +37,7 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
               <thead>
                 <tr>
                   <th [class]="ui.th">App</th>
-                  <th [class]="ui.th">Mailbox</th>
+                  <th [class]="ui.th">Access</th>
                   <th [class]="ui.th + ' max-md:hidden'">Can</th>
                   <th [class]="ui.th + ' max-md:hidden'">Last used</th>
                   <th class="w-0 pr-4"><span class="sr-only">Actions</span></th>
@@ -47,7 +47,13 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
                 @for (c of connectors(); track c.id) {
                   <tr [class]="ui.tr">
                     <td [class]="ui.td + ' font-medium'">{{ c.clientName }}</td>
-                    <td [class]="ui.td">{{ c.mailbox }}</td>
+                    <td [class]="ui.td">
+                      @for (item of c.access; track item) {
+                        <span class="block">{{ item }}</span>
+                      } @empty {
+                        <span class="text-muted">Nothing left to reach</span>
+                      }
+                    </td>
                     <td [class]="ui.td + ' max-md:hidden'">{{ scopeList(c) }}</td>
                     <td [class]="ui.td + ' whitespace-nowrap max-md:hidden'">
                       @if (c.lastUsedAt) {
@@ -66,7 +72,7 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
                       <td colspan="5" class="px-4 py-8 text-center">
                         <amelu-icon name="mail" [size]="18" class="mx-auto block" />
                         <p class="mt-2">No connected apps</p>
-                        <p class="mt-0.5 text-[13px] text-muted">Add Amelu as a connector in an AI assistant such as ChatGPT to give it access to one mailbox.</p>
+                        <p class="mt-0.5 text-[13px] text-muted">Add Amelu as a connector in an AI assistant such as ChatGPT to give it access to the mailboxes you choose.</p>
                       </td>
                     </tr>
                   }
@@ -77,7 +83,7 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
         </div>
         <p [class]="ui.setNote">
           <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
-          <span>An app only sees the one mailbox you chose and can only do what you allowed. Disconnecting stops it immediately.</span>
+          <span>An app only reaches the mailboxes and domains you chose, and can only do what you allowed. A domain you share includes mailboxes you add to it later. Disconnecting stops it immediately.</span>
         </p>
       </section>
 
@@ -91,7 +97,7 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
         </div>
         <p [class]="ui.setNote">
           <amelu-icon name="info" [size]="16" class="mt-0.5 flex-none" />
-          <span>ChatGPT will send you here to choose a mailbox and what it may do. Reading mail and writing drafts is the safe default. Think before allowing it to send.</span>
+          <span>ChatGPT will send you here to choose what it can reach and what it may do. Reading mail and writing drafts is the safe default. Think before allowing it to send.</span>
         </p>
       </section>
     </div>
@@ -101,7 +107,7 @@ const SCOPE_NAMES: Record<string, string> = { 'mail.read': 'Read', 'mail.draft':
         <div class="w-full max-w-md rounded-md border border-line bg-popover p-5 shadow-xl" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
           <h3 class="text-[15px] font-bold">Disconnect {{ target.clientName }}?</h3>
           <p class="mt-2 text-[13px] leading-relaxed text-muted">
-            It loses access to {{ target.mailbox }} immediately. You can connect it again later.
+            It loses access to everything it was given immediately. You can connect it again later.
           </p>
           <div class="mt-5 flex justify-end gap-2">
             <button type="button" [class]="ui.outline" (click)="closeRevoke()" [disabled]="revoking()">Cancel</button>

@@ -38,7 +38,8 @@ type throttleWire struct {
 // on local delivery too, so without it a full limit also held mail coming in
 // for our own mailboxes until the next hour (devlog 2026-11-04). It tests the
 // recipient's domain: queue_name, tried first, is accepted but never 'local'
-// when throttles are evaluated, so it exempted nothing.
+// when throttles are evaluated, so it exempted nothing. It isn't enough on its
+// own either, see ourSender.
 var notLocal = map[string]any{"if": "is_local_domain(rcpt_domain)", "then": "false"}
 
 // serverMade marks the DMARC/TLS reports and bounces Stalwart sends itself:
@@ -46,13 +47,20 @@ var notLocal = map[string]any{"if": "is_local_domain(rcpt_domain)", "then": "fal
 // ops/marduk/amelu-ip-pools.py.
 const serverMade = "source == 'report' || source == 'dsn'"
 
+// ourSender keeps mail coming in out of every plan limit. rcpt_domain is empty
+// when sender-domain throttles run, so notLocal let inbound mail through: all
+// of it from Gmail shared one "gmail.com" bucket under the free rule and was
+// held until midnight once 150 had arrived (20 Nov 2026, 224 messages). What
+// we send always has one of our domains as sender; mail coming in never does.
+const ourSender = "is_local_domain(sender_domain)"
+
 // match puts the whole decision in one boolean expression. An exemption
 // written as {"if": ..., "then": "false"} did not reliably exempt: amelu.org
 // stayed under the free rule although it was on that list (devlog
 // 2026-11-07). notLocal is kept first; it is harmless, but rcpt_domain is
 // empty when sender-domain throttles run, so it rarely applies.
 func (t OutboundThrottle) match() map[string]any {
-	expr := "!(" + serverMade + ")"
+	expr := ourSender + " && !(" + serverMade + ")"
 	switch {
 	case t.If != "" && t.Negate:
 		expr += " && !(" + t.If + ")"

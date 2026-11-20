@@ -257,6 +257,33 @@ export interface CreatedApiKey extends ApiKey {
   key: string;
 }
 
+export interface Connector {
+  id: string;
+  clientName: string;
+  mailbox: string;
+  scopes: string[];
+  createdAt: string;
+  lastUsedAt?: string;
+}
+
+export interface ConnectRequest {
+  clientName: string;
+  redirectHost: string;
+  scopes: string[];
+  allowed: boolean;
+  mailboxes: { id: string; address: string }[];
+}
+
+export interface ConnectApproval {
+  clientId: string;
+  redirectUri: string;
+  state: string;
+  codeChallenge: string;
+  mailboxId: string;
+  scopes: string[];
+  deny: boolean;
+}
+
 // Mirrors the Go API's error body (handlers/json.go). For server faults
 // `error` already ends in a link to https://amelu.org/docs/errors#CODE.
 export interface ApiErrorBody {
@@ -508,6 +535,24 @@ export class Api {
 
   revokeApiKey(id: string) {
     return this.http.delete<{ ok: boolean }>(`/api/account/api-keys/${id}`);
+  }
+
+  listConnectors() {
+    return this.http.get<Connector[]>('/api/account/connectors');
+  }
+
+  revokeConnector(id: string) {
+    return this.http.delete<{ ok: boolean }>(`/api/account/connectors/${id}`);
+  }
+
+  getConnectRequest(clientId: string, redirectUri: string, scope: string) {
+    return this.http.get<ConnectRequest>('/api/oauth/connect', {
+      params: { client_id: clientId, redirect_uri: redirectUri, scope },
+    });
+  }
+
+  approveConnect(body: ConnectApproval) {
+    return this.http.post<{ redirectUrl: string }>('/api/oauth/connect', body);
   }
 
   listMembers() {

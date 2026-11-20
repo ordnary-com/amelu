@@ -306,6 +306,62 @@ func (c *Client) Send(ctx context.Context, localPart, domainName string, msg Sen
 		return "", fmt.Errorf("send as %s: %w", address, err)
 	}
 
+	emailID, err := c.createDraftEmail(ctx, accountID, address, draftsID, msg)
+	if err != nil {
+		return "", err
+	}
+
+	envelopeTo := make([]map[string]any, 0, len(msg.To)+len(msg.CC))
+	for _, rcpt := range append(append([]Address{}, msg.To...), msg.CC...) {
+		envelopeTo = append(envelopeTo, map[string]any{"email": rcpt.Email})
+	}
+
+	raw, err := c.call(ctx, "EmailSubmission/set", map[string]any{
+		"accountId": accountID,
+		"create": map[string]any{
+			"s0": map[string]any{
+				"emailId":    emailID,
+				"identityId": identityID,
+				"envelope": map[string]any{
+					"mailFrom": map[string]any{"email": address},
+					"rcptTo":   envelopeTo,
+				},
+			},
+		},
+		// Filing the message in Sent is part of the same call: if submission
+		// fails there is nothing to move, and if it succeeds the message must
+		// not stay a draft.
+		"onSuccessUpdateEmail": map[string]any{
+			"#s0": map[string]any{
+				"mailboxIds/" + draftsID: nil,
+				"mailboxIds/" + sentID:   true,
+				"keywords/$draft":        nil,
+				"keywords/$seen":         true,
+			},
+		},
+	})
+	if err != nil {
+		c.destroyEmail(ctx, accountID, emailID)
+		return "", fmt.Errorf("submit message from %s: %w", address, err)
+	}
+	var submitted struct {
+		NotCreated map[string]json.RawMessage `json:"notCreated"`
+	}
+	if err := json.Unmarshal(raw, &submitted); err != nil {
+		return "", fmt.Errorf("decode submission response: %w", err)
+	}
+	if reason, ok := submitted.NotCreated["s0"]; ok {
+		c.destroyEmail(ctx, accountID, emailID)
+		return "", fmt.Errorf("stalwart refused to send from %s: %s", address, reason)
+	}
+
+	return emailID, nil
+}
+
+// createDraftEmail files msg in the Drafts mailbox and returns its id. Send
+// and CreateDraft share it so a draft made for review is byte-for-byte what a
+// send would have submitted.
+func (c *Client) createDraftEmail(ctx context.Context, accountID, address, draftsID string, msg SendMessage) (string, error) {
 	email := map[string]any{
 		"mailboxIds": map[string]bool{draftsID: true},
 		"keywords":   map[string]bool{"$draft": true},
@@ -351,52 +407,22 @@ func (c *Client) Send(ctx context.Context, localPart, domainName string, msg Sen
 	if emailID == "" {
 		return "", fmt.Errorf("stalwart returned no message id for %s", address)
 	}
-
-	envelopeTo := make([]map[string]any, 0, len(msg.To)+len(msg.CC))
-	for _, rcpt := range append(append([]Address{}, msg.To...), msg.CC...) {
-		envelopeTo = append(envelopeTo, map[string]any{"email": rcpt.Email})
-	}
-
-	raw, err = c.call(ctx, "EmailSubmission/set", map[string]any{
-		"accountId": accountID,
-		"create": map[string]any{
-			"s0": map[string]any{
-				"emailId":    emailID,
-				"identityId": identityID,
-				"envelope": map[string]any{
-					"mailFrom": map[string]any{"email": address},
-					"rcptTo":   envelopeTo,
-				},
-			},
-		},
-		// Filing the message in Sent is part of the same call: if submission
-		// fails there is nothing to move, and if it succeeds the message must
-		// not stay a draft.
-		"onSuccessUpdateEmail": map[string]any{
-			"#s0": map[string]any{
-				"mailboxIds/" + draftsID: nil,
-				"mailboxIds/" + sentID:   true,
-				"keywords/$draft":        nil,
-				"keywords/$seen":         true,
-			},
-		},
-	})
-	if err != nil {
-		c.destroyEmail(ctx, accountID, emailID)
-		return "", fmt.Errorf("submit message from %s: %w", address, err)
-	}
-	var submitted struct {
-		NotCreated map[string]json.RawMessage `json:"notCreated"`
-	}
-	if err := json.Unmarshal(raw, &submitted); err != nil {
-		return "", fmt.Errorf("decode submission response: %w", err)
-	}
-	if reason, ok := submitted.NotCreated["s0"]; ok {
-		c.destroyEmail(ctx, accountID, emailID)
-		return "", fmt.Errorf("stalwart refused to send from %s: %s", address, reason)
-	}
-
 	return emailID, nil
+}
+
+// CreateDraft saves msg in the mailbox's Drafts folder without sending it, so
+// a person can review it in webmail first.
+func (c *Client) CreateDraft(ctx context.Context, localPart, domainName string, msg SendMessage) (string, error) {
+	accountID, err := c.resolveAccountID(ctx, localPart, domainName)
+	if err != nil {
+		return "", fmt.Errorf("resolve account for draft: %w", err)
+	}
+	address := localPart + "@" + domainName
+	draftsID, err := c.mailboxIDForRole(ctx, accountID, "drafts")
+	if err != nil {
+		return "", fmt.Errorf("draft as %s: %w", address, err)
+	}
+	return c.createDraftEmail(ctx, accountID, address, draftsID, msg)
 }
 
 // destroyEmail removes a message, used to clean up a draft whose submission

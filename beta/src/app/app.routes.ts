@@ -70,6 +70,7 @@ export const routes: Routes = [
             loadComponent: () => import('./account-appearance/account-appearance').then((m) => m.AccountAppearance),
             title: 'Appearance · My Account · Amelu' },
           { path: 'api-keys', loadComponent: () => import('./account-api-keys/account-api-keys').then((m) => m.AccountApiKeys), title: 'API Keys · My Account · Amelu' },
+          { path: 'connected-apps', loadComponent: () => import('./account-connectors/account-connectors').then((m) => m.AccountConnectors), title: 'Connected Apps · My Account · Amelu' },
           { path: 'terminate', loadComponent: () => import('./misc/terminate-account').then((m) => m.TerminateAccount), title: 'Terminate account · My Account · Amelu' },
         ],
       },

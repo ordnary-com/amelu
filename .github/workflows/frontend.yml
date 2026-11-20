@@ -37,13 +37,5 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: lint
-        run: pnpm --filter frontend lint
-
-      # Runs `vite build` only, not `tsc -b` - the repo has pre-existing
-      # type errors unrelated to this migration, see
-      # docs/cloudflare/PAGES_FRONTEND.md "Common errors".
       - name: build
-        run: cd frontend && npx vite build
-        env:
-          VITE_API_URL: https://api.amelu.org
+        run: pnpm --filter frontend build

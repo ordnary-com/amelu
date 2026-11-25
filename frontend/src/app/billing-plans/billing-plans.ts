@@ -24,7 +24,7 @@ const SHARED = [
 const PLAN_DETAILS: Record<string, { tagline: string; perks: string[] }> = {
   free: {
     tagline: 'For trying Amelu on your own domain.',
-    perks: ['150 outgoing messages/day', 'Community support'],
+    perks: ['150 outgoing messages/day', 'Community and email support'],
   },
   go: {
     tagline: 'For small teams and side projects.',

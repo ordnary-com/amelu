@@ -30,7 +30,7 @@ export function terminateConfirmUrl(): string {
   return `${API_ORIGIN}/api/account/terminate/confirm?${new URLSearchParams({ origin: window.location.origin })}`;
 }
 
-/** The public repository, linked from the beta notice on the home page. */
+/** The public repository, linked from the home page. */
 export const GITHUB_URL = 'https://github.com/ordnary-com/amelu';
 
 /** Where people manage their Ordnary account (name, photo, email, security). */

@@ -681,9 +681,11 @@ func (a *App) AdminUpdateSupportTicket(w http.ResponseWriter, r *http.Request, o
 	writeJSON(w, http.StatusOK, toSupportTicketResponse(updated, true))
 }
 
-// notifySupport emails SupportNotifyEmail about a new ticket or reply. It
+// notifySupport emails SupportNotifyEmail about a new ticket or reply, and
+// posts new tickets to Discord (support_discord.go). It
 // never fails the request: Airplane shows the ticket either way.
 func (a *App) notifySupport(t *db.SupportTicket, what, body string) {
+	a.notifyDiscord(t, what, body)
 	if a.Mailer == nil || a.SupportNotifyEmail == "" {
 		return
 	}

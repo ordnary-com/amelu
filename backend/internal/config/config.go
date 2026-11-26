@@ -44,6 +44,8 @@ type Config struct {
 	// Where new support tickets and customer replies are announced; empty
 	// means nobody gets an email and support works from Airplane alone.
 	SupportNotifyEmail string
+	// Discord webhook that gets an embed for every new support ticket; empty disables it.
+	SupportDiscordWebhookURL string
 
 	// Stripe billing is optional in the same vein: absent, /api/billing/*
 	// reports the feature unavailable instead of failing startup. Both must
@@ -158,10 +160,11 @@ func Load() (*Config, error) {
 		DomainConnectPrivateKey:   os.Getenv("DOMAIN_CONNECT_PRIVATE_KEY"),
 		DomainConnectPubKeyDomain: os.Getenv("DOMAIN_CONNECT_PUBKEY_DOMAIN"),
 
-		MailRelayURL:       os.Getenv("MAIL_RELAY_URL"),
-		MailFromEmail:      getEnv("MAIL_FROM_EMAIL", "onboarding@ordnary.com"),
-		MailFromName:       getEnv("MAIL_FROM_NAME", "Amelu"),
-		SupportNotifyEmail: getEnv("SUPPORT_NOTIFY_EMAIL", ""),
+		MailRelayURL:             os.Getenv("MAIL_RELAY_URL"),
+		MailFromEmail:            getEnv("MAIL_FROM_EMAIL", "onboarding@ordnary.com"),
+		MailFromName:             getEnv("MAIL_FROM_NAME", "Amelu"),
+		SupportNotifyEmail:       getEnv("SUPPORT_NOTIFY_EMAIL", ""),
+		SupportDiscordWebhookURL: os.Getenv("SUPPORT_DISCORD_WEBHOOK_URL"),
 
 		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),

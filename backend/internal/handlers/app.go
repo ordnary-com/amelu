@@ -18,8 +18,10 @@ type App struct {
 	// SupportNotifyEmail gets a short email for every new ticket and customer
 	// reply; empty disables it.
 	SupportNotifyEmail string
-	Stalwart           *stalwart.Client
-	CookieSecure       bool
+	// SupportDiscordWebhookURL gets an embed for every new ticket; empty disables it.
+	SupportDiscordWebhookURL string
+	Stalwart                 *stalwart.Client
+	CookieSecure             bool
 
 	// DomainConnect is nil until Cloudflare has approved the template (see
 	// internal/domainconnect) — handlers must treat that as "unsupported",

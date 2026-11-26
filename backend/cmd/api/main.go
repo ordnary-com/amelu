@@ -56,6 +56,7 @@ func main() {
 		FrontendOrigin:           cfg.CORSOrigins[0],
 		PublicAPIURL:             cfg.PublicAPIURL,
 		SupportNotifyEmail:       cfg.SupportNotifyEmail,
+		SupportDiscordWebhookURL: cfg.SupportDiscordWebhookURL,
 		FrontendOrigins:          cfg.CORSOrigins,
 		InternalJobsSharedSecret: cfg.InternalJobsSharedSecret,
 		WebmailURL:               cfg.WebmailURL,
